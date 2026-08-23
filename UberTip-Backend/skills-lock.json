@@ -1,0 +1,25 @@
+{
+    "skills": [
+        {
+            "name": "clean-code-guard",
+            "source": "amElnagdy/guard-skills",
+            "sourceType": "github",
+            "skillPath": "skills/clean-code-guard",
+            "commit": "ffa26036b7b5e77b20b5d679304a703b6fd1a43d"
+        },
+        {
+            "name": "docs-guard",
+            "source": "amElnagdy/guard-skills",
+            "sourceType": "github",
+            "skillPath": "skills/docs-guard",
+            "commit": "ffa26036b7b5e77b20b5d679304a703b6fd1a43d"
+        },
+        {
+            "name": "test-guard",
+            "source": "amElnagdy/guard-skills",
+            "sourceType": "github",
+            "skillPath": "skills/test-guard",
+            "commit": "ffa26036b7b5e77b20b5d679304a703b6fd1a43d"
+        }
+    ]
+}

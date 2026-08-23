@@ -1,0 +1,115 @@
+openapi: 3.1.0
+info:
+  title: UberTib Service Catalog API
+  version: 1.0.0
+  description: Read-only Arabic-first dental service catalog with launch-readiness visibility.
+servers:
+  - url: /api/v1
+paths:
+  /catalog/service-groups:
+    get:
+      operationId: listServiceGroups
+      summary: List visible dental service groups and services
+      tags:
+        - Catalog
+      responses:
+        '200':
+          description: Visible groups and services for the server-configured catalog mode.
+          headers:
+            Cache-Control:
+              description: Public cache policy bounded to 60 seconds.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, meta]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ServiceGroup'
+                  meta:
+                    type: object
+                    required: [mode]
+                    properties:
+                      mode:
+                        type: string
+                        enum: [evaluation, production]
+        '500':
+          description: Server configuration or processing error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Public catalog rate limit exceeded.
+components:
+  schemas:
+    LocalizedText:
+      type: object
+      required: [ar, en]
+      properties:
+        ar:
+          type: string
+        en:
+          type: string
+    ServiceDefinitionSummary:
+      type: object
+      required: [version, audience, clinical_review_state, production_ready, protection]
+      properties:
+        version:
+          type: integer
+          minimum: 1
+        audience:
+          type: string
+          enum: [evaluation, production]
+        clinical_review_state:
+          type: string
+          enum: [pending, approved]
+        production_ready:
+          type: boolean
+        protection:
+          type: object
+          required: [funded]
+          properties:
+            funded:
+              type: boolean
+              const: false
+    Service:
+      type: object
+      required: [code, slug, name, description_ar, definition]
+      properties:
+        code:
+          type: string
+          pattern: '^G0[1-4]-S[0-9]{2}$'
+        slug:
+          type: string
+        name:
+          $ref: '#/components/schemas/LocalizedText'
+        description_ar:
+          type: string
+        definition:
+          $ref: '#/components/schemas/ServiceDefinitionSummary'
+    ServiceGroup:
+      type: object
+      required: [code, name, description_ar, services]
+      properties:
+        code:
+          type: string
+          enum: [G01, G02, G03, G04]
+        name:
+          $ref: '#/components/schemas/LocalizedText'
+        description_ar:
+          type: string
+        services:
+          type: array
+          items:
+            $ref: '#/components/schemas/Service'
+    Error:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
