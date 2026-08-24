@@ -1,0 +1,37 @@
+name: Documentation Validation
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - AGENTS.md
+      - 'docs/**'
+      - '.github/workflows/docs-validation.yml'
+  pull_request:
+    paths:
+      - AGENTS.md
+      - 'docs/**'
+      - '.github/workflows/docs-validation.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-docs:
+    name: Validate engineering documentation
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Run documentation validator
+        run: python docs/scripts/validate_docs.py
