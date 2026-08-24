@@ -133,7 +133,7 @@ This remains partial V1 implementation coverage. Identity/OTP, scoped authorizat
 4. `Existing`/`Partial` cases may reference current test files; `Planned` cases define the executable target without pretending the file exists.
 5. Mobile execution paths/commands remain `TBD after TASK-PLATFORM-008` until the actual React Native project is verified.
 6. Governed approval is referenced beside the relevant TCs/open questions; it is not faked as an automated pass.
-7. These allocations must be synchronized into `docs/README.md` in the next registry-maintenance step without renumbering.
+7. These allocations are synchronized in `docs/README.md`; future `TC-*` allocations must update that registry without renumbering existing IDs.
 
 ---
 
@@ -517,78 +517,3 @@ Slower load/recovery/provider-contract suites may run in release pipelines, but 
 ### Production medical readiness gate
 
 Software tests are necessary but insufficient. The release additionally requires current applicable launch approvals, licensed clinical approval for enabled medical catalog/policies, resolution of applicable `Q-CATALOG-001` / `Q-ELIG-001`, production catalog mode, and no promotion of evaluation fixtures merely because tests pass.
-
-## 33. Domain Exit Evidence
-
-| Domain | Minimum V1 exit evidence |
-|---|---|
-| IDENTITY | `TC-IDENTITY-001`–`007` applicable cases pass + provider-specific MFA/OTP evidence where required |
-| CATALOG | `TC-CATALOG-001`–`005` pass/complete + separate clinical approval |
-| ELIG | `TC-ELIG-001`–`010` pass + approved production clinical boundary fixtures |
-| BOOKING | `TC-BOOKING-001`–`008` pass including MySQL 100-way contention and cross-platform propagation |
-| CLINICAL | `TC-CLINICAL-001`–`007` pass |
-| FINANCE | `TC-FINANCE-001`–`008` pass, especially zero-money-movement negative architecture control |
-| REVIEWS | `TC-REVIEWS-001`–`004` pass |
-| CLAIMS | `TC-CLAIMS-001`–`007` pass |
-| POLICY | `TC-POLICY-001`–`004` pass |
-| OPS | `TC-OPS-001`–`005` pass |
-| AUDIT | `TC-AUDIT-001`–`005` pass |
-| PLATFORM | `TC-PLATFORM-001`–`012` applicable cases pass + governed legal/clinical/provider evidence where noted |
-
-## 34. Defect Severity
-
-- **Blocker:** enables unsafe production medical behavior, money movement, unauthorized protected-data access, unrecoverable historical corruption, capacity overbooking, cross-platform split-brain truth, or invalidates release verification.
-- **Major:** breaks a Must Have workflow, permission boundary, immutable/reproducible history, required NFR, or creates materially incorrect operational/cross-platform state.
-- **Minor:** localized defect that does not break a safety/business invariant and has an acceptable workaround.
-
-Intermittent reproducibility does not downgrade a defect affecting a high-impact invariant.
-
-## 35. Open Questions and Verification Constraints
-
-| ID | Severity | Verification impact |
-|---|---|---|
-| `Q-PLATFORM-001` | Blocker | Cannot claim full SRS v1.1 reconciliation until readable authoritative text is reviewed. |
-| `Q-CATALOG-001` | Major | `TC-CATALOG-*` cannot certify clinical production approval for provisional records. |
-| `Q-ELIG-001` | Major | Production clinical numeric/boundary acceptance within `TC-ELIG-004` depends on licensed approval. |
-| `Q-PLATFORM-002` | Major | `TC-PLATFORM-004` proves retention mechanism; final legal-period acceptance remains open. |
-| `Q-OPS-001` | Major | Final production-engine/load/recovery environment remains topology dependent. |
-| `Q-PLATFORM-003` | Major | Concrete OTP/MFA/malware/private-evidence/notification provider contract suites cannot be finalized. |
-| `Q-PLATFORM-004` | Minor | Performance tests retain approved NFR headroom even though expected launch population is lower. |
-| `CONFLICT-PLATFORM-001` | Major | Verification targets current Laravel/PHP/package stack, not stale historical assumptions. |
-| `CONFLICT-PLATFORM-002` | Major | Later SRS requirement-type reconciliation may remap traceability but must not silently delete existing test obligations. |
-
-## 36. `TC-*` Allocation Summary
-
-This revision allocates **82 concrete test-case IDs**:
-
-| Domain | Allocated IDs | Count |
-|---|---|---:|
-| IDENTITY | `TC-IDENTITY-001`–`007` | 7 |
-| CATALOG | `TC-CATALOG-001`–`005` | 5 |
-| ELIG | `TC-ELIG-001`–`010` | 10 |
-| BOOKING | `TC-BOOKING-001`–`008` | 8 |
-| CLINICAL | `TC-CLINICAL-001`–`007` | 7 |
-| FINANCE | `TC-FINANCE-001`–`008` | 8 |
-| REVIEWS | `TC-REVIEWS-001`–`004` | 4 |
-| CLAIMS | `TC-CLAIMS-001`–`007` | 7 |
-| POLICY | `TC-POLICY-001`–`004` | 4 |
-| OPS | `TC-OPS-001`–`005` | 5 |
-| AUDIT | `TC-AUDIT-001`–`005` | 5 |
-| PLATFORM | `TC-PLATFORM-001`–`012` | 12 |
-| **Total** | — | **82** |
-
-No IDs in this table may be renumbered during the next registry synchronization. A future test must append after the highest allocated ID in its domain.
-
-## 37. Current Verification Gap Summary
-
-Existing executable coverage is still concentrated in catalog/service-definition/launch-readiness governance. Most of the 82 concrete cases are Planned because the matching V1 features are not implemented yet.
-
-The largest safety-critical gaps are scoped authorization, production-approved eligibility, booking concurrency/cross-platform propagation, immutable treatment/financial agreements, record-only finance, private evidence security, claims human review/SoD, mobile/network behavior, and production recovery/observability evidence.
-
-This is expected and must remain visible; allocating a `TC-*` does not convert Planned application behavior into Existing code.
-
-## 38. Phase 3 Handoff
-
-The next Phase 3 step is **registry synchronization** in `docs/README.md` for the already allocated `API-*`, `ERR-*`, `TASK-*`, and the 82 `TC-*` IDs in this file.
-
-After that, update `docs/TRACEABILITY_MATRIX.md` to replace verification descriptions with concrete `TC-*` references while preserving Patient / Clinic / Admin / cross-platform impact. Then create `docs/scripts/validate_docs.py` and run Phase 4 documentation verification.
