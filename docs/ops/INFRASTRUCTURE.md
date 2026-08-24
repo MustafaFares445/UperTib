@@ -64,7 +64,7 @@ These are engineering capacity targets, not a requirement to deploy a complex di
 ## 4. Target Production Topology
 
 ```mermaid
-flowchart TB
+flowchart TD
     Internet[Patients / Authorized Staff] --> Edge[HTTPS Edge / Reverse Proxy / Load Balancer]
     Edge --> Web[Laravel Web/API + Filament Runtime]
 
