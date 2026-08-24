@@ -67,11 +67,13 @@ Every `FR-*` must have testable Given/When/Then acceptance criteria.
 
 Every `NFR-*` must define a metric, threshold, and measurement method.
 
-Every confirmed `FR-*` and `BR-*` must eventually trace to applicable design, API/data/state artifacts, at least one happy-path test, at least one failure-path test, and an implementation task.
+Every confirmed `FR-*` and `BR-*` must eventually trace to applicable design, API/data/state artifacts, at least one happy-path test target, at least one failure-path test target, and an implementation task.
 
-Do not mark an item `Covered` unless implementation and automated-test evidence genuinely exist. Distinguish `Implemented`, `Partially Implemented`, `Planned`, `Blocked`, and `Production Governance` work.
+`Covered` is a **documentation traceability status only**. It means the requirement has the required source, canonical design ownership, implementation-task mapping, and concrete verification/test-case mapping defined by `docs/TRACEABILITY_MATRIX.md`; it does **not** mean production code or automated tests already exist or pass.
 
-Blocked requirements must not be scheduled as confirmed implementation work.
+Track implementation evidence separately using statuses such as `Implemented`, `Partially Implemented`, `Planned`, `Blocked`, and `Production Governance`. Never infer implementation status from `Covered`, and never infer `Covered` from code existence alone.
+
+Blocked requirements must not be presented as production-ready behavior. Structural or preparatory work may proceed only where the owning requirement/open-item documentation explicitly allows it, while the blocker remains visible.
 
 ## Domain Registry
 
@@ -122,7 +124,7 @@ Preserve existing Laravel conventions and repository structure. Do not add depen
 
 ## API and Error Rules
 
-Treat feature specifications and OpenAPI files as contract evidence, not proof that routes are implemented. Verify current routes and behavior before marking coverage.
+Treat feature specifications and OpenAPI files as contract evidence, not proof that routes are implemented. Verify current routes and behavior before marking implementation coverage.
 
 Use versioned REST conventions already established by the repository unless an authoritative requirement requires a change.
 
