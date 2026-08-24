@@ -84,7 +84,7 @@ Framework cache/session/job tables are operational implementation details and ar
 ## 5. Level 0 DFD — V1 Business Information Flow
 
 ```mermaid
-flowchart TB
+flowchart TD
     PATIENT[Patient / Guardian]
     PROVIDER[Provider / Clinic]
     REVIEWER[Verifier / Clinical Reviewer]
@@ -214,7 +214,7 @@ flowchart LR
 This flow is central to the project because providers supply facts/evidence while the backend derives classification and eligibility. No actor directly selects final `S`, `P`, `H`, or `I` outcomes.
 
 ```mermaid
-flowchart TB
+flowchart TD
     PROVIDER[Provider / Clinic]
     VERIFIER[Verifier]
     CLINICAL[Licensed Clinical Reviewer]
@@ -268,7 +268,7 @@ flowchart TB
 **APIs:** API-CATALOG-001, API-ELIG-001–002, API-BOOKING-001–005.
 
 ```mermaid
-flowchart TB
+flowchart TD
     PATIENT[Patient / Guardian]
     PROVIDER[Provider / Clinic]
 
@@ -328,7 +328,7 @@ flowchart TB
 **APIs:** API-CLINICAL-001–004, API-FINANCE-001.
 
 ```mermaid
-flowchart TB
+flowchart TD
     PROVIDER[Clinician / Clinic]
     PATIENT[Patient / Guardian]
 
@@ -385,7 +385,7 @@ flowchart TB
 This is a record-and-confirmation flow only. The platform never initiates the monetary transaction described by the record.
 
 ```mermaid
-flowchart TB
+flowchart TD
     ASSERTOR[Patient or Authorized Case Party]
     COUNTERPARTY[Authorized Counterparty]
     FINANCE[Scoped Finance / Operations Reviewer]
@@ -439,7 +439,7 @@ flowchart TB
 **APIs:** API-REVIEWS-001–002, API-CLAIMS-001–005.
 
 ```mermaid
-flowchart TB
+flowchart TD
     PATIENT[Patient / Authorized Guardian]
     PROVIDER[Provider / Authorized Appellant]
     REVIEWER[Authorized Human Reviewer]
@@ -552,7 +552,7 @@ No provider-specific presigned, multipart, chunked, or resumable protocol is def
 **Requirements:** FR-POLICY-001–002, FR-OPS-003, FR-ELIG-003–006, NFR-AUDIT-003.
 
 ```mermaid
-flowchart TB
+flowchart TD
     POLICY[Authorized Policy Owner]
     CLINICAL[Licensed Clinical Reviewer]
     OPS[Legal / Operational / Technical Approver]
