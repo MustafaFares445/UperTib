@@ -407,16 +407,25 @@ def validate_requirement_blocks(
         requirements.add(item_id)
         if "**Source:**" not in block:
             validation.fail("REQ_SOURCE", f"{item_id} at docs/PRD.md:{line} has no Source")
-        if "**Acceptance Criteria:**" not in block:
-            validation.fail(
-                "REQ_ACCEPTANCE",
-                f"{item_id} at docs/PRD.md:{line} has no Acceptance Criteria",
-            )
-        elif not re.search(r"(?im)^-\s+Given\b", block):
-            validation.fail(
-                "REQ_ACCEPTANCE_GIVEN",
-                f"{item_id} at docs/PRD.md:{line} has no Given acceptance case",
-            )
+
+        if item_id.startswith("NFR-"):
+            for marker in ("**Metric / Threshold:**", "**Measurement Method:**"):
+                if marker not in block:
+                    validation.fail(
+                        "REQ_NFR_ACCEPTANCE",
+                        f"{item_id} at docs/PRD.md:{line} missing {marker}",
+                    )
+        else:
+            if "**Acceptance Criteria:**" not in block:
+                validation.fail(
+                    "REQ_ACCEPTANCE",
+                    f"{item_id} at docs/PRD.md:{line} has no Acceptance Criteria",
+                )
+            elif not re.search(r"(?im)^-\s+Given\b", block):
+                validation.fail(
+                    "REQ_ACCEPTANCE_GIVEN",
+                    f"{item_id} at docs/PRD.md:{line} has no Given acceptance case",
+                )
 
     validation.metrics["requirements:total"] = len(requirements)
     for prefix in ("FR", "BR", "NFR", "DR"):
