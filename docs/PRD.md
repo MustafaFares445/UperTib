@@ -804,7 +804,7 @@ The verified backend currently implements a narrow service-catalog/governance sl
 - `FR-CATALOG-001`, `FR-POLICY-001`, and `FR-OPS-003` have partial implementation evidence in the current backend and tests.
 - The 26 seeded dental-service records are provisional evaluation records, not clinically approved production services.
 - Booking, complete S/P/H/I eligibility computation, treatment/case management, record-only finance lifecycle, reviews, claims, full permissions, and the remaining platform workflows are not evidenced as complete implementations.
-- Feature/OpenAPI documents are contract/planning evidence and are not proof that routes are implemented (`CONFLICT-CATALOG-001`).
+- Feature/OpenAPI documents remain contract/planning evidence and are not proof that unimplemented routes exist. Historical `CONFLICT-CATALOG-001` is resolved for the implemented `API-CATALOG-001` route/OpenAPI alignment.
 
 ## 11. Assumptions, Questions, and Conflicts
 
@@ -820,7 +820,7 @@ No canonical `ASM-*` is allocated at this point. Do not convert open items below
 | Q-PLATFORM-003 | Major | Concrete OTP, malware-scanning/private-evidence, notification, and other external providers are not selected. Provider contracts must not be invented. |
 | Q-PLATFORM-004 | Minor | Low-thousands expected Aleppo launch population and the 10,000-identity NFR envelope are treated as expected population versus engineering headroom unless superseded. |
 | CONFLICT-PLATFORM-001 | Major | Older feature-plan stack assumptions differ from the verified current backend package constraints; technical documentation must use verified repository facts and preserve older plans only as historical evidence. |
-| CONFLICT-CATALOG-001 | Major | Feature/OpenAPI material is broader than the currently verified route/implementation surface; contracts, requirements, and implementation status must remain separately classified. |
+| CONFLICT-CATALOG-001 | Resolved | Resolved 2026-08-24: the currently verified `GET /api/v1/catalog/service-groups` route and current OpenAPI contract align. Broader planned contracts still remain planning evidence and must not be treated as implemented behavior. |
 | CONFLICT-PLATFORM-002 | Major | Some `.spec` quality statements include architecture-specific wording; final NFR versus DR/TD classification awaits authoritative SRS reconciliation. |
 
 ## 12. Product Rules for Downstream Design and Implementation
