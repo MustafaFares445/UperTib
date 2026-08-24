@@ -187,8 +187,10 @@ Canonical outcomes required by the approved behavior:
 | none | Evaluate | System | Mandatory facts/evidence insufficient | PENDING_EVALUATION | Persist immutable decision + blockers | FR-ELIG-008 |
 | none / PENDING_EVALUATION / NOT_ELIGIBLE / SUSPENDED | Reevaluate | System | All mandatory gates pass | ELIGIBLE | Persist new immutable decision; eligible discovery may include scope | FR-ELIG-002, FR-ELIG-004 |
 | none / PENDING_EVALUATION / ELIGIBLE / SUSPENDED | Reevaluate | System | One or more mandatory gates fail with sufficient evaluable facts | NOT_ELIGIBLE | Persist new immutable decision + controlling reason | FR-ELIG-005 |
-| ELIGIBLE | Influential condition becomes invalid/expired/revoked/unavailable | System | Dependency affects this exact provider/service/branch | SUSPENDED | Persist new decision; block new bookings immediately; existing bookings enter configured review workflow | FR-ELIG-003 |
+| ELIGIBLE | Influential condition becomes invalid/expired/revoked/unavailable | System | Dependency affects this exact provider/service/branch | SUSPENDED | Persist new decision; block new bookings immediately; existing bookings enter a review workflow whose actor/state/deadline/outcome semantics remain unresolved under `Q-BOOKING-002` | FR-ELIG-003 |
 | PENDING_EVALUATION | Missing inputs approved | System | Reevaluation can now run | derived by new evaluation | Old pending decision remains immutable | FR-ELIG-008 |
+
+Existing bookings must not be auto-cancelled, auto-confirmed, or moved to another terminal state merely because the affected provider scope becomes `SUSPENDED`; `Q-BOOKING-002` must be resolved before those review-workflow semantics are implemented as product truth.
 
 ```mermaid
 stateDiagram-v2
@@ -231,12 +233,14 @@ A request is created only after submission-time eligibility/readiness/publicatio
 | REQUESTED | Reject with reason | Authorized provider representative | Within response deadline | REJECTED | Record actor, branch, prior/result state, reason, time | FR-BOOKING-003 |
 | REQUESTED | Propose alternative | Authorized provider representative | Within response deadline; proposal has valid alternative appointment context | ALTERNATIVE_PROPOSED | Record proposal + deadline; notify patient | FR-BOOKING-003 |
 | ALTERNATIVE_PROPOSED | Accept alternative | Patient / authorized guardian | Proposal still within deadline; revalidation and capacity pass | CONFIRMED | Commit selected slot/capacity atomically; audit | FR-BOOKING-003, FR-BOOKING-001 |
-| ALTERNATIVE_PROPOSED | Deadline expires / patient declines | System / patient | Applicable rule reached/decline recorded | terminal according to approved rejection/expiry handling | Preserve proposal history | FR-BOOKING-003 |
+| ALTERNATIVE_PROPOSED | Deadline expires / patient declines | System / patient | Applicable rule reached/decline recorded | **Unresolved — `Q-BOOKING-001`** | Preserve proposal/decline/expiry history; disable/reject later acceptance; do not infer `REJECTED`, `CANCELLED`, or return to `REQUESTED` | FR-BOOKING-003 |
 | REQUESTED / ALTERNATIVE_PROPOSED / CONFIRMED | Cancel | Authorized actor | Actor permission and policy deadline/rules pass | CANCELLED | Release relevant capacity; append booking event; derive downstream consequences | FR-BOOKING-002 |
 | CONFIRMED | Record no-show | Authorized party | Only after policy-defined no-show threshold | NO_SHOW | Append event; derive policy consequences; no money movement | FR-BOOKING-002 |
 | CONFIRMED | Complete appointment/case booking step | Authorized workflow | Required appointment/treatment conditions satisfied | COMPLETED | Enables downstream verified-experience/case behavior as applicable | FR-BOOKING-001, FR-REVIEWS-001 |
 
 The precise provider-response deadline is preserved from the approved requirement: **12 hours or two hours before the appointment, whichever occurs first**.
+
+`Q-BOOKING-001` is intentionally not represented as an invented transition in the diagram below. Until that question is resolved, the implementation may record that the alternative is no longer acceptably actionable and reject a late acceptance, but it must preserve the current authoritative booking/history without fabricating a terminal or rollback state.
 
 ```mermaid
 stateDiagram-v2
@@ -517,16 +521,16 @@ Every sensitive transition must preserve enough information to answer:
 
 The following state vocabularies are not finalized here because current approved sources do not establish enough canonical lifecycle states to do so safely:
 
-- private evidence binary-transfer/upload session lifecycle — blocked by `Q-PLATFORM-003` / `Q-OPS-001` provider/transfer-strategy decisions;
+- private evidence binary-transfer/upload session lifecycle — blocked by `Q-PLATFORM-003` provider/transfer-strategy decisions;
 - notification provider delivery lifecycle beyond provider-neutral queued/attempted/success/failure operational metadata;
 - detailed operational work-item states beyond the requirement that assignment, escalation, completion, reopening, and deadline breach are auditable;
 - provider/clinic verification sub-state vocabulary not explicitly established by the currently readable source set.
 
 Implementation must not invent these as product truth. When their source decisions become authoritative, update `docs/README.md` registry/open items as needed and then update this file.
 
-## 21. Testing Obligations for Phase 3
+## 21. Testing Obligations
 
-`docs/TESTING_STRATEGY.md` must define, for every state machine in this document:
+`docs/TESTING_STRATEGY.md` owns the concrete append-only `TC-*` registry and the current state-machine test coverage. Implementation must preserve and execute coverage for every applicable state machine in this document, including:
 
 - at least one test for each valid transition;
 - at least one rejected invalid transition;
@@ -537,4 +541,4 @@ Implementation must not invent these as product truth. When their source decisio
 - fail-closed tests for medical eligibility/publication transitions;
 - explicit tests that financial transitions never perform platform money movement.
 
-No `TC-*` IDs are allocated in this Phase 2 file; test IDs remain owned by Phase 3 and must be registered through the canonical registry process.
+Concrete test IDs remain owned by `docs/TESTING_STRATEGY.md`, are mapped through `docs/TRACEABILITY_MATRIX.md`, and are synchronized in the canonical `docs/README.md` registry. Future test allocations must update that registry without renumbering existing IDs.
