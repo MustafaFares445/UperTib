@@ -2,7 +2,7 @@
 
 **Phase:** 2 — Conditional Engineering Documentation  
 **Mode:** Existing Repository  
-**Baseline:** 2026-08-23  
+**Baseline:** 2026-08-24  
 **Product source:** `docs/PRD.md`  
 **Technical source:** `docs/SDD.md`  
 **Registry:** `docs/README.md`
@@ -56,7 +56,7 @@ The verified public API surface currently contains only:
 
 `GET /api/v1/catalog/service-groups`
 
-Feature specifications and OpenAPI files are design/contract evidence, not proof of implementation. `CONFLICT-CATALOG-001` tracks this distinction.
+Feature specifications and OpenAPI files are design/contract evidence, not proof of implementation. `CONFLICT-CATALOG-001` is retained as a permanently allocated **Resolved (2026-08-24)** historical conflict because the verified implemented catalog route and current OpenAPI now align; broader planned contracts remain separate from implementation evidence.
 
 ## 4. Current vs V1 Target
 
@@ -402,8 +402,9 @@ Future money-movement capability requires a new authoritative product decision a
 | Q-PLATFORM-003 | Major | OTP/MFA, malware scanning, evidence-storage and notification providers remain unresolved. |
 | Q-PLATFORM-004 | Minor | Launch population and capacity headroom remain separately stated. |
 | CONFLICT-PLATFORM-001 | Major | Historical stack planning cannot override verified current package constraints. |
-| CONFLICT-CATALOG-001 | Major | Intended contracts and implemented routes remain separately classified. |
 | CONFLICT-PLATFORM-002 | Major | Some `.spec` architecture statements await final NFR vs DR/TD classification. |
+
+`CONFLICT-CATALOG-001` remains permanently allocated but is **Resolved (2026-08-24)**: the verified implemented catalog route and current OpenAPI contract align. It is not an open architecture blocker.
 
 ## 26. Implementation Rules
 
