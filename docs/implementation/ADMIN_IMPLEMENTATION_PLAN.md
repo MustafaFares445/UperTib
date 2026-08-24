@@ -12,7 +12,7 @@
 
 ## 1. Purpose
 
-This plan defines the dependency-ordered implementation work required for the UberTib **Admin / Operations / Governance platform**. It is deliberately separated from the later Clinic/Doctor plan and Patient Mobile plan.
+This plan defines the dependency-ordered implementation work required for the UberTib **Admin / Operations / Governance platform**. It is deliberately separated from the companion Clinic/Doctor and Patient Mobile plans so each platform has a focused execution plan while sharing one Laravel business layer.
 
 The Admin platform is not a universal override console. It exists to operate governed workflows: staff access, verification, policy/catalog governance, launch readiness, operational queues, eligibility oversight, booking/case operations, external financial-record review, review integrity, claims/disputes, audit, reporting, privacy operations, and production readiness.
 
@@ -27,12 +27,12 @@ Phase 3 implementation planning is split as follows:
 | Plan | Owns | Does not own |
 |---|---|---|
 | **Admin** — this file | Staff authorization, governance, verification, policy/catalog publication, operational work, review/claim/finance operations, audit/reporting, shared governed backend primitives needed by staff workflows | Clinic-authored treatment workflows, clinic booking response UX, patient mobile UX |
-| **Clinic / Doctor** — next file | Clinic/branch/dentist working surface, activation submissions, availability, booking response, clinician-authored treatment plans/stages/evidence, clinic-side financial assertions | Platform governance, final policy editing, administrative bypasses |
-| **Patient Mobile** — third file | Patient identity/contact verification, discovery, booking, acceptance, case timeline, external financial assertions/confirmation, reviews, claims/appeals through APIs + React Native | Internal verification, raw risk `I`, governance, launch approvals |
+| **Clinic / Doctor** — `docs/implementation/CLINIC_IMPLEMENTATION_PLAN.md` | Clinic/branch/dentist working surface, activation submissions, availability, booking response, clinician-authored treatment plans/stages/evidence, clinic-side financial assertions | Platform governance, final policy editing, administrative bypasses |
+| **Patient Mobile** — `docs/implementation/USER_IMPLEMENTATION_PLAN.md` | Patient identity/contact verification, discovery, booking, acceptance, case timeline, external financial assertions/confirmation, reviews, claims/appeals through APIs + React Native | Internal verification, raw risk `I`, governance, launch approvals |
 
 Shared business rules remain implemented once in Laravel application/domain actions. Filament and API adapters call the same application use cases rather than reproducing eligibility, policy, booking, finance, or claim rules in presentation code.
 
-After the three platform plans exist, `docs/IMPLEMENTATION_PLAN.md` should become the canonical cross-platform orchestration/index and preserve the dependency order across them.
+`docs/IMPLEMENTATION_PLAN.md` is the canonical cross-platform orchestration/index and preserves dependency order across all three detailed plans.
 
 ## 3. Verified Starting Point
 
@@ -130,7 +130,7 @@ These are **functional sections**, not a visual-navigation specification.
 3. Staff cannot directly change S, P, H, I, scientific grade, or final eligibility.
 4. A correction changes the governed source fact/policy and triggers a new decision.
 5. Expiry/revocation/unavailability of an influential input suspends affected scopes and blocks new bookings.
-6. Existing bookings enter the configured review workflow; they are not silently rewritten.
+6. Existing bookings enter a review workflow, but its decision authority, deadlines, state effects, and allowed outcomes remain unresolved under `Q-BOOKING-002`; Admin must not infer automatic cancellation, confirmation, or another terminal outcome.
 
 ### 6.5 Booking operations workflow
 
@@ -139,6 +139,7 @@ These are **functional sections**, not a visual-navigation specification.
 3. Admin cannot force confirmation around failed eligibility/readiness/capacity checks.
 4. Cancellation/no-show events expose actor, reason, policy snapshot, prior state, resulting state, and downstream operational effects.
 5. Exceptions become work items/audited events, not hidden state edits.
+6. Expiry or explicit decline of an alternative makes that proposal non-actionable, but the resulting booking state is not to be invented while `Q-BOOKING-001` is unresolved.
 
 ### 6.6 Financial operations workflow
 
@@ -414,13 +415,14 @@ Do not start a downstream wave by duplicating missing upstream logic in Filament
 **Goal:** Reevaluate only affected scopes when an influential fact/evidence/policy/credential changes and block unsafe new bookings promptly.  
 **Dependencies:** TASK-ELIG-004  
 **Expected Files / Areas:** dependency resolver (Proposed); reevaluation jobs; scheduler hooks; suspension action; queue monitoring; tests  
-**Implementation Notes:** Determine affected provider/service/branch scopes from source ownership metadata. Each reevaluation creates a new decision. Background lag is observable; booking confirmation still revalidates synchronously/currently rather than trusting stale projection.  
+**Implementation Notes:** Determine affected provider/service/branch scopes from source ownership metadata. Each reevaluation creates a new decision. Background lag is observable; booking confirmation still revalidates synchronously/currently rather than trusting stale projection. Existing bookings use the unresolved review workflow under `Q-BOOKING-002`; do not encode an automatic terminal outcome in this task.  
 **Data / Migration Impact:** Reuse decision history; add only necessary dependency/index metadata justified by queries.  
 **API Impact:** Later discovery/booking contracts consume latest safe state.  
-**Tests Required:** credential/evidence expiry; targeted suspension; unaffected scopes unchanged; job retry/idempotency; delay/failed-job visibility.  
+**Tests Required:** credential/evidence expiry; targeted suspension; unaffected scopes unchanged; new bookings blocked; existing bookings not silently cancelled/confirmed; job retry/idempotency; delay/failed-job visibility.  
 **Verification:** `php artisan test --compact tests/Feature/Eligibility/EligibilityRecalculationTest.php`; `composer test:mysql`; `composer test`  
 **Definition of Done:**
 - [ ] Influential invalidation blocks affected new bookings
+- [ ] Existing booking state is not invented while `Q-BOOKING-002` is open
 - [ ] Recalculation does not rewrite history
 - [ ] Unaffected scopes remain unchanged
 - [ ] Failures are observable/retryable
@@ -448,14 +450,15 @@ Do not start a downstream wave by duplicating missing upstream logic in Filament
 **Goal:** Provide scoped operational visibility into booking lifecycle, provider deadlines, alternatives, capacity conflicts, and blocked cases without giving Admin a safety override.  
 **Dependencies:** TASK-ELIG-005, TASK-OPS-002  
 **Expected Files / Areas:** booking models/actions created by shared/Clinic/Patient work as applicable; Admin booking query/resource (Proposed); work-item integration; tests  
-**Implementation Notes:** Read canonical states from `STATE_MACHINES.md`. Admin may inspect/escalate work; provider accept/reject/alternative remains provider-scoped. Never implement “force confirmed” when revalidation fails.  
+**Implementation Notes:** Read canonical states from `STATE_MACHINES.md`. Admin may inspect/escalate work; provider accept/reject/alternative remains provider-scoped. Never implement “force confirmed” when revalidation fails. Alternative expiry/decline becomes non-actionable but does not acquire an invented terminal/rollback state while `Q-BOOKING-001` is open.  
 **Data / Migration Impact:** Booking tables/events follow `ERD.md`; this task primarily adds Admin read/projection integration.  
 **API Impact:** None from Admin surface.  
-**Tests Required:** scoped access; deadline visibility; terminal-state immutability; no force-confirm action; work-item creation on exception.  
+**Tests Required:** scoped access; deadline visibility; terminal-state immutability; expired alternative remains non-actionable without an invented terminal state; no force-confirm action; work-item creation on exception.  
 **Verification:** `php artisan test --compact tests/Feature/Admin/BookingOperationsTest.php`; `composer test:mysql`; `composer test`  
 **Definition of Done:**
 - [ ] Operations can inspect actionable booking state
 - [ ] Safety-critical checks cannot be bypassed
+- [ ] Unresolved alternative outcome is not fabricated
 - [ ] Exceptions route to work instead of hidden edits
 - [ ] Relevant tests pass
 
@@ -748,12 +751,14 @@ These items must remain visible during implementation:
 | `Q-PLATFORM-001` | Blocker | Cannot claim full SRS-v1.1 reconciliation until readable authoritative text is available. Work continues only under the approved `.spec` baseline. |
 | `Q-CATALOG-001` | Major | 26 provisional catalog records cannot be declared production medically ready without licensed clinical approval. |
 | `Q-ELIG-001` | Major | Eligibility framework may be built, but production S/P/H/I formulas/weights/thresholds/defaults require licensed clinical approval. |
+| `Q-BOOKING-001` | Major | Alternative expiry/decline can make the proposal non-actionable, but the resulting booking state is unresolved; Admin must not infer a terminal or rollback state. |
+| `Q-BOOKING-002` | Major | Existing-booking review after eligibility suspension lacks approved decision authority, deadline, state-effect, and outcome semantics; Admin must not auto-cancel/confirm. |
 | `Q-PLATFORM-002` | Major | Retention/deletion policy values require legal/compliance validation; mechanism can be implemented without falsely finalizing values. |
-| `Q-OPS-001` | Major | Hosting/deployment topology remains provider-neutral; do not hardwire infrastructure products into Admin code. |
+| `Q-OPS-001` | Major | MySQL is the required production relational engine; hosting/provider/topology, managed-vs-self-hosted deployment, HA/PITR implementation, cache/queue/storage/logging and release infrastructure remain unresolved. |
 | `Q-PLATFORM-003` | Major | OTP/MFA, malware scan, private storage, and notification providers are unresolved; use interfaces/fakes only. |
 | `CONFLICT-PLATFORM-001` | Major | Use verified current Laravel/PHP/package stack, not historical stack assumptions. |
 
-`CONFLICT-CATALOG-001` should be retained as an allocated historical conflict ID but reviewed for resolved status because the currently verified route and current OpenAPI contract align for the implemented catalog endpoint.
+`CONFLICT-CATALOG-001` remains permanently allocated and is **Resolved (2026-08-24)** because the currently verified catalog route and current OpenAPI contract align for the implemented endpoint.
 
 ## 12. Admin Delivery Gates
 
@@ -796,20 +801,15 @@ The Admin plan is implementation-complete only when all applicable gates below a
 - production build passes if Admin assets changed;
 - no unrelated behavior or API contract is changed.
 
-## 13. Test-ID Note
+## 13. Test-ID Status
 
-`docs/TESTING_STRATEGY.md` currently intentionally allocates no placeholder `TC-*` IDs until executable test cases are concretely registered. For that reason this plan names the exact required test areas/files rather than referencing nonexistent TC IDs.
+`docs/TESTING_STRATEGY.md` owns the current append-only registry of **82 concrete `TC-*` IDs**. `docs/TRACEABILITY_MATRIX.md` maps the 65 registered requirements to implementation tasks and test cases, and `docs/README.md` is synchronized with the current TASK/TC maxima.
 
-Before `docs/TRACEABILITY_MATRIX.md` and `docs/scripts/validate_docs.py` are finalized, Phase 3 must perform a registry synchronization pass that:
-
-1. allocates concrete `TC-*` IDs for implemented/planned executable cases;
-2. maps them to the tasks in all three platform plans;
-3. updates `docs/README.md` highest allocated `TC` and `TASK` values without renumbering any existing IDs;
-4. makes `docs/IMPLEMENTATION_PLAN.md` the canonical cross-platform task index.
+The `Tests Required` and `Verification` fields in this plan remain task-level implementation guidance; canonical test IDs and cross-requirement coverage stay owned by `docs/TESTING_STRATEGY.md` and `docs/TRACEABILITY_MATRIX.md`. Future test allocations must update `docs/README.md` without renumbering existing IDs. `docs/scripts/validate_docs.py` and the documentation CI validate the mechanical registry/coverage constraints.
 
 ## 14. Task Allocation Created by This File
 
-This file allocates the following `TASK-*` identifiers append-only:
+This file owns the following append-only `TASK-*` identifiers:
 
 - `TASK-PLATFORM-001` through `TASK-PLATFORM-004`;
 - `TASK-IDENTITY-001` through `TASK-IDENTITY-003`;
@@ -824,12 +824,13 @@ This file allocates the following `TASK-*` identifiers append-only:
 - `TASK-REVIEWS-001`;
 - `TASK-CLAIMS-001` through `TASK-CLAIMS-004`.
 
-Later Clinic and Patient implementation plans must continue each domain's task numbering from these maxima and must not reuse these IDs.
+These IDs are synchronized in `docs/README.md`. The Clinic and Patient plans continue each domain's numbering from the applicable maxima; future task additions remain append-only and must not reuse or renumber existing IDs.
 
-## 15. Next Platform Plan
+## 15. Documentation Integration Status
 
-The next Phase 3 file should be:
+The companion plans now exist at:
 
-`docs/implementation/CLINIC_IMPLEMENTATION_PLAN.md`
+- `docs/implementation/CLINIC_IMPLEMENTATION_PLAN.md`;
+- `docs/implementation/USER_IMPLEMENTATION_PLAN.md`.
 
-It should begin from the shared foundations in this Admin plan and cover clinic/branch onboarding, doctor/staff scope, service activation submission, actual service pricing, availability, booking response, treatment-plan authoring, accepted amendments, treatment stages/evidence, follow-up, clinic-side external financial records, and clinic participation in claims/appeals without duplicating Admin governance rules.
+`docs/IMPLEMENTATION_PLAN.md` is the canonical cross-platform orchestration/index across all three detailed platform plans. This file remains the detailed owner of Admin task bodies and Admin-specific dependency guidance; future changes must keep the master plan, traceability matrix, testing strategy, and README registry synchronized.
