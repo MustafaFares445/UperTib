@@ -5,51 +5,47 @@
 **Baseline:** 2026-08-24  
 **Product source:** `docs/PRD.md`  
 **Technical sources:** `docs/SDD.md`, `docs/architecture/*`, `docs/api/*`, `docs/database/*`, `docs/domain/*`, `docs/diagrams/SEQUENCE_DIAGRAMS.md`, `docs/ops/*`  
+**Cross-platform behavior owner:** `docs/domain/CROSS_PLATFORM_BEHAVIOR.md`  
 **Requirement sources:** `.spec/functional-requirements/` and `.spec/non-functional-requirements/`  
+**Implementation owner:** `docs/IMPLEMENTATION_PLAN.md` and `docs/implementation/*`  
+**Coverage owner:** `docs/TRACEABILITY_MATRIX.md`  
 **Registry:** `docs/README.md`
 
 ## 1. Purpose
 
-This document defines the verification strategy for UberTib V1. It owns how approved functional and non-functional requirements are proved through automated tests, integration tests, database tests, concurrency tests, security checks, operational verification, and governed manual acceptance where automation cannot establish clinical/legal approval.
+This document defines how UberTib V1 requirements are verified and allocates the canonical concrete `TC-*` test-case identifiers used by Phase 3 traceability.
 
-The strategy distinguishes:
+It distinguishes:
 
-- **Existing verification** — tests and quality gates verified in the current Laravel repository;
-- **Required verification** — tests necessary to prove the approved V1 behavior but not yet implemented;
-- **Governed acceptance** — evidence that requires an authorized human clinical, legal, operational, or product decision rather than a software assertion.
+- **Existing** — executable verification already confirmed in the repository;
+- **Partial** — an existing test proves part of the listed case but V1 assertions remain to be added;
+- **Planned** — the acceptance case is concretely specified here but the executable test/artifact is not implemented yet;
+- **Governed acceptance** — licensed clinical, legal, operational, or other accountable human evidence that software tests cannot replace.
 
-This document does not define UI layouts or UX acceptance screens. UI-specific test cases remain downstream of the separate UX pipeline.
+A `TC-*` marked Planned is not evidence that the application already passes it. It is a concrete implementation acceptance contract that must become executable or otherwise produce the specified verification artifact before the owning requirement is considered released.
 
-`Q-PLATFORM-001` remains a Blocker for claiming complete end-to-end reconciliation with readable authoritative SRS v1.1 text. `Q-CATALOG-001` and `Q-ELIG-001` prevent automated tests from being treated as licensed clinical approval of the provisional service catalog or production S/P/H/I policy.
+`Q-PLATFORM-001` remains a Blocker for claiming complete reconciliation against readable authoritative SRS v1.1. `Q-CATALOG-001` and `Q-ELIG-001` prevent software tests from being treated as licensed clinical approval of the provisional catalog or production S/P/H/I policy.
 
 ## 2. Verification Principles
 
-1. Every approved `FR-*` and `NFR-*` must have an explicit verification method before production release.
-2. Safety-critical invariants are tested at more than one layer when feasible: domain behavior, persistence constraints, API behavior, and integration/concurrency behavior.
-3. Tests verify outcomes and invariants, not implementation trivia.
-4. External-provider behavior is isolated behind fakes/contracts until a concrete provider is approved.
-5. Sensitive workflows fail closed when required evidence, authorization, readiness, or policy data is missing.
+1. Every approved `FR-*` and `NFR-*` must trace to one or more concrete `TC-*` cases or an explicitly identified governed acceptance requirement.
+2. Safety-critical invariants are verified at more than one layer when feasible: domain, persistence, API/adapter, concurrency, and cross-platform projection.
+3. Laravel is the authoritative business-state source. Patient, Clinic, and Admin tests must not legitimize independent platform copies of shared records.
+4. Tests verify outcomes and invariants rather than framework implementation trivia.
+5. Sensitive workflows fail closed when authorization, evidence, policy, readiness, or current state is missing or invalid.
 6. Historical snapshots/events are tested for immutability and reproducibility.
-7. Financial tests prove **recording of external financial facts only** and explicitly prove absence of platform money movement.
-8. S/P/H/I and eligibility tests feed source facts and policy versions into the system; tests never legitimize a direct final-outcome input path.
-9. `PENDING_EVALUATION` is tested as a distinct state and never treated as scientific grade `F`.
-10. Race conditions, retries, duplicated requests, expired deadlines, revoked grants, and stale state are first-class test scenarios.
-11. Production database behavior must be tested on the selected production engine in addition to the fast SQLite suite.
-12. A passing automated suite does not override unresolved clinical, legal, infrastructure, or provider approval questions.
+7. Financial verification proves both the record-only workflow and the absence of payment/custody/money-movement behavior.
+8. S/P/H/I tests provide source facts and policy versions; they never directly input final classifications as an accepted business path.
+9. `PENDING_EVALUATION` is distinct from scientific grade `F`.
+10. Race conditions, retries, duplicate commands, stale state, expired deadlines, revoked grants, and failed post-commit notifications are first-class scenarios.
+11. Production-database/concurrency behavior must be verified on the selected production relational engine, not only SQLite in-memory.
+12. A passing automated suite never substitutes for unresolved clinical/legal/accountable approval.
 
-## 3. Verified Current Test Toolchain
+## 3. Verified Current Toolchain and Quality Gates
 
-The backend currently uses:
+The backend currently uses Pest `^4.7`, Pest Laravel `^4.1`, PHPUnit `^12.5.12`, Pest type coverage, Laravel Pint, Rector Laravel, Larastan/PHPStan, and Roave Security Advisories.
 
-- Pest `^4.7` with `pestphp/pest-plugin-laravel ^4.1`;
-- PHPUnit `^12.5.12` as the underlying runner;
-- Pest type coverage plugin `^4.0`;
-- Laravel Pint;
-- Rector Laravel;
-- Larastan/PHPStan;
-- Roave Security Advisories at dependency-resolution time.
-
-Current Composer verification scripts are:
+Verified Composer commands:
 
 ```text
 composer test:lint
@@ -61,666 +57,420 @@ composer test:mysql
 composer test
 ```
 
-Verified behavior of those scripts:
+Current behavior:
 
-- `composer test:lint` runs Pint in check mode and Rector dry-run;
-- `composer test:types` runs PHPStan;
-- `composer test:type-coverage` enforces Pest type coverage at `--min=100`;
-- `composer test:coverage` runs Pest with line coverage `--min=100`;
-- `composer test:unit` runs the Laravel/Pest suite in parallel with two processes;
-- `composer test:mysql` runs the suite against `phpunit.mysql.xml`;
-- `composer test` aggregates lint, static analysis, type coverage, and line coverage; it does **not** replace the explicit MySQL verification gate.
+- `composer test:lint` — Pint check + Rector dry-run;
+- `composer test:types` — PHPStan;
+- `composer test:type-coverage` — configured minimum 100%;
+- `composer test:coverage` — configured line coverage minimum 100%;
+- `composer test:unit` — Laravel/Pest in parallel with two processes;
+- `composer test:mysql` — same suites against `phpunit.mysql.xml`;
+- `composer test` — aggregate lint/types/type/line coverage, but does not replace `test:mysql`.
 
-The configured 100% line/type thresholds are repository quality gates. This strategy does not lower them to accommodate future V1 implementation.
+Future work must preserve these existing repository gates rather than lowering them to accommodate V1 implementation.
 
-## 4. Current Test Environments
+## 4. Verification Environments
 
-### 4.1 Default test environment
+### 4.1 Fast deterministic environment
 
-`phpunit.xml` currently uses:
+Current `phpunit.xml` uses `APP_ENV=testing`, SQLite in-memory, array cache/session, synchronous queue, array mail, reduced bcrypt rounds, and disables production observability packages.
 
-- `APP_ENV=testing`;
-- SQLite in-memory database;
-- array cache;
-- array session;
-- synchronous queue;
-- array mail transport;
-- reduced bcrypt rounds for tests;
-- Pulse/Telescope/Nightwatch disabled.
-
-This environment is appropriate for fast deterministic application tests but cannot prove every production database or asynchronous behavior.
+Use this for fast Unit/Feature/contract behavior where database-engine concurrency semantics are not the assertion.
 
 ### 4.2 MySQL compatibility environment
 
-`phpunit.mysql.xml` runs the same Unit/Feature suites against:
+Current `phpunit.mysql.xml` uses the MySQL test connection (`ubertib_test`). Use it for schema, constraints, locking, query behavior, uniqueness, and persistence cases that may differ from SQLite.
 
-```text
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=ubertib_test
-DB_USERNAME=root
-```
+### 4.3 Required production-like verification environments
 
-Production credentials/topology must not reuse these test defaults.
+Before V1 release the project also requires:
 
-The MySQL suite is required because current catalog/governance integrity logic includes database-specific behavior and future booking/concurrency constraints must be proven on a production-like relational engine.
+- production-engine integration with representative indexes/constraints;
+- asynchronous queue verification rather than only `sync`;
+- private evidence/storage + malware-adapter fake or approved sandbox;
+- load/concurrency environment isolated from production;
+- backup/restore environment;
+- React Native test/build environment after `TASK-PLATFORM-008` verifies the actual patient-client repository and commands.
 
-### 4.3 Required additional verification environments
-
-Before production, the project also needs:
-
-- a production-engine integration environment with representative indexes/constraints;
-- an asynchronous queue environment rather than only `QUEUE_CONNECTION=sync`;
-- a private-storage/evidence test environment with provider fakes or approved sandbox services;
-- a load/concurrency environment isolated from production;
-- a restore-test environment for backup recovery exercises.
-
-Concrete infrastructure remains governed by `Q-OPS-001` and `Q-PLATFORM-003`.
+`Q-OPS-001` and `Q-PLATFORM-003` still block final provider/topology-specific suites.
 
 ## 5. Verified Existing Automated Coverage
 
-The repository currently contains a narrow but meaningful catalog/governance test slice.
-
-Verified test files include:
+Verified current test files include:
 
 - `tests/Feature/Api/V1/Catalog/ListServiceGroupsTest.php`;
 - `tests/Feature/Models/CatalogIdentityIntegrityTest.php`;
 - `tests/Feature/Models/ClinicalApprovalIntegrityTest.php`;
 - `tests/Feature/Models/ServiceDefinitionTest.php`;
 - `tests/Feature/Models/UserTest.php`;
-- `tests/Unit/ArchTest.php`;
-- framework example tests that are not substantive UberTib requirement coverage.
-
-Existing coverage already exercises material behavior including:
-
-- evaluation catalog structure and the four evaluation groups / 26 provisional services;
-- production filtering and launch-readiness behavior;
-- service-definition version lifecycle and immutability;
-- catalog identity integrity;
-- clinical launch approval integrity;
-- highest applicable version selection without unsafe fallback;
-- architectural conventions represented by the current architecture test.
-
-This is **partial implementation coverage**, not V1 acceptance coverage. Identity/OTP, scoped permissions, provider activation, S/P/H/I, booking, cases, finance, reviews, claims, operations, evidence security, and most NFRs remain unimplemented or unverified end to end.
-
-## 6. Test Layers
-
-### 6.1 Unit/domain tests
-
-Use for deterministic pure behavior such as:
-
-- policy evaluation helpers;
-- classification calculations after clinically approved formulas exist;
-- deadline calculations;
-- state-transition guards;
-- normalization/value objects;
-- safe error mapping;
-- immutable snapshot hashing/normalization;
-- permission scope predicates where meaningful outside persistence.
-
-Unit tests must not mock away the invariant being tested.
-
-### 6.2 Feature/application tests
-
-Use Laravel feature tests for:
-
-- actions/queries;
-- authorization policies;
-- transaction behavior;
-- Eloquent/database invariants;
-- workflow transitions;
-- audit creation;
-- queue dispatch boundaries;
-- evidence metadata lifecycle;
-- provider/service/branch scoping.
-
-### 6.3 API contract tests
-
-Every implemented `API-*` contract must verify:
-
-- method and route;
-- authentication requirement;
-- authorization/scope behavior;
-- validation failures;
-- success payload shape;
-- stable public identifiers;
-- state-dependent conflict behavior;
-- stable `ERR-*` error code where the target error contract applies;
-- privacy-safe fields;
-- idempotency where required;
-- no accidental exposure of internal `I`, private evidence paths, reviewer credentials, OTP material, or protected payloads.
-
-The currently implemented `API-CATALOG-001` remains the baseline example but its 429/500 responses still require future normalization to the target stable error envelope documented in `ERROR_CATALOG.md`.
-
-### 6.4 Persistence/constraint tests
-
-Required for invariants that cannot safely depend only on request validation:
-
-- stable catalog identity immutability;
-- version uniqueness/effective-period rules;
-- append-only records;
-- foreign keys;
-- active/effective uniqueness rules;
-- one verified review per eligible experience;
-- idempotency key uniqueness;
-- evidence binding integrity;
-- booking capacity/concurrency protection;
-- supersession chains;
-- historical snapshot immutability.
-
-Run these tests on SQLite where supported and on the chosen production relational engine.
-
-### 6.5 Integration/provider-contract tests
-
-Required only after a concrete provider exists. Until then use application adapters/fakes for:
-
-- OTP delivery;
-- privileged MFA;
-- malware scanning;
-- notification delivery;
-- private object storage where externalized.
-
-No payment-provider integration tests belong to V1.
-
-### 6.6 End-to-end workflow tests
-
-Backend/API-level E2E workflows must verify complete business paths across aggregates, for example:
-
-- provider facts → verification → eligibility decision → patient discovery → booking;
-- booking → treatment plan → acceptance → immutable snapshots → treatment-stage evidence;
-- external payment report → counterparty confirmation/dispute → financial timeline;
-- eligible case → verified review → review appeal;
-- refund/protection claim → evidence → human decision → external-action record → appeal.
-
-UI automation is not defined by this engineering document because authoritative business UI has not yet been produced.
-
-## 7. Requirement Traceability Rule
-
-The final `docs/TRACEABILITY_MATRIX.md` must map every approved requirement to at least one verification method.
-
-Allowed verification methods are:
-
-- automated unit test;
-- automated feature/application test;
-- automated API contract test;
-- database/constraint test;
-- concurrency/load test;
-- security test;
-- recovery/operations exercise;
-- accessibility/localization verification;
-- governed human acceptance where software alone cannot establish approval.
-
-This strategy intentionally allocates **no new `TC-*` identifiers**. Executable test-case IDs should be allocated only when concrete cases are introduced into the authoritative registry and implementation/traceability artifacts, avoiding placeholder IDs that imply nonexistent tests.
-
-## 8. Identity and Authorization Verification
-
-**Requirements:** FR-IDENTITY-001–003; NFR-IDENTITY-001–002.
-
-Required tests include:
-
-- OTP generation is six digits without persisting the raw code;
-- OTP expires at five minutes;
-- single-use consumption;
-- maximum five verification attempts;
-- maximum three sends per 15-minute phone/account/IP scope;
-- resend invalidates prior challenge without resetting accumulated failures;
-- equivalent error behavior avoids unnecessary account/identity enumeration;
-- privileged roles cannot satisfy the required second factor with SMS alone;
-- deny-by-default authorization;
-- role + organization + branch + workflow + subject-matter + purpose + time scope combinations;
-- changing route/request identifiers cannot escape scope isolation;
-- revoked/expired grants stop access immediately;
-- guardian actions retain guardian actor attribution and patient ownership remains unchanged;
-- administrator/coarse role does not become universal domain bypass;
-- protected evidence and case data use fresh authorization checks.
-
-Authorization tests should be table-driven across actor/resource/action combinations derived from `PERMISSIONS_MATRIX.md`.
-
-## 9. Catalog and Launch Governance Verification
-
-**Requirements:** FR-CATALOG-001, FR-POLICY-001–002, FR-OPS-003.
-
-Existing tests are extended to prove:
-
-- only visible/eligible service definitions appear for the selected catalog mode;
-- evaluation content cannot leak into production mode;
-- production publication fails without every required current gate;
-- medical launch approval requires a current verified clinical credential;
-- approval content hash must match the definition being published;
-- expired/revoked gate or credential causes readiness to fail closed;
-- higher version publication supersedes the earlier active version atomically;
-- historical effective versions remain reproducible;
-- active/retired/superseded definitions cannot have governed content silently rewritten;
-- V1 funded protection remains rejected;
-- launch status cannot be inferred from infrastructure availability alone.
-
-The 26 provisional records may be used as evaluation fixtures but automated tests must label them evaluation data. Test success does not satisfy `Q-CATALOG-001`.
-
-## 10. Eligibility and S/P/H/I Verification
-
-**Requirements:** FR-ELIG-001–017, FR-POLICY-002, NFR-AUDIT-003.
-
-After licensed clinical approval supplies production formulas/policies, tests must cover:
-
-- one decision scoped to provider + service + branch + policy context;
-- approved source facts/evidence are the only accepted decision inputs;
-- no API/admin/action path accepts a manually supplied final eligibility outcome;
-- no user path directly sets S, P, H, or I;
-- missing/expired mandatory inputs create `PENDING_EVALUATION`;
-- `PENDING_EVALUATION` is never grade `F`;
-- grade-cap/confidence behavior exactly matches the approved versioned policy;
-- P derives from actual price + effective versioned price bands;
-- H and I derive from governed policies;
-- most-restrictive gate determines final eligibility;
-- changing an influential approved fact creates a **new** decision rather than rewriting history;
-- invalid/revoked/expired dependency immediately blocks new bookings for the affected scope;
-- unaffected provider/service/branch scopes do not become suspended;
-- patient-facing explanations omit raw internal risk and protected evidence;
-- historical decision reproduction yields the same result from captured policy/input snapshot.
-
-Property-based or parameterized tests are strongly preferred for approved formula boundary values once `Q-ELIG-001` is resolved.
-
-## 11. Booking Verification
-
-**Requirements:** FR-BOOKING-001–003, NFR-AUDIT-002.
-
-Required tests cover:
-
-- request-time revalidation of service publication, branch readiness, provider eligibility, and slot capacity;
-- confirmation-time revalidation repeats safety checks;
-- provider accept/reject/alternative actions require exact provider/branch scope;
-- rejection records a reason;
-- provider response expires at 12 hours or two hours before the appointment, whichever occurs first;
-- alternative proposal requires patient/authorized guardian acceptance;
-- stale alternative cannot confirm;
-- cancellation validates actor + current state + versioned policy;
-- no-show cannot be recorded before the policy threshold;
-- financial/review consequences are derived as records/events rather than money movement or historical rewrites;
-- invalid transitions map to the documented booking errors;
-- repeated idempotent commands return the original committed outcome.
-
-### 11.1 Mandatory concurrency test
-
-`NFR-PLATFORM-001` requires a test where **100 concurrent booking attempts cannot overbook the configured slot capacity**.
-
-The production-engine concurrency test must:
-
-1. create a slot with known capacity;
-2. issue 100 independent competing confirmation attempts;
-3. synchronize their critical section closely enough to exercise contention;
-4. assert confirmed bookings never exceed capacity;
-5. assert losing requests receive deterministic conflict behavior rather than silent success;
-6. verify no duplicate capacity reservation/event from idempotent retries;
-7. inspect final authoritative rows rather than relying only on API responses.
-
-SQLite in-memory results are not sufficient evidence for this concurrency requirement.
-
-## 12. Clinical Case and Treatment Verification
-
-**Requirements:** FR-CLINICAL-001–005, FR-FINANCE-001.
-
-Required tests include:
-
-- only authorized treating clinicians can author the clinical plan;
-- system output never represents an autonomous diagnosis/prescription/treatment plan;
-- incomplete service/stage/price/policy content cannot be accepted;
-- acceptance creates immutable treatment and financial snapshots in one committed workflow;
-- later amendment creates a new version/snapshot and preserves prior accepted history;
-- stage completion fails when mandatory evidence/facts/acknowledgments are missing or invalid;
-- stage completion records actor/time/evidence context;
-- reopening/correction preserves prior completion event/history;
-- follow-up scheduling/rescheduling preserves traceability;
-- unified case timeline reconstructs ordered booking, clinical, financial, review, claim, and operational facts without mutating source records.
-
-## 13. External Financial Record Verification
-
-**Requirements:** FR-FINANCE-001–007, NFR-FINANCE-001, NFR-AUDIT-003.
-
-Financial verification has two equally important goals: prove the record workflow and prove the absence of platform money movement.
-
-Required tests:
-
-- every financial record references the correct case and immutable financial-terms snapshot;
-- external payment report begins unconfirmed;
-- only an authorized counterparty/scoped reviewer can confirm or dispute;
-- confirmation/dispute appends a new event and never rewrites the original assertion;
-- refund/compensation external execution confirmation is append-only;
-- corrections/reversals are later events linked to earlier events;
-- derived financial state is reproducible from ordered event history;
-- duplicate idempotency key creates no duplicate financial event;
-- no gateway payment intent, capture, transfer, wallet balance, payout, settlement, escrow, custody, or platform refund execution occurs;
-- forbidden financial mode/funded-protection configuration fails closed;
-- financial client responses/logs do not expose unnecessary sensitive details.
-
-A V1 release must include a negative architecture/security test that detects introduction of prohibited payment/custody behavior or dependencies where practical.
-
-## 14. Review and Appeal Verification
-
-**Requirements:** FR-REVIEWS-001–002.
-
-Required tests:
-
-- review accepted only after eligible verified completion;
-- only linked patient or currently authorized guardian may submit;
-- review-window deadline uses the governing policy snapshot;
-- a second active review for the same eligible experience is rejected;
-- verified-experience link cannot be detached silently;
-- review rating `R` stays separate from S/P/H/I and cannot alter scientific eligibility;
-- review appeal records appellant, grounds, evidence, policy, and time;
-- only authorized integrity reviewer may issue publication/eligibility compliance decision;
-- appeal does not directly edit rating content or scientific classification;
-- original review/appeal history remains auditable.
-
-## 15. Claims, Refund Requests, and Sensitive Human Review
-
-**Requirements:** FR-CLAIMS-001–005.
-
-Required tests:
-
-- refund request validates case, accepted terms, deadline, claimant, amount/currency, and evidence requirements;
-- protection claim cannot be submitted without applicable protection entitlement in the immutable accepted snapshot;
-- claim policy/evidence/deadline rules are captured from the correct historical version;
-- missing/rejected/expired/accepted evidence states are distinguishable;
-- deadline pause/extension creates an event and never erases original deadline;
-- sensitive decision requires an appropriately scoped human reviewer;
-- separation-of-duties rule rejects a conflicted reviewer where governing policy requires independence;
-- automated components may prepare facts/routing but cannot issue the final sensitive decision;
-- decision records findings, reasons, evidence references, policy version, actor, time, and required external action;
-- approval of a refund/compensation creates an entitlement/amount-due record only and does not execute money movement;
-- appeal references and preserves original decision;
-- appeal deadline and reviewer independence are enforced;
-- closed claim remains reasoned/reproducible.
-
-## 16. Operations, Audit, and Idempotency Verification
-
-**Requirements:** FR-OPS-001–003, FR-AUDIT-001–003, NFR-AUDIT-001–003, NFR-PLATFORM-008.
-
-Required tests include:
-
-- sensitive action audit contains actor, effective scope/role, action, resource, outcome, reason where required, correlation ID, and time;
-- audit safe metadata excludes OTP, credentials, signed URLs, raw private evidence, and unnecessary clinical/financial payloads;
-- append-only audit/integrity records cannot be silently updated/deleted;
-- idempotency scope includes actor/operation/resource and request fingerprint;
-- same key + same request returns original committed result;
-- same key + different request fingerprint returns `ERR-AUDIT-001`;
-- failed pre-commit request does not masquerade as a committed idempotent result;
-- queue/work item creation happens after authoritative transaction commit for flows that depend on committed state;
-- retried jobs reload authoritative state and do not duplicate business outcomes;
-- stale/failed work items remain operationally visible;
-- integrity mismatch records exception rather than silently repairing history.
-
-## 17. Private Evidence and File Security Verification
-
-**Requirements:** NFR-PLATFORM-003 plus evidence-bearing FRs.
-
-Required automated/security tests:
-
-- accepted extensions: PDF/JPEG/PNG only where the requirement applies;
-- size limits: 10 MB image, 25 MB PDF;
-- maximum 10 files per action;
-- extension, magic bytes, MIME, and file decode/parse validation;
-- opaque/UUID object identity;
-- SHA-256 captured;
-- object remains quarantined until scan success;
-- failed/pending scan cannot satisfy business evidence requirements;
-- private evidence never uses the public disk/public storage URL;
-- direct object/path guessing cannot bypass authorization;
-- short-lived signed access is no longer valid after the approved maximum lifetime;
-- download authorization is re-evaluated and audited;
-- evidence deletion respects retention and legal hold;
-- logs/errors do not emit object secrets, signed URLs, or protected file content.
-
-Until a malware-scanning/storage provider is approved, provider interaction is tested through fakes and local contract semantics rather than invented vendor behavior.
-
-## 18. Privacy, Retention, and Legal Hold Verification
-
-**Requirement:** NFR-PLATFORM-004.
-
-Retention periods are provisional under `Q-PLATFORM-002`, so tests should separate **mechanism correctness** from final legal-period acceptance.
-
-Mechanism tests must prove:
-
-- retention clock resolves from the captured governing rule;
-- legal hold prevents destruction;
-- release of hold does not automatically destroy data before normal eligibility checks;
-- abandoned/unverified/temp cleanup does not remove referenced historical evidence;
-- destruction is auditable without preserving the protected payload itself;
-- deletion jobs are retry-safe;
-- immutable/audit obligations are reconciled with approved deletion/anonymization policy rather than silently cascading historical records.
-
-Final numeric legal periods remain governed acceptance until `Q-PLATFORM-002` is resolved.
-
-## 19. API Error and Privacy Verification
-
-**Owner:** `docs/api/ERROR_CATALOG.md`.
-
-For each implemented error:
-
-- stable code matches the catalog;
-- HTTP status matches the catalog;
-- Arabic-first safe message is available where user-facing;
-- validation `details` do not expose internal/private values;
-- `correlation_id` is available for operational support where target envelope applies;
-- server failures do not return stack traces/config/secrets;
-- authorization failures do not disclose a hidden resource unnecessarily;
-- rate-limit behavior is deterministic enough for client recovery;
-- retryability follows the documented recovery model.
-
-Contract tests should compare canonical error codes, not fragile full-message wording unless wording itself is an approved requirement.
-
-## 20. Performance and Scale Verification
-
-**Requirement:** NFR-PLATFORM-001.
-
-### 20.1 Approved targets
+- `tests/Unit/ArchTest.php`.
+
+Current substantive coverage is concentrated on evaluation catalog structure, production visibility/readiness, service-definition lifecycle/version immutability, catalog identity integrity, clinical launch approval integrity, and architecture conventions.
+
+This remains partial V1 implementation coverage. Identity/OTP, scoped authorization, provider activation, full eligibility, booking, case/treatment, finance, reviews, claims, evidence security, operations, mobile, and most NFR verification are still Planned.
+
+## 6. Verification Layers
+
+| Layer | Main use |
+|---|---|
+| Unit/domain | deterministic policy calculations, deadlines, state guards, value objects, snapshot/hash logic |
+| Feature/application | actions, authorization, transactions, Eloquent invariants, jobs, audit, workflow transitions |
+| API contract | method/path/auth, payload shape, stable `ERR-*`, privacy fields, idempotency, safe projections |
+| Filament adapter | Admin/Clinic route isolation, scoped resource/action access, shared-domain action invocation |
+| Persistence/constraint | uniqueness, append-only rules, FK/integrity, version/effective intervals, capacity locks |
+| Cross-platform | one authoritative mutation propagates correctly to Patient/Clinic/Admin projections |
+| Integration/provider | OTP/MFA/malware/notification/storage adapters after provider approval; fakes before approval |
+| Load/concurrency | latency/RPS, 100-way booking contention, queue behavior, degraded dependency behavior |
+| Recovery/operations | RPO/RTO restore, alerting, queue/work backlog, correlation, backup evidence |
+| Client/accessibility | React Native Arabic/RTL, accessibility, network recovery after client bootstrap |
+| Governed human acceptance | clinical/legal/accountable approval that cannot be inferred from software tests |
+
+## 7. `TC-*` Identifier Rules
+
+1. IDs are `TC-DOMAIN-NNN` and append-only.
+2. A case may verify several requirements when one executable scenario genuinely proves the shared invariant.
+3. A requirement may require several cases across layers.
+4. `Existing`/`Partial` cases may reference current test files; `Planned` cases define the executable target without pretending the file exists.
+5. Mobile execution paths/commands remain `TBD after TASK-PLATFORM-008` until the actual React Native project is verified.
+6. Governed approval is referenced beside the relevant TCs/open questions; it is not faked as an automated pass.
+7. These allocations must be synchronized into `docs/README.md` in the next registry-maintenance step without renumbering.
+
+---
+
+# 8. Identity Test Cases
+
+| ID | Status | Requirements | Layer / platforms | Concrete acceptance scenario |
+|---|---|---|---|---|
+| `TC-IDENTITY-001` | Planned | FR-IDENTITY-002, NFR-IDENTITY-002 | API + DB · Patient | Request OTP: generate exactly six digits, persist hash only, expose no raw OTP, five-minute expiry metadata, safe challenge response. |
+| `TC-IDENTITY-002` | Planned | FR-IDENTITY-002, NFR-IDENTITY-002 | API + time control · Patient | OTP verification enforces single use, max five attempts, invalid/expired/used behavior, and at-most-one patient activation under concurrent success. |
+| `TC-IDENTITY-003` | Planned | FR-IDENTITY-002, NFR-IDENTITY-002 | API + rate limit · Patient | Max three sends/15 minutes across phone/account/IP scope; resend invalidates previous challenge without resetting accumulated abuse protection. |
+| `TC-IDENTITY-004` | Planned | FR-IDENTITY-001, NFR-IDENTITY-001 | Authorization matrix · Admin/Clinic/API | Deny by default; role alone cannot bypass organization/branch/workflow/subject/purpose/time scope; route/record identifier tampering cannot escape scope. |
+| `TC-IDENTITY-005` | Planned | FR-IDENTITY-001, NFR-IDENTITY-002 | Security · Admin | Privileged production roles require approved non-SMS second factor; insecure environment bypass cannot be enabled in production. |
+| `TC-IDENTITY-006` | Planned | FR-IDENTITY-003, NFR-IDENTITY-001 | API + cross-platform · Patient/Admin | Guardian grant permits only configured patient/actions/data/purpose/time; patient remains owner and action audit records actual guardian actor. |
+| `TC-IDENTITY-007` | Planned | FR-IDENTITY-003, FR-IDENTITY-001, NFR-IDENTITY-001 | Cross-platform · Patient/Clinic/Admin | Revoke/expire guardian or clinic scope: next protected request is denied on every affected adapter while historical actions remain attributable and source records remain unchanged. |
+
+# 9. Catalog and Launch Governance Test Cases
+
+| ID | Status | Requirements | Layer / platforms | Concrete acceptance scenario |
+|---|---|---|---|---|
+| `TC-CATALOG-001` | Existing | FR-CATALOG-001, NFR-PLATFORM-005 | API · Patient/public | `API-CATALOG-001` returns four evaluation groups / 26 provisional records with documented resource shape in evaluation mode. Existing evidence: `ListServiceGroupsTest.php`. |
+| `TC-CATALOG-002` | Existing | FR-CATALOG-001, FR-OPS-003 | API + model | Production mode never exposes evaluation-only/unready definition and does not silently fall back to older ready version when highest applicable current version is unready. Existing evidence: `ListServiceGroupsTest.php`. |
+| `TC-CATALOG-003` | Existing | FR-CATALOG-001, FR-POLICY-001 | Model + persistence | Stable catalog identity and governed definition version integrity cannot be silently rewritten. Existing evidence: `CatalogIdentityIntegrityTest.php`, `ServiceDefinitionTest.php`. |
+| `TC-CATALOG-004` | Partial | FR-OPS-003, FR-POLICY-001 | Model + governance · Admin | Production publication fails without all current gates; medical gate requires current verified dental credential; stale content hash/expired/revoked approval fails closed. Current clinical approval tests cover part; full staff/action authorization remains Planned. |
+| `TC-CATALOG-005` | Partial | FR-POLICY-001, FR-OPS-003 | Transaction + cross-platform | Publishing higher production version atomically supersedes prior active version; fresh Patient/Clinic/Admin projections use new current version while historical cases retain captured version. Lifecycle transaction is partly Existing; cross-platform projection verification Planned. |
+
+**Governed acceptance:** Passing `TC-CATALOG-*` does not resolve `Q-CATALOG-001`; licensed clinical approval is still required for production medical readiness of the 26 provisional records.
+
+# 10. Eligibility and S/P/H/I Test Cases
+
+| ID | Status | Requirements | Layer / platforms | Concrete acceptance scenario |
+|---|---|---|---|---|
+| `TC-ELIG-001` | Planned | FR-ELIG-007–008 | Feature + evidence · Clinic/Admin | Clinic submits factual provider/service/branch activation inputs/evidence; Admin verifies source facts; neither adapter can submit final S/P/H/I/eligibility. |
+| `TC-ELIG-002` | Planned | FR-ELIG-002, FR-ELIG-008 | Domain + DB | Missing/expired mandatory fact or evidence produces immutable `PENDING_EVALUATION`; it is never scientific grade `F`. |
+| `TC-ELIG-003` | Planned | FR-ELIG-009, FR-ELIG-014 | Domain | Actual provider price + exact effective price-band policy computes `P`; no request/form/action can persist a manually selected P outcome. |
+| `TC-ELIG-004` | Planned | FR-ELIG-010–013, FR-ELIG-015 | Domain/property | Approved versioned policy computes S/H/I/confidence/grade-cap/gates deterministically at approved boundary values. Numeric clinical assertions remain gated by `Q-ELIG-001`. |
+| `TC-ELIG-005` | Planned | FR-ELIG-002, FR-ELIG-005, FR-ELIG-011–015 | Domain + DB | Most restrictive mandatory gate determines final eligibility; decision captures exact provider/service/branch/input/policy snapshot and cannot be edited. |
+| `TC-ELIG-006` | Planned | FR-ELIG-003–004, FR-ELIG-006 | Queue + DB + cross-platform | Influential fact/evidence/policy expiry/revocation creates a new decision, immediately blocks affected new bookings, removes affected Patient discovery result, updates Clinic status, and creates Admin operational visibility without changing unaffected scopes. |
+| `TC-ELIG-007` | Planned | FR-ELIG-001, FR-ELIG-005–006 | API · Patient | Provider search returns only currently passing provider/service/branch combinations and excludes pending/suspended/failing scopes. |
+| `TC-ELIG-008` | Planned | FR-ELIG-016–017 | API privacy · Patient/Clinic | Patient-safe explanation and Clinic projection expose actionable reasons/freshness but omit raw internal `I`, protected reviewer evidence, and manual override controls. |
+| `TC-ELIG-009` | Planned | FR-POLICY-002, FR-ELIG-004 | Reproduction | Replaying captured inputs + historical policy reproduces the original decision; mismatch creates an integrity exception rather than rewriting original history. |
+| `TC-ELIG-010` | Planned | FR-ELIG-003, FR-BOOKING-001 | Integration | Search/cache says eligible, then influential state becomes invalid before booking: booking-time revalidation rejects the mutation and stale client data cannot bypass current eligibility. |
+
+**Governed acceptance:** Formula/weight/threshold correctness for production medicine cannot be marked accepted until `Q-ELIG-001` is resolved by licensed clinical approval.
+
+# 11. Booking Test Cases
+
+| ID | Status | Requirements | Layer / platforms | Concrete acceptance scenario |
+|---|---|---|---|---|
+| `TC-BOOKING-001` | Planned | FR-BOOKING-001, FR-ELIG-006 | API + transaction · Patient | Patient/guardian booking request revalidates publication, branch readiness, eligibility, slot/capacity, authority, and creates one `REQUESTED` booking with idempotent retry behavior. |
+| `TC-BOOKING-002` | Planned | FR-BOOKING-001–003, FR-OPS-001 | Cross-platform | After `TC-BOOKING-001` commit, Patient sees pending, owning Clinic sees the **same booking** as actionable request, authorized Admin sees oversight projection; no second platform-specific booking record exists. |
+| `TC-BOOKING-003` | Planned | FR-BOOKING-003 | Feature + time · Clinic | Correct provider/branch may accept, reject-with-reason, or propose alternative before the earlier of 12 hours or 2 hours before appointment; wrong scope/expired response is rejected. |
+| `TC-BOOKING-004` | Planned | FR-BOOKING-001, FR-BOOKING-003 | Transaction + cross-platform | Clinic accept revalidates current eligibility/readiness/capacity and commits `CONFIRMED`; Patient/Clinic/Admin all read confirmed state from one authoritative booking. |
+| `TC-BOOKING-005` | Planned | FR-BOOKING-003 | API + transaction · Patient/Clinic | Alternative proposal is not confirmation; only patient/authorized guardian may accept current unexpired proposal and capacity/eligibility are revalidated before confirmation. |
+| `TC-BOOKING-006` | Planned | FR-BOOKING-002 | State + policy · Patient/Clinic/Admin | Cancellation validates actor/current state/versioned policy; no-show fails before threshold; resulting history records actor/reason/prior/result/policy and propagates to all authorized projections. |
+| `TC-BOOKING-007` | Planned | FR-BOOKING-001, NFR-PLATFORM-001, NFR-AUDIT-002 | MySQL concurrency | 100 concurrent confirmations against finite capacity never exceed capacity; losers receive deterministic conflict and idempotent retries create no duplicate reservation/event. |
+| `TC-BOOKING-008` | Planned | FR-BOOKING-001–003, NFR-PLATFORM-006, NFR-PLATFORM-008 | Cross-platform + notification | Booking state commits before notification. Simulate Patient/Clinic notification delivery failure: authoritative booking remains committed, recipient sees state on refresh, delivery is retryable/observable, and no rollback/duplicate booking occurs. |
+
+# 12. Clinical Case and Treatment Test Cases
+
+| ID | Status | Requirements | Layer / platforms | Concrete acceptance scenario |
+|---|---|---|---|---|
+| `TC-CLINICAL-001` | Planned | FR-CLINICAL-001, NFR-IDENTITY-001 | Authorization · Clinic | Only assigned/authorized treating clinician can author clinical plan; ordinary clinic staff/Admin cannot gain clinical authorship from broad access. |
+| `TC-CLINICAL-002` | Planned | FR-CLINICAL-001 | Domain/security | System may validate structure but never autonomously emits diagnosis, prescription, or authoritative treatment plan; incomplete required service/stage/price/terms cannot be proposed/accepted. |
+| `TC-CLINICAL-003` | Planned | FR-CLINICAL-001–002, FR-FINANCE-001 | Cross-platform | Dentist proposes exact plan version → Patient sees same proposed version/financial terms → Clinic sees awaiting-patient state → Admin only authorized oversight; no duplicate plan copies. |
+| `TC-CLINICAL-004` | Planned | FR-CLINICAL-002, FR-FINANCE-001, NFR-AUDIT-003 | Transaction · Patient/Clinic | Patient/guardian accepts exact displayed plan version; one transaction creates immutable accepted treatment + financial snapshots; Clinic/Admin projections update after commit. |
+| `TC-CLINICAL-005` | Planned | FR-CLINICAL-002, NFR-AUDIT-003 | Versioning | Accepted plan cannot be edited; later amendment creates new proposed version and requires new patient acceptance while previous accepted snapshot remains queryable. |
+| `TC-CLINICAL-006` | Planned | FR-CLINICAL-003–004 | State + evidence · Clinic | Stage completion requires exact accepted-snapshot evidence/facts/acknowledgements and authorized clinician; completion records actor/time/evidence; reopening is a new event preserving prior completion. |
+| `TC-CLINICAL-007` | Planned | FR-CLINICAL-005, FR-AUDIT-002 | Cross-platform timeline | Stage/follow-up changes appear in Patient safe timeline, Clinic workflow, and authorized Admin case projection from the same source; delayed reminder/notification does not alter clinical due/completion state. |
+
+# 13. External Financial Record Test Cases
+
+| ID | Status | Requirements | Layer / platforms | Concrete acceptance scenario |
+|---|---|---|---|---|
+| `TC-FINANCE-001` | Planned | FR-FINANCE-001, NFR-AUDIT-003 | Snapshot | Accepted financial terms capture exact case/plan/price/policy version and become immutable; later price/policy changes do not rewrite history. |
+| `TC-FINANCE-002` | Planned | FR-FINANCE-002, FR-FINANCE-005 | API/Filament + DB | Authorized Patient or Clinic reports payment already performed externally; append unconfirmed assertion linked to accepted snapshot; submission does not call payment provider. |
+| `TC-FINANCE-003` | Planned | FR-FINANCE-003, FR-FINANCE-005 | Cross-platform | Authorized counterparty confirms or disputes original assertion; append response event, never mutate original; Patient/Clinic/Admin derived financial projections converge on event history. |
+| `TC-FINANCE-004` | Planned | FR-FINANCE-004–005, FR-FINANCE-007 | Claim/finance integration | Approved refund/compensation creates external amount/action due only; execution can be recorded only as an assertion after off-platform execution and remains confirmable/disputable. |
+| `TC-FINANCE-005` | Planned | FR-FINANCE-005–006 | Event reproduction | Corrections/reversals are later linked events; ordered history deterministically derives provisional/confirmed/disputed/corrected state without rewriting earlier facts. |
+| `TC-FINANCE-006` | Planned | FR-FINANCE-002–007, NFR-AUDIT-002 | Idempotency/concurrency | Same financial command/key produces one event; conflicting reuse fails deterministically; concurrent contradictory responses preserve append-only history according to policy. |
+| `TC-FINANCE-007` | Planned | FR-FINANCE-007, NFR-FINANCE-001 | Architecture/security | Repository/runtime has no V1 gateway payment intent, charge/capture, wallet balance, escrow/custody, settlement, payout, transfer, or platform-executed refund path; funded/prohibited mode fails closed. |
+| `TC-FINANCE-008` | Planned | FR-FINANCE-006, NFR-FINANCE-001 | API/client wording/privacy | Patient/Clinic financial views describe external records/uncertainty correctly and expose no platform-held-balance semantics or unnecessary protected payloads. |
+
+# 14. Review Test Cases
+
+| ID | Status | Requirements | Layer / platforms | Concrete acceptance scenario |
+|---|---|---|---|---|
+| `TC-REVIEWS-001` | Planned | FR-REVIEWS-001 | API + DB · Patient | Only linked patient/currently authorized guardian may create a review for eligible verified completed experience within governing window. |
+| `TC-REVIEWS-002` | Planned | FR-REVIEWS-001, NFR-AUDIT-002 | DB + concurrency | One active review per eligible experience; duplicate/replayed/concurrent submissions cannot create another active review. |
+| `TC-REVIEWS-003` | Planned | FR-REVIEWS-001–002 | Domain separation | Rating `R` remains experience feedback and cannot alter S/P/H/I or scientific eligibility; Clinic cannot edit patient rating/content. |
+| `TC-REVIEWS-004` | Planned | FR-REVIEWS-002 | Cross-platform · Clinic/Admin | Eligible affected party submits appeal with grounds/evidence/time; Admin integrity reviewer makes authorized publication/compliance decision; original review/rating history stays immutable. |
+
+# 15. Claim, Refund, and Appeal Test Cases
+
+| ID | Status | Requirements | Layer / platforms | Concrete acceptance scenario |
+|---|---|---|---|---|
+| `TC-CLAIMS-001` | Planned | FR-CLAIMS-001 | API/domain · Patient | Refund request validates claimant, case, accepted terms/policy snapshot, deadline, amount/currency, and required evidence; submission creates reviewable workflow, not money movement. |
+| `TC-CLAIMS-002` | Planned | FR-CLAIMS-002 | API/domain · Patient | Protection claim is rejected unless applicable entitlement exists in immutable accepted snapshot; successful submission creates claim/work only. |
+| `TC-CLAIMS-003` | Planned | FR-CLAIMS-003 | Evidence + time | Missing/rejected/expired/accepted evidence states remain distinct; pause/extension appends reasoned deadline event and preserves original deadline. |
+| `TC-CLAIMS-004` | Planned | FR-CLAIMS-001–004, FR-OPS-001 | Cross-platform | Patient claim commit → Patient sees submitted state → related Clinic sees permitted response/evidence work → Admin gets review work item on the same claim; no platform-specific claim copy. |
+| `TC-CLAIMS-005` | Planned | FR-CLAIMS-004, FR-IDENTITY-001 | Human-review authorization | Final sensitive medical/legal/high-impact financial decision requires assigned scoped human reviewer and enforced separation of duties; automation may prepare facts but cannot submit final decision. |
+| `TC-CLAIMS-006` | Planned | FR-CLAIMS-004, NFR-AUDIT-003 | Decision integrity | Decision records findings/reasons/evidence/policy/actor/time/external actions due and is immutable; approved monetary remedy still does not execute funds. |
+| `TC-CLAIMS-007` | Planned | FR-CLAIMS-005 | Appeal + cross-platform | Eligible patient/clinic party submits appeal within governing window; appeal references immutable original decision, reviewer independence is enforced, result propagates to authorized projections without rewriting original decision. |
+
+# 16. Policy Test Cases
+
+| ID | Status | Requirements | Layer / platforms | Concrete acceptance scenario |
+|---|---|---|---|---|
+| `TC-POLICY-001` | Partial | FR-POLICY-001 | Lifecycle + DB · Admin | Version lifecycle enforces draft → reviewed → scheduled → active → retired/superseded rules and prevents invalid transitions. Existing ServiceDefinition lifecycle proves catalog-specific part; general policy model Planned. |
+| `TC-POLICY-002` | Planned | FR-POLICY-001 | Effective-period integrity | Active/effective policy overlap or precedence ambiguity is rejected/deterministically resolved; activated historical content cannot be edited. |
+| `TC-POLICY-003` | Planned | FR-POLICY-002, NFR-AUDIT-003 | Historical reproduction | Booking/eligibility/claim/etc. can resolve exact captured governing policy version after newer policy becomes active. |
+| `TC-POLICY-004` | Planned | FR-POLICY-001–002 | Cross-platform | Prospective policy replacement affects new/currently governed decisions as specified while existing accepted snapshots/history on Patient/Clinic/Admin remain bound to original version. |
+
+# 17. Operations Test Cases
+
+| ID | Status | Requirements | Layer / platforms | Concrete acceptance scenario |
+|---|---|---|---|---|
+| `TC-OPS-001` | Planned | FR-OPS-001 | Work queue · Admin/Clinic | Verification/booking/claim/evidence/deadline work item references source record, has scope/priority/due/assignment, and cannot substitute or independently mutate source truth. |
+| `TC-OPS-002` | Planned | FR-OPS-001, NFR-PLATFORM-008 | Queue/retry | Work/notification/jobs are created after authoritative commit; retry reloads current state and cannot duplicate domain mutation. |
+| `TC-OPS-003` | Planned | FR-OPS-002 | Reporting | Each metric has explicit population/window/state/dispute rules and refresh time; rebuildable reporting projections reproduce from authoritative data and respect staff scope/privacy. |
+| `TC-OPS-004` | Partial | FR-OPS-003 | Governance/release | Launch readiness fails closed for missing/expired/revoked gate/credential and does not equate infrastructure health with clinical production readiness. Existing clinical/catalog tests prove part. |
+| `TC-OPS-005` | Planned | FR-OPS-001–002, NFR-PLATFORM-008 | Cross-platform operations | Closing/reassigning/deleting a work/notification UI record does not delete or revert Booking/Case/Claim/Financial source record; source state remains visible through canonical projections. |
+
+# 18. Audit and Idempotency Test Cases
+
+| ID | Status | Requirements | Layer / platforms | Concrete acceptance scenario |
+|---|---|---|---|---|
+| `TC-AUDIT-001` | Planned | FR-AUDIT-001, NFR-AUDIT-001 | Audit | Sensitive action records actor, effective scope/role, action, resource, outcome, reason when required, time, and correlation ID without protected payload leakage. |
+| `TC-AUDIT-002` | Planned | FR-AUDIT-001–002, NFR-AUDIT-001 | Persistence/security | Audit/provenance history is append-only/immutable; logs/audit exclude OTP, credentials, signed URLs, private evidence content, and unnecessary clinical/financial payloads. |
+| `TC-AUDIT-003` | Planned | FR-AUDIT-003, NFR-AUDIT-002 | Idempotency | Same actor/operation/resource/key + same fingerprint returns original committed result; different fingerprint returns `ERR-AUDIT-001`; failed pre-commit request is not stored as successful outcome. |
+| `TC-AUDIT-004` | Planned | FR-AUDIT-002–003, NFR-AUDIT-003 | Integrity | Historical reproduction/hash mismatch creates explicit integrity exception/work/audit and never silently repairs or mutates source history. |
+| `TC-AUDIT-005` | Planned | FR-AUDIT-001–003, NFR-PLATFORM-008 | Correlation | Request correlation propagates into jobs/work/notification/error support context while remaining privacy safe. |
+
+# 19. Platform / NFR Test Cases
+
+| ID | Status | Requirements | Layer / platforms | Concrete acceptance scenario |
+|---|---|---|---|---|
+| `TC-PLATFORM-001` | Planned | NFR-PLATFORM-003 | File security | Evidence accepts only permitted PDF/JPEG/PNG; 10 MB image, 25 MB PDF, max 10/action; extension + magic + MIME + decode/parse validation all enforced. |
+| `TC-PLATFORM-002` | Planned | NFR-PLATFORM-003 | Storage/security | Evidence gets opaque UUID, SHA-256, private storage, quarantine until successful scan; pending/rejected scan cannot satisfy business requirement. |
+| `TC-PLATFORM-003` | Planned | NFR-PLATFORM-003, NFR-IDENTITY-001 | Authorization | Guessing object/path cannot bypass access; signed access expires within approved ≤60s; download authorization is freshly rechecked and audited. |
+| `TC-PLATFORM-004` | Planned | NFR-PLATFORM-004 | Retention/legal hold | Retention mechanism resolves governing rule, legal hold blocks destruction, release of hold re-evaluates normal eligibility, deletion is retry-safe/auditable, referenced history is not silently cascaded. Final legal periods remain governed by `Q-PLATFORM-002`. |
+| `TC-PLATFORM-005` | Planned | NFR-PLATFORM-001 | Load/performance | Production-like workload meets normal read p95 ≤500ms, normal write p95 ≤800ms, provider search p95 ≤1s, ~75 rps burst, 30-minute error rate <1% at approved planning volume. |
+| `TC-PLATFORM-006` | Planned | NFR-PLATFORM-001 | Capacity/concurrency | Around 100 concurrent-user/mixed workload remains stable and integrates `TC-BOOKING-007` 100-way booking contention without overbooking. |
+| `TC-PLATFORM-007` | Planned | NFR-PLATFORM-002 | Recovery | Restore isolated backup, validate representative immutable histories/evidence references, measured RPO ≤15m and RTO ≤4h, and produce quarterly restore evidence. |
+| `TC-PLATFORM-008` | Planned | NFR-PLATFORM-008 | Observability | Correlation, queue age/retry/failure, scan backlog, notification failure, eligibility delay, deadline breach, backup status, and invariant breach are measurable and threshold breach creates operational signal. |
+| `TC-PLATFORM-009` | Planned | NFR-PLATFORM-006, NFR-AUDIT-002 | Network resilience · Patient | Simulate timeout after server commit, reconnect duplicate, stale state, 429/temp failure: same logical command does not duplicate; unknown outcome reconciles via authoritative read. |
+| `TC-PLATFORM-010` | Planned | NFR-PLATFORM-006, NFR-PLATFORM-008 | Cross-platform side effect | Out-of-order/delayed/failed notification or reminder never becomes business truth and never reverts committed state; refresh converges Patient/Clinic/Admin to backend state. |
+| `TC-PLATFORM-011` | Partial | NFR-PLATFORM-007 | Architecture/static | Pint/Rector/PHPStan/100% configured type+line coverage pass; API remains `/api/v1`; presentation contains no hard-coded medical/financial policy engine. Existing `ArchTest.php` proves part. |
+| `TC-PLATFORM-012` | Planned | NFR-PLATFORM-005 | API/client localization | Arabic text round-trips through DB/API; mixed Arabic/English identifiers/data are safe; React Native/Filament functional surfaces operate RTL with scalable text, semantic actions, logical order, and required accessible states after UI implementation. |
+
+## 20. Cross-Platform Behavior Verification Rules
+
+`docs/domain/CROSS_PLATFORM_BEHAVIOR.md` is now a test source, not only descriptive documentation.
+
+For every shared feature, at least one acceptance test must prove all applicable points:
+
+1. the initiating adapter invokes the shared Laravel action;
+2. exactly one authoritative aggregate/event/version is committed;
+3. Patient, Clinic, and Admin read authorized projections of that same state;
+4. unauthorized platform/actor cannot see or mutate it;
+5. notification/work generation occurs only after authoritative commit;
+6. notification failure does not roll back or mutate the source business state;
+7. another platform does not need a duplicate write to “synchronize” the record;
+8. edit/delete behavior follows state transition, new version, append-only event, revoke/expire, retire/supersede, or governed retention rather than unsafe generic CRUD.
+
+Mandatory cross-platform cases are currently represented by:
+
+- `TC-IDENTITY-007` — access revocation propagation;
+- `TC-CATALOG-005` — published version propagation;
+- `TC-ELIG-006` — eligibility suspension propagation;
+- `TC-BOOKING-002`, `004`, `006`, `008` — booking create/confirm/cancel/notification behavior;
+- `TC-CLINICAL-003`, `004`, `007` — plan proposal/acceptance/stage timeline;
+- `TC-FINANCE-003` — financial confirmation/dispute convergence;
+- `TC-REVIEWS-004` — review appeal separation;
+- `TC-CLAIMS-004`, `007` — claim intake/decision/appeal propagation;
+- `TC-OPS-005` — work item never replaces source truth;
+- `TC-PLATFORM-010` — failed/delayed side effects do not own state.
+
+A feature is incomplete if only the initiating platform is tested while an expected cross-platform projection/action/notification/work behavior is missing.
+
+## 21. API Contract and Error Verification
+
+Every implemented `API-*` must test method/path, authentication, scope, validation, success shape, stable public IDs, state conflicts, stable `ERR-*`, privacy fields, and idempotency where required.
+
+Target error-envelope verification includes:
+
+- code and HTTP status match `ERROR_CATALOG.md`;
+- Arabic-safe user-facing message where applicable;
+- validation details do not expose protected values;
+- correlation ID is available where target envelope applies;
+- server errors do not return stack/config/secrets;
+- hidden resources are not unnecessarily disclosed;
+- client maps code, not fragile full message wording.
+
+Current catalog 429/500 behavior still requires normalization to the target stable error envelope; tests must preserve the existing success contract while that change is implemented.
+
+## 22. Security Verification
+
+Security verification covers:
+
+- OTP/authentication abuse controls (`TC-IDENTITY-001`–`005`);
+- deny-by-default and cross-scope isolation (`TC-IDENTITY-004`, `007`);
+- IDOR/identifier manipulation;
+- mass assignment of protected state/S/P/H/I fields;
+- CSRF for Filament/browser mutations as applicable;
+- API replay/revocation once mobile auth transport is selected;
+- rate limits;
+- unsafe file uploads (`TC-PLATFORM-001`–`003`);
+- output escaping where user content is rendered;
+- SQL/query safety through framework conventions + review;
+- secret/config/log leakage;
+- private evidence access;
+- zero-money-movement architecture (`TC-FINANCE-007`);
+- dependency vulnerability controls.
+
+Penetration-test vendor/tooling is not established by current source material and must not be claimed until approved/scheduled.
+
+## 23. Performance and Scale Verification
+
+Approved planning targets:
 
 - 10,000 registered identities;
-- 3,000 MAU planning baseline;
-- 500 DAU planning baseline;
-- approximately 100 concurrent users;
-- approximately 75 requests/second burst;
-- normal reads p95 ≤ 500 ms;
-- normal writes p95 ≤ 800 ms;
-- provider search p95 ≤ 1 second;
-- 30-minute test error rate < 1%;
+- 3,000 MAU;
+- 500 DAU;
+- about 100 concurrent users;
+- about 75 requests/second burst;
+- reads p95 ≤500ms;
+- writes p95 ≤800ms;
+- provider search p95 ≤1s;
+- 30-minute error rate <1%;
 - 100 concurrent booking attempts cannot overbook capacity.
 
-### 20.2 Required load scenarios
+Required load scenarios supporting `TC-PLATFORM-005`/`006` and `TC-BOOKING-007`:
 
-At minimum run:
-
-1. public catalog read burst;
+1. public catalog burst;
 2. eligible-provider search with representative data/indexes;
-3. authenticated patient case/timeline reads;
-4. representative normal write path;
+3. authenticated case/timeline reads;
+4. representative normal write;
 5. queue-producing writes;
 6. 100-way booking contention;
-7. mixed 30-minute workload at expected launch concurrency;
-8. degraded dependency scenario to confirm external-provider slowness does not consume all application capacity.
+7. mixed 30-minute workload;
+8. degraded external dependency behavior.
 
-Measurements must separate application latency, database latency, queue latency, and external-provider latency where applicable.
+Measurements should separate application, database, queue, and external-provider latency. Use synthetic production-like data, never real protected patient data.
 
-Performance tests use production-like configuration/data volume but never real protected patient data.
+## 24. Availability, Backup, and Recovery Verification
 
-## 21. Availability, Backup, and Recovery Verification
+`TC-PLATFORM-007` verifies the approved 99.5% availability objective operational context, RPO ≤15 minutes, RTO ≤4 hours, and quarterly restore exercise.
 
-**Requirement:** NFR-PLATFORM-002.
+A restore exercise records date, artifact/version, backup point, actual RPO/RTO, verifier, result, database integrity, representative immutable history integrity, and evidence-store reference consistency.
 
-Approved targets:
+A configured backup without a proven restore is not release evidence.
 
-- 99.5% availability objective;
-- RPO ≤ 15 minutes;
-- RTO ≤ 4 hours;
-- quarterly restore verification.
+## 25. Observability and Queue Verification
 
-Required operational exercises:
+`TC-PLATFORM-008`, `TC-AUDIT-005`, `TC-OPS-002`, and `TC-PLATFORM-010` verify:
 
-- restore database backup to an isolated environment;
-- validate schema/integrity and representative immutable histories after restore;
-- prove restored point satisfies the measured RPO;
-- measure service restoration workflow against RTO;
-- verify evidence-store recovery/availability strategy does not orphan database references;
-- verify backup failure/staleness triggers alerting;
-- record restore test date, artifact/version, backup point, actual RPO/RTO, verifier, and result.
+- request/job correlation;
+- queue age/retry/failure;
+- scan backlog;
+- notification failure;
+- eligibility recalculation delay;
+- deadline breach;
+- backup status;
+- invariant alerts;
+- distinction between committed business outcome and delayed side effect;
+- audited retry/escalation;
+- privacy-safe telemetry.
 
-A configured backup without a successful restore exercise is not sufficient acceptance evidence.
+Provider-specific alert transport remains outside the suite until selected; generating the alert condition itself must still be testable.
 
-## 22. Observability and Queue Verification
+## 26. Arabic, RTL, and Accessibility Verification
 
-**Requirement:** NFR-PLATFORM-008.
+`TC-PLATFORM-012` has two layers:
 
-Tests/operational probes must prove:
+**Backend/contract:** Arabic names/descriptions/errors round-trip correctly; JSON/DB encoding is preserved; bidirectional data does not corrupt identifiers/validation.
 
-- every request has a correlation identifier;
-- asynchronous jobs propagate/create correlation context;
-- queue age, retry count, failed-job count, scan backlog, notification failure, reevaluation delay, deadline breach, and backup status are measurable;
-- threshold breach creates the intended alert/operational signal;
-- operators can distinguish committed business outcome from delayed side effect;
-- retry/escalation is audited;
-- monitoring telemetry is privacy-safe;
-- monitoring outage does not become permission to skip domain safety checks.
+**Client/Filament:** after authoritative UI implementation exists, verify Arabic-first/RTL behavior, mixed Arabic/English/numerals, keyboard/focus where applicable, screen-reader/semantic actions, contrast, text scaling, logical reading order, dynamic/error/empty/loading states, and non-color-only status meaning.
 
-Provider-specific alert transport is not tested until selected; alert-condition generation is testable independently.
+Engineering documentation must not claim WCAG 2.2 AA/RTL completion before those interfaces exist and the client-side portion is executable.
 
-## 23. Arabic, RTL, and Accessibility Verification
+## 27. Weak Connectivity and Retry Verification
 
-**Requirement:** NFR-PLATFORM-005.
+`TC-PLATFORM-009`/`010` must simulate:
 
-Backend/contract-level tests can prove:
-
-- Arabic service names/descriptions round-trip correctly under selected database charset/collation;
-- JSON/API encoding preserves Arabic text;
-- user-facing API error text supports Arabic-first product behavior;
-- mixed Arabic/English data does not corrupt identifiers or validation.
-
-Full RTL layout and WCAG 2.2 AA interaction verification belongs to the UX/client implementation phase once authoritative interfaces exist. The later UX testing plan must include keyboard/focus, screen-reader semantics, contrast, text scaling, logical reading order, dynamic content, and bidirectional text behavior.
-
-Engineering documentation must not claim WCAG/RTL completion before those interfaces are implemented and tested.
-
-## 24. Weak Connectivity and Retry Verification
-
-**Requirement:** NFR-PLATFORM-006.
-
-API/application tests must simulate:
-
-- request timeout after server commit followed by identical retry;
-- interrupted draft save/recovery;
-- duplicate mutation caused by mobile reconnect;
-- stale client state on booking/claim actions;
+- timeout after server commit followed by identical retry;
+- interrupted supported draft save/recovery;
+- reconnect duplicate mutation;
+- stale booking/claim state;
 - retry after 429/temporary failure;
-- out-of-order background notification delivery;
+- out-of-order/delayed notification;
 - delayed upload/scan completion.
 
-Required outcomes:
+Committed mutations are not duplicated, stale commands fail safely, supported drafts resume, and non-authoritative notification failure never undoes committed state.
 
-- committed mutations are not duplicated;
-- stale state fails with recoverable current-state information rather than corrupting history;
-- drafts can be safely resumed where the feature supports drafts;
-- non-authoritative notification failure does not undo committed business state.
+Do not queue offline booking confirmation, treatment acceptance, financial assertion, review, or claim as if locally successful without a defined idempotent reconciliation contract.
 
-## 25. Maintainability and Contract Verification
+## 28. Immutable Snapshot/Event Integrity Verification
 
-**Requirement:** NFR-PLATFORM-007.
-
-Required gates include:
-
-- Pint check;
-- Rector dry-run;
-- PHPStan;
-- 100% configured type coverage threshold;
-- 100% configured line coverage threshold;
-- architecture tests protecting agreed layering/conventions;
-- API version remains under `/api/v1` unless an explicit versioning change is approved;
-- OpenAPI/Scramble output must not silently contradict implemented routes/resources;
-- presentation layers do not contain hard-coded clinical/financial policy calculations;
-- domain behavior remains independently testable outside Filament/React Native presentation.
-
-Generated API documentation is evidence of route/schema shape, not a substitute for behavioral tests.
-
-## 26. Immutable Snapshot and Event Integrity Verification
-
-**Requirement:** NFR-AUDIT-003.
-
-For every immutable/superseding entity family, test:
+Across catalog definitions, launch decisions, credentials, eligibility decisions, bookings/events, accepted treatment/financial snapshots, financial events, claim decisions, policy versions, and audit:
 
 1. creation captures exact governing version/input context;
-2. protected fields cannot be updated after terminal/accepted state;
-3. correction produces new version/event/snapshot;
-4. prior record remains queryable for authorized audit/reproduction;
-5. hash/content binding detects unintended changes where hashes apply;
-6. timeline order is deterministic;
-7. deleting a parent cannot cascade-delete required immutable history;
-8. current derived view can be recomputed from the event/snapshot chain where the design promises reproducibility.
+2. protected historical fields cannot be updated after terminal/accepted state;
+3. correction/amendment creates new version/event/snapshot;
+4. prior record remains queryable to authorized audit/reproduction;
+5. content/hash binding detects unintended mutation where hashes apply;
+6. order is deterministic;
+7. deleting parent cannot cascade-delete required history;
+8. promised reproducible derived state can be recomputed from the chain.
 
-This applies particularly to service definitions, launch decisions, credentials, eligibility decisions, accepted treatment/financial snapshots, booking events, financial events, claim decisions, policy versions, and audit records.
+Relevant concrete cases include `TC-CATALOG-003`–`005`, `TC-ELIG-005`/`009`, `TC-CLINICAL-004`–`006`, `TC-FINANCE-001`/`003`–`006`, `TC-CLAIMS-003`/`006`/`007`, `TC-POLICY-002`–`004`, and `TC-AUDIT-002`/`004`.
 
-## 27. Security Verification
+## 29. Test Data Strategy
 
-Security verification includes automated application tests, dependency controls, configuration checks, and targeted manual review.
+- Automated suites use factories/fixtures and synthetic evidence only; never copy production patient/clinical evidence into developer/test environments.
+- Time-sensitive tests freeze/control time explicitly.
+- The 26 service records remain **evaluation fixtures** until clinical approval.
+- Formula/threshold fixtures declare exact policy version and must not be mislabeled clinically approved.
+- Old policy fixtures remain for historical reproduction after prospective replacement.
+- Parallel tests isolate DB/file/idempotency/fake-notification/clock state.
+- Cross-platform tests query all adapters/projections from the same committed fixture rather than creating separate platform records.
 
-Minimum scope:
+## 30. External Dependency Test Rules
 
-- authentication/OTP abuse controls;
-- deny-by-default authorization and cross-scope isolation;
-- IDOR/resource identifier manipulation;
-- mass-assignment of protected outcome/state fields;
-- CSRF for browser/Filament mutation paths as applicable;
-- API authentication/replay behavior once auth transport is selected;
-- rate limiting;
-- input validation and unsafe file uploads;
-- stored/reflected output escaping where user content is rendered;
-- SQL injection resistance through framework/query conventions plus review;
-- secret/config leakage;
-- private evidence path/access leakage;
-- log privacy;
-- prohibited payment/money-movement surface;
-- dependency vulnerability gate through project dependency policy.
+For future OTP/MFA/malware/notification/private-storage adapters:
 
-Penetration testing scope/tooling is not specified by current source material and should not be claimed until scheduled/approved.
-
-## 28. Test Data Strategy
-
-### 28.1 Synthetic data only
-
-Automated suites use factories/fixtures and synthetic evidence. Production patient/clinical evidence must not be copied into developer/test environments.
-
-### 28.2 Deterministic time
-
-Deadline, expiry, effective-period, OTP, booking, claim, retention, and launch tests freeze or control time explicitly.
-
-### 28.3 Catalog fixtures
-
-The 26 seeded service records are usable only as **evaluation** fixtures until clinical approval. Tests must not rename them production-approved or use fixture presence as a production-readiness assertion.
-
-### 28.4 Policy fixtures
-
-Formula/threshold fixtures must declare the policy version they represent. When clinical/legal defaults change prospectively, old test fixtures remain available for historical reproduction tests while new policy tests cover the replacement version.
-
-### 28.5 Parallel isolation
-
-Parallel tests must isolate database and file state. Shared filesystem paths, idempotency keys, external fake mail/notification state, and mutable clocks must not make tests order-dependent.
-
-## 29. External Dependency Test Rules
-
-The test suite must prevent accidental real external calls during automated tests.
-
-For every future adapter:
-
-- default tests use fakes/stubs;
-- unexpected network calls fail the test where practical;
-- explicit sandbox/contract suites are separately tagged/configured;
-- secrets come from CI secret storage, never committed fixtures;
-- provider outage/timeout/retry behavior is tested;
-- a provider success response is not treated as authoritative business success until local transaction/invariant rules succeed.
+- ordinary suites use fakes/stubs;
+- unexpected real network calls fail where practical;
+- explicit approved sandbox/contract suites are separate;
+- secrets come from CI secret storage;
+- timeout/outage/retry is tested;
+- provider success does not become authoritative business success until local transaction/invariants succeed.
 
 No V1 test suite may require a payment gateway.
 
-## 30. CI and Merge Gates
+## 31. CI and Merge Gates
 
-At minimum, backend changes should not be merged when an applicable required gate fails.
-
-Recommended verification sequence:
+Backend verification baseline:
 
 ```bash
 cd UberTip-Backend
@@ -732,113 +482,113 @@ composer test:unit
 composer test:mysql
 ```
 
-`composer test` may replace the first four commands when the CI job uses that aggregate script, but `composer test:mysql` remains an explicit separate database-compatibility gate unless the Composer scripts are later changed.
+`composer test` may replace the first four when used as the aggregate CI command, but `composer test:mysql` remains a separate compatibility gate unless scripts change.
 
-Additional domain-specific integration/load/recovery suites may run in slower CI stages or release pipelines, but safety-critical behavior must not be left to an undocumented manual check.
+React Native commands are deliberately not invented here. `TASK-PLATFORM-008` must record actual client repository/path/package-manager/test/lint/build commands; later Patient `TC-*` executions use those verified commands.
 
-The exact CI provider/workflow is not fixed by this document.
+Slower load/recovery/provider-contract suites may run in release pipelines, but safety-critical behavior cannot be left to undocumented manual checks.
 
-## 31. Release Verification Levels
+## 32. Release Verification Levels
 
 ### Pull request gate
 
-Required for every backend change:
-
-- affected automated tests;
-- static analysis;
-- code style/refactor dry-run;
-- configured type/line coverage gates;
-- relevant SQLite feature/unit tests;
-- MySQL suite when schema/queries/constraints/concurrency behavior can be affected.
+- affected concrete `TC-*` automated cases;
+- static analysis/lint/refactor dry-run;
+- configured coverage gates;
+- relevant SQLite tests;
+- MySQL suite when schema/query/constraint/concurrency behavior is affected;
+- cross-platform projection regression for any shared aggregate change.
 
 ### Pre-release gate
 
-Required for a V1 release candidate:
-
-- full automated backend suite;
+- full backend suite;
 - production-engine integration suite;
-- API contract/error/privacy suite;
-- permissions matrix negative tests;
+- API/error/privacy suite;
+- permission negative matrix;
 - concurrency/idempotency suite;
 - private evidence security suite;
-- load/performance suite;
-- queue/observability verification;
-- backup/restore exercise evidence current within the approved cadence;
-- migration forward/rollback/recovery rehearsal as appropriate to the migration design;
-- no unresolved blocker that invalidates the released feature scope.
+- performance/load suite;
+- queue/observability suite;
+- current restore evidence;
+- migration/recovery rehearsal as appropriate;
+- React Native full verified CI + cross-platform E2E journeys after client bootstrap;
+- no unresolved blocker invalidating enabled scope.
 
 ### Production medical readiness gate
 
-In addition to software verification:
+Software tests are necessary but insufficient. The release additionally requires current applicable launch approvals, licensed clinical approval for enabled medical catalog/policies, resolution of applicable `Q-CATALOG-001` / `Q-ELIG-001`, production catalog mode, and no promotion of evaluation fixtures merely because tests pass.
 
-- the applicable service definitions must have required current launch approvals;
-- licensed clinical approval must cover the production medical catalog/policies;
-- `Q-CATALOG-001` / `Q-ELIG-001` must be resolved for the behavior being enabled;
-- production catalog mode must remain `production`;
-- evaluation records must not be promoted through test success alone.
+## 33. Domain Exit Evidence
 
-## 32. Acceptance and Exit Criteria by Domain
-
-A domain is not considered V1-complete until:
-
-| Domain | Minimum exit evidence |
+| Domain | Minimum V1 exit evidence |
 |---|---|
-| IDENTITY | OTP/MFA + scoped permission + guardian/isolation tests pass |
-| CATALOG | Publication/version/launch tests pass; clinical readiness separately approved |
-| ELIG | Approved policy boundary tests + provenance + no-manual-outcome + reevaluation tests pass |
-| BOOKING | Lifecycle/deadline/idempotency + production-engine 100-way capacity test pass |
-| CLINICAL | Clinician ownership + acceptance snapshots + evidence-gated stage completion pass |
-| FINANCE | Append-only external record workflow passes and zero-money-movement negative controls pass |
-| REVIEWS | Verified-experience uniqueness + R separation + appeal tests pass |
-| CLAIMS | Eligibility/evidence/deadline/human review/SoD/appeal tests pass |
-| OPS | Work queues, retries, alerts, reporting evidence, launch gates pass |
-| POLICY | Version lifecycle, effective uniqueness, reproduction, immutability pass |
-| AUDIT | Complete privacy-safe audit + idempotency + integrity tests pass |
-| PLATFORM | Performance, recovery, security, files, Arabic/RTL/accessibility applicable evidence pass |
+| IDENTITY | `TC-IDENTITY-001`–`007` applicable cases pass + provider-specific MFA/OTP evidence where required |
+| CATALOG | `TC-CATALOG-001`–`005` pass/complete + separate clinical approval |
+| ELIG | `TC-ELIG-001`–`010` pass + approved production clinical boundary fixtures |
+| BOOKING | `TC-BOOKING-001`–`008` pass including MySQL 100-way contention and cross-platform propagation |
+| CLINICAL | `TC-CLINICAL-001`–`007` pass |
+| FINANCE | `TC-FINANCE-001`–`008` pass, especially zero-money-movement negative architecture control |
+| REVIEWS | `TC-REVIEWS-001`–`004` pass |
+| CLAIMS | `TC-CLAIMS-001`–`007` pass |
+| POLICY | `TC-POLICY-001`–`004` pass |
+| OPS | `TC-OPS-001`–`005` pass |
+| AUDIT | `TC-AUDIT-001`–`005` pass |
+| PLATFORM | `TC-PLATFORM-001`–`012` applicable cases pass + governed legal/clinical/provider evidence where noted |
 
-## 33. Defect Severity for Verification
+## 34. Defect Severity
 
-Testing should classify defects by product consequence rather than only visual/technical impact.
-
-- **Blocker:** can enable unsafe production medical behavior, money movement, unauthorized protected-data access, unrecoverable historical corruption, capacity overbooking, or invalidates release verification.
-- **Major:** breaks a Must Have workflow, permission boundary, immutable/reproducible history, required NFR, or creates materially incorrect operational state.
+- **Blocker:** enables unsafe production medical behavior, money movement, unauthorized protected-data access, unrecoverable historical corruption, capacity overbooking, cross-platform split-brain truth, or invalidates release verification.
+- **Major:** breaks a Must Have workflow, permission boundary, immutable/reproducible history, required NFR, or creates materially incorrect operational/cross-platform state.
 - **Minor:** localized defect that does not break a safety/business invariant and has an acceptable workaround.
 
-A defect is not downgraded merely because it is difficult to reproduce when it affects a high-impact invariant.
+Intermittent reproducibility does not downgrade a defect affecting a high-impact invariant.
 
-## 34. Open Questions and Testing Constraints
+## 35. Open Questions and Verification Constraints
 
 | ID | Severity | Verification impact |
 |---|---|---|
 | `Q-PLATFORM-001` | Blocker | Cannot claim full SRS v1.1 reconciliation until readable authoritative text is reviewed. |
-| `Q-CATALOG-001` | Major | Automated catalog tests cannot certify clinical production approval for the 26 provisional records. |
-| `Q-ELIG-001` | Major | Final production formula/threshold boundary suites depend on licensed clinical approval. |
-| `Q-PLATFORM-002` | Major | Retention mechanism can be tested, but final legal-period acceptance remains open. |
-| `Q-OPS-001` | Major | Final production-engine/infrastructure/load/recovery environment remains provider/topology dependent. |
+| `Q-CATALOG-001` | Major | `TC-CATALOG-*` cannot certify clinical production approval for provisional records. |
+| `Q-ELIG-001` | Major | Production clinical numeric/boundary acceptance within `TC-ELIG-004` depends on licensed approval. |
+| `Q-PLATFORM-002` | Major | `TC-PLATFORM-004` proves retention mechanism; final legal-period acceptance remains open. |
+| `Q-OPS-001` | Major | Final production-engine/load/recovery environment remains topology dependent. |
 | `Q-PLATFORM-003` | Major | Concrete OTP/MFA/malware/private-evidence/notification provider contract suites cannot be finalized. |
-| `Q-PLATFORM-004` | Minor | Capacity tests use approved NFR headroom even though expected launch population is lower. |
-| `CONFLICT-PLATFORM-001` | Major | Verification must target the current repository stack, not the stale historical stack assumptions. |
-| `CONFLICT-PLATFORM-002` | Major | Any requirement-type classification changed during later SRS reconciliation may require traceability remapping, not silent deletion of tests. |
+| `Q-PLATFORM-004` | Minor | Performance tests retain approved NFR headroom even though expected launch population is lower. |
+| `CONFLICT-PLATFORM-001` | Major | Verification targets current Laravel/PHP/package stack, not stale historical assumptions. |
+| `CONFLICT-PLATFORM-002` | Major | Later SRS requirement-type reconciliation may remap traceability but must not silently delete existing test obligations. |
 
-## 35. Current Verification Gap Summary
+## 36. `TC-*` Allocation Summary
 
-Current automated coverage is concentrated in catalog/service-definition/launch-readiness governance. The majority of V1 verification described above is **required but not yet implemented**, matching the current codebase's narrow implementation state.
+This revision allocates **82 concrete test-case IDs**:
 
-The largest safety-critical future test gaps are:
+| Domain | Allocated IDs | Count |
+|---|---|---:|
+| IDENTITY | `TC-IDENTITY-001`–`007` | 7 |
+| CATALOG | `TC-CATALOG-001`–`005` | 5 |
+| ELIG | `TC-ELIG-001`–`010` | 10 |
+| BOOKING | `TC-BOOKING-001`–`008` | 8 |
+| CLINICAL | `TC-CLINICAL-001`–`007` | 7 |
+| FINANCE | `TC-FINANCE-001`–`008` | 8 |
+| REVIEWS | `TC-REVIEWS-001`–`004` | 4 |
+| CLAIMS | `TC-CLAIMS-001`–`007` | 7 |
+| POLICY | `TC-POLICY-001`–`004` | 4 |
+| OPS | `TC-OPS-001`–`005` | 5 |
+| AUDIT | `TC-AUDIT-001`–`005` | 5 |
+| PLATFORM | `TC-PLATFORM-001`–`012` | 12 |
+| **Total** | — | **82** |
 
-- deny-by-default scoped authorization;
-- clinically approved S/P/H/I and eligibility computation;
-- booking concurrency/revalidation/idempotency;
-- immutable treatment/financial agreements;
-- record-only financial event workflows;
-- evidence security and malware-scan gating;
-- claim human-review/separation-of-duties flows;
-- performance/recovery/observability release evidence.
+No IDs in this table may be renumbered during the next registry synchronization. A future test must append after the highest allocated ID in its domain.
 
-These gaps are expected to become implementation work in `docs/IMPLEMENTATION_PLAN.md`; this document does not imply that they already exist in code.
+## 37. Current Verification Gap Summary
 
-## 36. Phase 3 Handoff
+Existing executable coverage is still concentrated in catalog/service-definition/launch-readiness governance. Most of the 82 concrete cases are Planned because the matching V1 features are not implemented yet.
 
-The next Phase 3 artifact, `docs/IMPLEMENTATION_PLAN.md`, must convert the approved product/design/test requirements into ordered implementation work while preserving dependency order and blockers.
+The largest safety-critical gaps are scoped authorization, production-approved eligibility, booking concurrency/cross-platform propagation, immutable treatment/financial agreements, record-only finance, private evidence security, claims human review/SoD, mobile/network behavior, and production recovery/observability evidence.
 
-After implementation planning, `docs/TRACEABILITY_MATRIX.md` must prove coverage across requirement → design → API/data/state/permission → verification → implementation task relationships. `docs/scripts/validate_docs.py` then provides mechanical documentation consistency checks.
+This is expected and must remain visible; allocating a `TC-*` does not convert Planned application behavior into Existing code.
+
+## 38. Phase 3 Handoff
+
+The next Phase 3 step is **registry synchronization** in `docs/README.md` for the already allocated `API-*`, `ERR-*`, `TASK-*`, and the 82 `TC-*` IDs in this file.
+
+After that, update `docs/TRACEABILITY_MATRIX.md` to replace verification descriptions with concrete `TC-*` references while preserving Patient / Clinic / Admin / cross-platform impact. Then create `docs/scripts/validate_docs.py` and run Phase 4 documentation verification.
