@@ -134,6 +134,8 @@ OTP behavior must preserve five-minute expiry, single use, maximum five verifica
 6. Internal `I` and internal calculation details remain hidden.
 7. Search data is informational; booking performs current revalidation again.
 
+If a previously eligible provider/service/branch becomes suspended, new affected bookings are blocked. Any already-existing booking remains governed by its authoritative current state while the review workflow specifics are unresolved under `Q-BOOKING-002`; the mobile client must not infer automatic cancellation, confirmation, or another outcome.
+
 ### 6.5 Booking request and provider response
 
 1. Patient chooses an offered slot/provider/service/branch combination.
@@ -142,9 +144,10 @@ OTP behavior must preserve five-minute expiry, single use, maximum five verifica
 4. Booking enters the canonical server state.
 5. Clinic may accept, reject with reason, or propose an alternative.
 6. Patient reads booking detail/list to see the current result and deadline context.
-7. If an alternative is proposed, patient explicitly accepts it; backend revalidates eligibility and alternative capacity before confirmation.
-8. Concurrent requests cannot overbook the slot.
-9. Mobile never treats a local tap or timeout as confirmation without a committed server response.
+7. If an alternative is proposed, patient explicitly accepts it while it remains current and unexpired; backend revalidates eligibility and alternative capacity before confirmation.
+8. If the proposal expires or the patient explicitly declines it, the proposal becomes non-actionable, but the resulting booking state remains unresolved under `Q-BOOKING-001`; the app must not infer `REJECTED`, `CANCELLED`, or return-to-`REQUESTED`.
+9. Concurrent requests cannot overbook the slot.
+10. Mobile never treats a local tap or timeout as confirmation without a committed server response.
 
 ### 6.6 Cancellation
 
@@ -258,6 +261,8 @@ Core mappings include:
 - external finance invalid event → `ERR-FINANCE-001`;
 - review eligibility → `ERR-REVIEWS-001`;
 - claim eligibility/evidence → `ERR-CLAIMS-001`–`002`.
+
+`ERR-BOOKING-003` makes an expired alternative action unavailable; it does not tell the client which booking state should result from expiry/decline while `Q-BOOKING-001` remains unresolved.
 
 Unexpected errors show a safe generic state and correlation identifier when available. Raw stack traces, provider responses, secrets, private paths, or protected domain detail never reach the patient UI.
 
@@ -448,10 +453,10 @@ Backend domain foundations from Admin/Clinic plans may be developed earlier, but
 **Goal:** Implement `API-BOOKING-002`/`003` and scoped mobile booking history/current-detail behavior.  
 **Dependencies:** TASK-BOOKING-007  
 **Expected Files / Areas:** booking patient queries/resources; React Native booking list/detail feature `(Proposed)`  
-**Implementation Notes:** Return safe canonical state, service/provider/branch/slot, deadlines, rejection/alternative reason where allowed, and actionable next-step flags derived server-side. Guardian sees only grants in active data scope.  
+**Implementation Notes:** Return safe canonical state, service/provider/branch/slot, deadlines, rejection/alternative reason where allowed, and actionable next-step flags derived server-side. Guardian sees only grants in active data scope. For suspended eligibility affecting an existing booking, expose the current authoritative booking state only; do not derive an unapproved outcome while `Q-BOOKING-002` is open.  
 **Data / Migration Impact:** None beyond shared booking domain.  
 **API Impact:** Implement API-BOOKING-002/003.  
-**Tests Required:** self/guardian isolation, status filter, resource-not-found/undisclosed behavior, stale cached detail refresh.  
+**Tests Required:** self/guardian isolation, status filter, resource-not-found/undisclosed behavior, stale cached detail refresh, existing suspended-scope booking remains server-authoritative without an invented client state.  
 **Verification:** targeted booking read API tests; `composer test`; mobile verified scripts.  
 **Definition of Done:**
 - [ ] Patient sees only authorized bookings
@@ -464,14 +469,15 @@ Backend domain foundations from Admin/Clinic plans may be developed earlier, but
 **Goal:** Implement `API-BOOKING-004` and explicit patient/guardian acceptance of a provider-proposed alternative.  
 **Dependencies:** TASK-BOOKING-006–008, TASK-AUDIT-003  
 **Expected Files / Areas:** shared alternative acceptance action; API endpoint; React Native alternative-action flow `(Proposed)`  
-**Implementation Notes:** Accept exact alternative/version only. At commit time revalidate actor authority, deadline, current eligibility/readiness and target slot capacity. Repeated acceptance returns original outcome; stale/full alternatives fail deterministically.  
+**Implementation Notes:** Accept exact alternative/version only. At commit time revalidate actor authority, deadline, current eligibility/readiness and target slot capacity. Repeated acceptance returns original outcome; stale/full alternatives fail deterministically. When an alternative expires or is explicitly declined, preserve history and make acceptance non-actionable, but do not infer the resulting booking state while `Q-BOOKING-001` remains unresolved.  
 **Data / Migration Impact:** Reuse booking alternatives/events and capacity structures.  
 **API Impact:** Implement API-BOOKING-004.  
-**Tests Required:** expired alternative, replaced alternative, full slot, revalidation failure, duplicate/repeated acceptance, guardian authorization.  
+**Tests Required:** expired alternative rejected without asserting `REJECTED`, `CANCELLED`, or return-to-`REQUESTED`; replaced alternative; full slot; revalidation failure; duplicate/repeated acceptance; guardian authorization.  
 **Verification:** targeted alternative API tests; `composer test:mysql`; mobile verified scripts.  
 **Definition of Done:**
 - [ ] Alternative requires explicit authorized acceptance
 - [ ] Confirmation revalidates current safety/capacity
+- [ ] Expired/declined alternative outcome is not fabricated
 - [ ] Repeated taps/network retry cannot duplicate effect
 - [ ] Client reconciles unknown outcome from booking detail
 
@@ -775,6 +781,7 @@ Patient implementation is incomplete if any of these are possible:
 12. Protected evidence is exposed through public filesystem URLs.
 13. App reports a mutation as successful solely because it was queued locally while offline.
 14. Production app exposes evaluation-only service definitions as production-ready.
+15. Client invents a booking terminal/rollback state when an alternative expires/declines or when an existing booking is subject to unresolved post-suspension review semantics.
 
 These must be enforced by server tests where applicable, not only by hiding client controls.
 
@@ -787,9 +794,11 @@ The following are not to be silently invented during implementation:
 | Readable full authoritative SRS v1.1 reconciliation | `Q-PLATFORM-001` — Blocker | Cannot claim complete SRS coverage until resolved |
 | Clinical approval of provisional 26-service catalog | `Q-CATALOG-001` — Major | Production patient catalog/readiness remains gated |
 | Production S/P/H/I formulas/thresholds/defaults | `Q-ELIG-001` — Major | Patient discovery can be engineered, but production medical outcome policy requires approval |
+| Alternative expiry / explicit decline outcome | `Q-BOOKING-001` — Major | Make the alternative non-actionable and preserve history; do not infer `REJECTED`, `CANCELLED`, return-to-`REQUESTED`, or another outcome |
+| Existing-booking review after eligibility suspension | `Q-BOOKING-002` — Major | New affected bookings are blocked, but the mobile client must surface authoritative current booking state until review authority/deadline/state-effect/outcomes are approved |
 | Concrete OTP delivery / privileged provider choices | `Q-PLATFORM-003` — Major | OTP application logic can be implemented behind adapter; real production delivery waits for provider configuration |
 | Patient private-evidence upload/download transport/provider | `Q-PLATFORM-003` — Major | Claims/evidence references can be modeled, but do not invent binary transfer endpoints/provider contract; production attachment flow remains incomplete until resolved |
-| Hosting/deployment topology | `Q-OPS-001` — Major | Mobile base URL/release environments depend on selected deployment |
+| Hosting/deployment topology | `Q-OPS-001` — Major | MySQL is the required production relational engine; mobile base URL and release environments depend on selected hosting/provider/topology and deployment configuration |
 | Legal validation of retention/deletion periods | `Q-PLATFORM-002` — Major | Mobile privacy behavior must follow final governed policy when approved |
 
 No payment-provider decision is awaited because payment/custody/money movement is explicitly out of V1 scope.
@@ -804,7 +813,7 @@ No payment-provider decision is awaited because payment/custody/money movement i
 | Guardian | allow/deny, revocation, wrong patient, attribution |
 | Catalog | production filtering, Arabic payload, cache/error states |
 | Provider search | only passing combinations, privacy filtering, freshness/performance |
-| Booking | happy path, full/ineligible, alternative, cancellation, idempotency, 100-way concurrency |
+| Booking | happy path, full/ineligible, alternative acceptance/expiry non-actionability without invented outcome, cancellation, idempotency, 100-way concurrency, existing-booking suspension behavior remains authoritative pending `Q-BOOKING-002` |
 | Treatment acceptance | exact version, stale version, duplicate/concurrent acceptance, immutable snapshots |
 | Timeline | authorization, field filtering, event order |
 | External finance | report/confirm/dispute/refund assertions, duplicate safety, zero money movement |
@@ -815,9 +824,9 @@ No payment-provider decision is awaited because payment/custody/money movement i
 
 Where mobile automation cannot prove clinical/legal approval, the release evidence must reference the governed human approval instead of treating a passing software test as approval.
 
-## 15. Task ID Allocations Added by This Plan
+## 15. Task ID Allocation Status
 
-This file continues task numbering after the Admin and Clinic implementation plans and allocates:
+This file continues task numbering after the Admin and Clinic implementation plans and owns:
 
 - `TASK-IDENTITY-005` through `TASK-IDENTITY-007`;
 - `TASK-AUDIT-003`;
@@ -830,11 +839,11 @@ This file continues task numbering after the Admin and Clinic implementation pla
 - `TASK-CLAIMS-007` through `TASK-CLAIMS-009`;
 - `TASK-PLATFORM-008` through `TASK-PLATFORM-012`.
 
-These IDs are append-only and must be synchronized into the canonical `docs/README.md` registry during the later registry-maintenance step without renumbering earlier tasks.
+These IDs are append-only and are synchronized in the canonical `docs/README.md` registry. Future task additions must update that registry without renumbering or reusing earlier task IDs.
 
-## 16. Recommended Cross-Platform Implementation Order
+## 16. Cross-Platform Implementation and Documentation Status
 
-The safest high-level order after all three platform plans is:
+The canonical high-level implementation order across all three detailed plans is:
 
 1. shared identity/authorization/audit/idempotency foundation;
 2. Admin policy/catalog/launch governance and private evidence foundation;
@@ -849,4 +858,4 @@ The safest high-level order after all three platform plans is:
 11. cross-platform work/notification/monitoring hardening;
 12. production-like concurrency, security, recovery, accessibility/RTL, and release verification.
 
-The next canonical Phase 3 artifact should be `docs/IMPLEMENTATION_PLAN.md`, which must orchestrate the Admin, Clinic, and Patient plans into one dependency graph without copying every task body.
+`docs/IMPLEMENTATION_PLAN.md` already owns the canonical cross-platform orchestration/index without duplicating every detailed task body. `docs/TESTING_STRATEGY.md`, `docs/TRACEABILITY_MATRIX.md`, and `docs/README.md` are synchronized with the current task/test allocations; future changes must preserve append-only IDs and update those artifacts together.
