@@ -288,7 +288,7 @@ A current catalog/policy change never rewrites a previously accepted treatment/f
 
 ### 9.2 Existing-booking safety rule
 
-Automatic suspension blocks **new** affected bookings immediately. Existing bookings enter the configured review workflow. This document intentionally does not invent an automatic cancellation outcome for existing bookings where the canonical requirements do not define one.
+Automatic suspension blocks **new** affected bookings immediately. Existing bookings enter the configured review workflow. The canonical review workflow, decision authority, deadlines, state effect, and allowed outcomes for those existing bookings remain unresolved under `Q-BOOKING-002`; implementations and clients must not infer automatic cancellation, automatic confirmation, or another terminal outcome until that decision is approved.
 
 ### 9.3 Classification visibility
 
@@ -311,7 +311,7 @@ Automatic suspension blocks **new** affected bookings immediately. Existing book
 | Clinic rejects request | Clinic | Append rejection transition + reason | Same booking shows rejected + safe reason | Shows rejected history | Oversight reflects actor/reason | **Patient notification intent**; response work closes | Rejection is history; do not delete booking |
 | Clinic proposes alternative | Clinic | Create/store alternative and `ALTERNATIVE_PROPOSED` state according to canonical model | Shows alternative as actionable for patient | Shows waiting for patient decision | Oversight shows pending alternative | **Patient notification intent** after commit | Clinic does not overwrite original requested facts silently |
 | Patient accepts alternative | Patient/guardian | Revalidate proposal/state/eligibility/capacity; transition to confirmed if valid | Shows confirmed alternative | Same booking shows confirmed alternative | Oversight updates | **Clinic notification intent** after commit; waiting work resolves | Idempotent transition, no duplicate booking |
-| Alternative expires/becomes invalid | System/policy | Current proposal no longer acceptably confirmable | Patient action disabled/rejected on server; current safe state shown | Clinic sees expired/non-actionable proposal | Operations sees deadline/state | Notification optional; work state must no longer imply actionable acceptance | Do not delete earlier proposal/history |
+| Alternative expires/becomes invalid | System/policy | Proposal can no longer be accepted; the canonical resulting booking state remains unresolved under `Q-BOOKING-001` | Patient acceptance is disabled/rejected on server and the current authoritative safe state is shown without inventing a terminal outcome | Clinic sees expired/non-actionable proposal and current authoritative booking state | Operations sees deadline/state and unresolved outcome semantics | Notification/work may reflect expiry, but must not imply an unapproved terminal state | Preserve proposal/history; do not infer `REJECTED`, `CANCELLED`, or return-to-`REQUESTED` until `Q-BOOKING-001` is resolved |
 | Patient cancels booking | Patient/guardian | Authorized cancellation transition with actor/reason/policy snapshot | Shows cancelled | Same booking shows cancelled | Oversight shows cancellation provenance | **Clinic notification intent** after commit; related work closes/updates | Cancellation replaces delete semantics |
 | Clinic cancels booking where policy allows | Clinic | Authorized cancellation transition with actor/reason/policy | Shows cancelled + safe reason | Shows cancelled | Oversight shows provenance | **Patient notification intent** after commit | No hard delete; no silent date/status edit |
 | No-show recorded | Authorized provider/system workflow after policy threshold | Append no-show transition/event | Shows resulting status/consequence safe projection | Shows no-show history | Admin sees actor/time/policy | Patient notification intent when status/consequence requires awareness; downstream work may be created | No early no-show; no deletion |
@@ -628,7 +628,7 @@ Expected result:
 
 ## 23. Required Cross-Platform Integration Tests
 
-`docs/TESTING_STRATEGY.md` owns test design. Phase 3/implementation must include cross-platform integration coverage proving at least the following behaviors.
+`docs/TESTING_STRATEGY.md` owns test design. The current Phase 3 test registry includes cross-platform integration coverage; implementation must preserve and prove at least the following behaviors.
 
 | Scenario | Required assertion |
 |---|---|
@@ -690,9 +690,9 @@ This prevents an agent assigned only the Clinic panel, for example, from impleme
 
 ## 26. Traceability Integration
 
-The upcoming `docs/TRACEABILITY_MATRIX.md` should use this document as the cross-platform behavior reference for requirements that span more than one surface.
+`docs/TRACEABILITY_MATRIX.md` uses this document as the cross-platform behavior reference for requirements that span more than one surface.
 
-The matrix should distinguish at least:
+The matrix distinguishes at least:
 
 - backend/domain implementation;
 - Patient impact;
@@ -714,8 +714,10 @@ This contract intentionally does not invent behavior blocked by unresolved decis
 | `Q-PLATFORM-001` | Full SRS-v1.1 reconciliation cannot be claimed |
 | `Q-CATALOG-001` | Production service visibility remains clinically gated |
 | `Q-ELIG-001` | Production clinical calculation values cannot be treated as approved |
+| `Q-BOOKING-001` | Canonical outcome when an alternative proposal expires or is rejected remains unresolved; clients and implementation must not infer a terminal or rollback state |
+| `Q-BOOKING-002` | Existing-booking review workflow, decision authority, deadlines, state effect, and outcomes after eligibility suspension remain unresolved |
 | `Q-PLATFORM-003` | Concrete OTP, notification, malware-scan, private-storage/evidence-transfer providers remain unresolved; use provider-neutral intents/interfaces |
-| `Q-OPS-001` | Hosting topology/real-time delivery infrastructure is not fixed |
+| `Q-OPS-001` | Hosting/provider/topology remains unresolved, including managed-versus-self-hosted MySQL deployment, HA/PITR implementation, and real-time delivery infrastructure; the production relational engine is MySQL |
 | `Q-PLATFORM-002` | Physical retention/deletion periods require legal validation |
 
 No payment-provider dependency is pending because electronic money movement is explicitly outside V1.
