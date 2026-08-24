@@ -11,7 +11,7 @@
 **Canonical product behavior:** `docs/PRD.md`  
 **Canonical technical design:** `docs/SDD.md` and Phase 2 engineering documents  
 **Testing owner:** `docs/TESTING_STRATEGY.md`  
-**Coverage owner:** `docs/TRACEABILITY_MATRIX.md` — generated after this plan  
+**Coverage owner:** `docs/TRACEABILITY_MATRIX.md` — current requirement/design/test/task coverage  
 **ID registry:** `docs/README.md`
 
 ## 1. Purpose
@@ -106,7 +106,7 @@ The three detailed plans currently allocate **82 implementation tasks**.
 | REVIEWS | `TASK-REVIEWS-001`–`TASK-REVIEWS-003` | 003 |
 | CLAIMS | `TASK-CLAIMS-001`–`TASK-CLAIMS-009` | 009 |
 
-These IDs are append-only. `docs/README.md` still requires a later registry synchronization pass; do not renumber tasks to match its currently stale `TASK` counters.
+These IDs are append-only and are synchronized with the canonical `docs/README.md` registry. Future task allocations must update the registry without renumbering, reusing, or repurposing existing IDs.
 
 ## 7. Execution Lanes
 
@@ -819,9 +819,11 @@ The current implemented public catalog route is production code evidence and mus
 | `Q-PLATFORM-002` | Major | Implement retention mechanism/policy versioning; do not label provisional retention periods legally final. |
 | `Q-OPS-001` | Major | Keep deployment provider-neutral until concrete production topology is selected. |
 | `Q-PLATFORM-003` | Major | Use provider-neutral OTP/MFA/malware/storage/notification boundaries; do not invent provider contracts or patient binary evidence transport. |
+| `Q-PLATFORM-004` | Minor | Treat low-thousands launch population as expected initial load and the 10,000-user target as engineering headroom unless a later approved source supersedes either value. |
 | `CONFLICT-PLATFORM-001` | Major | Implement against verified current Laravel/PHP/package stack rather than obsolete historical stack assumptions. |
+| `CONFLICT-PLATFORM-002` | Major | Keep disputed architecture-quality statements traceable and defer final NFR vs DR/TD classification until complete authoritative SRS reconciliation. |
 
-`CONFLICT-CATALOG-001` remains an allocated historical ID but should be marked resolved during registry maintenance because the currently verified route and current OpenAPI contract align for the implemented catalog route.
+`CONFLICT-CATALOG-001` remains permanently allocated but is **Resolved (2026-08-24)**: the currently verified `GET /api/v1/catalog/service-groups` route and current OpenAPI contract align for the implemented catalog slice. Broader feature-spec aspirations remain Planned and are not implementation evidence.
 
 ## 19. Explicitly Forbidden Implementation Shortcuts
 
@@ -869,14 +871,17 @@ Complete Stages 8–10. Outcome: external financial facts, reviews, claims, huma
 
 Complete Stage 11 plus Phase 3 traceability/validation and Phase 4 verification. Outcome: every applicable requirement is covered or explicitly blocked, NFR evidence exists, and clinical/governance release gates are satisfied for the production scope.
 
-## 21. Phase 3 Handoff After This File
+## 21. Documentation Handoff Status
 
-After this master plan, Phase 3 continues with:
+Phase 3 documentation is complete:
 
-1. `docs/TRACEABILITY_MATRIX.md` — map every confirmed requirement to design/API/data/state/tests/tasks/status across all three platforms.
-2. `docs/scripts/validate_docs.py` — mechanically verify ID integrity, requirement→test/task coverage, dependency existence/cycles, matrix integrity, and blocker consistency.
+- `docs/TESTING_STRATEGY.md` contains the concrete append-only `TC-*` registry;
+- `docs/TRACEABILITY_MATRIX.md` maps all 51 `FR-*` and 14 `NFR-*` requirements to design/platform impacts, `TASK-*`, and concrete `TC-*` coverage;
+- `docs/README.md` is synchronized with the allocated `API-*`, `ERR-*`, `TASK-*`, and `TC-*` maxima;
+- `docs/scripts/validate_docs.py` is implemented and executed by the documentation-validation GitHub Actions workflow;
+- current mechanical documentation validation is clean with 0 failures and 0 warnings.
 
-Before or during that work, the canonical `docs/README.md` registry must be synchronized with the already allocated `API-*`, `ERR-*`, and `TASK-*` maxima without renumbering existing IDs. Concrete `TC-*` IDs should be allocated only when the Phase 3 testing/traceability artifacts register executable cases; placeholder test IDs must not be invented merely to satisfy counts.
+Phase 4 manual evidence/consistency verification is the active documentation stage. Any additional maintenance discovered there must preserve existing IDs and source priority. `Q-PLATFORM-001` continues to prevent a claim of complete authoritative-SRS reconciliation until readable SRS v1.1 text is available; it does not invalidate the completed `.spec`-baseline traceability work.
 
 ## 22. Final Execution Rule
 
