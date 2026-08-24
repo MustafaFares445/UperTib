@@ -101,7 +101,7 @@ The columns describe functional impact, not UI layout.
 
 | Requirement | Source | Design / Data / API | Patient | Clinic | Admin | Cross-Platform Behavior | Tests | Tasks | Implementation State | Gate / Open Item | Status |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| `FR-BOOKING-001` — booking request and safety revalidation | `.spec FR.04.1.1` / SRS `FR-006` | `API-BOOKING-001`–`003`; booking state machine; slots/bookings | Action/Read | Action/Read | Oversight | Patient request → Clinic work → authoritative confirmation visible everywhere | `TC-BOOKING-001`, `002`, `004`, `005`, `007`, `008`; `TC-ELIG-010` | `TASK-BOOKING-001`, `003`–`005`, `007`, `008` | Planned | — | Covered |
+| `FR-BOOKING-001` — booking request and safety revalidation | `.spec FR.04.1.1` / SRS `FR-006` | `API-BOOKING-001`–`003`; booking state machine; slots/bookings | Action/Read | Action/Read | Oversight | Patient request → Clinic work → authoritative confirmation visible everywhere | `TC-BOOKING-001`, `TC-BOOKING-002`, `TC-BOOKING-004`, `TC-BOOKING-005`, `TC-BOOKING-007`, `TC-BOOKING-008`; `TC-ELIG-010` | `TASK-BOOKING-001`, `003`–`005`, `007`, `008` | Planned | — | Covered |
 | `FR-BOOKING-002` — cancellation and no-show | `.spec FR.04.1.2` / SRS `FR-033` | `API-BOOKING-005`; booking events/state | Action/Read | Action/Read | Oversight | Transition propagates; record is not hard-deleted | `TC-BOOKING-006`, `008` | `TASK-BOOKING-002`, `006`, `010` | Planned | Policy values versioned | Covered |
 | `FR-BOOKING-003` — provider response/alternative/deadline | `.spec FR.04.2.1` / SRS `FR-007` | `API-BOOKING-004`; shared provider response actions | Action/Read | Action | Oversight | Clinic response → Patient/Admin projection + post-commit notification | `TC-BOOKING-003`–`005`, `008` | `TASK-BOOKING-004`, `005`, `008`, `009` | Planned | — | Covered |
 
@@ -148,7 +148,7 @@ The columns describe functional impact, not UI layout.
 
 | Requirement | Source | Design / Data / API | Patient | Clinic | Admin | Cross-Platform Behavior | Tests | Tasks | Implementation State | Gate / Open Item | Status |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| `FR-OPS-001` — operational work queues | `.spec FR.10.1.1` / SRS `FR-029` | work items; monitoring; cross-platform work rules | Indirect | Read/Action scoped | Action/Oversight | Work references but never replaces source record | `TC-OPS-001`, `002`, `005`; `TC-BOOKING-002`, `TC-CLAIMS-004` | `TASK-OPS-002`, `004`; emitting domain tasks | Planned | — | Covered |
+| `FR-OPS-001` — operational work queues | `.spec FR.10.1.1` / SRS `FR-029` | work items; monitoring; cross-platform work rules | Indirect | Read/Action scoped | Action/Oversight | Work references but never replaces source record | `TC-OPS-001`, `TC-OPS-002`, `TC-OPS-005`; `TC-BOOKING-002`, `TC-CLAIMS-004` | `TASK-OPS-002`, `004`; emitting domain tasks | Planned | — | Covered |
 | `FR-OPS-002` — operational reporting | `.spec FR.14.1.1` / SRS `FR-035` | reporting read models; monitoring | — | Scoped if approved | Action/Read | Reports derive from authoritative data | `TC-OPS-003`, `005` | `TASK-OPS-003`, `TASK-PLATFORM-004` | Planned | — | Covered |
 | `FR-OPS-003` — launch readiness gate | `.spec FR.14.2.1` / PO-2026-08-23 | existing launch gates/publication | Indirect catalog result | Indirect activation availability | Action | Publication/readiness propagates to catalog/Clinic availability | `TC-OPS-004`, `TC-CATALOG-004`, `005` | `TASK-OPS-001`, `TASK-CATALOG-001` | **Partial existing** | `Q-CATALOG-001` | Covered |
 
@@ -185,7 +185,7 @@ The columns describe functional impact, not UI layout.
 | `NFR-PLATFORM-006` — weak-connectivity resilience | `.spec NFR.10` | mobile network/cache; idempotency | Primary | browser retry semantics | operational retry semantics | `TC-PLATFORM-009`, `010`; `TC-BOOKING-008` | `TASK-PLATFORM-009`, `010`, `012` | Planned | — | Covered |
 | `NFR-PLATFORM-007` — maintainability/contract versioning | `.spec NFR.11` | Architecture/API; Composer quality gates | stable `/api/v1` | shared actions/separate panel | shared actions/Admin panel | `TC-PLATFORM-011` | `TASK-PLATFORM-001`, `005`, `008`, `012` | Partial foundation existing | Historical stack conflict handled by verified current stack | Covered |
 | `NFR-PLATFORM-008` — observability/queue operations | `.spec NFR.12` | Monitoring; work queues; correlation | safe support context | work/notification visibility | operations monitoring | `TC-PLATFORM-008`, `010`; `TC-AUDIT-005`; `TC-OPS-002` | `TASK-PLATFORM-004`, `007`, `012`; `TASK-OPS-002`, `004` | Planned | Provider-specific delivery unresolved | Covered |
-| `NFR-FINANCE-001` — zero money movement | `.spec NFR.13` | SDD finance boundary; architecture/security | no payment/custody | no gateway/refund execution | no settlement/payout controls | `TC-FINANCE-004`, `007`, `008`; `TC-CLAIMS-006` | all `TASK-FINANCE-*`; platform release gates | Planned | Hard V1 boundary | Covered |
+| `NFR-FINANCE-001` — zero money movement | `.spec NFR.13` | SDD finance boundary; architecture/security | no payment/custody | no gateway/refund execution | no settlement/payout controls | `TC-FINANCE-004`, `007`, `008`; `TC-CLAIMS-006` | `TASK-FINANCE-001`–`011`; `TASK-PLATFORM-012` | Planned | Hard V1 boundary | Covered |
 | `NFR-AUDIT-003` — immutable snapshot/event integrity | `.spec NFR.14` | ERD/state/policy reproduction | accepted history | append/version actions | oversight/reproduction | `TC-AUDIT-004`; `TC-POLICY-003`; `TC-ELIG-005`, `009`; `TC-CLINICAL-004`–`006`; `TC-FINANCE-001`, `003`–`006`; `TC-CLAIMS-006`, `007` | `TASK-AUDIT-001`, `002`; eligibility/clinical/finance/claim tasks | Planned | — | Covered |
 
 ---
@@ -213,7 +213,7 @@ The columns describe functional impact, not UI layout.
 | Sensitive claim decision | Admin human reviewer | Authorized Patient/Clinic result projection | `TC-CLAIMS-005`, `006` |
 | Claim appeal | Patient or eligible Clinic party | Admin independent review on same appeal record | `TC-CLAIMS-007` |
 | Permission/grant revocation | Authorized grantor/Admin/system | Access denied on next request across affected adapters | `TC-IDENTITY-007` |
-| Work-item mutation | Admin/Clinic operations | Source Booking/Case/Claim/etc. remains unchanged unless domain action runs | `TC-OPS-001`, `005` |
+| Work-item mutation | Admin/Clinic operations | Source Booking/Case/Claim/etc. remains unchanged unless domain action runs | `TC-OPS-001`, `TC-OPS-005` |
 | Delayed/failed notification | Delivery infrastructure | Business state remains committed and authoritative refresh converges surfaces | `TC-PLATFORM-010` |
 
 A capability above is not implementation-complete if only the initiating platform passes while an expected other-surface projection/action is missing.
@@ -230,7 +230,7 @@ A capability above is not implementation-complete if only the initiating platfor
 | Review | governed active/integrity workflow, no direct Clinic/Admin rating rewrite | `TC-REVIEWS-003`, `004` |
 | Guardian/staff grant | revoke/expire, preserve actor history | `TC-IDENTITY-007` |
 | Evidence | governed lifecycle/retention/legal hold | `TC-PLATFORM-002`–`004` |
-| Work item | operational state only | `TC-OPS-001`, `005` |
+| Work item | operational state only | `TC-OPS-001`, `TC-OPS-005` |
 | Notification intent | delivery/retry state only | `TC-BOOKING-008`, `TC-PLATFORM-010` |
 
 # 9. Coverage Summary
@@ -277,12 +277,8 @@ Future changes must preserve all of the following:
 - execution ordering remains owned by `IMPLEMENTATION_PLAN.md`;
 - this matrix records links/status and does not invent new product behavior.
 
-# 11. Phase 3 Continuation
+# 11. Phase 4 Verification
 
-Concrete test allocation, README registry synchronization, and traceability binding are now complete.
+Phase 3 artifact generation is complete. `docs/scripts/validate_docs.py` now performs the mechanical integrity checks and is executed by the repository documentation-validation workflow.
 
-The next and final Phase 3 artifact is:
-
-`docs/scripts/validate_docs.py`
-
-After the validator is generated, Phase 4 must run it against the repository, repair any mechanical inconsistencies one file at a time, and report exact final counts, generated/omitted artifacts, unresolved gates, and engineering-to-UX readiness.
+Phase 4 must continue until the validator reports zero failures. The final verification report must record exact requirement/API/error/task/test counts, generated and intentionally omitted artifacts, unresolved `Q-*` / `CONFLICT-*` items, and engineering-to-UX readiness without claiming clinical or SRS reconciliation that remains blocked.
