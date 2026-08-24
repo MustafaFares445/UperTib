@@ -22,11 +22,13 @@ Two product boundaries apply to every flow:
 
 `Q-PLATFORM-001` remains a Blocker for claiming complete reconciliation against readable SRS v1.1 text. `Q-CATALOG-001`, `Q-ELIG-001`, `Q-PLATFORM-002`, `Q-PLATFORM-003`, and `Q-OPS-001` continue to govern production clinical, retention, provider, and infrastructure details.
 
+The D1–D8 stores below are logical domain stores. Their relational tables persist in **MySQL in production** under the approved `NFR-PLATFORM-002` / `NFR.02` recovery baseline. `Q-OPS-001` leaves the concrete MySQL hosting/product/HA/PITR topology unresolved; it does not leave the production database engine unresolved.
+
 ## 2. DFD Conventions
 
 - **External entity** — a person, role group, or provider outside the UberTib application process boundary.
 - **Process** — an UberTib application/domain capability that transforms, validates, or routes information.
-- **Data store** — an authoritative or durable logical store represented physically by one or more ERD tables.
+- **Data store** — an authoritative or durable logical store represented physically by one or more ERD tables; production relational persistence is MySQL even though the diagrams remain engine-neutral at the logical-store level.
 - **Derived view** — rebuildable/read-only information assembled from authoritative stores.
 - **Provider adapter** — an external delivery/storage/scanning boundary whose concrete vendor is not selected.
 
@@ -472,8 +474,8 @@ flowchart TD
     PROVIDER -->|evidence where authorized| P63
     D3 -->|scan/validation state| P63
     D2 -->|evidence/deadline rules| P63
-    P63 -->|evidence bindings + append-only deadline events| D3
-    P63 -->|deadline history / completeness state| D7
+    P63 -->|evidence bindings / evidence-state updates| D3
+    P63 -->|append-only deadline events / deadline history / completeness state| D7
 
     REVIEWER -->|reasoned human decision| P64
     D7 -->|claim/review facts and deadline history| P64
@@ -671,11 +673,14 @@ Cross-scope requests may be returned as not found when existence itself is prote
 | Q-CATALOG-001 | Major | Production catalog flow cannot treat provisional records as clinically approved. |
 | Q-ELIG-001 | Major | Production S/P/H/I calculation inputs/thresholds remain clinically governed. |
 | Q-PLATFORM-002 | Major | Retention/destruction flow needs final legal/compliance validation. |
-| Q-OPS-001 | Major | Concrete hosting/storage/queue topology remains provider-neutral. |
+| Q-OPS-001 | Major | Concrete hosting/storage/queue topology and the managed/self-hosted MySQL product, HA, PITR implementation, and network placement remain unresolved; the production relational engine is MySQL. |
 | Q-PLATFORM-003 | Major | OTP/MFA, storage, malware-scan and notification provider contracts remain unresolved. |
 | CONFLICT-PLATFORM-001 | Major | Historical stack assumptions do not override the verified Laravel/PHP baseline. |
-| CONFLICT-CATALOG-001 | Major | Registry wording should be reviewed because current route and current OpenAPI now align. |
 | CONFLICT-PLATFORM-002 | Major | Final NFR vs DR/TD classification awaits complete SRS reconciliation. |
+
+### Resolved allocated conflict
+
+`CONFLICT-CATALOG-001` remains permanently allocated but is **Resolved (2026-08-24)**. The currently verified catalog route and current OpenAPI contract align; broader feature-spec aspirations remain planned rather than being treated as implemented route evidence.
 
 ## 21. Document Boundary
 
