@@ -14,7 +14,7 @@ This document owns runtime and environment configuration guidance for UberTib V1
 
 Configuration must not become a second policy engine. Clinical formulas, S/P/H/I weights and thresholds, eligibility rules, evidence rules, deadlines, cancellation rules, financial rules, and other historically reproducible business behavior belong in versioned domain policy records, not `.env` values.
 
-`Q-PLATFORM-001` still blocks a claim of complete reconciliation with readable SRS v1.1. `Q-PLATFORM-003` and `Q-OPS-001` leave concrete production providers and hosting topology unresolved.
+`Q-PLATFORM-001` still blocks a claim of complete reconciliation with readable SRS v1.1. `Q-PLATFORM-003` and `Q-OPS-001` leave concrete production providers, hosting, and deployment topology unresolved. They do **not** leave the production database engine unresolved: the approved `NFR-PLATFORM-002` / `NFR.02` baseline requires MySQL point-in-time recovery, so MySQL is the production database engine for the current V1 baseline.
 
 ## 2. Configuration Principles
 
@@ -122,42 +122,52 @@ Those capabilities are out of V1 scope and cannot be activated by configuration.
 
 ## 6. Database Configuration
 
-The current default is SQLite:
+The current **development example default** is SQLite:
 
 ```text
 DB_CONNECTION=sqlite
 ```
 
-Current Laravel configuration also includes MySQL, MariaDB, PostgreSQL, and SQL Server connection definitions. The verified UberTib migrations contain SQLite/MySQL-specific integrity trigger implementations for current catalog/governance tables.
+Current Laravel configuration also includes MySQL, MariaDB, PostgreSQL, and SQL Server connection definitions. Framework availability does not make those engines interchangeable for UberTib production. The verified UberTib migrations contain SQLite/MySQL-specific integrity trigger implementations for current catalog/governance tables, and the approved `NFR-PLATFORM-002` / `NFR.02` recovery baseline explicitly requires **MySQL point-in-time recovery**.
+
+Therefore the current V1 environment rule is:
+
+```text
+Production: DB_CONNECTION=mysql
+Local/test: SQLite may be used where appropriate, with MySQL verification for engine-sensitive behavior
+```
 
 ### 6.1 Relevant Variables
 
 | Variable | Purpose |
 |---|---|
-| `DB_CONNECTION` | Selected Laravel connection. |
-| `DB_URL` | Optional full connection URL. |
+| `DB_CONNECTION` | Selected Laravel connection; must resolve to MySQL in production. |
+| `DB_URL` | Optional full MySQL connection URL in production. |
 | `DB_HOST` | Database host when applicable. |
 | `DB_PORT` | Database port. |
-| `DB_DATABASE` | Database/schema name or SQLite path. |
+| `DB_DATABASE` | Database/schema name or SQLite path in local/test. |
 | `DB_USERNAME` | Database principal. |
 | `DB_PASSWORD` | Database secret. |
-| `DB_SOCKET` | Optional MySQL/MariaDB socket. |
+| `DB_SOCKET` | Optional MySQL socket. |
 | `DB_CHARSET` / `DB_COLLATION` | Character set/collation; current MySQL defaults are `utf8mb4` / `utf8mb4_unicode_ci`. |
 | `MYSQL_ATTR_SSL_CA` | Optional MySQL TLS CA. |
-| `DB_FOREIGN_KEYS` | SQLite foreign-key enforcement. |
+| `DB_FOREIGN_KEYS` | SQLite foreign-key enforcement for local/test use. |
 
 ### 6.2 Environment Rules
 
 **Local/test**
 
-- SQLite is supported by current migrations/tests.
+- SQLite is supported by current migrations/tests and may remain the fast isolated test engine where behavior is engine-independent.
 - Foreign keys must stay enabled when tests rely on relational integrity.
+- MySQL-specific migrations, triggers, locking, constraints, concurrency, and recovery assumptions must also be exercised through the repository's MySQL verification path before release.
 
 **Production**
 
-- The concrete managed/self-hosted database topology remains part of `Q-OPS-001`.
-- Production must use a relational deployment that preserves all documented foreign keys, transactions, row locking, uniqueness rules, append-only constraints, and recovery objectives.
-- Before deployment, all database-specific trigger/constraint behavior must be exercised against the chosen production database engine, not only SQLite test runs.
+- **MySQL is the required production relational engine for the current V1 baseline.**
+- The concrete managed/self-hosted MySQL product, hosting provider, HA arrangement, network placement, backup/PITR implementation, and operational topology remain part of `Q-OPS-001`.
+- Production MySQL must preserve all documented foreign keys, transactions, row locking, uniqueness rules, append-only constraints, Arabic `utf8mb4` data behavior, and recovery objectives.
+- Production recovery must support MySQL point-in-time recovery while satisfying the approved RPO/RTO targets.
+- Before deployment, all database-specific trigger/constraint behavior must be exercised against MySQL, not only SQLite test runs.
 - Database credentials must use least privilege appropriate to runtime versus migration/deployment operations where the hosting setup supports separate principals.
 
 ### 6.3 Business Policy Must Not Live in DB Environment Variables
@@ -475,7 +485,7 @@ APP_URL=https://<approved-host>
 UBERTIB_CATALOG_MODE=production
 UBERTIB_FINANCIAL_MODE=record_only_non_funded
 
-DB_CONNECTION=<approved production relational connection>
+DB_CONNECTION=mysql
 DB_HOST=<secret/config>
 DB_DATABASE=<secret/config>
 DB_USERNAME=<secret>
@@ -492,7 +502,7 @@ MAIL_MAILER=<approved provider only when configured>
 LOG_CHANNEL=<approved operational logging channel>
 ```
 
-This block intentionally omits vendor-specific OTP/MFA, malware-scanning, notification, storage, and hosting settings because those providers are not yet approved.
+The concrete MySQL host/service/topology remains unresolved under `Q-OPS-001`; the MySQL engine itself is not unresolved. This block intentionally omits vendor-specific OTP/MFA, malware-scanning, notification, storage, and hosting settings because those providers are not yet approved.
 
 ## 18. Local / Evaluation Configuration Profile
 
@@ -520,13 +530,14 @@ Local mode does not waive product invariants. In particular:
 
 ## 19. Test Configuration Expectations
 
-Automated tests may use isolated SQLite/database/cache/queue drivers for speed, but tests that verify engine-specific constraints or deployment behavior must also exercise the selected production stack.
+Automated tests may use isolated SQLite/database/cache/queue drivers for speed, but tests that verify engine-specific constraints or deployment behavior must also exercise **MySQL**, the required production database engine.
 
 Test environments should explicitly verify at least:
 
 - evaluation versus production catalog visibility;
 - `record_only_non_funded` enforcement;
-- database constraint/trigger behavior on the production database engine;
+- database constraint/trigger behavior on MySQL;
+- MySQL locking/concurrency behavior for booking and other contention-sensitive workflows;
 - queue-after-commit behavior for side effects;
 - cache staleness cannot bypass booking-time revalidation;
 - session/auth isolation for privileged and scoped users;
@@ -543,7 +554,9 @@ Before a production release is considered healthy, deployment verification shoul
 | `APP_DEBUG=true` in production | Deployment fails. |
 | `UBERTIB_FINANCIAL_MODE != record_only_non_funded` | Application/business initialization fails closed. |
 | `UBERTIB_CATALOG_MODE=evaluation` in production | Deployment fails or is blocked by release validation. |
-| Database unavailable | Health/readiness fails; do not accept business writes. |
+| Effective production database connection is not MySQL | Deployment/release validation fails. |
+| MySQL unavailable | Health/readiness fails; do not accept business writes. |
+| Required MySQL PITR/recovery capability is not configured/verified | Production promotion is blocked. |
 | Queue unavailable | Business writes may continue only where post-commit delivery is safely recoverable; operations must see degraded state. |
 | Private evidence store unavailable | Evidence intake/download fails closed; no fallback to public storage. |
 | Malware scanner unavailable where scan is mandatory | Evidence remains quarantined; do not mark clean. |
@@ -588,7 +601,8 @@ Where possible, production credentials should be injected from the hosting platf
 | Concern | Runtime configuration? | Canonical owner |
 |---|---|---|
 | Application URL/environment/debug | Yes | Deployment configuration |
-| Database/cache/queue/storage/log provider | Yes | Deployment/infrastructure configuration |
+| Production database engine | Yes; fixed to MySQL for current V1 baseline | `NFR-PLATFORM-002` / `NFR.02` + deployment configuration |
+| MySQL hosting/product/topology and cache/queue/storage/log provider | Yes | Deployment/infrastructure configuration; provider choice remains `Q-OPS-001` |
 | Catalog evaluation vs production mode | Yes | `config/ubertib.php`, release environment |
 | V1 record-only financial mode | Yes, invariant switch | `config/ubertib.php` + domain enforcement |
 | Service definitions | No | Versioned service-definition records |
@@ -607,7 +621,7 @@ Where possible, production credentials should be injected from the hosting platf
 - `Q-PLATFORM-001` — authoritative SRS v1.1 text remains unreadable for complete reconciliation.
 - `Q-PLATFORM-002` — final retention/deletion periods require legal/compliance validation.
 - `Q-PLATFORM-003` — OTP/MFA, malware scanning, private-evidence transfer/storage, and related provider selections remain unresolved.
-- `Q-OPS-001` — production hosting/deployment/database/cache/queue/log aggregation topology/provider remains unresolved.
+- `Q-OPS-001` — production hosting/deployment topology and the concrete managed/self-hosted MySQL service, HA/PITR implementation, cache, queue, storage, and log-aggregation providers remain unresolved; **the production database engine itself is MySQL and is not open under this question**.
 - Current `.env.example` is development-oriented and must not be deployed unchanged to production.
 - Current queue connections use `after_commit=false`; domain implementation must explicitly guarantee post-commit dispatch for relevant side effects.
 - The current mobile API authentication transport is not established and must not be inferred from Laravel's browser session configuration.
