@@ -60,8 +60,8 @@ The repository SRS v1.1 is not readable through the current GitHub connector. `Q
 
 - **Phase 1 complete:** `docs/PRD.md`, `docs/SDD.md`.
 - **Phase 2 complete:** `SYSTEM_ARCHITECTURE`, `COMPONENT_DESIGN`, `API_CONTRACTS`, `ERROR_CATALOG`, `ERD`, `DFD`, `STATE_MACHINES`, `PERMISSIONS_MATRIX`, `SEQUENCE_DIAGRAMS`, `CONFIGURATION`, `INFRASTRUCTURE`, `MONITORING`.
-- **Phase 3 generated:** `TESTING_STRATEGY`, three platform plans, master `IMPLEMENTATION_PLAN`, `CROSS_PLATFORM_BEHAVIOR`, `TRACEABILITY_MATRIX`.
-- **Phase 3 remaining:** synchronize `TC-*` into `TRACEABILITY_MATRIX`, then generate `docs/scripts/validate_docs.py`.
+- **Phase 3 complete:** `TESTING_STRATEGY`, three platform implementation plans, master `IMPLEMENTATION_PLAN`, `CROSS_PLATFORM_BEHAVIOR`, `TRACEABILITY_MATRIX`, and `docs/scripts/validate_docs.py`.
+- **Phase 4 verification in progress:** the mechanical validator is currently clean with 0 failures / 0 warnings; manual evidence and consistency review is still in progress.
 - **Omitted:** `docs/ux/SCREEN_INVENTORY.md` because no authoritative business UI exists yet.
 - **Omitted currently:** `docs/integrations/INTEGRATION_CONTRACTS.md` because no concrete third-party provider contract is approved; V1 has no payment/custody integration.
 
