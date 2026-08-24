@@ -992,16 +992,19 @@ Protected payloads, OTP values, credential secrets, signed evidence links, and p
 | Q-CATALOG-001 | Major | Catalog production publication cannot treat the 26 provisional records as clinically approved. |
 | Q-ELIG-001 | Major | Production S/P/H/I/confidence formulas and thresholds require licensed clinical approval. |
 | Q-PLATFORM-002 | Major | Retention/deletion policy values require final legal/compliance validation. |
-| Q-OPS-001 | Major | Infrastructure/storage topology/provider selection remains unresolved. |
+| Q-OPS-001 | Major | Hosting/provider/topology remains unresolved, including managed-versus-self-hosted MySQL deployment, HA/PITR implementation, object storage, queue, and related operational infrastructure; the production database engine itself is MySQL. |
 | Q-PLATFORM-003 | Major | OTP/MFA, malware scanning, evidence storage, and notification providers remain unresolved. |
 | Q-PLATFORM-004 | Minor | Low-thousands launch population remains distinct from the approved 10,000-identity engineering envelope. |
 | CONFLICT-PLATFORM-001 | Major | Historical stack assumptions must not override verified current Laravel/PHP/package constraints. |
-| CONFLICT-CATALOG-001 | Major | Contract/spec intent and verified implemented route surface remain separately classified. |
 | CONFLICT-PLATFORM-002 | Major | Final NFR-vs-DR/TD classification awaits complete SRS reconciliation. |
 
-## 29. Downstream Documentation Ownership
+### Resolved allocated conflict
 
-This component document deliberately does not duplicate details owned by later Phase 2 files:
+`CONFLICT-CATALOG-001` remains permanently allocated but is **Resolved (2026-08-24)**. The verified `GET /api/v1/catalog/service-groups` route and current OpenAPI contract align. Broader feature-spec intent remains Planned and does not expand the verified implemented route surface.
+
+## 29. Canonical Documentation Ownership
+
+This component document deliberately does not duplicate details owned by the current canonical engineering files:
 
 - endpoint shapes and request/response contracts → `docs/api/API_CONTRACTS.md`;
 - stable API/client errors → `docs/api/ERROR_CATALOG.md`;
@@ -1023,4 +1026,4 @@ This document is complete for the current engineering-documentation baseline whe
 - no component duplicates product rules owned by the PRD;
 - no component introduces payment/custody behavior;
 - clinical-governance blockers remain explicit;
-- API, data, state, permission, sequence, configuration, infrastructure, and monitoring details are delegated to their canonical downstream documents.
+- API, data, state, permission, sequence, configuration, infrastructure, and monitoring details are delegated to their canonical engineering documents.
