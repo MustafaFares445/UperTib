@@ -2,7 +2,7 @@
 
 **Phase:** 2 — Conditional Engineering Documentation  
 **Mode:** Existing Repository  
-**Baseline:** 2026-08-23  
+**Baseline:** 2026-08-24  
 **Product source:** `docs/PRD.md`  
 **Technical source:** `docs/SDD.md`  
 **Architecture source:** `docs/architecture/SYSTEM_ARCHITECTURE.md`  
@@ -31,7 +31,7 @@ Only one API route is currently verified as implemented: `GET /api/v1/catalog/se
 
 ## 3. Common Error References
 
-The following error IDs are referenced by contracts below and are to be defined canonically in `ERROR_CATALOG.md`:
+The following error IDs are referenced by contracts below and are defined canonically in `ERROR_CATALOG.md`:
 
 - `ERR-PLATFORM-001` — validation failed.
 - `ERR-IDENTITY-001` — authentication required.
@@ -93,7 +93,7 @@ The following error IDs are referenced by contracts below and are to be defined 
 **Existing Tests:** `UberTip-Backend/tests/Feature/Api/V1/Catalog/ListServiceGroupsTest.php`.  
 **Source Evidence:** `routes/api.php`, catalog resources, current OpenAPI contract, feature tests.
 
-Current route and current OpenAPI evidence align on this single public route. Therefore the previous `CONFLICT-CATALOG-001` wording about route/OpenAPI breadth should be reviewed for resolution during registry maintenance; broader feature-spec behavior remains separate from implemented route evidence.
+Current route and current OpenAPI evidence align on this single public route. `CONFLICT-CATALOG-001` is retained only as a permanently allocated **Resolved (2026-08-24)** historical ID. Broader feature-spec behavior remains Planned and is not evidence that additional routes are currently implemented.
 
 ## 5. Identity and Patient Access
 
@@ -110,7 +110,7 @@ Current route and current OpenAPI evidence align on this single public route. Th
 **Side Effects:** Creates/replaces a verification challenge and queues provider delivery. Resend invalidates the previous OTP without resetting accumulated failure counts.  
 **Idempotency / Concurrency:** Rate-limit identity must prevent parallel-send bypass. No business-account activation occurs here.  
 **Data Touched:** OTP challenge metadata, candidate contact identity, audit/rate-limit state.  
-**Tests:** Phase 3 must cover send limit, expiry metadata, no OTP leakage, and resend invalidation.
+**Tests:** Required coverage includes send limit, expiry metadata, no OTP leakage, and resend invalidation.
 
 ### API-IDENTITY-002 — Verify Patient OTP and Activate Identity
 
@@ -125,7 +125,7 @@ Current route and current OpenAPI evidence align on this single public route. Th
 **Side Effects:** Marks challenge consumed; activates or links patient identity; audits the event.  
 **Idempotency / Concurrency:** Concurrent successful verification attempts produce at most one active identity outcome.  
 **Data Touched:** Patient identity, contact verification, OTP challenge, audit/idempotency record.  
-**Tests:** Phase 3 must cover valid/expired/used/wrong OTP, attempt boundary, duplicate activation, and concurrent verification.
+**Tests:** Required coverage includes valid/expired/used/wrong OTP, attempt boundary, duplicate activation, and concurrent verification.
 
 ### API-IDENTITY-003 — Get Current Patient Identity
 
@@ -139,7 +139,7 @@ Current route and current OpenAPI evidence align on this single public route. Th
 **Side Effects:** None except ordinary access audit where policy requires it.  
 **Idempotency / Concurrency:** Read-only.  
 **Data Touched:** Identity and active grants.  
-**Tests:** Phase 3 authorization and scope tests.
+**Tests:** Required authorization and scope coverage.
 
 ### API-IDENTITY-004 — Create Guardian/Family Grant
 
@@ -153,7 +153,7 @@ Current route and current OpenAPI evidence align on this single public route. Th
 **Side Effects:** Creates an auditable scoped grant.  
 **Idempotency / Concurrency:** Required to prevent duplicate equivalent grants.  
 **Data Touched:** Guardian/family grant, patient/grantee identities, audit/idempotency.  
-**Tests:** Phase 3 grant-scope, invalid relationship/basis, duplicate, and authorization tests.
+**Tests:** Required coverage includes grant scope, invalid relationship/basis, duplicate, and authorization cases.
 
 ### API-IDENTITY-005 — Revoke Guardian/Family Grant
 
@@ -167,7 +167,7 @@ Current route and current OpenAPI evidence align on this single public route. Th
 **Side Effects:** Ends authorization immediately while retaining historical grant/audit records.  
 **Idempotency / Concurrency:** Repeated revocation is safe and creates no duplicate effect.  
 **Data Touched:** Grant lifecycle/audit.  
-**Tests:** Phase 3 immediate-deny-after-revocation and repeated-action tests.
+**Tests:** Required coverage includes immediate denial after revocation and repeated-action safety.
 
 ## 6. Eligibility and Provider Discovery
 
@@ -184,7 +184,7 @@ Current route and current OpenAPI evidence align on this single public route. Th
 **Side Effects:** None.  
 **Idempotency / Concurrency:** Read-only; booking must revalidate rather than trust this result.  
 **Data Touched:** Catalog, provider/branch facts, current eligibility decision, price, verified-review aggregate, appointment availability.  
-**Tests:** Phase 3 search filtering, exclusion of failing gates, privacy fields, and p95 provider-search verification.
+**Tests:** Required coverage includes search filtering, exclusion of failing gates, privacy fields, and p95 provider-search verification.
 
 ### API-ELIG-002 — Get Provider Eligibility Explanation
 
@@ -198,7 +198,7 @@ Current route and current OpenAPI evidence align on this single public route. Th
 **Side Effects:** None.  
 **Idempotency / Concurrency:** Read-only.  
 **Data Touched:** Current eligibility snapshot and safe reason projection.  
-**Tests:** Phase 3 pending-vs-F, confidential-field exclusion, and exact-scope tests.
+**Tests:** Required coverage includes pending-vs-F, confidential-field exclusion, and exact-scope cases.
 
 ### API-ELIG-003 — Submit Service Activation Request
 
@@ -212,7 +212,7 @@ Current route and current OpenAPI evidence align on this single public route. Th
 **Side Effects:** Creates source-fact/evidence request and queues governed verification/evaluation work as appropriate.  
 **Idempotency / Concurrency:** Required. Identical retry returns original request; different payload on same key is rejected.  
 **Data Touched:** Activation request, questionnaire facts, evidence references, service definition, audit/idempotency.  
-**Tests:** Phase 3 no-manual-outcome-field, missing evidence, duplicate submission, and scope tests.
+**Tests:** Required coverage includes no manual-outcome field, missing evidence, duplicate submission, and scope enforcement.
 
 ### API-ELIG-004 — Get Service Activation Request
 
@@ -225,7 +225,7 @@ Current route and current OpenAPI evidence align on this single public route. Th
 **Side Effects:** None.  
 **Idempotency / Concurrency:** Read-only.  
 **Data Touched:** Activation request, evidence status, current decision summary.  
-**Tests:** Phase 3 ownership/scope and blocker-state tests.
+**Tests:** Required ownership/scope and blocker-state coverage.
 
 ## 7. Booking
 
@@ -242,7 +242,7 @@ Current route and current OpenAPI evidence align on this single public route. Th
 **Side Effects:** Creates booking request, audit entry, provider work/notification after commit.  
 **Idempotency / Concurrency:** Mandatory. Capacity protection must prevent overbooking under concurrent requests.  
 **Data Touched:** Booking, slot/capacity, eligibility snapshot reference, case/actor identity, audit/idempotency.  
-**Tests:** Phase 3 happy path, ineligible provider, full slot, duplicate key, conflicting payload, and 100-concurrent-attempt capacity test.
+**Tests:** Required coverage includes happy path, ineligible provider, full slot, duplicate key, conflicting payload, and the 100-concurrent-attempt capacity case.
 
 ### API-BOOKING-002 — List My Bookings
 
@@ -256,7 +256,7 @@ Current route and current OpenAPI evidence align on this single public route. Th
 **Side Effects:** None.  
 **Idempotency / Concurrency:** Read-only.  
 **Data Touched:** Scoped bookings and safe projections.  
-**Tests:** Phase 3 owner/guardian isolation and state-filter tests.
+**Tests:** Required owner/guardian isolation and state-filter coverage.
 
 ### API-BOOKING-003 — Get Booking
 
@@ -269,7 +269,7 @@ Current route and current OpenAPI evidence align on this single public route. Th
 **Side Effects:** None.  
 **Idempotency / Concurrency:** Read-only.  
 **Data Touched:** Booking lifecycle and scoped case data.  
-**Tests:** Phase 3 scope and state-projection tests.
+**Tests:** Required scope and state-projection coverage.
 
 ### API-BOOKING-004 — Accept Provider Alternative
 
@@ -280,11 +280,11 @@ Current route and current OpenAPI evidence align on this single public route. Th
 **Request:** `proposal_id: string`; idempotency key required.  
 **Response:** `200` with resulting booking state and confirmed/proposed slot metadata.  
 **Errors:** `ERR-IDENTITY-001`, `ERR-IDENTITY-002`, `ERR-PLATFORM-002`, `ERR-BOOKING-001`, `ERR-BOOKING-002`, `ERR-BOOKING-003`, `ERR-ELIG-001`, `ERR-AUDIT-001`.  
-**Business Rules:** Revalidate deadline, slot capacity, and current eligibility before confirmation.  
+**Business Rules:** Revalidate deadline, slot capacity, and current eligibility before confirmation. An expired or otherwise non-actionable alternative must be rejected; the canonical resulting booking state after alternative expiry or explicit patient decline remains unresolved under `Q-BOOKING-001` and must not be inferred by this API or its clients.  
 **Side Effects:** Confirms accepted alternative when valid; releases superseded provisional capacity if modeled; queues notifications.  
 **Idempotency / Concurrency:** Mandatory; one committed acceptance outcome.  
 **Data Touched:** Booking/proposal, slot capacity, eligibility, audit/idempotency.  
-**Tests:** Phase 3 expired proposal, full alternative slot, revalidation failure, and repeated acceptance.
+**Tests:** Required coverage includes expired proposal rejection without inventing a terminal state, full alternative slot, revalidation failure, and repeated acceptance.
 
 ### API-BOOKING-005 — Cancel Booking
 
@@ -298,9 +298,11 @@ Current route and current OpenAPI evidence align on this single public route. Th
 **Side Effects:** Audited cancellation transition, capacity release, operational/review/financial consequence records where required; never moves money.  
 **Idempotency / Concurrency:** Mandatory; repeated cancellation does not create duplicate consequences.  
 **Data Touched:** Booking lifecycle, capacity, policy snapshot reference, audit/derived work.  
-**Tests:** Phase 3 allowed/forbidden states, deadline boundary, duplicate request, and no-money-movement assertion.
+**Tests:** Required coverage includes allowed/forbidden states, deadline boundary, duplicate request, and no-money-movement assertion.
 
 Provider accept/reject/alternative response is a confirmed use case under FR-BOOKING-003. Because the current product architecture assigns doctor/clinic operations to Filament, no external REST contract is mandated here; Filament should call the shared application action directly. If a non-Filament provider client is later approved, allocate a separate `API-BOOKING-*` contract rather than exposing an internal route implicitly.
+
+`Q-BOOKING-002` also remains authoritative for the unresolved review workflow applied to existing bookings when a previously eligible provider/service/branch becomes suspended. Booking read contracts must expose the current authoritative state; they must not manufacture automatic cancellation, confirmation, or another outcome while that workflow remains unresolved.
 
 ## 8. Clinical Case
 
@@ -315,7 +317,7 @@ Provider accept/reject/alternative response is a confirmed use case under FR-BOO
 **Side Effects:** None except access audit where required.  
 **Idempotency / Concurrency:** Read-only.  
 **Data Touched:** Case/booking/current accepted clinical snapshot/read projection.  
-**Tests:** Phase 3 scope and sensitive-field filtering.
+**Tests:** Required scope and sensitive-field filtering coverage.
 
 ### API-CLINICAL-002 — Get Proposed/Accepted Treatment Plan
 
@@ -328,7 +330,7 @@ Provider accept/reject/alternative response is a confirmed use case under FR-BOO
 **Side Effects:** None.  
 **Idempotency / Concurrency:** Read-only.  
 **Data Touched:** Treatment plan/version and linked financial-term proposal/snapshot.  
-**Tests:** Phase 3 authorship, immutable accepted-version projection, and scope tests.
+**Tests:** Required authorship, immutable accepted-version projection, and scope coverage.
 
 ### API-CLINICAL-003 — Accept Treatment Plan
 
@@ -343,7 +345,7 @@ Provider accept/reject/alternative response is a confirmed use case under FR-BOO
 **Side Effects:** Creates immutable accepted treatment and financial terms snapshots atomically and audits acceptance.  
 **Idempotency / Concurrency:** Mandatory; concurrent acceptance cannot create multiple accepted outcomes for the same plan version.  
 **Data Touched:** Treatment plan version, accepted clinical snapshot, FinancialTermsSnapshot, audit/idempotency.  
-**Tests:** Phase 3 incomplete plan, stale version, duplicate acceptance, and immutability tests.
+**Tests:** Required coverage includes incomplete plan, stale version, duplicate acceptance, and immutability.
 
 ### API-CLINICAL-004 — Get Unified Case Timeline
 
@@ -356,7 +358,7 @@ Provider accept/reject/alternative response is a confirmed use case under FR-BOO
 **Side Effects:** None.  
 **Idempotency / Concurrency:** Read-only projection.  
 **Data Touched:** Booking, accepted terms, treatment stages, follow-ups, reviews, claims/issues, external financial-event projections.  
-**Tests:** Phase 3 ordering, role filtering, and correction-history tests.
+**Tests:** Required ordering, role filtering, and correction-history coverage.
 
 Clinician plan authoring, treatment-stage completion, and staff follow-up administration are currently expected to be Filament/in-process workflows. They must share the same application/domain rules and do not require artificial internal REST endpoints.
 
@@ -375,7 +377,7 @@ All contracts in this section are record-only. No request or response represents
 **Side Effects:** None.  
 **Idempotency / Concurrency:** Read-only.  
 **Data Touched:** FinancialTermsSnapshot.  
-**Tests:** Phase 3 immutable historical-version and access tests.
+**Tests:** Required immutable historical-version and access coverage.
 
 ### API-FINANCE-002 — Report External Payment
 
@@ -389,7 +391,7 @@ All contracts in this section are record-only. No request or response represents
 **Side Effects:** Appends a financial assertion event and notifies/queues counterparty review; does not move money.  
 **Idempotency / Concurrency:** Mandatory; exactly one event per identical idempotent command.  
 **Data Touched:** FinancialTermsSnapshot, append-only financial event, evidence references, audit/idempotency.  
-**Tests:** Phase 3 valid report, wrong snapshot/currency, duplicate, conflicting key, and architecture assertion that no money-movement integration is called.
+**Tests:** Required coverage includes valid report, wrong snapshot/currency, duplicate, conflicting key, and an architecture assertion that no money-movement integration is called.
 
 ### API-FINANCE-003 — Confirm or Dispute External Financial Event
 
@@ -403,7 +405,7 @@ All contracts in this section are record-only. No request or response represents
 **Side Effects:** Appends confirmation/dispute event; never edits original assertion.  
 **Idempotency / Concurrency:** Mandatory; concurrent contradictory responses follow state/policy rules and cannot rewrite history.  
 **Data Touched:** Append-only financial event stream, audit/idempotency.  
-**Tests:** Phase 3 confirm/dispute branches, authorization, duplicate, and history immutability.
+**Tests:** Required confirm/dispute branch, authorization, duplicate, and history-immutability coverage.
 
 ### API-FINANCE-004 — Report External Refund Execution
 
@@ -417,7 +419,7 @@ All contracts in this section are record-only. No request or response represents
 **Side Effects:** Appends execution assertion; routes counterparty confirmation/dispute. No platform refund is executed.  
 **Idempotency / Concurrency:** Mandatory.  
 **Data Touched:** Approved refund decision, financial event stream, evidence, audit/idempotency.  
-**Tests:** Phase 3 approved-decision requirement, amount mismatch, duplicate, and no-money-movement tests.
+**Tests:** Required approved-decision, amount-mismatch, duplicate, and no-money-movement coverage.
 
 ### API-FINANCE-005 — Get Case Financial Timeline
 
@@ -431,7 +433,7 @@ All contracts in this section are record-only. No request or response represents
 **Side Effects:** None.  
 **Idempotency / Concurrency:** Read-only projection.  
 **Data Touched:** FinancialTermsSnapshot and financial event stream.  
-**Tests:** Phase 3 event-order derivation, disputed-vs-confirmed distinction, access, and wording boundary tests.
+**Tests:** Required event-order derivation, disputed-vs-confirmed distinction, access, and wording-boundary coverage.
 
 ## 10. Reviews
 
@@ -448,7 +450,7 @@ All contracts in this section are record-only. No request or response represents
 **Side Effects:** Creates verified review and may update derived review aggregate asynchronously/transactionally as designed.  
 **Idempotency / Concurrency:** Mandatory; uniqueness constraint/application rule prevents duplicate active review.  
 **Data Touched:** Completed case/experience, review, audit/idempotency.  
-**Tests:** Phase 3 eligible/ineligible, duplicate, guardian authorization, and R-separation tests.
+**Tests:** Required eligible/ineligible, duplicate, guardian authorization, and R-separation coverage.
 
 ### API-REVIEWS-002 — Appeal Review Decision
 
@@ -462,7 +464,7 @@ All contracts in this section are record-only. No request or response represents
 **Side Effects:** Creates appeal/work item; does not directly rewrite the original review or scientific classification.  
 **Idempotency / Concurrency:** Mandatory.  
 **Data Touched:** Review, appeal, evidence refs, work queue, audit/idempotency.  
-**Tests:** Phase 3 eligibility/window, duplicate, and no-direct-rewrite tests.
+**Tests:** Required eligibility/window, duplicate, and no-direct-rewrite coverage.
 
 ## 11. Claims and Refund Requests
 
@@ -479,7 +481,7 @@ All contracts in this section are record-only. No request or response represents
 **Side Effects:** Creates reviewable refund case and operational work item.  
 **Idempotency / Concurrency:** Mandatory.  
 **Data Touched:** Case, accepted terms snapshot, refund request/claim, evidence refs, work queue, audit/idempotency.  
-**Tests:** Phase 3 valid/late request, currency/amount mismatch, duplicate, evidence rules, and zero-money-movement.
+**Tests:** Required valid/late request, currency/amount mismatch, duplicate, evidence-rule, and zero-money-movement coverage.
 
 ### API-CLAIMS-002 — Submit Protection Claim
 
@@ -494,7 +496,7 @@ All contracts in this section are record-only. No request or response represents
 **Side Effects:** Creates claim/work item and evidence-deadline workflow.  
 **Idempotency / Concurrency:** Mandatory.  
 **Data Touched:** Case, accepted protection snapshot, claim, evidence refs, work queue, audit/idempotency.  
-**Tests:** Phase 3 no-protection denial, evidence validation, duplicate, and wording/no-money-movement tests.
+**Tests:** Required no-protection denial, evidence validation, duplicate, and wording/no-money-movement coverage.
 
 ### API-CLAIMS-003 — List Case Claims/Refund Requests
 
@@ -507,7 +509,7 @@ All contracts in this section are record-only. No request or response represents
 **Side Effects:** None.  
 **Idempotency / Concurrency:** Read-only.  
 **Data Touched:** Claims/refund requests and safe derived state.  
-**Tests:** Phase 3 scope and state/deadline projection tests.
+**Tests:** Required scope and state/deadline projection coverage.
 
 ### API-CLAIMS-004 — Get Claim/Refund Request Detail
 
@@ -520,7 +522,7 @@ All contracts in this section are record-only. No request or response represents
 **Side Effects:** None.  
 **Idempotency / Concurrency:** Read-only.  
 **Data Touched:** Claim/refund workflow, evidence metadata, decision/appeal projection.  
-**Tests:** Phase 3 role filtering and deadline/history tests.
+**Tests:** Required role-filtering and deadline/history coverage.
 
 ### API-CLAIMS-005 — Appeal Claim/Dispute Decision
 
@@ -535,11 +537,11 @@ All contracts in this section are record-only. No request or response represents
 **Side Effects:** Creates appeal and review work item.  
 **Idempotency / Concurrency:** Mandatory.  
 **Data Touched:** Original decision, appeal, evidence refs, work queue, audit/idempotency.  
-**Tests:** Phase 3 appeal-window boundary, separation-of-duties, duplicate, and original-decision immutability.
+**Tests:** Required appeal-window boundary, separation-of-duties, duplicate, and original-decision immutability coverage.
 
 ## 12. Evidence Transfer Contract — Blocked Detail
 
-The product requires private clinical, credential, claim, identity, and financial evidence. However the exact binary-transfer mechanism must support weak connectivity, quarantine, malware scanning, size/type limits, SHA-256 integrity, fresh authorization, and provider-neutral storage while concrete storage/scanning providers remain unresolved under `Q-PLATFORM-003` and `Q-OPS-001`.
+The product requires private clinical, credential, claim, identity, and financial evidence. However the exact binary-transfer mechanism must support weak connectivity, quarantine, malware scanning, size/type limits, SHA-256 integrity, fresh authorization, and provider-neutral storage while concrete storage/scanning providers remain unresolved under `Q-PLATFORM-003` and infrastructure placement remains governed by `Q-OPS-001`.
 
 Therefore this document does **not** invent a presigned-upload, multipart-upload, chunking, or resumable-upload endpoint. Proposed domain write contracts use `evidence_ids` only after an evidence record has been safely created through the eventual private-evidence transfer contract. That contract must be allocated as `API-PLATFORM-*` only after the transfer strategy is approved. This prevents a speculative provider-specific API from becoming an accidental product contract.
 
@@ -591,9 +593,9 @@ The exact HTTP header name is intentionally not fixed by current source material
 
 Total defined contracts: **31** (`1 Implemented`, `30 Proposed`). Staff-only/in-process Filament use cases are intentionally not counted as REST contracts.
 
-## 18. Registry Allocations Introduced by This File
+## 18. Registry Allocation Status
 
-This file allocates the following API ranges for later synchronization into the canonical `docs/README.md` registry without renumbering:
+The following API ranges are synchronized in the canonical `docs/README.md` registry. Allocations are append-only; future additions must update the registry without renumbering or repurposing existing IDs:
 
 - `API-CATALOG-001`
 - `API-IDENTITY-001`–`API-IDENTITY-005`
@@ -604,4 +606,4 @@ This file allocates the following API ranges for later synchronization into the 
 - `API-REVIEWS-001`–`API-REVIEWS-002`
 - `API-CLAIMS-001`–`API-CLAIMS-005`
 
-It also reserves the `ERR-*` references listed in Section 3 for definition in the immediately downstream `docs/api/ERROR_CATALOG.md`. No `API-PLATFORM-*` is allocated until the private-evidence transfer strategy is approved.
+The `ERR-*` references listed in Section 3 are defined by the current `docs/api/ERROR_CATALOG.md` and synchronized in the registry. No `API-PLATFORM-*` is allocated until the private-evidence transfer strategy is approved.
