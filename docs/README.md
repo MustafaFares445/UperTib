@@ -93,7 +93,7 @@ Canonical forms are `FR-*`, `BR-*`, `NFR-*`, `DR-*`, `TD-*`, `ASM-*`, `Q-*`, `CO
 | IDENTITY | 003 | 000 | 002 | 000 | 000 | 000 | 000 | 000 | 005 | 000 | 007 | 007 | 004 |
 | CATALOG | 001 | 000 | 000 | 000 | 000 | 000 | 001 | 001 | 001 | 000 | 005 | 002 | 000 |
 | ELIG | 017 | 000 | 000 | 000 | 000 | 000 | 001 | 000 | 004 | 000 | 010 | 011 | 002 |
-| BOOKING | 003 | 000 | 000 | 000 | 000 | 000 | 000 | 000 | 005 | 000 | 008 | 010 | 003 |
+| BOOKING | 003 | 000 | 000 | 000 | 000 | 000 | 002 | 000 | 005 | 000 | 008 | 010 | 003 |
 | CLINICAL | 005 | 000 | 000 | 000 | 000 | 000 | 000 | 000 | 004 | 000 | 007 | 009 | 001 |
 | FINANCE | 007 | 000 | 001 | 000 | 000 | 000 | 000 | 000 | 005 | 000 | 008 | 011 | 001 |
 | REVIEWS | 002 | 000 | 000 | 000 | 000 | 000 | 000 | 000 | 002 | 000 | 004 | 003 | 001 |
@@ -149,6 +149,8 @@ No `ASM-*` is allocated.
 | `Q-PLATFORM-001` | Blocker | Obtain readable authoritative SRS v1.1 before claiming complete SRS reconciliation. |
 | `Q-CATALOG-001` | Major | Licensed clinical approval required before the 26 provisional records become production medical content. |
 | `Q-ELIG-001` | Major | Production S/P/H/I formulas, weights, thresholds, deadlines, and defaults require licensed clinical approval. |
+| `Q-BOOKING-001` | Major | Define the canonical booking outcome when an `ALTERNATIVE_PROPOSED` appointment expires or the patient declines it; current sources define the deadline/acceptance requirement but not the resulting lifecycle state. |
+| `Q-BOOKING-002` | Major | Define the existing-booking review workflow triggered when eligibility is suspended: responsible actor, booking-state effect, allowed outcomes, deadlines, and required notifications/work items remain unspecified. |
 | `Q-PLATFORM-002` | Major | Final retention/deletion periods require legal/compliance validation. |
 | `Q-OPS-001` | Major | Production hosting/deployment topology/provider remains unresolved. |
 | `Q-PLATFORM-003` | Major | Concrete OTP/MFA, malware/private-evidence, notification, and other external providers remain unresolved. |
