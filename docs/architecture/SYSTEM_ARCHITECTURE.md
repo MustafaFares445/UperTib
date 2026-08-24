@@ -29,10 +29,10 @@ Primary platform shape:
 - Laravel backend for domain behavior, REST APIs, authorization, persistence, queues, schedules, and audit.
 - Filament for authorized staff/doctor operational workspaces where applicable.
 - React Native patient application consuming versioned REST APIs.
-- Relational production persistence compatible with the approved MySQL recovery requirements.
+- **MySQL production persistence**, as required by the approved recovery NFR; local/test environments may use other repository-supported engines where the relevant behavior is also verified against MySQL.
 - Private file/object storage for sensitive evidence.
 - Laravel queue workers for genuinely asynchronous work.
-- Provider-neutral production infrastructure until `Q-OPS-001` is resolved.
+- Provider-neutral production infrastructure until `Q-OPS-001` is resolved; this open item covers hosting/provider/topology and managed-versus-self-hosted choices, not the production database engine.
 
 Microservices, distributed transactions, CQRS, event sourcing, Kubernetes, and similar distributed patterns are not required by the current scope.
 
@@ -72,7 +72,7 @@ Feature specifications and OpenAPI files are design/contract evidence, not proof
 | Audit | Supporting package available | Full sensitive-action and decision provenance |
 | Policy | Service-definition versioning partial | Versioned policies across applicable domains |
 | Operations | Filament shell | Queues, reporting, launch governance |
-| Infrastructure | Provider not established | Provider-neutral topology satisfying NFRs |
+| Infrastructure | Provider not established | Provider-neutral application topology with MySQL production persistence satisfying the approved NFRs |
 
 ## 5. System Context
 
@@ -83,7 +83,7 @@ flowchart LR
     STAFF["UberTib Staff Filament"] --> APP
     API --> APP
     APP --> DOMAIN["Domain Modules"]
-    DOMAIN --> DB["Relational Database"]
+    DOMAIN --> DB["MySQL Production Database"]
     DOMAIN --> FILES["Private Evidence Storage"]
     DOMAIN --> QUEUE["Queue / Scheduled Work"]
     QUEUE --> DOMAIN
@@ -150,7 +150,7 @@ flowchart TD
     APPLICATION --> DOMAIN["Domain Services / Models"]
     DOMAIN --> DATA["Eloquent + Database Constraints"]
     DOMAIN --> ASYNC["Jobs / Schedules / Notifications"]
-    DATA --> DB["Relational Database"]
+    DATA --> DB["MySQL Production Database"]
     ASYNC --> QUEUE["Queue Backend"]
 ```
 
@@ -190,7 +190,9 @@ Cached discovery output cannot replace current validation at booking confirmatio
 
 Core business state is relational and requires transactions, constraints, foreign keys, indexes, and locking where appropriate.
 
-The approved NFR baseline names MySQL point-in-time recovery for production recovery planning. Local development defaults do not define the final production topology.
+The approved `NFR-PLATFORM-002` / `NFR.02` baseline explicitly requires **MySQL point-in-time recovery** for production. Therefore **MySQL is the required production relational engine for the current V1 baseline**. `Q-OPS-001` does not leave the engine itself undecided; it leaves the hosting/provider/topology, managed-versus-self-hosted deployment, HA arrangement, backup implementation, and related operational choices unresolved.
+
+SQLite may remain appropriate for local or isolated tests supported by the repository, but all engine-sensitive migrations, constraints, locking/concurrency behavior, and recovery assumptions must also be verified against MySQL before production release.
 
 ### Immutable history
 
@@ -307,12 +309,12 @@ Ordinary logs must not contain OTP values, credential secrets, private evidence 
 
 ## 20. Provider-Neutral Deployment Topology
 
-`Q-OPS-001` prevents selecting a hosting provider in this document.
+`Q-OPS-001` prevents selecting a hosting provider or concrete MySQL deployment product/topology in this document; it does not reopen the approved MySQL engine requirement.
 
 ```mermaid
 flowchart LR
     USERS["Clients"] --> APP["HTTPS Laravel Runtime"]
-    APP --> DB["Relational Database"]
+    APP --> DB["MySQL Production Database"]
     APP --> FILES["Private Object Storage"]
     APP --> QUEUE["Queue Backend"]
     WORKERS["Workers / Scheduler"] --> QUEUE
@@ -320,24 +322,25 @@ flowchart LR
     WORKERS --> FILES
     APP --> OBS["Logs / Metrics"]
     WORKERS --> OBS
-    BACKUP["Backup / Recovery"] --> DB
+    BACKUP["Backup / PITR / Recovery"] --> DB
     BACKUP --> FILES
 ```
 
-No cloud vendor, container platform, managed database product, CDN, or cache product is selected here.
+No cloud vendor, container platform, managed MySQL product, CDN, or cache product is selected here. The MySQL engine itself is fixed by the approved production recovery requirement; its concrete service/provider and operational topology remain open.
 
 ## 21. Availability and Recovery
 
 The production architecture must support the approved targets:
 
 - 99.5% monthly availability excluding approved maintenance;
+- **MySQL point-in-time recovery**;
 - RPO ≤15 minutes;
 - RTO ≤4 hours;
 - quarterly restore verification;
 - recovery of relational state and private evidence;
 - preservation of required quarantine/scan metadata, deletion tombstones, and legal holds.
 
-Provider-specific implementation belongs in `docs/ops/INFRASTRUCTURE.md` after `Q-OPS-001` is resolved or with explicitly marked provider-neutral alternatives.
+Provider-specific implementation belongs in `docs/ops/INFRASTRUCTURE.md` after `Q-OPS-001` is resolved or with explicitly marked provider-neutral alternatives. Provider neutrality must not weaken or substitute the MySQL PITR requirement.
 
 ## 22. Performance and Scale
 
@@ -395,7 +398,7 @@ Future money-movement capability requires a new authoritative product decision a
 | Q-CATALOG-001 | Major | Provisional service records are not production clinical approval. |
 | Q-ELIG-001 | Major | Production S/P/H/I policies require licensed approval. |
 | Q-PLATFORM-002 | Major | Retention values need final legal/compliance validation. |
-| Q-OPS-001 | Major | Hosting provider/topology remains unresolved. |
+| Q-OPS-001 | Major | Hosting/provider/topology remains unresolved, including managed-versus-self-hosted MySQL deployment, HA, backup implementation, cache/queue/storage, and release infrastructure; the production database engine remains MySQL. |
 | Q-PLATFORM-003 | Major | OTP/MFA, malware scanning, evidence-storage and notification providers remain unresolved. |
 | Q-PLATFORM-004 | Minor | Launch population and capacity headroom remain separately stated. |
 | CONFLICT-PLATFORM-001 | Major | Historical stack planning cannot override verified current package constraints. |
@@ -414,7 +417,7 @@ Future money-movement capability requires a new authoritative product decision a
 8. Do not introduce V1 money-movement capability.
 9. Do not treat evaluation catalog data as production clinical approval.
 10. Do not claim routes, providers, integrations, or infrastructure that are not established by evidence.
-11. Keep infrastructure provider-neutral while `Q-OPS-001` is open.
+11. Keep hosting and infrastructure services provider-neutral while `Q-OPS-001` is open, while preserving MySQL as the approved production database engine.
 12. Do not implement unresolved `Q-*` or `CONFLICT-*` as confirmed behavior.
 
 ## 27. Related Canonical Documents
