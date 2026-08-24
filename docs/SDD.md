@@ -163,7 +163,7 @@ Every recalculation creates a new immutable decision record. Existing decisions 
 
 **Implements:** FR-BOOKING-001–003, NFR-AUDIT-002.
 
-Booking should be a transactional lifecycle with explicit states documented canonically in `docs/domain/STATE_MACHINES.md` during Phase 2. Do not embed state-transition rules independently in controllers or UI components.
+Booking should be a transactional lifecycle with explicit states documented canonically in `docs/domain/STATE_MACHINES.md`. Do not embed state-transition rules independently in controllers or UI components.
 
 A booking request must validate service publication, provider-service-branch eligibility, branch readiness, and slot capacity at submission. Confirmation repeats the safety-critical checks. Capacity enforcement must use database constraints and/or row-level transactional locking so concurrent requests cannot overbook a slot.
 
@@ -269,7 +269,7 @@ Row-level locking or equivalent transactional contention control is required for
 
 ## 21. Data Persistence Strategy
 
-The full persistent model is owned by `docs/database/ERD.md` in Phase 2. This SDD establishes the following persistence principles:
+The full persistent model is owned by `docs/database/ERD.md`. This SDD establishes the following persistence principles:
 
 - Stable identities are separated from mutable/versioned definitions.
 - Historical decisions use immutable snapshots or append-only events where required.
@@ -283,7 +283,7 @@ Development environment defaults do not establish production storage topology. P
 
 ## 22. API Strategy
 
-Detailed contracts are owned by `docs/api/API_CONTRACTS.md` in Phase 2.
+Detailed contracts are owned by `docs/api/API_CONTRACTS.md`.
 
 API conventions should preserve the verified `/api/v1` version namespace and Laravel controller/resource patterns. API adapters should call application actions/query services and must not duplicate business rules.
 
@@ -295,7 +295,7 @@ Client contracts must support weak-connectivity states without claiming success 
 
 ## 23. Error Strategy
 
-Stable error identifiers are owned by `docs/api/ERROR_CATALOG.md` in Phase 2.
+Stable error identifiers are owned by `docs/api/ERROR_CATALOG.md`.
 
 Errors must distinguish at minimum:
 
@@ -312,7 +312,7 @@ Errors must distinguish at minimum:
 - production-readiness failure;
 - unexpected server failure.
 
-Errors must not leak protected resource existence across unauthorized scopes or include secrets/private evidence details. Client-facing error surfaces are specified later without prescribing visual layout here.
+Errors must not leak protected resource existence across unauthorized scopes or include secrets/private evidence details. Client-facing error semantics are owned by `docs/api/ERROR_CATALOG.md`; downstream UX may decide presentation without redefining those semantics.
 
 ## 24. File and Evidence Strategy
 
@@ -361,7 +361,7 @@ Security is enforced at multiple layers:
 - Separation of duties for sensitive reviews.
 - No payment credential handling or money-movement integration in V1.
 
-Security-sensitive business rules must have automated allow/deny and negative tests; details are owned by `docs/TESTING_STRATEGY.md` in Phase 3.
+Security-sensitive business rules must have automated allow/deny and negative tests; the current verification strategy and concrete test registry are owned by `docs/TESTING_STRATEGY.md`.
 
 ## 28. Performance and Scale
 
@@ -373,7 +373,7 @@ Provider search and operational queues will require indexes driven by their real
 
 Caching must never replace synchronous revalidation for safety-critical booking/eligibility decisions. Cache invalidation strategy should follow the domain's freshness requirement rather than using global caching indiscriminately.
 
-Load verification thresholds are defined in the PRD and later testing strategy.
+Load-verification thresholds and test cases are owned by `docs/PRD.md` and `docs/TESTING_STRATEGY.md`.
 
 ## 29. Availability, Backup, and Recovery
 
@@ -383,7 +383,7 @@ The production deployment must support the required 99.5% monthly availability, 
 
 The `.spec` requirement explicitly references MySQL point-in-time recovery; production infrastructure must honor that requirement unless a later authoritative source changes it. Hosting/provider selection remains `Q-OPS-001`, so this document does not select a cloud vendor or managed service.
 
-Recovery procedures and deployment topology are owned by Phase 2 operations documents.
+Recovery procedures and deployment topology are owned by `docs/ops/CONFIGURATION.md` and `docs/ops/INFRASTRUCTURE.md`.
 
 ## 30. Arabic, RTL, Accessibility, and Client Resilience
 
@@ -406,7 +406,7 @@ Business policy values that must reproduce historical decisions must not live on
 
 Existing `config/ubertib.php` currently exposes catalog mode and `record_only_non_funded` financial mode. Those values are application safety configuration; the record-only financial boundary also remains a product requirement and must be enforced by architecture/tests, not only by a mutable environment flag.
 
-Detailed configuration ownership is deferred to `docs/ops/CONFIGURATION.md`.
+Detailed configuration ownership is defined in `docs/ops/CONFIGURATION.md`.
 
 ## 32. Existing Behavior vs Required Change
 
@@ -431,7 +431,7 @@ Detailed configuration ownership is deferred to `docs/ops/CONFIGURATION.md`.
 
 All remaining identity, eligibility, provider/branch, booking, treatment-case, financial-record, review, claims, operational, policy-generalization, audit, retention, evidence, notification, reporting, and production operations behavior described in the PRD.
 
-Implementation status must be tracked in the final traceability matrix and must never be inferred from design documentation alone.
+Implementation status is tracked in the current `docs/TRACEABILITY_MATRIX.md` and must never be inferred from design documentation alone.
 
 ## 33. Dependency Rules
 
@@ -451,22 +451,25 @@ Implementation status must be tracked in the final traceability matrix and must 
 | Q-CATALOG-001 | Major | 26 evaluation records cannot be treated as clinically approved production service definitions. |
 | Q-ELIG-001 | Major | Production S/P/H/I formulas, thresholds, weights, and defaults require licensed clinical approval. |
 | Q-PLATFORM-002 | Major | Final legal retention/deletion values may change policy/schema/scheduled processing. |
-| Q-OPS-001 | Major | Hosting, managed database, object storage, queue, and recovery topology remain provider-neutral. |
+| Q-OPS-001 | Major | Hosting/provider/topology remains unresolved, including managed-versus-self-hosted MySQL deployment, HA/PITR implementation, object storage, queue, and recovery infrastructure; the production database engine remains MySQL. |
 | Q-PLATFORM-003 | Major | OTP, malware scanning/private evidence, and other external providers are unresolved; no provider-specific integration contract is authoritative. |
 | Q-PLATFORM-004 | Minor | Treat low-thousands expected launch use and 10,000 registered-user engineering envelope as expected population versus capacity headroom unless superseded. |
 | CONFLICT-PLATFORM-001 | Major | Historical backend feature planning named older PHP/Laravel/database/auth assumptions; current verified Composer/repository facts control implementation conventions unless product requirements demand change. |
-| CONFLICT-CATALOG-001 | Major | Feature/OpenAPI evidence must remain classified separately from actually implemented routes and behavior. |
 | CONFLICT-PLATFORM-002 | Major | Architecture-specific wording inside some NFR sources must not be expanded into additional product behavior before final SRS reconciliation. |
+
+### Resolved allocated conflict
+
+`CONFLICT-CATALOG-001` remains permanently allocated but is **Resolved (2026-08-24)**. The currently verified `GET /api/v1/catalog/service-groups` route and current OpenAPI contract align. Broader feature-spec aspirations remain Planned rather than being treated as implemented-route evidence.
 
 ## 35. Technical Decision Allocation
 
-No new canonical `TD-*` or `ASM-*` IDs are allocated in this Phase 1 SDD. The major architecture shape described above is either verified existing-repository convention, directly required by confirmed requirements/NFRs, or intentionally left unresolved under the existing `Q-*` / `CONFLICT-*` register.
+No new canonical `TD-*` or `ASM-*` IDs are allocated by this SDD. The major architecture shape described above is either verified existing-repository convention, directly required by confirmed requirements/NFRs, or intentionally left unresolved under the existing `Q-*` / `CONFLICT-*` register.
 
-Phase 2 conditional documents may identify a genuinely discretionary technical choice that requires a `TD-*`. If so, the ID must first be allocated append-only in `docs/README.md`, include rationale and rejected alternatives, and must not silently override product behavior.
+The Phase 2 engineering documents are now present and have not allocated a `TD-*`. Any future genuinely discretionary technical choice that requires a canonical `TD-*` must first allocate the ID append-only in `docs/README.md`, include rationale and rejected alternatives, and must not silently override product behavior.
 
-## 36. Phase 2 Decomposition
+## 36. Phase 2 Engineering Documents
 
-The following documents should expand this SDD without redefining it:
+The following documents now expand this SDD without redefining it:
 
 - `docs/architecture/SYSTEM_ARCHITECTURE.md` — process/layer/module/runtime architecture.
 - `docs/architecture/COMPONENT_DESIGN.md` — application/module/component responsibilities and dependencies.
