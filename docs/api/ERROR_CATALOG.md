@@ -2,7 +2,7 @@
 
 **Phase:** 2 — Conditional Engineering Documentation  
 **Mode:** Existing Repository  
-**Baseline:** 2026-08-23  
+**Baseline:** 2026-08-24  
 **Product source:** `docs/PRD.md`  
 **Technical source:** `docs/SDD.md`  
 **API source:** `docs/api/API_CONTRACTS.md`  
@@ -227,8 +227,9 @@ The later UX pipeline decides visual treatment and component choice.
 **Client-facing message:** `انتهت المهلة المتاحة لهذا الإجراء.`  
 **When raised:** The provider response/alternative acceptance or other documented booking action occurs after its policy-governed deadline.  
 **APIs:** API-BOOKING-004.  
-**Retryable:** No for the expired action; follow the current booking state/next available action.  
-**Surface:** Unavailable-state message with current booking status.
+**Retryable:** No for the expired action; follow the current authoritative booking state/next available action.  
+**Surface:** Unavailable-state message with current booking status.  
+**State rule:** For alternative expiry or explicit patient decline, this error does not define the resulting booking state. That outcome remains unresolved under `Q-BOOKING-001`; clients must not infer `REJECTED`, `CANCELLED`, or return-to-`REQUESTED` from this error alone.
 
 ## 9. Clinical Error
 
@@ -335,7 +336,7 @@ The later UX pipeline decides visual treatment and component choice.
 
 All remaining `ERR-*` entries belong to proposed APIs and must be verified against actual handlers/tests once implementation exists. Their HTTP status and semantic meaning are fixed by this documentation baseline unless an approved upstream requirement or contract version supersedes them.
 
-## 16. Registry Allocations Introduced by This File
+## 16. Registry Allocation Status
 
 This file canonically defines the `ERR-*` IDs reserved by `API_CONTRACTS.md`:
 
@@ -349,4 +350,4 @@ This file canonically defines the `ERR-*` IDs reserved by `API_CONTRACTS.md`:
 - `ERR-REVIEWS-001`
 - `ERR-CLAIMS-001`–`ERR-CLAIMS-002`
 
-These allocations are append-only and must be synchronized into the highest-ID registry in `docs/README.md` during registry maintenance. No ID is to be renumbered or repurposed.
+These allocations are append-only and are synchronized in the highest-ID registry in `docs/README.md`. Future allocations must update that registry without renumbering, reusing, or repurposing existing IDs.
