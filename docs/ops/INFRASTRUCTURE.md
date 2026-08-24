@@ -12,7 +12,7 @@
 
 This document defines the provider-neutral infrastructure required to operate UberTib V1 safely and reliably. It describes runtime responsibilities, deployment topology, isolation boundaries, backup/recovery expectations, scaling approach, security controls, and operational dependencies without selecting a cloud or hosting vendor that has not been approved.
 
-`Q-OPS-001` remains **Major** because the concrete hosting provider, deployment topology, and production environment have not yet been selected. `Q-PLATFORM-003` remains **Major** because concrete OTP/MFA, malware-scanning, private-evidence, and notification providers are not selected.
+`Q-OPS-001` remains **Major** because the concrete hosting provider, deployment topology, managed-versus-self-hosted MySQL service, HA/PITR implementation, and production environment have not yet been selected. It does **not** leave the production database engine unresolved: the approved `NFR-PLATFORM-002` / `NFR.02` baseline requires MySQL point-in-time recovery, so MySQL is the required production relational engine for the current V1 baseline. `Q-PLATFORM-003` remains **Major** because concrete OTP/MFA, malware-scanning, private-evidence, and notification providers are not selected.
 
 Accordingly, this file specifies required infrastructure capabilities rather than AWS/Azure/GCP/DigitalOcean-specific products.
 
@@ -55,6 +55,7 @@ The infrastructure must support the approved NFR baseline:
 - 30-minute performance verification with error rate below **1%**;
 - concurrent booking protection such that **100 concurrent booking attempts cannot overbook capacity**;
 - availability target **99.5%**;
+- **MySQL point-in-time recovery**;
 - recovery point objective **RPO ≤ 15 minutes**;
 - recovery time objective **RTO ≤ 4 hours**;
 - quarterly restore verification.
@@ -68,7 +69,7 @@ flowchart TD
     Internet[Patients / Authorized Staff] --> Edge[HTTPS Edge / Reverse Proxy / Load Balancer]
     Edge --> Web[Laravel Web/API + Filament Runtime]
 
-    Web --> DB[(Primary Relational Database)]
+    Web --> DB[(Primary MySQL Production Database)]
     Web --> Cache[(Cache / Shared Runtime Store)]
     Web --> Queue[(Queue Store)]
     Web --> PrivateFiles[(Private Evidence Storage)]
@@ -84,14 +85,14 @@ flowchart TD
     Worker --> Logs
     Scheduler --> Logs
 
-    DB --> Backup[Encrypted Database Backups]
+    DB --> Backup[Encrypted MySQL Backups / PITR]
     PrivateFiles --> FileBackup[Versioned / Durable Evidence Protection]
 
     External[Approved OTP / MFA / Scan / Notification Providers] -. provider selection unresolved .-> Web
     External -. async provider interactions .-> Worker
 ```
 
-The diagram describes responsibilities, not provider products. Cache and queue may share a managed runtime technology if isolation, reliability, observability, and capacity requirements remain satisfied.
+The diagram describes responsibilities, not provider products. Cache and queue may share a managed runtime technology if isolation, reliability, observability, and capacity requirements remain satisfied. The concrete MySQL product/provider/topology is unresolved; the MySQL engine itself is not.
 
 ## 5. Runtime Components
 
@@ -155,36 +156,37 @@ Expected scheduled responsibilities include:
 
 Scheduler failure must be visible to monitoring because missed deadlines can affect operational correctness.
 
-## 6. Relational Database Infrastructure
+## 6. MySQL Production Database Infrastructure
 
-The relational database is the authoritative transactional source for the V1 domain described in `ERD.md`.
+MySQL is the authoritative production transactional source for the V1 domain described in `ERD.md`, as required by the approved recovery NFR. SQLite remains a supported local/test tool where appropriate, but it is not the production engine.
 
 ### Required capabilities
 
-- ACID transactions;
+- MySQL ACID transactions;
 - row-level locking/concurrency behavior sufficient for booking capacity and publication flows;
 - foreign keys and unique constraints;
 - reliable JSON support for documented snapshot/policy structures;
 - indexes required by `ERD.md`;
-- encrypted transport between application and database when network-separated;
+- `utf8mb4`-compatible Arabic data handling;
+- encrypted transport between application and MySQL when network-separated;
 - automated backups meeting RPO/RTO requirements;
-- point-in-time or sufficiently frequent recovery capability to satisfy RPO ≤ 15 minutes;
+- MySQL point-in-time recovery satisfying RPO ≤ 15 minutes;
 - storage monitoring and alerting;
 - documented restore procedure.
 
-### Engine selection
+### Deployment selection
 
-Current code supports SQLite for development/testing and contains MySQL-specific implementations for current integrity triggers. Laravel also exposes other drivers, but framework support alone does not certify them for production.
+Current code supports SQLite for development/testing and contains MySQL-specific implementations for current integrity triggers. Laravel also exposes other drivers, but framework support alone does not certify them for UberTib production.
 
-Before production selection, the chosen database must pass:
+Before production promotion, the selected **MySQL deployment/topology** must pass:
 
-1. all migration and trigger/constraint tests;
-2. concurrency tests including 100 simultaneous booking attempts;
-3. backup/restore tests;
+1. all migration and trigger/constraint tests on MySQL;
+2. concurrency tests including 100 simultaneous booking attempts using MySQL locking semantics;
+3. MySQL backup/PITR and restore tests;
 4. realistic data-volume and query-performance tests;
-5. character-set tests for Arabic content.
+5. character-set/collation tests for Arabic content.
 
-No production engine is selected by this document while `Q-OPS-001` remains open.
+`Q-OPS-001` leaves the managed/self-hosted MySQL product, hosting provider, HA arrangement, network placement, backup/PITR implementation, and operational topology unresolved. It does not permit substituting another production database engine without a new authoritative requirement decision.
 
 ## 7. Cache and Shared Runtime State
 
@@ -264,7 +266,7 @@ There is deliberately no payment provider boundary in V1.
 Minimum production network posture:
 
 - only the public HTTPS edge is internet-facing;
-- database, queue, cache, and private storage endpoints are private/restricted where deployment technology permits;
+- MySQL, queue, cache, and private storage endpoints are private/restricted where deployment technology permits;
 - administrative infrastructure access is limited to authorized operators;
 - database and infrastructure credentials use least privilege;
 - development/test environments do not share production databases, buckets, queues, secrets, or cache namespaces;
@@ -287,7 +289,7 @@ Recommended logical environments:
 
 Production secrets and real protected data must never be copied into developer environments as a convenience.
 
-Staging should resemble production topology closely enough to validate database engine behavior, queue workers, scheduler, private storage, TLS, and deployment processes.
+Staging should resemble production topology closely enough to validate **MySQL engine behavior**, queue workers, scheduler, private storage, TLS, PITR/restore procedures, and deployment processes.
 
 ## 13. Deployment Model
 
@@ -304,7 +306,7 @@ The repository does not currently establish a provider-specific deployment mecha
 9. clear/build Laravel production caches as appropriate;
 10. start/reload web and worker processes gracefully;
 11. run health/smoke verification;
-12. monitor errors, latency, queue state, and database health after release;
+12. monitor errors, latency, queue state, and MySQL health after release;
 13. roll back application release when safe, while treating database rollback as a separately planned operation rather than blindly reversing destructive migrations.
 
 ### Release principle
@@ -321,7 +323,7 @@ Confirms the runtime process can serve requests. It should not fail merely becau
 
 ### Readiness
 
-Confirms the instance can safely receive traffic, including required application bootstrap/configuration and primary database connectivity. Required shared dependencies may be included according to the selected topology.
+Confirms the instance can safely receive traffic, including required application bootstrap/configuration and primary MySQL connectivity. Required shared dependencies may be included according to the selected topology.
 
 ### Domain readiness is separate
 
@@ -329,17 +331,17 @@ Infrastructure health must **not** report a dental service as medically producti
 
 ## 15. Backup and Recovery
 
-### Database
+### MySQL database
 
 Required:
 
-- automated backup/PITR strategy achieving RPO ≤ 15 minutes;
+- automated **MySQL backup and point-in-time recovery** strategy achieving RPO ≤ 15 minutes;
 - encrypted backups;
 - access restricted separately from normal application users;
 - retention appropriate to legal/compliance review;
-- restore runbook;
+- documented MySQL restore/PITR runbook;
 - quarterly restore test with recorded result;
-- restoration to isolated environment before production cutover where feasible.
+- restoration to an isolated environment before production cutover where feasible.
 
 ### Private evidence
 
@@ -367,7 +369,7 @@ A suitable V1 progression is:
 - one production application service with fast restart/redeployment capability;
 - independently supervised queue worker(s);
 - one controlled scheduler;
-- production relational database with automated backups;
+- production MySQL database with automated backups/PITR;
 - durable private evidence storage;
 - health monitoring and alerting.
 
@@ -376,7 +378,7 @@ A suitable V1 progression is:
 - add multiple stateless Laravel web instances behind a load balancer;
 - move session/cache/locks to shared runtime stores if needed;
 - scale queue workers separately by queue age and workload;
-- vertically or horizontally enhance database/read infrastructure only after query/index optimization and measured need;
+- vertically or horizontally enhance MySQL/read infrastructure only after query/index optimization and measured need;
 - introduce dedicated search infrastructure only if relational/provider-search performance cannot satisfy p95 ≤ 1 second with the expected dataset.
 
 Do not add microservices, Kubernetes, a dedicated search cluster, event-streaming infrastructure, or multi-region complexity solely for projected prestige or generic scalability assumptions.
@@ -390,13 +392,13 @@ Required controls include:
 - PHP production optimization and opcode caching where supported;
 - production Laravel config/route/view caching where compatible;
 - database indexes from `ERD.md`;
-- bounded database connection usage;
+- bounded MySQL connection usage;
 - request timeout values that fail predictably rather than hanging indefinitely;
 - pagination/bounded result sizes when volume requires it;
 - queue offloading for non-request-critical side effects;
 - public catalog cache support already present;
 - measured provider-search query plans before introducing new infrastructure;
-- load tests using production-like database engine/topology.
+- load tests using production-like **MySQL topology/configuration**.
 
 ## 18. Security Operations
 
@@ -424,7 +426,8 @@ Application `audit_events` are not a substitute for infrastructure access/securi
 | Queue worker failure | Committed domain state remains valid; jobs remain retryable/observable. |
 | Scheduler failure | Alert operations; resume idempotently without duplicating actions. |
 | Cache loss | Rebuild from authoritative data; no business history loss. |
-| Database unavailable | Fail requests safely; do not accept writes that cannot commit authoritatively. |
+| MySQL unavailable | Fail requests safely; do not accept writes that cannot commit authoritatively. |
+| MySQL PITR/recovery capability unavailable or unverified | Block production promotion or treat production readiness as degraded according to the release/runbook policy; do not claim the approved recovery NFR is satisfied. |
 | Private storage unavailable | Block evidence-dependent action/download; do not mark missing upload/scan as accepted. |
 | OTP/notification provider unavailable | Do not fabricate delivery success; expose retry/operational state. |
 | Malware scanner unavailable | Keep evidence quarantined/fail closed. |
@@ -441,19 +444,19 @@ Before production promotion, the pipeline should include at minimum:
 - formatting/lint verification;
 - static/type checks required by the project;
 - automated Pest test suite;
-- migration verification against the target production database engine;
+- migration, trigger/constraint, and concurrency verification against MySQL;
 - production asset build;
 - vulnerability/dependency checks already supported by project tooling;
-- documentation/contract validation once `docs/scripts/validate_docs.py` is created in Phase 3.
+- `python docs/scripts/validate_docs.py` documentation/contract validation, which is already present and used by the repository documentation-validation workflow.
 
-Exact CI platform is not selected by current source material.
+Exact CI platform for application deployment is not selected by current source material.
 
 ## 21. Infrastructure Decisions Still Open
 
 | Item | Status | Blocking impact |
 |---|---|---|
 | Hosting/cloud/provider selection | `Q-OPS-001` Major | Blocks exact network, managed-service, deployment, and cost design. |
-| Production relational database deployment | Part of `Q-OPS-001` | Must be selected and verified against current MySQL/SQLite-sensitive integrity behavior. |
+| Production MySQL deployment/topology | Part of `Q-OPS-001` | Managed versus self-hosted product, provider, HA, network placement, PITR implementation, and operational topology remain to be selected; the engine remains MySQL. |
 | Production cache/queue technology | Part of `Q-OPS-001` | Database defaults are current baseline; dedicated technology remains optional. |
 | Private evidence storage provider | `Q-PLATFORM-003` Major | Blocks concrete upload/download/storage integration contract. |
 | Malware-scanning provider | `Q-PLATFORM-003` Major | Evidence must remain quarantined until resolved. |
@@ -481,7 +484,8 @@ Relational immutable/event tables and auditable Laravel application services are
 Infrastructure is ready for production only when all applicable items are true:
 
 - production provider/topology approved;
-- production database selected and concurrency/migration tested;
+- production **MySQL** deployment/topology approved and migration/constraint/concurrency tested;
+- MySQL PITR is configured and restore evidence satisfies the approved RPO/RTO targets;
 - TLS and secure proxy configuration verified;
 - `APP_DEBUG=false`;
 - `UBERTIB_CATALOG_MODE=production`;
