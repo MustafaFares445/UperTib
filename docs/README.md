@@ -14,7 +14,7 @@
 6. `docs/TESTING_STRATEGY.md` — verification strategy and concrete `TC-*` registry.
 7. `docs/IMPLEMENTATION_PLAN.md` — canonical cross-platform execution order; detailed platform plans live under `docs/implementation/`.
 8. `docs/TRACEABILITY_MATRIX.md` — requirement/design/platform/test/task coverage and current implementation status.
-9. `docs/scripts/validate_docs.py` — mechanical documentation validator; generated after registry/traceability synchronization.
+9. `docs/scripts/validate_docs.py` — mechanical documentation validator used to verify registry, traceability, counts, line budgets, and cross-document consistency.
 
 ## Role-Based Reading Paths
 
