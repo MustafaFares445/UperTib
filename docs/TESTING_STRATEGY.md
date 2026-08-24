@@ -38,7 +38,7 @@ A `TC-*` marked Planned is not evidence that the application already passes it. 
 8. S/P/H/I tests provide source facts and policy versions; they never directly input final classifications as an accepted business path.
 9. `PENDING_EVALUATION` is distinct from scientific grade `F`.
 10. Race conditions, retries, duplicate commands, stale state, expired deadlines, revoked grants, and failed post-commit notifications are first-class scenarios.
-11. Production-database/concurrency behavior must be verified on the selected production relational engine, not only SQLite in-memory.
+11. Production-database/concurrency behavior must be verified on **MySQL**, the approved V1 production relational engine, not only SQLite in-memory.
 12. A passing automated suite never substitutes for unresolved clinical/legal/accountable approval.
 
 ## 3. Verified Current Toolchain and Quality Gates
@@ -85,14 +85,14 @@ Current `phpunit.mysql.xml` uses the MySQL test connection (`ubertib_test`). Use
 
 Before V1 release the project also requires:
 
-- production-engine integration with representative indexes/constraints;
+- MySQL integration with representative indexes/constraints;
 - asynchronous queue verification rather than only `sync`;
 - private evidence/storage + malware-adapter fake or approved sandbox;
 - load/concurrency environment isolated from production;
 - backup/restore environment;
 - React Native test/build environment after `TASK-PLATFORM-008` verifies the actual patient-client repository and commands.
 
-`Q-OPS-001` and `Q-PLATFORM-003` still block final provider/topology-specific suites.
+`Q-OPS-001` and `Q-PLATFORM-003` still block final provider/topology-specific suites, but they do not reopen the MySQL production-engine requirement.
 
 ## 5. Verified Existing Automated Coverage
 
@@ -170,7 +170,7 @@ This remains partial V1 implementation coverage. Identity/OTP, scoped authorizat
 | `TC-ELIG-003` | Planned | FR-ELIG-009, FR-ELIG-014 | Domain | Actual provider price + exact effective price-band policy computes `P`; no request/form/action can persist a manually selected P outcome. |
 | `TC-ELIG-004` | Planned | FR-ELIG-010–013, FR-ELIG-015 | Domain/property | Approved versioned policy computes S/H/I/confidence/grade-cap/gates deterministically at approved boundary values. Numeric clinical assertions remain gated by `Q-ELIG-001`. |
 | `TC-ELIG-005` | Planned | FR-ELIG-002, FR-ELIG-005, FR-ELIG-011–015 | Domain + DB | Most restrictive mandatory gate determines final eligibility; decision captures exact provider/service/branch/input/policy snapshot and cannot be edited. |
-| `TC-ELIG-006` | Planned | FR-ELIG-003–004, FR-ELIG-006 | Queue + DB + cross-platform | Influential fact/evidence/policy expiry/revocation creates a new decision, immediately blocks affected new bookings, removes affected Patient discovery result, updates Clinic status, and creates Admin operational visibility without changing unaffected scopes. |
+| `TC-ELIG-006` | Planned | FR-ELIG-003–004, FR-ELIG-006 | Queue + DB + cross-platform | Influential fact/evidence/policy expiry/revocation creates a new decision, immediately blocks affected new bookings, removes affected Patient discovery result, updates Clinic status, creates Admin operational visibility, and leaves any already-existing affected booking in its authoritative current state without auto-cancelling/confirming or inventing review outcomes while `Q-BOOKING-002` is unresolved; unaffected scopes remain unchanged. |
 | `TC-ELIG-007` | Planned | FR-ELIG-001, FR-ELIG-005–006 | API · Patient | Provider search returns only currently passing provider/service/branch combinations and excludes pending/suspended/failing scopes. |
 | `TC-ELIG-008` | Planned | FR-ELIG-016–017 | API privacy · Patient/Clinic | Patient-safe explanation and Clinic projection expose actionable reasons/freshness but omit raw internal `I`, protected reviewer evidence, and manual override controls. |
 | `TC-ELIG-009` | Planned | FR-POLICY-002, FR-ELIG-004 | Reproduction | Replaying captured inputs + historical policy reproduces the original decision; mismatch creates an integrity exception rather than rewriting original history. |
@@ -186,7 +186,7 @@ This remains partial V1 implementation coverage. Identity/OTP, scoped authorizat
 | `TC-BOOKING-002` | Planned | FR-BOOKING-001–003, FR-OPS-001 | Cross-platform | After `TC-BOOKING-001` commit, Patient sees pending, owning Clinic sees the **same booking** as actionable request, authorized Admin sees oversight projection; no second platform-specific booking record exists. |
 | `TC-BOOKING-003` | Planned | FR-BOOKING-003 | Feature + time · Clinic | Correct provider/branch may accept, reject-with-reason, or propose alternative before the earlier of 12 hours or 2 hours before appointment; wrong scope/expired response is rejected. |
 | `TC-BOOKING-004` | Planned | FR-BOOKING-001, FR-BOOKING-003 | Transaction + cross-platform | Clinic accept revalidates current eligibility/readiness/capacity and commits `CONFIRMED`; Patient/Clinic/Admin all read confirmed state from one authoritative booking. |
-| `TC-BOOKING-005` | Planned | FR-BOOKING-003 | API + transaction · Patient/Clinic | Alternative proposal is not confirmation; only patient/authorized guardian may accept current unexpired proposal and capacity/eligibility are revalidated before confirmation. |
+| `TC-BOOKING-005` | Planned | FR-BOOKING-003 | API + transaction · Patient/Clinic | Alternative proposal is not confirmation; only patient/authorized guardian may accept a current unexpired proposal and capacity/eligibility are revalidated before confirmation. Expired or explicitly declined proposals become non-actionable and late acceptance fails, but this test must not assert `REJECTED`, `CANCELLED`, return-to-`REQUESTED`, or another resulting booking state until `Q-BOOKING-001` is resolved. |
 | `TC-BOOKING-006` | Planned | FR-BOOKING-002 | State + policy · Patient/Clinic/Admin | Cancellation validates actor/current state/versioned policy; no-show fails before threshold; resulting history records actor/reason/prior/result/policy and propagates to all authorized projections. |
 | `TC-BOOKING-007` | Planned | FR-BOOKING-001, NFR-PLATFORM-001, NFR-AUDIT-002 | MySQL concurrency | 100 concurrent confirmations against finite capacity never exceed capacity; losers receive deterministic conflict and idempotent retries create no duplicate reservation/event. |
 | `TC-BOOKING-008` | Planned | FR-BOOKING-001–003, NFR-PLATFORM-006, NFR-PLATFORM-008 | Cross-platform + notification | Booking state commits before notification. Simulate Patient/Clinic notification delivery failure: authoritative booking remains committed, recipient sees state on refresh, delivery is retryable/observable, and no rollback/duplicate booking occurs. |
@@ -302,7 +302,7 @@ Mandatory cross-platform cases are currently represented by:
 
 - `TC-IDENTITY-007` — access revocation propagation;
 - `TC-CATALOG-005` — published version propagation;
-- `TC-ELIG-006` — eligibility suspension propagation;
+- `TC-ELIG-006` — eligibility suspension propagation, including no invented existing-booking outcome while `Q-BOOKING-002` is open;
 - `TC-BOOKING-002`, `004`, `006`, `008` — booking create/confirm/cancel/notification behavior;
 - `TC-CLINICAL-003`, `004`, `007` — plan proposal/acceptance/stage timeline;
 - `TC-FINANCE-003` — financial confirmation/dispute convergence;
@@ -372,11 +372,11 @@ Required load scenarios supporting `TC-PLATFORM-005`/`006` and `TC-BOOKING-007`:
 3. authenticated case/timeline reads;
 4. representative normal write;
 5. queue-producing writes;
-6. 100-way booking contention;
+6. 100-way booking contention on MySQL;
 7. mixed 30-minute workload;
 8. degraded external dependency behavior.
 
-Measurements should separate application, database, queue, and external-provider latency. Use synthetic production-like data, never real protected patient data.
+Measurements should separate application, MySQL, queue, and external-provider latency. Use synthetic production-like data, never real protected patient data.
 
 ## 24. Availability, Backup, and Recovery Verification
 
@@ -502,7 +502,7 @@ Slower load/recovery/provider-contract suites may run in release pipelines, but 
 ### Pre-release gate
 
 - full backend suite;
-- production-engine integration suite;
+- MySQL integration suite;
 - API/error/privacy suite;
 - permission negative matrix;
 - concurrency/idempotency suite;
