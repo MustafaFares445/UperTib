@@ -174,6 +174,7 @@ The Clinic UI must never ask the dentist to select `A/B/C/D/F`, `P`, `H`, `I`, o
 4. Other approved facts/policies feed S/H/I and final eligibility automatically.
 5. Clinic sees patient/provider-safe meaning and actionable blockers.
 6. If an influential fact expires or is revoked, the system creates a new evaluation/suspension; Clinic cannot override it.
+7. New affected bookings are blocked, while any already-existing booking follows the still-unresolved review workflow under `Q-BOOKING-002`; Clinic must not infer automatic cancellation, confirmation, or another terminal outcome.
 
 ### 7.4 Availability and booking flow
 
@@ -182,7 +183,7 @@ The Clinic UI must never ask the dentist to select `A/B/C/D/F`, `P`, `H`, `I`, o
 3. Clinic receives a scoped actionable request.
 4. Provider may accept, reject with reason, or propose an alternative appointment within the response deadline.
 5. Accept/alternative confirmation revalidates current eligibility, branch readiness, publication and capacity.
-6. Alternative remains pending until the patient/guardian accepts it.
+6. An alternative is actionable only while current and unexpired. If it expires or the patient explicitly declines it, the proposal becomes non-actionable, but the canonical resulting booking state remains unresolved under `Q-BOOKING-001`; Clinic must not infer `REJECTED`, `CANCELLED`, or return-to-`REQUESTED`.
 7. Capacity is committed transactionally and cannot overbook under concurrent requests.
 8. Clinic sees the canonical booking state; it does not maintain a second Filament-only status.
 
@@ -414,10 +415,10 @@ flowchart TD
 **Goal:** Surface only actionable provider-side booking requests, response deadlines, and alternatives for authorized branches.  
 **Dependencies:** TASK-BOOKING-003, TASK-OPS-002, patient booking creation action when available  
 **Expected Files / Areas:** Clinic booking resource/page; shared booking query; work-item projection; tests  
-**Implementation Notes:** Read canonical booking states/deadlines. Worklist is a projection; booking aggregate remains authoritative. Expired/non-actionable requests must not expose active response actions.  
+**Implementation Notes:** Read canonical booking states/deadlines. Worklist is a projection; booking aggregate remains authoritative. Expired/non-actionable requests must not expose active response actions. Alternative expiry/decline must not be translated into an invented booking terminal/rollback state while `Q-BOOKING-001` is open.  
 **Data / Migration Impact:** Reuse `bookings`, `booking_events`, `booking_alternatives`, `work_items`.  
 **API Impact:** None.  
-**Tests Required:** branch scoping; deadline ordering; actionable vs terminal states; no access to unrelated patient bookings.  
+**Tests Required:** branch scoping; deadline ordering; actionable vs terminal states; expired alternative non-actionability without invented outcome; no access to unrelated patient bookings.  
 **Verification:** `php artisan test --compact tests/Feature/Clinic/BookingWorklistTest.php`; `composer test`  
 **Definition of Done:**
 - [ ] Provider sees only scoped actionable requests
@@ -430,15 +431,16 @@ flowchart TD
 **Goal:** Implement provider-side response actions with transaction-safe revalidation and deadline enforcement.  
 **Dependencies:** TASK-BOOKING-004, TASK-ELIG-005, TASK-AUDIT-002  
 **Expected Files / Areas:** shared booking response actions; Clinic Filament actions; booking events/alternatives; tests  
-**Implementation Notes:** Accept revalidates publication/readiness/eligibility/capacity. Reject requires reason. Alternative stores proposed appointment context and awaits patient acceptance. Deadline is 12 hours or two hours before appointment, whichever occurs first.  
+**Implementation Notes:** Accept revalidates publication/readiness/eligibility/capacity. Reject requires reason. Alternative stores proposed appointment context and awaits patient acceptance. Deadline is 12 hours or two hours before appointment, whichever occurs first. If the alternative expires or is declined, preserve history and disable acceptance but do not infer the resulting booking state until `Q-BOOKING-001` is resolved.  
 **Data / Migration Impact:** Reuse booking/alternative/event structures.  
 **API Impact:** Shared actions must also support patient alternative acceptance API.  
-**Tests Required:** valid accept/reject/alternative; expired deadline; failed eligibility/capacity; duplicate command idempotency; 100-way capacity test remains required globally.  
+**Tests Required:** valid accept/reject/alternative; expired deadline; expired/declined alternative non-actionability without invented terminal state; failed eligibility/capacity; duplicate command idempotency; 100-way capacity test remains required globally.  
 **Verification:** `php artisan test --compact tests/Feature/Booking/ProviderBookingResponseTest.php`; `composer test:mysql`; `composer test`  
 **Definition of Done:**
 - [ ] Provider responses follow canonical transitions
 - [ ] Safety revalidation cannot be bypassed
 - [ ] Alternative requires patient acceptance
+- [ ] Unresolved alternative outcome is not fabricated
 - [ ] Duplicate response is safe
 
 ## TASK-BOOKING-006 — Implement Provider Cancellation and No-Show Actions
@@ -745,8 +747,10 @@ These items do not prevent building the structural Clinic panel but prevent cert
 | `Q-PLATFORM-001` — readable SRS v1.1 | Cannot claim full source reconciliation |
 | `Q-CATALOG-001` — clinical approval of provisional services | Clinic can use evaluation fixtures; production service activation/publication remains gated |
 | `Q-ELIG-001` — approved production S/P/H/I formulas | Build engine/input/versioning/readiness behavior; do not label provisional formulas clinically approved |
+| `Q-BOOKING-001` — alternative expiry/decline outcome | Make the proposal non-actionable and preserve history, but do not infer the resulting booking terminal/rollback state |
+| `Q-BOOKING-002` — existing-booking review after eligibility suspension | Block new affected bookings, but do not invent review authority, deadline, state effect, cancellation/confirmation, or other outcome |
 | `Q-PLATFORM-003` — concrete OTP/MFA/malware/storage/notification providers | Use provider-neutral interfaces/fakes; do not invent vendor contracts |
-| `Q-OPS-001` — production hosting topology | Does not change Clinic business behavior; deployment hardening waits for selected environment |
+| `Q-OPS-001` — production infrastructure | MySQL is the required production relational engine; hosting/provider/topology, managed-vs-self-hosted deployment, HA/PITR implementation, cache/queue/storage/logging and release infrastructure remain unresolved |
 | `Q-PLATFORM-002` — retention legal validation | Clinic uses shared retention mechanism; final legal periods remain governed |
 
 ## 14. Task ID Allocation in This Plan
@@ -765,7 +769,7 @@ Allocated here:
 - `TASK-OPS-004`;
 - `TASK-PLATFORM-005` through `TASK-PLATFORM-007`.
 
-Later Patient implementation planning must continue from these maxima and must not reuse any of these IDs.
+These IDs are synchronized in `docs/README.md`. The Patient plan continues from the applicable maxima, and future task additions across all plans remain append-only without reusing or renumbering existing IDs.
 
 ## 15. Recommended Implementation Order
 
@@ -785,12 +789,8 @@ Implementation should proceed in this order:
 
 Do not wait for final UI design to implement the domain and authorization foundations, but do not treat temporary Filament resource layout as authoritative UX design.
 
-## 16. Next Platform Plan
+## 16. Documentation Integration Status
 
-After this file, generate:
+`docs/implementation/USER_IMPLEMENTATION_PLAN.md` now owns the React Native patient application and the Laravel APIs it consumes. `docs/IMPLEMENTATION_PLAN.md` is the canonical cross-platform orchestration/index across the Admin, Clinic, and Patient plans.
 
-`docs/implementation/USER_IMPLEMENTATION_PLAN.md`
-
-That plan owns the React Native patient application and the Laravel APIs it consumes, and must continue task numbering from both Admin and Clinic plans.
-
-After all three platform plans exist, create `docs/IMPLEMENTATION_PLAN.md` as the canonical cross-platform orchestration/index rather than duplicating the detailed task bodies.
+This file remains the detailed owner of Clinic task bodies and provider-side execution dependencies. Future changes must keep the master implementation plan, testing strategy, traceability matrix, and `docs/README.md` registry synchronized without renumbering existing IDs.
