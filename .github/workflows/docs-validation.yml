@@ -17,6 +17,7 @@ on:
 
 permissions:
   contents: read
+  issues: write
 
 jobs:
   validate-docs:
@@ -34,4 +35,51 @@ jobs:
           python-version: '3.12'
 
       - name: Run documentation validator
-        run: python docs/scripts/validate_docs.py
+        id: validator
+        shell: bash
+        run: |
+          set +e
+          python docs/scripts/validate_docs.py > validation-output.txt 2>&1
+          status=$?
+          cat validation-output.txt
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Publish validation report issue
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VALIDATOR_STATUS: ${{ steps.validator.outputs.status }}
+        shell: bash
+        run: |
+          {
+            echo '# Documentation Validation Report'
+            echo
+            echo "- Commit: \`$GITHUB_SHA\`"
+            echo "- Validator exit code: \`$VALIDATOR_STATUS\`"
+            echo "- Workflow: \`Documentation Validation\`"
+            echo
+            echo '```text'
+            cat validation-output.txt
+            echo '```'
+          } > issue-body.md
+
+          issue_number=$(gh issue list \
+            --state all \
+            --search 'Documentation Validation Report in:title' \
+            --json number,title \
+            --jq '.[] | select(.title == "Documentation Validation Report") | .number' \
+            | head -n 1)
+
+          if [ -z "$issue_number" ]; then
+            gh issue create \
+              --title 'Documentation Validation Report' \
+              --body-file issue-body.md >/dev/null
+          else
+            gh issue edit "$issue_number" --body-file issue-body.md >/dev/null
+            gh issue reopen "$issue_number" >/dev/null 2>&1 || true
+          fi
+
+      - name: Fail when documentation validation fails
+        if: steps.validator.outputs.status != '0'
+        run: exit 1
