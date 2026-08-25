@@ -84,6 +84,12 @@ REQUIRED_FILES = (
 # Explicit omissions for the current engineering baseline. If an approved
 # source later introduces either artifact, update README and this validator in
 # the same documentation change.
+#
+# 2026-08-25: the UX chain introduced the SCR owner as
+# docs/ux/01-foundation/INFORMATION_ARCHITECTURE.md rather than SCREEN_INVENTORY.md,
+# because Phase 1 ran in Docs-Partial mode and derived its own screen model.
+# OWNER_FILES["SCR"] was repointed accordingly. SCREEN_INVENTORY.md remains
+# genuinely omitted and stays in the list below.
 CURRENTLY_OMITTED_FILES = (
     "docs/ux/SCREEN_INVENTORY.md",
     "docs/integrations/INTEGRATION_CONTRACTS.md",
@@ -100,11 +106,16 @@ OWNER_FILES = {
     "NFR": ("docs/PRD.md",),
     "DR": ("docs/PRD.md", "docs/SDD.md"),
     "TD": ("docs/SDD.md",),
-    "ASM": ("docs/README.md", "docs/PRD.md", "docs/SDD.md"),
+    "ASM": (
+        "docs/README.md",
+        "docs/PRD.md",
+        "docs/SDD.md",
+        "docs/ux/01-foundation/UPSTREAM_GAPS.md",
+    ),
     "Q": ("docs/README.md",),
     "CONFLICT": ("docs/README.md",),
     "API": ("docs/api/API_CONTRACTS.md",),
-    "SCR": ("docs/ux/SCREEN_INVENTORY.md",),
+    "SCR": ("docs/ux/01-foundation/INFORMATION_ARCHITECTURE.md",),
     "TC": ("docs/TESTING_STRATEGY.md",),
     "TASK": (
         "docs/implementation/ADMIN_IMPLEMENTATION_PLAN.md",
