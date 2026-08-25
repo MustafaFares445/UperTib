@@ -91,10 +91,10 @@ Canonical forms are `FR-*`, `BR-*`, `NFR-*`, `DR-*`, `TD-*`, `ASM-*`, `Q-*`, `CO
 
 | Domain | FR | BR | NFR | DR | TD | ASM | Q | CONFLICT | API | SCR | TC | TASK | ERR |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| IDENTITY | 003 | 000 | 002 | 000 | 000 | 001 | 001 | 000 | 005 | 036 | 007 | 007 | 004 |
+| IDENTITY | 003 | 000 | 002 | 000 | 000 | 001 | 001 | 000 | 006 | 038 | 007 | 007 | 004 |
 | CATALOG | 001 | 000 | 000 | 000 | 000 | 000 | 001 | 001 | 001 | 009 | 005 | 002 | 000 |
-| ELIG | 017 | 000 | 000 | 000 | 000 | 001 | 001 | 000 | 004 | 020 | 010 | 011 | 002 |
-| BOOKING | 003 | 000 | 000 | 000 | 000 | 000 | 003 | 001 | 005 | 015 | 008 | 010 | 003 |
+| ELIG | 017 | 000 | 000 | 000 | 000 | 001 | 001 | 000 | 004 | 022 | 010 | 011 | 002 |
+| BOOKING | 004 | 000 | 000 | 000 | 000 | 000 | 003 | 001 | 007 | 017 | 009 | 011 | 003 |
 | CLINICAL | 005 | 000 | 000 | 000 | 000 | 000 | 001 | 000 | 004 | 019 | 007 | 009 | 001 |
 | FINANCE | 007 | 000 | 001 | 000 | 000 | 000 | 000 | 000 | 005 | 012 | 008 | 011 | 001 |
 | REVIEWS | 002 | 000 | 000 | 000 | 000 | 000 | 001 | 000 | 002 | 009 | 004 | 003 | 001 |
@@ -102,28 +102,24 @@ Canonical forms are `FR-*`, `BR-*`, `NFR-*`, `DR-*`, `TD-*`, `ASM-*`, `Q-*`, `CO
 | OPS | 003 | 000 | 000 | 000 | 000 | 000 | 002 | 000 | 000 | 006 | 005 | 004 | 000 |
 | POLICY | 002 | 000 | 000 | 000 | 000 | 000 | 000 | 000 | 000 | 004 | 004 | 001 | 000 |
 | AUDIT | 003 | 000 | 003 | 000 | 000 | 000 | 000 | 000 | 000 | 004 | 005 | 003 | 001 |
-| PLATFORM | 000 | 000 | 008 | 000 | 000 | 001 | 007 | 002 | 000 | 008 | 012 | 012 | 004 |
+| PLATFORM | 001 | 000 | 008 | 000 | 000 | 001 | 007 | 002 | 002 | 009 | 013 | 013 | 005 |
 
-`SCR-*`, `ASM-*`, and the `Q-*` / `CONFLICT-*` increments above were allocated by UX chain Phase 1 on 2026-08-25. See `docs/ux/PHASE_01_HANDOFF.md`.
+`SCR-*`, `ASM-*` and the `Q-*` / `CONFLICT-*` increments above were allocated by the UX chain on 2026-08-25; see `docs/ux/PHASE_01_HANDOFF.md`. `FLOW-*` and `JTBD-*` are introduced by the UX chain and are append-only on the same terms as every other prefix.
 
 ### UX Chain Registry — Highest Allocated Number
 
-`FLOW-*` and `JTBD-*` are introduced by the UX chain and are append-only on the same terms as every other prefix.
-
 | Domain | FLOW | JTBD | Domain | FLOW | JTBD |
 |---|---:|---:|---|---:|---:|
-| IDENTITY | 020 | 011 | FINANCE | 008 | 006 |
-| ELIG | 014 | 008 | REVIEWS | 005 | 003 |
-| BOOKING | 012 | 007 | CATALOG | 005 | 003 |
+| IDENTITY | 021 | 012 | FINANCE | 008 | 006 |
+| ELIG | 015 | 008 | REVIEWS | 006 | 004 |
+| BOOKING | 014 | 008 | CATALOG | 005 | 003 |
 | CLINICAL | 010 | 007 | OPS | 004 | 003 |
-| CLAIMS | 009 | 007 | PLATFORM | 003 | 003 |
+| CLAIMS | 009 | 007 | PLATFORM | 004 | 004 |
 | POLICY | 002 | 002 | AUDIT | 002 | 002 |
 
-`WF-*` (Phase 2), `CMP-*`, `IX-*`, `TXT-*`, `A11Y-*` (Phase 3) and `WGT-*` (Phase 4) are not yet allocated.
+`WF-*` (Phase 2), `CMP-*`, `IX-*`, `TXT-*`, `A11Y-*` (Phase 3) and `WGT-*` (Phase 4) are not yet allocated. `SDC-*` staff interaction contracts keep their own append-only registry in `docs/domain/STAFF_INTERACTION_CONTRACTS.md` section 9 — 20 allocated across 11 domains.
 
-`SDC-*` staff interaction contracts keep their own append-only registry in `docs/domain/STAFF_INTERACTION_CONTRACTS.md` section 9 — 17 allocated across 11 domains.
-
-**Registry snapshot:** 31 allocated `API-*` contracts, 19 `ERR-*` definitions, 82 `TASK-*` implementation tasks, and 82 concrete `TC-*` cases. Counts describe allocations, not completed code/tests.
+**Registry snapshot:** 36 allocated `API-*` contracts, 20 `ERR-*` definitions, 84 `TASK-*` implementation tasks, and 84 concrete `TC-*` cases. Counts describe allocations, not completed code/tests.
 
 ## Functional Requirement Alias Map
 
@@ -162,34 +158,39 @@ Canonical forms are `FR-*`, `BR-*`, `NFR-*`, `DR-*`, `TD-*`, `ASM-*`, `Q-*`, `CO
 
 ## Open ASM / Q / CONFLICT Index
 
-Three `ASM-*` are allocated, all by UX chain Phase 1: `ASM-PLATFORM-001` (patient attention surface is the primary re-entry path), `ASM-IDENTITY-001` (applicant contact verification precedes application content), `ASM-ELIG-001` (booking may proceed directly from a provider result row). Each is defined with what breaks if it is wrong in `docs/ux/01-foundation/UPSTREAM_GAPS.md` section 5, which is their canonical owner.
+Three `ASM-*` are allocated, all by UX chain Phase 1. `ASM-IDENTITY-001` (applicant contact verification precedes application content) and `ASM-ELIG-001` (booking may proceed directly from a provider result row) remain open assumptions; `ASM-PLATFORM-001` was resolved on 2026-08-25. Each is defined with what breaks if it is wrong in `docs/ux/01-foundation/UPSTREAM_GAPS.md` section 5, which is their canonical owner.
 
 | ID | Severity | Status / decision needed |
 |---|---|---|
 | `Q-PLATFORM-001` | Blocker | Obtain readable authoritative SRS v1.1 before claiming complete SRS reconciliation. |
 | `Q-CATALOG-001` | Major | Licensed clinical approval required before the 26 provisional records become production medical content. |
 | `Q-ELIG-001` | Major | Production S/P/H/I formulas, weights, thresholds, deadlines, and defaults require licensed clinical approval. |
-| `Q-BOOKING-001` | Major | Define the canonical booking outcome when an `ALTERNATIVE_PROPOSED` appointment expires or the patient declines it; current sources define the deadline/acceptance requirement but not the resulting lifecycle state. |
-| `Q-BOOKING-002` | Major | Define the existing-booking review workflow triggered when eligibility is suspended: responsible actor, booking-state effect, allowed outcomes, deadlines, and required notifications/work items remain unspecified. |
 | `Q-PLATFORM-002` | Major | Final retention/deletion periods require legal/compliance validation. |
-| `Q-OPS-001` | Major | Production hosting/deployment topology/provider remains unresolved. |
-| `Q-PLATFORM-003` | Major | Concrete OTP/MFA, malware/private-evidence, notification, and other external providers remain unresolved. |
+| `Q-OPS-001` | Major | Production hosting/deployment topology/provider remains unresolved, now including the concrete storage, malware-scanning, OTP and notification-delivery vendors deferred from `Q-PLATFORM-003`. |
 | `Q-PLATFORM-004` | Minor | Low-thousands launch expectation vs 10,000-user NFR is treated as expected load versus engineering headroom unless superseded. |
 | `CONFLICT-PLATFORM-001` | Major | Historical stack assumptions differ from verified current Laravel/PHP/package stack; current repository facts govern implementation. |
 | `CONFLICT-PLATFORM-002` | Major | Some `.spec` architecture-quality statements require final NFR vs DR/TD classification after SRS reconciliation. |
-| `Q-OPS-002` | Major | Enumerate the operational work-item state vocabulary. `FR-OPS-001` requires work-item state to be visible to authorized staff and `SDC-OPS-001` names its commands, but `STATE_MACHINES.md` section 20 declines to finalize the states. Raised by UX Phase 1. |
-| `Q-PLATFORM-005` | Major | Confirm whether a patient-facing notification or attention surface exists in V1. Twelve notification intents address the patient, no transport is assumed, and no `FR-*` establishes a patient inbox. Raised by UX Phase 1. |
-| `Q-PLATFORM-006` | Major | Document device, setting, interruption pattern and product expertise for the actor categories. Undocumented for all 19 UI-bearing actors, and these drive density, target size and confirmation friction. Raised by UX Phase 1. |
-| `Q-PLATFORM-007` | Major | No research input of any kind exists — no interviews, analytics or support tickets. The task frequency-by-criticality model rests on documented responsibility rather than observed behavior. Raised by UX Phase 1. |
-| `Q-IDENTITY-001` | Major | Define the authorized legal-basis representation-grant workflow: which actor establishes a grant that the patient cannot consent to, on what evidence, and through which surface. Referenced by `PERMISSIONS_MATRIX.md` section 6 and `API-IDENTITY-004` but never defined. Raised by UX Phase 1. |
-| `Q-REVIEWS-001` | Major | State whether a patient may appeal a review eligibility or publication decision. `TRACEABILITY_MATRIX.md` records the patient impact of `FR-REVIEWS-002` as conditional on an undefined policy. Raised by UX Phase 1. |
-| `Q-BOOKING-003` | Minor | Decide whether V1 needs a governed reschedule for a confirmed booking. `CROSS_PLATFORM_BEHAVIOR.md` section 10.2 leaves rescheduling to separate specification, so the only path is cancel and rebook. Raised by UX Phase 1. |
-| `Q-CLINICAL-001` | Minor | Decide whether a `PROPOSED` treatment plan expires, and whether a later price change invalidates an unaccepted proposal. `STATE_MACHINES.md` section 9 defines no deadline. Raised by UX Phase 1. |
-| `CONFLICT-BOOKING-001` | Major | `API-IDENTITY-005` references `ERR-BOOKING-002` for a policy-blocked guardian-grant revocation, which would surface a booking-domain error and recovery path on a representation surface. `ERROR_CATALOG.md` section 8 already flags the reference for confirmation. Raised by UX Phase 1. |
 
-### Resolved Allocated Conflict
+### Resolved Allocated Items
 
-`CONFLICT-CATALOG-001` remains permanently allocated but is **Resolved (2026-08-24)**: the currently verified `GET /api/v1/catalog/service-groups` route and current OpenAPI contract align. Broader feature-spec aspirations remain Planned rather than being treated as implemented route evidence.
+Permanently allocated, never reused or renumbered. Thirteen were closed on 2026-08-25 by `.spec/decisions/PO-2026-08-25-ux-phase1-reconciliation.md`; canonical detail lives in that decision and in the owner documents named below.
+
+| ID | Resolved | Resolution |
+|---|---|---|
+| `CONFLICT-CATALOG-001` | Resolved (2026-08-24) | The verified `GET /api/v1/catalog/service-groups` route and current OpenAPI contract align. Broader feature-spec aspirations remain Planned, not implemented route evidence. |
+| `Q-PLATFORM-003` | 2026-08-25 | `PO-UX-17`: evidence-transfer interaction is fixed and provider-neutral (`API-PLATFORM-001`, `STATE_MACHINES.md` section 21.1); notification surface confirmed as `FR-PLATFORM-001`. Vendor selection moved to `Q-OPS-001`. |
+| `Q-PLATFORM-005` | 2026-08-25 | `PO-UX-09`: patient notification/attention centre confirmed as `FR-PLATFORM-001` and `API-PLATFORM-002`; four primary tabs unchanged. |
+| `Q-PLATFORM-006` | 2026-08-25 | `PO-UX-07`: device, setting, interruption pattern and expertise confirmed for all six role classes. |
+| `Q-PLATFORM-007` | 2026-08-25 | `PO-UX-18`: accepted research limitation, not a blocker. Usability testing remains recommended, not prerequisite. |
+| `Q-OPS-002` | 2026-08-25 | `PO-UX-08`: work-item states are `OPEN`/`ASSIGNED`/`IN_PROGRESS`/`WAITING`/`COMPLETED`; escalation and overdue are flags. `STATE_MACHINES.md` section 20. |
+| `Q-IDENTITY-001` | 2026-08-25 | `PO-UX-14`: legal-basis grant requires Admin Verification approval; `API-IDENTITY-006` and `SDC-IDENTITY-005`. A guardian cannot self-authorize. |
+| `Q-REVIEWS-001` | 2026-08-25 | `PO-UX-10`: both the authoring patient/guardian and the affected provider may appeal eligibility/policy decisions; decided by an independent Review Integrity Reviewer. |
+| `Q-BOOKING-001` | 2026-08-25 | `PO-UX-12`: decline or expiry closes the booking as `CANCELLED` with reason `ALTERNATIVE_DECLINED` or `ALTERNATIVE_EXPIRED`, with no patient penalty. |
+| `Q-BOOKING-002` | 2026-08-25 | `PO-UX-13`: new non-terminal booking state `ELIGIBILITY_REVIEW`; returns to `CONFIRMED` or closes as `CANCELLED` reason `PROVIDER_ELIGIBILITY_SUSPENDED`. No override may make it attendable. |
+| `Q-BOOKING-003` | 2026-08-25 | `PO-UX-15`: governed `RescheduleProposal` workflow confirmed as `FR-BOOKING-004`; generic booking editing stays prohibited. |
+| `Q-CLINICAL-001` | 2026-08-25 | `PO-UX-16`: proposal carries a policy-governed `expires_at`, V1 default 7 calendar days, and goes stale early when a material governing fact changes. |
+| `CONFLICT-BOOKING-001` | 2026-08-25 | `PO-UX-11`: `ERR-BOOKING-002` removed from `API-IDENTITY-005`. Guardian revocation is always immediate and no booking state may block it. |
+| `ASM-PLATFORM-001` | 2026-08-25 | `PO-UX-09` confirmed the attention surface as required product behavior, so `SCR-PLATFORM-001` no longer rests on an assumption. |
 
 ## Status Vocabulary
 

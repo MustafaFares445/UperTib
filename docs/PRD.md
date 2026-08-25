@@ -145,7 +145,8 @@ The engineering PRD names journeys but does not define navigation or screen flow
 **Business Principles:** BP-02, BP-04.  
 **Acceptance Criteria:**
 - Given an invalid dependency, when suspension becomes effective, then only dependent provider-service-branch scopes are suspended and new bookings are blocked.
-- Given existing bookings in the affected scope, when suspension occurs, then they enter the configured review workflow rather than being silently rewritten.
+- Given existing bookings in the affected scope, when suspension occurs, then each affected `CONFIRMED` booking moves to the non-terminal `ELIGIBILITY_REVIEW` state, keeps its reserved slot, is not attendable, and creates an urgent operational work item rather than being silently rewritten.
+- Given the owning eligibility scope is still `SUSPENDED`, then no override of any role can make the booking attendable, and the review is due no later than two hours before the appointment.
 
 ### FR-ELIG-004 — Eligibility Recalculation
 **Source:** `.spec/functional-requirements/FR.01.2.3-eligibility-recalculation.md` · aliases `FR.01.2.3`, SRS `FR-031`  
@@ -334,6 +335,21 @@ The engineering PRD names journeys but does not define navigation or screen flow
 **Acceptance Criteria:**
 - Given a provider response, then actor, branch, prior/resulting state, reason, and time are recorded.
 - Given 12 hours have elapsed or the appointment is within two hours, whichever is earlier, then the response/proposal deadline has expired; an alternative requires patient acceptance before confirmation.
+- Given the patient declines an alternative or its acceptance deadline expires, then the booking closes as `CANCELLED` with reason `ALTERNATIVE_DECLINED` or `ALTERNATIVE_EXPIRED`, no patient penalty applies, the proposal history is preserved, a late acceptance is rejected, and the patient is offered a new booking request rather than a punitive cancellation message.
+
+
+### FR-BOOKING-004 — Governed Booking Reschedule
+**Source:** decision `PO-2026-08-25-ux-phase1-reconciliation` `PO-UX-15`; resolves `Q-BOOKING-003`  
+**Status:** Confirmed.  
+**Description:** Allow either the patient side or an authorized clinic party to propose moving a confirmed appointment to a different slot, through a governed proposal the counterparty must accept, instead of a generic edit of the booking.  
+**Actors:** Patient/authorized guardian; authorized clinic party; system.  
+**Screens:** Deferred to UX pipeline.  
+**Business Principles:** BP-04, BP-13.  
+**Acceptance Criteria:**
+- Given a pending reschedule proposal, then the original booking remains `CONFIRMED` and the original slot remains the authoritative appointment; the proposed slot is never silently substituted.
+- Given acceptance by the counterparty, then provider/service/branch eligibility and new-slot capacity are revalidated, the booking moves to the accepted slot atomically, the old slot is released, reschedule history is appended, and both parties are notified.
+- Given a decline, an expiry, or a withdrawal, then the proposal closes and the original confirmed appointment is unchanged.
+- Given any attempt to change date, provider, or service without the required acceptance and successful revalidation, then the change is rejected.
 
 ### 7.3 CLINICAL — Treatment and Case Progress
 
@@ -347,6 +363,8 @@ The engineering PRD names journeys but does not define navigation or screen flow
 **Acceptance Criteria:**
 - Given treatment planning, then only an authorized treating clinician authors clinical stages and the system identifies the plan as the clinician's proposal, not autonomous platform diagnosis.
 - Given required service/stage/price/policy information is missing, then the plan cannot be accepted.
+- Given a proposed plan, then it carries a policy-governed `expires_at` whose V1 default is 7 calendar days after proposal, and that value is versioned policy data rather than a hard-coded constant.
+- Given a material governing fact changes before expiry — the relevant plan version, service, price or financial terms, eligibility state, or a required policy/snapshot input — then the proposal is no longer acceptable and the clinician must issue a new version; an already-accepted snapshot is never invalidated by a later expiry.
 
 ### FR-CLINICAL-002 — Accepted Terms Snapshot
 **Source:** `.spec/functional-requirements/FR.05.2.1-accepted-terms-snapshot.md` · aliases `FR.05.2.1`, SRS `FR-009`  
@@ -493,6 +511,9 @@ The engineering PRD names journeys but does not define navigation or screen flow
 **Acceptance Criteria:**
 - Given an appeal, then appellant, review, policy-grounded reason, evidence, and submission time are recorded.
 - Given a publication-state decision, then an authorized integrity decision with findings/reason is required and the review rating cannot feed S/P/H/I or modify scientific eligibility.
+- Given a decision that rejects, retires, or unpublishes a review, then the authoring patient or guardian is an authorized affected party who may appeal it.
+- Given a review eligibility or policy-compliance decision affecting a provider, then that provider or clinic is an authorized affected party who may appeal it.
+- Given any appeal, then it concerns eligibility, verification, or policy compliance only, is decided by an independent Review Integrity Reviewer, and can never directly edit the rating or review content.
 
 ### 7.6 CLAIMS — Refunds, Protection Claims, Sensitive Review
 
@@ -563,6 +584,8 @@ The engineering PRD names journeys but does not define navigation or screen flow
 **Acceptance Criteria:**
 - Given a work item, then type, case, state, priority, due time, responsibility scope, and blocking reason are visible to authorized staff.
 - Given assignment/escalation/completion/reopening/deadline breach, then an audited state transition is recorded; staff can only see/claim work within active scope.
+- Given a work item, then its lifecycle state is exactly one of `OPEN`, `ASSIGNED`, `IN_PROGRESS`, `WAITING`, or `COMPLETED`.
+- Given escalation or a passed due time, then these are recorded as flags and events that preserve the lifecycle state rather than replacing it, so an item can be simultaneously `IN_PROGRESS`, escalated, and overdue; deadline breach is derived from `due_at` and audited.
 
 ### FR-OPS-002 — Operational Reporting
 **Source:** `.spec/functional-requirements/FR.14.1.1-operational-reporting.md` · aliases `FR.14.1.1`, SRS `FR-035`  
@@ -617,6 +640,8 @@ The engineering PRD names journeys but does not define navigation or screen flow
 **Acceptance Criteria:**
 - Given a grant, then grantor/legal basis, patient, grantee, actions, data scope, effective period, and purpose are explicit.
 - Given expiry/revocation, then access stops immediately while history remains; guardian actions are attributed to the guardian, never impersonating the patient.
+- Given an adult patient with capacity, then that patient grants and revokes scoped access themselves, and revocation is always immediate — no booking or case state may block it, and revocation never deletes or cancels an existing booking or case.
+- Given a minor or a patient who cannot legally or self-consensually establish the grant, then the guardian submits a legal-basis request with declared relationship, legal basis, and required identity/legal evidence, which enters Admin Verification; only an authorized verification decision creates the `LEGAL_BASIS` grant, so a guardian can never self-authorize by entering a dependent.
 
 ### 7.9 AUDIT — Audit, Idempotency, Provenance
 
@@ -687,6 +712,21 @@ The engineering PRD names journeys but does not define navigation or screen flow
 **Acceptance Criteria:**
 - Given historical reproduction, then historical snapshots—not mutable current data—are used and the result matches stored history.
 - Given an integrity mismatch, then an auditable exception is raised; protected payload remains purpose/scope restricted.
+
+### 7.12 PLATFORM — Patient Attention and Notification
+
+### FR-PLATFORM-001 — Patient Notification and Attention Center
+**Source:** decision `PO-2026-08-25-ux-phase1-reconciliation` `PO-UX-09`; resolves `Q-PLATFORM-005`  
+**Status:** Confirmed.  
+**Description:** Provide the patient with a durable in-app record of the notification intents addressed to them, plus an attention area that surfaces everything currently awaiting their action, so correctness never depends on push, SMS, or email delivery.  
+**Actors:** Patient; guardian within an active grant scope; system.  
+**Screens:** Deferred to UX pipeline.  
+**Business Principles:** BP-04, BP-13.  
+**Acceptance Criteria:**
+- Given a required notification intent addressed to the patient, then a durable in-system entry exists carrying a safe title/summary, a link to the authoritative resource, a timestamp, read/unread, an action-required indication, and any applicable due time.
+- Given the patient reads or dismisses an entry, then no business state changes; reading is never an acknowledgement, an acceptance, or a deadline response.
+- Given a deadline-bound or action-required item, then it also appears in the patient attention area, so a failed or undelivered push/SMS/email never causes a missed obligation.
+- Given push, SMS, or email delivery fails, then the durable entry and the attention area still present the obligation and the authoritative state is unchanged.
 
 ## 8. Non-Functional Requirements
 
@@ -817,7 +857,7 @@ No canonical `ASM-*` is allocated at this point. Do not convert open items below
 | Q-ELIG-001 | Major | Production S/P/H/I formulas, weights, thresholds, deadlines, and defaults require licensed clinical approval; provisional values remain versioned/configurable evaluation policy. |
 | Q-PLATFORM-002 | Major | Final retention/deletion periods require applicable legal/compliance validation. |
 | Q-OPS-001 | Major | Production hosting/deployment topology/provider is not established. Infrastructure documentation must remain provider-neutral until resolved. |
-| Q-PLATFORM-003 | Major | Concrete OTP, malware-scanning/private-evidence, notification, and other external providers are not selected. Provider contracts must not be invented. |
+| Q-PLATFORM-003 | Resolved for interaction; provider selection open | Resolved 2026-08-25 by `PO-UX-17`: the evidence-transfer interaction contract is fixed and provider-neutral (`API-PLATFORM-001`, `STATE_MACHINES.md` section 21.1), and the patient notification surface is confirmed (`FR-PLATFORM-001`). Selecting the concrete OTP, malware-scanning, private-storage, and notification-delivery vendors remains an infrastructure decision tracked by `Q-OPS-001`; provider contracts must still not be invented. |
 | Q-PLATFORM-004 | Minor | Low-thousands expected Aleppo launch population and the 10,000-identity NFR envelope are treated as expected population versus engineering headroom unless superseded. |
 | CONFLICT-PLATFORM-001 | Major | Older feature-plan stack assumptions differ from the verified current backend package constraints; technical documentation must use verified repository facts and preserve older plans only as historical evidence. |
 | CONFLICT-CATALOG-001 | Resolved | Resolved 2026-08-24: the currently verified `GET /api/v1/catalog/service-groups` route and current OpenAPI contract align. Broader planned contracts still remain planning evidence and must not be treated as implemented behavior. |

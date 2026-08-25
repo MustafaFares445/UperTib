@@ -7,7 +7,7 @@
 
 ## 1. Purpose
 
-Designing the structure is the most thorough audit the requirements will ever get. This file records every gap that surfaced while deriving 155 screens and 94 flows across three platforms.
+Designing the structure is the most thorough audit the requirements will ever get. This file records every gap that surfaced while deriving 162 screens and 100 flows across three platforms, and the resolution of each one that has been answered.
 
 A gap here is an upstream problem, not a design task. Suggested resolutions are labelled as suggestions and decide nothing.
 
@@ -29,6 +29,7 @@ One documentation-synchronization observation follows from the onboarding decisi
 These pre-existed this phase. They are restated with their concrete UX consequence, and their IDs are not reallocated.
 
 ### GAP-001 — Booking state after an alternative expires or is declined is undefined
+**Status: Resolved 2026-08-25.** `Q-BOOKING-001` — `PO-UX-12` closes the booking as `CANCELLED` with reason `ALTERNATIVE_DECLINED` or `ALTERNATIVE_EXPIRED`, with no patient penalty and a fresh-request next action. `FLOW-BOOKING-007` and `STATE_MACHINES` section 8 now run to that outcome.
 **Found while:** mapping `FLOW-BOOKING-007` and `FLOW-BOOKING-012`
 **Type:** Missing behavior
 **Detail:** `STATE_MACHINES.md` section 8 marks the transition from `ALTERNATIVE_PROPOSED` on deadline expiry or explicit patient decline as unresolved, and `ERROR_CATALOG.md` section 8 states that `ERR-BOOKING-003` does not define the resulting state and that clients must not infer `REJECTED`, `CANCELLED` or a return to `REQUESTED`. No canonical outcome exists.
@@ -39,6 +40,7 @@ These pre-existed this phase. They are restated with their concrete UX consequen
 **Suggested resolution (suggestion only):** define whether expiry returns the booking to `REQUESTED` for a further provider response, moves it to a terminal state, or introduces a distinct `PROPOSAL_LAPSED` state. Whichever is chosen, the patient needs a named next action.
 
 ### GAP-002 — Existing bookings have no defined review workflow after eligibility suspension
+**Status: Resolved 2026-08-25.** `Q-BOOKING-002` — `PO-UX-13` adds the non-terminal `ELIGIBILITY_REVIEW` booking state with two permitted outcomes, an urgent work item, a review deadline no later than two hours before the appointment, and no attendance override at any role. Owned by `FLOW-ELIG-015` and `SCR-ELIG-022`.
 **Found while:** mapping `FLOW-ELIG-012` and `FLOW-ELIG-014`
 **Type:** Missing behavior
 **Detail:** `STATE_MACHINES.md` section 7 and `CROSS_PLATFORM_BEHAVIOR.md` section 9.2 both state that existing bookings enter a configured review workflow when a scope becomes `SUSPENDED`, and that its actor, booking-state effect, deadlines and allowed outcomes are unresolved. Both explicitly forbid inferring automatic cancellation, automatic confirmation or any other terminal outcome.
@@ -49,6 +51,7 @@ These pre-existed this phase. They are restated with their concrete UX consequen
 **Suggested resolution (suggestion only):** name the responsible actor, the effect on booking state, the deadline, the allowed outcomes and the required notifications. The patient-facing question needing an answer first is whether a confirmed appointment in a suspended scope remains attendable.
 
 ### GAP-003 — No private-evidence transfer contract exists
+**Status: Resolved 2026-08-25.** `Q-PLATFORM-003` — `PO-UX-17` fixes the provider-neutral transfer contract `API-PLATFORM-001` and its eight session states in `STATE_MACHINES` section 21.1. Storage and scanner vendor selection moved to `Q-OPS-001` and does not change any user-visible state.
 **Found while:** mapping `FLOW-PLATFORM-001`, and six flows that require evidence
 **Type:** Missing behavior
 **Detail:** `API_CONTRACTS.md` section 12 explicitly declines to invent a presigned, multipart, chunked or resumable upload endpoint while storage and scanning providers remain unresolved, and no `API-PLATFORM-*` is allocated. Domain write contracts accept `evidence_ids` only after an evidence record exists.
@@ -83,7 +86,7 @@ These pre-existed this phase. They are restated with their concrete UX consequen
 **Type:** Missing behavior
 **Detail:** `Docs/UberTib_SRS_Etkan_v1.1.pdf` exists in the repository but its full text is not available, so complete reconciliation against the authoritative source cannot be certified.
 **UX consequence:** none on any artifact — every screen and flow derives from the approved `.spec` baseline, the canonical `docs/` set and the Product Owner decisions, all of which are sufficient. The consequence is a limit on what may be *claimed*: this phase covers the approved baseline, not a certified complete reconciliation with the SRS.
-**Affects:** the coverage claim for all 155 screens and 94 flows
+**Affects:** the coverage claim for all 162 screens and 100 flows
 **Severity:** Blocker for the completeness claim; not a blocker for any artifact
 **Raised as:** `Q-PLATFORM-001` — pre-existing
 **Suggested resolution (suggestion only):** obtain readable SRS text, then re-run the requirement sweep against it. Until then, journey coverage should be described as against the approved baseline.
@@ -91,6 +94,7 @@ These pre-existed this phase. They are restated with their concrete UX consequen
 ## 4. New Gaps Raised By This Phase
 
 ### GAP-007 — Work-item state vocabulary is user-visible but deliberately unfinalized
+**Status: Resolved 2026-08-25.** `Q-OPS-002` — `PO-UX-08` enumerates `OPEN`, `ASSIGNED`, `IN_PROGRESS`, `WAITING`, `COMPLETED` in `STATE_MACHINES` section 20, with escalated and overdue as flags rather than states.
 **Found while:** deriving `SCR-OPS-002`, `SCR-OPS-003` and `SCR-OPS-001`, and mapping `FLOW-OPS-001` and `FLOW-OPS-002`
 **Type:** Missing behavior
 **Detail:** a direct collision between two canonical documents. `FR-OPS-001` requires a work item's "type, case, state, priority, due time, responsibility scope, and blocking reason" to be visible to authorized staff, and requires assignment, escalation, completion, reopening and deadline breach to be auditable transitions. `SDC-OPS-001` repeats `state` in its projection and names claim, assign, start, complete, escalate and reopen as commands. But `STATE_MACHINES.md` section 20 explicitly declines to finalize "detailed operational work-item states" and instructs that implementation must not invent them as product truth. The states are named as commands and required to be visible, yet never enumerated as a vocabulary.
@@ -101,6 +105,7 @@ These pre-existed this phase. They are restated with their concrete UX consequen
 **Suggested resolution (suggestion only):** enumerate the work-item state vocabulary in `STATE_MACHINES.md`. The commands already named in `SDC-OPS-001` imply a minimal set, but deriving states from command names is exactly the invention that section 20 forbids, so this needs an owner rather than an inference.
 
 ### GAP-008 — No patient-facing notification or attention surface is established
+**Status: Resolved 2026-08-25.** `Q-PLATFORM-005` — `PO-UX-09` confirms the durable notification centre and attention surface as `FR-PLATFORM-001` and `API-PLATFORM-002`, reachable from the app chrome without a fifth primary tab.
 **Found while:** mapping `FLOW-BOOKING-006`, `FLOW-CLINICAL-007`, `FLOW-CLAIMS-003` and `FLOW-FINANCE-004`
 **Type:** Missing behavior
 **Detail:** `CROSS_PLATFORM_BEHAVIOR.md` section 17.2 requires 24 notification intents, twelve of them addressed to the patient or acting guardian, and `notification_intents` exists in the data model. Section 3.7 establishes that no real-time transport is assumed and that no feature correctness may depend on delivery. The Clinic panel has a Work Feed established by `FR-OPS-001` and `SDC-OPS-001`. **The Patient app has no equivalent requirement** — no notification centre, no inbox, no attention surface is established by any `FR-*`.
@@ -111,6 +116,7 @@ These pre-existed this phase. They are restated with their concrete UX consequen
 **Suggested resolution (suggestion only):** confirm whether an in-app notification history is in V1 scope, or whether the derived attention surface on `SCR-PLATFORM-001` is the intended mechanism. If the latter, that is a satisfactory answer and worth recording explicitly, because it makes the attention feed load-bearing rather than convenient. See `ASM-PLATFORM-001`.
 
 ### GAP-009 — Environment and expertise are undocumented for every actor
+**Status: Resolved 2026-08-25.** `Q-PLATFORM-006` — `PO-UX-07` confirms device, setting, interruption pattern and expertise for all six role classes; every persona in `UX_FOUNDATION.md` section 2 now carries its class's context.
 **Found while:** building all 19 actor personas in `UX_FOUNDATION.md` section 2
 **Type:** Missing behavior
 **Detail:** no source establishes the device, physical setting, interruption pattern, lighting, shared-device usage or product expertise of any actor. What the sources do establish is Aleppo, Arabic-first, right-to-left, weak and intermittent connectivity, and low thousands of users.
@@ -121,9 +127,10 @@ These pre-existed this phase. They are restated with their concrete UX consequen
 **Suggested resolution (suggestion only):** answer for the three highest-frequency roles first — clinic representative, treating dentist and operations staff — since those drive the most screens. The patient's mobile context is partially established by the connectivity and Arabic-first requirements.
 
 ### GAP-010 — No research inputs exist for any actor
-**Found while:** writing the `Current pain` field on all 62 jobs
+**Status: Resolved 2026-08-25.** `Q-PLATFORM-007` — `PO-UX-18` accepts the absence of research as a limitation rather than an open decision. Usability testing stays recommended, not prerequisite.
+**Found while:** writing the `Current pain` field on all 66 jobs
 **Type:** Missing behavior
-**Detail:** no interviews, analytics, support tickets or usage data exist for this product. The `Current pain` field on all 62 jobs is therefore recorded once as unresearched rather than filled with fabricated insight.
+**Detail:** no interviews, analytics, support tickets or usage data exist for this product. The `Current pain` field on all 66 jobs is therefore recorded once as unresearched rather than filled with fabricated insight.
 **UX consequence:** every job's pain statement is absent rather than invented, which is the correct handling but leaves the frequency-by-criticality plot resting on documented responsibility and error consequence rather than on observed behavior. The plot's conclusions are defensible from the requirements; they are not validated against users. Two placements are most exposed to being wrong: whether patients actually treat comparison as convenience rather than blocking, and whether the booking response deadline is experienced as manageable or as constant pressure.
 **Affects:** all 62 `JTBD-*`, the frequency-by-criticality plot, and prominence decisions in UX Phase 2
 **Severity:** Major
@@ -131,6 +138,7 @@ These pre-existed this phase. They are restated with their concrete UX consequen
 **Suggested resolution (suggestion only):** five usability sessions with clinic staff would validate or overturn the plot's daily-and-blocking placements at low cost. `workflows/prototyping.md` in the design kit carries a usability-testing script.
 
 ### GAP-011 — The legal-basis representation grant workflow has no actor, screen or contract
+**Status: Resolved 2026-08-25.** `Q-IDENTITY-001` — `PO-UX-14` defines the legal-basis path: `API-IDENTITY-006` submits a request, `SDC-IDENTITY-005` decides it, and only approval creates the `LEGAL_BASIS` grant. Owned by `FLOW-IDENTITY-021`.
 **Found while:** mapping `FLOW-IDENTITY-002`
 **Type:** Missing role
 **Detail:** `PERMISSIONS_MATRIX.md` section 6 permits creating a representation grant by "Patient / authorized legal-basis workflow", and `API-IDENTITY-004` accepts a `legal_or_grant_basis` field with the actor described as "authenticated authorized grantor or authorized legal-basis workflow". **That second path is never defined** — no actor category, no screen, no contract, no workflow.
@@ -141,6 +149,7 @@ These pre-existed this phase. They are restated with their concrete UX consequen
 **Suggested resolution (suggestion only):** define who may establish a grant on a legal basis rather than by patient consent, what evidence that requires, and which surface performs it. An Admin-side guardian establishment workflow adjacent to `SCR-IDENTITY-035` would fit the existing model, but the legal basis is not a design question.
 
 ### GAP-012 — Patient review-appeal authority is conditional on an undefined policy
+**Status: Resolved 2026-08-25.** `Q-REVIEWS-001` — `PO-UX-10` confirms the authoring patient or guardian as an authorized affected party. `SCR-REVIEWS-004` is a real patient surface and `FLOW-REVIEWS-006` is its flow.
 **Found while:** deriving `SCR-REVIEWS-004` and mapping `FLOW-REVIEWS-001`
 **Type:** Ambiguous rule
 **Detail:** `TRACEABILITY_MATRIX.md` records the patient impact of `FR-REVIEWS-002` as "Action if policy permits" and notes "Patient surface only if policy grants action". `PERMISSIONS_MATRIX.md` section 12 permits an appeal by an "Authorized affected party" without stating whether a patient is one. The governing policy is not defined anywhere.
@@ -151,6 +160,7 @@ These pre-existed this phase. They are restated with their concrete UX consequen
 **Suggested resolution (suggestion only):** state whether a patient may appeal a decision that retired or unpublished their own review. If not, `SCR-REVIEWS-004` becomes clinic-only and the patient sees the outcome without recourse, which is a defensible position but should be a decision rather than an omission.
 
 ### GAP-013 — `ERR-BOOKING-002` is reused across domains on an identity surface
+**Status: Resolved 2026-08-25.** `CONFLICT-BOOKING-001` — `PO-UX-11` removes `ERR-BOOKING-002` from `API-IDENTITY-005` by settling the rule behind it: guardian revocation is always immediate and no booking state may block it.
 **Found while:** deriving `SCR-IDENTITY-007` and mapping `FLOW-IDENTITY-004`
 **Type:** Contradiction
 **Detail:** `ERR-BOOKING-002` is defined as "Booking action invalid for current state" with the machine code `BOOKING_ACTION_NOT_ALLOWED`. `API-IDENTITY-005`, which revokes a guardian grant, references it as the failure when a protected transition policy blocks revocation. `ERROR_CATALOG.md` section 8 already flags this reference, noting that `STATE_MACHINES.md` should confirm whether it remains valid or should be replaced by an identity-specific error.
@@ -164,13 +174,14 @@ These pre-existed this phase. They are restated with their concrete UX consequen
 **Found while:** building the lifecycle sweep in `INFORMATION_ARCHITECTURE.md` section 10
 **Type:** Ambiguous rule
 **Detail:** the onboarding application states `DRAFT`, `SUBMITTED`, `CHANGES_REQUESTED`, `RESUBMITTED`, `APPROVED`, `REJECTED` are authoritative through `SDC-IDENTITY-001` and `PO-UX-02`. The staff invitation states are derivable from `SDC-IDENTITY-003` and `PO-UX-03`. Neither appears in `STATE_MACHINES.md`, which section 2 presents as the canonical status classification for all entities with controlled state changes.
-**UX consequence:** none on any artifact — the states are authoritative and the lifecycle sweep covers all 62 statuses across 15 machines, two of which are sourced from the decision and contract documents. This is a documentation-placement observation so that a later reader consulting only `STATE_MACHINES.md` does not conclude these machines are unspecified. **This does not reopen `PO-UX-02` or `PO-UX-03`, and no `Q-*` is raised.**
+**UX consequence:** none on any artifact — the states are authoritative and the lifecycle sweep covers all 82 statuses across 18 machines, two of which are sourced from the decision and contract documents. This is a documentation-placement observation so that a later reader consulting only `STATE_MACHINES.md` does not conclude these machines are unspecified. **This does not reopen `PO-UX-02` or `PO-UX-03`, and no `Q-*` is raised.**
 **Affects:** `INFORMATION_ARCHITECTURE.md` sections 10.1 and 10.2; the canonical ownership claim in `STATE_MACHINES.md` section 2
 **Severity:** Minor
 **Raised as:** no ID — documentation synchronization note
 **Suggested resolution (suggestion only):** add both machines to `STATE_MACHINES.md`, sourced to `SDC-IDENTITY-001`, `SDC-IDENTITY-003` and the decision record, so the canonical lifecycle document is complete. The invitation machine would benefit from an explicit state enumeration, since this chain derived its states from commands and behavior rather than from a stated list.
 
 ### GAP-015 — No reschedule action exists for a confirmed booking
+**Status: Resolved 2026-08-25.** `Q-BOOKING-003` — `PO-UX-15` adds the governed `RescheduleProposal` workflow as `FR-BOOKING-004`. Generic booking editing stays prohibited.
 **Found while:** mapping `FLOW-BOOKING-008` and `FLOW-BOOKING-009`
 **Type:** Missing behavior
 **Detail:** `CROSS_PLATFORM_BEHAVIOR.md` section 10.2 states that changes to a confirmed booking use "alternative proposal plus patient acceptance", "cancellation plus new request where applicable", or "governed future rescheduling behavior if separately specified". Rescheduling is not separately specified.
@@ -181,6 +192,7 @@ These pre-existed this phase. They are restated with their concrete UX consequen
 **Suggested resolution (suggestion only):** decide whether V1 needs a governed reschedule that preserves the booking identity, or whether cancel-and-rebook is accepted. If accepted, the cancellation copy should make the loss of slot explicit.
 
 ### GAP-016 — A proposed treatment plan has no acceptance deadline
+**Status: Resolved 2026-08-25.** `Q-CLINICAL-001` — `PO-UX-16` gives a proposal a policy-governed `expires_at`, V1 default 7 calendar days, plus early staleness when a material governing fact changes.
 **Found while:** mapping `FLOW-CLINICAL-002` and `FLOW-CLINICAL-010`
 **Type:** Missing behavior
 **Detail:** `STATE_MACHINES.md` section 9 defines `PROPOSED` to `ACCEPTED` with no deadline, expiry or staleness rule. No source establishes how long a proposal remains acceptable.
@@ -191,7 +203,7 @@ These pre-existed this phase. They are restated with their concrete UX consequen
 **Suggested resolution (suggestion only):** decide whether a proposal expires, whether a price change invalidates an unaccepted proposal, or whether indefinite validity is intended. The third is a legitimate answer and worth stating explicitly.
 
 ### GAP-017 — Staff-panel surfaces are absent from the error presentation vocabulary
-**Found while:** mapping error destinations across all 94 flows
+**Found while:** mapping error destinations across all 100 flows
 **Type:** Ambiguous rule
 **Detail:** `ERROR_CATALOG.md` section 3 defines five presentation surfaces — inline field validation, action banner or toast, full-page or auth gate, unavailable-state message, and silent-log-only. All five are client and API oriented. `SDC-IDENTITY-004` establishes that `ERR-IDENTITY-001` and `ERR-IDENTITY-002` semantics apply in-process, so the error identifiers do reach the panels, but the catalog's surface vocabulary does not describe panel-native presentation.
 **UX consequence:** minor and confined to UX Phase 3. All 19 `ERR-*` have a destination in this phase's flows, and no error was found without one. The gap is that Phase 3 will allocate `TXT-*` copy against surface descriptions that do not name the Filament-native equivalents, so the mapping from error to surface has to be established rather than inherited for the panels.
@@ -202,9 +214,10 @@ These pre-existed this phase. They are restated with their concrete UX consequen
 
 ## 5. Assumptions In Force
 
-Three interpretations were needed to produce this phase. Each is recorded with what breaks if it is wrong.
+Three interpretations were needed to produce this phase. Each is recorded with what breaks if it is wrong. One — `ASM-PLATFORM-001` — was confirmed as product behavior on 2026-08-25 and is retained here as history; two remain in force.
 
 ### ASM-PLATFORM-001 — The patient attention surface is the primary re-entry path
+**Status: Resolved 2026-08-25.** `PO-UX-09` confirmed the attention surface and the durable notification centre as required product behavior under `FR-PLATFORM-001`. The assumption became a requirement, so `SCR-PLATFORM-001` no longer rests on an interpretation. The four flows named below keep the re-entry path they needed.
 **Assumption:** `SCR-PLATFORM-001` serves as the patient's re-entry point for every deadline-bound and action-required item, in the absence of an established notification surface.
 **Why needed:** twelve notification intents address the patient, no transport is assumed, and no `FR-*` establishes a patient notification centre. Without an attention surface, four flows have no re-entry path other than the patient happening to open the app.
 **What breaks if wrong:** if a notification history or inbox is later established, `SCR-PLATFORM-001`'s role changes from load-bearing to supplementary, and the attention-item ordering logic may move or duplicate. If instead no attention surface is wanted, `FLOW-BOOKING-006`, `FLOW-CLAIMS-003`, `FLOW-CLINICAL-007` and `FLOW-FINANCE-004` lose their re-entry path entirely and their deadlines become substantially more likely to be missed.
@@ -243,17 +256,43 @@ Append-only. Allocated from `max + 1` per domain against the registry in `docs/R
 
 No existing ID was renumbered, reused or repurposed.
 
+### 6.1 Additions from the 2026-08-25 reconciliation
+
+The resolutions introduced new requirement, contract and chain identifiers. All are allocated `max + 1` per domain and synchronized into `docs/README.md`.
+
+| ID | Type | Owner document |
+|---|---|---|
+| `FR-BOOKING-004` | Requirement — governed reschedule | `docs/PRD.md` |
+| `FR-PLATFORM-001` | Requirement — patient notification and attention centre | `docs/PRD.md` |
+| `API-IDENTITY-006` | Contract — legal-basis representation request | `docs/api/API_CONTRACTS.md` |
+| `API-BOOKING-006`, `API-BOOKING-007` | Contracts — reschedule proposal and response | `docs/api/API_CONTRACTS.md` |
+| `API-PLATFORM-001`, `API-PLATFORM-002` | Contracts — evidence transfer, notification centre | `docs/api/API_CONTRACTS.md` |
+| `ERR-PLATFORM-005` | Error — evidence rejected or failed validation | `docs/api/ERROR_CATALOG.md` |
+| `SDC-IDENTITY-005`, `SDC-BOOKING-002`, `SDC-ELIG-004` | Staff contracts | `docs/domain/STAFF_INTERACTION_CONTRACTS.md` |
+| `TASK-BOOKING-011`, `TASK-PLATFORM-013` | Implementation tasks | `docs/implementation/USER_IMPLEMENTATION_PLAN.md` |
+| `TC-BOOKING-009`, `TC-PLATFORM-013` | Verification cases | `docs/TESTING_STRATEGY.md` |
+| `JTBD-IDENTITY-012`, `JTBD-BOOKING-008`, `JTBD-REVIEWS-004`, `JTBD-PLATFORM-004` | Jobs | `UX_FOUNDATION.md` |
+| `SCR-PLATFORM-009`, `SCR-BOOKING-016`, `SCR-BOOKING-017`, `SCR-IDENTITY-037`, `SCR-IDENTITY-038`, `SCR-ELIG-021`, `SCR-ELIG-022` | Screens | `INFORMATION_ARCHITECTURE.md` |
+| `FLOW-IDENTITY-021`, `FLOW-ELIG-015`, `FLOW-BOOKING-013`, `FLOW-BOOKING-014`, `FLOW-REVIEWS-006`, `FLOW-PLATFORM-004` | Flows | `USER_FLOWS.md` |
+
 ## 7. Severity Summary
 
-| Severity | Count | IDs |
+Counts reflect the state after the 2026-08-25 reconciliation. Resolved IDs remain permanently allocated and are never reused.
+
+| Severity | Open | IDs |
 |---|---:|---|
-| **Blocker** | 0 new | `Q-PLATFORM-001` carried forward — blocks the completeness claim, not any artifact |
-| **Major** | 8 new · 5 carried | New: `Q-OPS-002`, `Q-PLATFORM-005`, `Q-PLATFORM-006`, `Q-PLATFORM-007`, `Q-IDENTITY-001`, `Q-REVIEWS-001`, `CONFLICT-BOOKING-001`, and the Major portion of `GAP-005`. Carried: `Q-BOOKING-001`, `Q-BOOKING-002`, `Q-PLATFORM-003`, `Q-CATALOG-001`, `Q-ELIG-001` |
-| **Minor** | 2 new IDs · 3 unnumbered notes · 4 carried | New IDs: `Q-BOOKING-003`, `Q-CLINICAL-001`. Notes: `GAP-014`, `GAP-017`, and the repository path-casing observation in section 8. Carried: `Q-PLATFORM-002`, `Q-OPS-001`, `Q-PLATFORM-004`, `CONFLICT-PLATFORM-001` and `CONFLICT-PLATFORM-002` where UX-relevant |
+| **Blocker** | 1 carried | `Q-PLATFORM-001` — blocks the completeness claim against the authoritative SRS, not any artifact |
+| **Major** | 4 carried | `Q-CATALOG-001`, `Q-ELIG-001`, `Q-PLATFORM-002`, `Q-OPS-001` — the last now also carries the storage, scanner, OTP and notification vendor selection deferred from `Q-PLATFORM-003` |
+| **Minor** | 1 carried · 2 unnumbered notes | `Q-PLATFORM-004`. Notes: `GAP-014` and `GAP-017`. `CONFLICT-PLATFORM-001` and `CONFLICT-PLATFORM-002` remain open where UX-relevant |
+| **Assumption** | 2 in force | `ASM-IDENTITY-001`, `ASM-ELIG-001` |
+
+**Resolved on 2026-08-25 by `.spec/decisions/PO-2026-08-25-ux-phase1-reconciliation.md`:** `Q-BOOKING-001`, `Q-BOOKING-002`, `Q-BOOKING-003`, `Q-CLINICAL-001`, `Q-IDENTITY-001`, `Q-OPS-002`, `Q-PLATFORM-003`, `Q-PLATFORM-005`, `Q-PLATFORM-006`, `Q-PLATFORM-007`, `Q-REVIEWS-001`, `CONFLICT-BOOKING-001`, `ASM-PLATFORM-001` — thirteen items across nine gap entries. Every one is stamped in place in sections 3 and 4 above.
+
+**What the resolutions changed structurally.** Seven screens and six flows were added, two bounded branches were completed, and three lifecycle machines entered the sweep — the reschedule proposal, the operational work item and the evidence transfer session. That is the measure of how much of the model these questions were holding open: not labelling, but whole journeys.
 
 **Halt check.** Convention C5 requires halting if more than roughly 30% of the phase's artifacts are Blocked, or if any Blocker touches the role model, the data model or navigation structure.
 
-- Blocked artifacts: 0 of 155 screens. 2 of 94 flows carry a bounded incomplete branch — `FLOW-BOOKING-007` and `FLOW-ELIG-012` — which is 2%, and both are complete up to the point where their destination is undefined upstream.
+- Blocked artifacts: 0 of 162 screens, 0 of 100 flows. **No bounded incomplete branch remains** — the two Phase 1 reported were resolved.
 - No Blocker touches the role model: 19 of 19 roles have a landing screen and every permitted action is reachable.
 - No Blocker touches the data model or navigation structure.
 
@@ -261,8 +300,10 @@ No existing ID was renumbered, reused or repurposed.
 
 ## 8. Repository Observations
 
-Two notes outside the requirement space, recorded because they affect the next agent rather than the product.
+Two notes outside the requirement space, recorded because they affect the next agent rather than the product. Both were acted on during the 2026-08-25 reconciliation.
 
-**Path casing.** The git index contains both `docs/` — 23 markdown files plus the validator — and `Docs/` — six PDFs including the authoritative SRS. This resolves on Windows and would break cross-references on a case-sensitive runner. This phase writes to lowercase `docs/ux/` to match the markdown convention and the paths used throughout `prompts/`.
+**Path casing — fixed.** The Phase 1 commit recorded the seven UX artifacts under `Docs/ux/**` while `docs/README.md`, `prompts/**` and both validators reference `docs/ux/**`. On Windows the two collapse to one directory, so the mismatch was invisible locally and would have produced a split tree on a case-sensitive checkout. The on-disk directory was normalized to lowercase and the seven files re-recorded via an intermediate rename; verified by extracting the tree onto a case-sensitive path and re-running the validator there. `Docs/*.pdf` intentionally keeps its casing, because the six source PDFs are referenced as `Docs/...` from `AGENTS.md`, `docs/PRD.md` and `docs/README.md`.
 
-**Standing instruction now superseded.** `AGENTS.md` closes with "Do not begin `ux_00`, `ux_01`, or later UX phases", scoped to the engineering-documentation completion run. That run is recorded as complete through Phase 3 in `docs/README.md` with a clean validator, and `PO-2026-08-25` plus `prompts/ux_phase1_gap_resolution_directive_2026-08-25.md` authorize this phase. The line will misdirect the next agent and warrants a one-line correction. `AGENTS.md` sits outside `docs/ux/**` and outside this phase's write scope, so it is flagged rather than edited.
+**Standing instruction — corrected.** `AGENTS.md` closed with "Do not begin `ux_00`, `ux_01`, or later UX phases", scoped to the engineering-documentation completion run. That run is complete and the UX pipeline is active, so the line would have misdirected the next agent. It now states that the UX pipeline owns `docs/ux/**` and advances one phase per approved gate.
+
+**Noted but not acted on.** `UberTip-Backend/storage/framework/phpstan/cache/` is committed to the repository — several thousand generated cache files, some with paths long enough to fail a checkout on a deep working directory. That is production-repo hygiene rather than documentation, and outside this phase's write scope.

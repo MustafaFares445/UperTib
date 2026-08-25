@@ -34,6 +34,7 @@ State-machine principles:
 | Policy Version | Canonical requirement | Partially implemented by Service Definition pattern |
 | Eligibility | Canonical outcome machine | Proposed V1; immutable decisions |
 | Booking | Canonical requirement machine | Proposed V1 |
+| Reschedule Proposal | Canonical requirement machine | Proposed V1; separate record from the booking |
 | Treatment Plan / Accepted Terms | Canonical requirement machine | Proposed V1; version/snapshot based |
 | Treatment Stage | Canonical requirement machine | Proposed V1 |
 | External Financial Event | Canonical requirement machine | Proposed V1; append-only |
@@ -41,6 +42,8 @@ State-machine principles:
 | Review Appeal | Canonical requirement machine | Proposed V1 |
 | Claim / Refund Request | Canonical requirement machine | Proposed V1 |
 | Claim Appeal | Canonical requirement machine | Proposed V1 |
+| Operational Work Item | Canonical requirement machine | Proposed V1; operational projection, not business truth |
+| Evidence Transfer Session | Canonical interaction machine | Proposed V1; provider-neutral, owned by section 21.1 |
 
 ## 3. Service Definition Lifecycle — Existing
 
@@ -187,10 +190,10 @@ Canonical outcomes required by the approved behavior:
 | none | Evaluate | System | Mandatory facts/evidence insufficient | PENDING_EVALUATION | Persist immutable decision + blockers | FR-ELIG-008 |
 | none / PENDING_EVALUATION / NOT_ELIGIBLE / SUSPENDED | Reevaluate | System | All mandatory gates pass | ELIGIBLE | Persist new immutable decision; eligible discovery may include scope | FR-ELIG-002, FR-ELIG-004 |
 | none / PENDING_EVALUATION / ELIGIBLE / SUSPENDED | Reevaluate | System | One or more mandatory gates fail with sufficient evaluable facts | NOT_ELIGIBLE | Persist new immutable decision + controlling reason | FR-ELIG-005 |
-| ELIGIBLE | Influential condition becomes invalid/expired/revoked/unavailable | System | Dependency affects this exact provider/service/branch | SUSPENDED | Persist new decision; block new bookings immediately; existing bookings enter a review workflow whose actor/state/deadline/outcome semantics remain unresolved under `Q-BOOKING-002` | FR-ELIG-003 |
+| ELIGIBLE | Influential condition becomes invalid/expired/revoked/unavailable | System | Dependency affects this exact provider/service/branch | SUSPENDED | Persist new decision; block new bookings immediately; move affected `CONFIRMED` bookings to `ELIGIBILITY_REVIEW` per section 8.2 | FR-ELIG-003 |
 | PENDING_EVALUATION | Missing inputs approved | System | Reevaluation can now run | derived by new evaluation | Old pending decision remains immutable | FR-ELIG-008 |
 
-Existing bookings must not be auto-cancelled, auto-confirmed, or moved to another terminal state merely because the affected provider scope becomes `SUSPENDED`; `Q-BOOKING-002` must be resolved before those review-workflow semantics are implemented as product truth.
+Existing bookings must not be auto-cancelled or auto-confirmed merely because the affected provider scope becomes `SUSPENDED`. They enter the non-terminal `ELIGIBILITY_REVIEW` state defined in section 8.2, which preserves the reservation, blocks attendance, and reaches a decision through the governed review workflow rather than an automatic terminal outcome.
 
 ```mermaid
 stateDiagram-v2
@@ -219,12 +222,17 @@ Canonical booking outcomes are normalized directly from the approved booking req
 - `REQUESTED`
 - `ALTERNATIVE_PROPOSED`
 - `CONFIRMED`
+- `ELIGIBILITY_REVIEW`
 - `REJECTED`
 - `CANCELLED`
 - `NO_SHOW`
 - `COMPLETED`
 
 A request is created only after submission-time eligibility/readiness/publication/capacity revalidation. Confirmation repeats the safety-critical revalidation.
+
+`ELIGIBILITY_REVIEW` is non-terminal. It exists because automatic eligibility suspension must block a confirmed appointment from being attended without destroying the reservation or the patient's place in the workflow. Its rules are owned by section 8.2.
+
+Cancellation carries a reason code. The reason distinguishes an unconfirmed request closure from a penalty-bearing cancellation of a confirmed appointment: `ALTERNATIVE_DECLINED`, `ALTERNATIVE_EXPIRED`, and `PROVIDER_ELIGIBILITY_SUSPENDED` are never patient-penalised.
 
 | Current State | Action/Event | Actor/System | Conditions | Next State | Side Effects | Requirement |
 |---|---|---|---|---|---|---|
@@ -233,14 +241,16 @@ A request is created only after submission-time eligibility/readiness/publicatio
 | REQUESTED | Reject with reason | Authorized provider representative | Within response deadline | REJECTED | Record actor, branch, prior/result state, reason, time | FR-BOOKING-003 |
 | REQUESTED | Propose alternative | Authorized provider representative | Within response deadline; proposal has valid alternative appointment context | ALTERNATIVE_PROPOSED | Record proposal + deadline; notify patient | FR-BOOKING-003 |
 | ALTERNATIVE_PROPOSED | Accept alternative | Patient / authorized guardian | Proposal still within deadline; revalidation and capacity pass | CONFIRMED | Commit selected slot/capacity atomically; audit | FR-BOOKING-003, FR-BOOKING-001 |
-| ALTERNATIVE_PROPOSED | Deadline expires / patient declines | System / patient | Applicable rule reached/decline recorded | **Unresolved — `Q-BOOKING-001`** | Preserve proposal/decline/expiry history; disable/reject later acceptance; do not infer `REJECTED`, `CANCELLED`, or return to `REQUESTED` | FR-BOOKING-003 |
+| ALTERNATIVE_PROPOSED | Patient declines alternative | Patient / authorized guardian | Decline recorded | CANCELLED reason `ALTERNATIVE_DECLINED` | Preserve proposal/decline history; reject later acceptance; no patient penalty | FR-BOOKING-003 |
+| ALTERNATIVE_PROPOSED | Acceptance deadline expires | System | Acceptance deadline reached | CANCELLED reason `ALTERNATIVE_EXPIRED` | Preserve proposal/expiry history; reject late acceptance; no patient penalty | FR-BOOKING-003 |
+| CONFIRMED | Owning provider/service/branch becomes SUSPENDED | System | Automatic eligibility suspension affects this booking scope | ELIGIBILITY_REVIEW | Preserve reserved slot; create urgent operational work item; notify patient and clinic safely | FR-BOOKING-002, FR-ELIG-003 |
 | REQUESTED / ALTERNATIVE_PROPOSED / CONFIRMED | Cancel | Authorized actor | Actor permission and policy deadline/rules pass | CANCELLED | Release relevant capacity; append booking event; derive downstream consequences | FR-BOOKING-002 |
 | CONFIRMED | Record no-show | Authorized party | Only after policy-defined no-show threshold | NO_SHOW | Append event; derive policy consequences; no money movement | FR-BOOKING-002 |
 | CONFIRMED | Complete appointment/case booking step | Authorized workflow | Required appointment/treatment conditions satisfied | COMPLETED | Enables downstream verified-experience/case behavior as applicable | FR-BOOKING-001, FR-REVIEWS-001 |
 
 The precise provider-response deadline is preserved from the approved requirement: **12 hours or two hours before the appointment, whichever occurs first**.
 
-`Q-BOOKING-001` is intentionally not represented as an invented transition in the diagram below. Until that question is resolved, the implementation may record that the alternative is no longer acceptably actionable and reject a late acceptance, but it must preserve the current authoritative booking/history without fabricating a terminal or rollback state.
+An alternative closure is an **unconfirmed booking-request closure**. It carries no patient cancellation penalty, preserves the full proposal/decline/expiry history, rejects a late acceptance, and must be presented as "the appointment was not confirmed" rather than as a punitive cancellation. The patient's next action is to choose another time or provider and create a new booking request.
 
 ```mermaid
 stateDiagram-v2
@@ -249,24 +259,99 @@ stateDiagram-v2
     REQUESTED --> REJECTED: provider rejects
     REQUESTED --> ALTERNATIVE_PROPOSED: provider proposes alternative
     ALTERNATIVE_PROPOSED --> CONFIRMED: patient accepts + revalidation passes
+    ALTERNATIVE_PROPOSED --> CANCELLED: patient declines or acceptance deadline expires
     REQUESTED --> CANCELLED: authorized cancellation
-    ALTERNATIVE_PROPOSED --> CANCELLED: authorized cancellation
+    CONFIRMED --> ELIGIBILITY_REVIEW: owning eligibility scope suspended
+    ELIGIBILITY_REVIEW --> CONFIRMED: new authoritative evaluation is ELIGIBLE before deadline
+    ELIGIBILITY_REVIEW --> CANCELLED: review deadline expires while suspended
     CONFIRMED --> CANCELLED: authorized cancellation
     CONFIRMED --> NO_SHOW: threshold reached + authorized record
     CONFIRMED --> COMPLETED: appointment/case completion condition
 ```
 
-### Invalid Transitions and Errors
+### 8.1 Invalid Transitions and Errors
 
 - Confirmation while eligibility/readiness/capacity is invalid is rejected (`ERR-ELIG-001`, `ERR-ELIG-002`, `ERR-BOOKING-001`).
 - Actions invalid for current booking state are rejected (`ERR-BOOKING-002`).
 - Provider/alternative actions after the response deadline are rejected (`ERR-BOOKING-003`).
+- Accepting an alternative after decline or expiry is rejected; the booking is already `CANCELLED` and the reason code is preserved.
 - A no-show before the policy-defined threshold is rejected.
+- Starting, completing, or recording a no-show against an `ELIGIBILITY_REVIEW` booking is rejected.
 - Terminal outcomes cannot be overwritten by a contradictory later action; any authorized correction must be represented as later auditable history according to the governing policy rather than silent mutation.
 
-### Concurrency and Repeated Actions
+### 8.2 Eligibility Review of an Existing Confirmed Booking
 
-Capacity must remain correct under concurrent requests. An idempotent repeated booking command returns the original committed result. Competing requests cannot confirm beyond configured slot capacity.
+**Requirements:** FR-BOOKING-002, FR-ELIG-003, FR-OPS-001.
+
+Automatic suspension of a provider, service, or branch blocks **new** affected bookings immediately. An existing `CONFIRMED` booking in the affected scope moves to `ELIGIBILITY_REVIEW`.
+
+While `ELIGIBILITY_REVIEW` is active:
+
+1. the existing reserved slot is preserved temporarily;
+2. the appointment is **not** attendable;
+3. the clinic cannot start or complete the visit while the suspension remains;
+4. an urgent Admin/Operations work item is created;
+5. Verification handles factual/credential remediation;
+6. a Licensed Clinical Reviewer is included when the controlling suspension reason requires clinical judgment;
+7. patient and clinic receive a safe status notification.
+
+| Condition | Next State | Reason | Patient effect |
+|---|---|---|---|
+| A new authoritative eligibility evaluation becomes `ELIGIBLE` before the review deadline | CONFIRMED | — | Appointment is attendable again |
+| The suspension remains unresolved when the review deadline expires | CANCELLED | `PROVIDER_ELIGIBILITY_SUSPENDED` | No penalty; history preserved; patient returns to eligible discovery and rebooking |
+
+Hard constraints:
+
+- **No Admin override may make the booking attendable while the owning eligibility scope remains `SUSPENDED`.** This is a fail-closed medical safety rule.
+- The review due time is **no later than two hours before the appointment**. If suspension occurs inside that two-hour window, review is immediately due.
+- Cancellation under this rule never automatically transfers the patient to another provider.
+
+### 8.3 Governed Reschedule Proposal
+
+**Requirements:** FR-BOOKING-004, NFR-AUDIT-002.
+
+A confirmed booking is never edited in place. A date, time, or slot change is represented by a separate `RescheduleProposal` record with its own lifecycle. The booking and the proposal are distinct entities: the proposal's state never substitutes for the booking's state.
+
+Canonical proposal states:
+
+- `PENDING`
+- `ACCEPTED`
+- `DECLINED`
+- `EXPIRED`
+- `WITHDRAWN`
+
+| Current State | Action/Event | Actor/System | Conditions | Next State | Side Effects | Requirement |
+|---|---|---|---|---|---|---|
+| none | Propose reschedule | Patient / authorized guardian, or authorized clinic party | Booking is `CONFIRMED`; initiating party permitted by policy; target slot is a valid future appointment context | PENDING | Record proposed slot, initiator, response deadline; notify counterparty; **original booking stays `CONFIRMED`** | FR-BOOKING-004 |
+| PENDING | Accept | Counterparty to the initiator | Response within deadline; eligibility and new-slot capacity revalidation pass | ACCEPTED | Atomically move booking to accepted slot; release old slot; append reschedule history; notify both parties | FR-BOOKING-004, FR-BOOKING-001 |
+| PENDING | Decline | Counterparty to the initiator | Within deadline | DECLINED | Proposal closes; original confirmed appointment unchanged | FR-BOOKING-004 |
+| PENDING | Response deadline expires | System | Deadline reached without response | EXPIRED | Proposal closes; original confirmed appointment unchanged | FR-BOOKING-004 |
+| PENDING | Withdraw | Initiating party | Before a counterparty response is committed | WITHDRAWN | Proposal closes; original confirmed appointment unchanged | FR-BOOKING-004 |
+
+```mermaid
+stateDiagram-v2
+    [*] --> PENDING
+    PENDING --> ACCEPTED: counterparty accepts + revalidation passes
+    PENDING --> DECLINED: counterparty declines
+    PENDING --> EXPIRED: response deadline reached
+    PENDING --> WITHDRAWN: initiator withdraws
+```
+
+Invariants:
+
+1. while a proposal is `PENDING`, the **original slot remains the authoritative appointment** and the new slot is not silently substituted;
+2. only the counterparty to the initiator may accept or decline — a party cannot accept its own proposal;
+3. acceptance is the only transition that changes the booking, and it performs the same eligibility and capacity revalidation required at confirmation;
+4. no date, provider, or service change occurs without the required acceptance and validation;
+5. at most one `PENDING` proposal exists per booking;
+6. a proposal cannot be created against a booking in `ELIGIBILITY_REVIEW`, because that appointment is not attendable;
+7. reschedule history is appended, never overwritten.
+
+Acceptance that fails revalidation is rejected with `ERR-ELIG-001`, `ERR-ELIG-002`, or `ERR-BOOKING-001` and leaves both the proposal and the booking unchanged. A response after the deadline is rejected with `ERR-BOOKING-003`. An action invalid for the current proposal or booking state is rejected with `ERR-BOOKING-002`.
+
+### 8.4 Concurrency and Repeated Actions
+
+Capacity must remain correct under concurrent requests. An idempotent repeated booking command returns the original committed result. Competing requests cannot confirm beyond configured slot capacity. A reschedule acceptance competes for the target slot under the same capacity guarantee as an original confirmation.
 
 ## 9. Treatment Plan and Accepted Terms — Required, Versioned
 
@@ -279,14 +364,21 @@ Canonical plan states:
 - `DRAFT`
 - `PROPOSED`
 - `ACCEPTED`
+- `EXPIRED`
 
 An amendment after acceptance creates another plan version and, after acceptance, a new immutable accepted treatment/financial snapshot. It does not return the historical accepted version to draft.
+
+A `PROPOSED` plan carries an `expires_at` governed by a versioned policy. The **V1 default is 7 calendar days after proposal**. This value is policy data and must not be hard-coded in presentation or business logic.
+
+A proposal also becomes non-acceptable **before** `expires_at` when a material governing fact changes. The governing facts are the relevant plan version, service, price or financial terms, eligibility state, and any required policy or snapshot input. A stale proposal is not silently repriced or auto-updated; the clinician must issue a new plan version.
 
 | Current State | Action/Event | Actor/System | Conditions | Next State / Record | Side Effects | Requirement |
 |---|---|---|---|---|---|---|
 | none | Create plan | Authorized treating clinician | Clinician owns authorized case context | DRAFT | Store clinician authorship | FR-CLINICAL-001 |
 | DRAFT | Propose plan | Authorized treating clinician | Required service, stages, prices, inclusions/exclusions and policy information complete | PROPOSED | Freeze content/version as proposal candidate | FR-CLINICAL-001 |
 | PROPOSED | Accept plan | Patient / authorized guardian | Exact version current and complete | ACCEPTED + immutable snapshots | Atomically create accepted treatment and financial terms snapshots | FR-CLINICAL-002, FR-FINANCE-001 |
+| PROPOSED | Policy validity period elapses | System | `expires_at` reached without acceptance | EXPIRED | Acceptance is refused; clinician must issue a new version | FR-CLINICAL-001 |
+| PROPOSED | Material governing fact changes | System | Relevant plan version, service, price/financial terms, eligibility state, or policy/snapshot input changed | EXPIRED | Acceptance is refused as stale; reason is recorded | FR-CLINICAL-001, FR-CLINICAL-002 |
 | ACCEPTED | Amend | Authorized treating clinician | Change is permitted and captured as new version | new DRAFT/PROPOSED version | Existing accepted snapshot unchanged | FR-CLINICAL-002 |
 
 ```mermaid
@@ -294,10 +386,12 @@ stateDiagram-v2
     [*] --> DRAFT
     DRAFT --> PROPOSED
     PROPOSED --> ACCEPTED
+    PROPOSED --> EXPIRED: validity elapsed or governing fact changed
+    EXPIRED --> DRAFT: clinician issues a new version
     ACCEPTED --> DRAFT: create new amendment version
 ```
 
-Acceptance is rejected when mandatory service, stage, price, or policy information is missing (`ERR-CLINICAL-001`). UberTib does not generate an autonomous diagnosis or treatment plan.
+Acceptance is rejected when mandatory service, stage, price, or policy information is missing, and when the proposal has expired or become stale (`ERR-CLINICAL-001`). An accepted snapshot is never invalidated by a later expiry: expiry applies only to a proposal that was never accepted. UberTib does not generate an autonomous diagnosis or treatment plan.
 
 ## 10. Treatment Stage Lifecycle — Required
 
@@ -384,7 +478,18 @@ Canonical states:
 | Current State | Action/Event | Actor/System | Conditions | Next State | Side Effects | Requirement |
 |---|---|---|---|---|---|---|
 | none | Submit appeal | Authorized appellant | Appeal eligibility/window passes | SUBMITTED | Create appeal/work item; preserve original review | FR-REVIEWS-002 |
-| SUBMITTED | Decide appeal | Authorized scoped reviewer | Evidence/policy review complete | DECIDED | Record reasoned decision; original review is not directly rewritten by the appeal record | FR-REVIEWS-002 |
+| SUBMITTED | Decide appeal | Independent Review Integrity Reviewer | Evidence/policy review complete | DECIDED | Record reasoned decision; original review is not directly rewritten by the appeal record | FR-REVIEWS-002 |
+
+### 13.1 Authorized Appellants
+
+Either side may be an authorized affected party, depending on what was decided:
+
+| Appellant | May appeal | May not appeal |
+|---|---|---|
+| Patient or Guardian who authored the review | A decision that rejects, retires, or unpublishes their review | The content or rating of someone else's review |
+| Affected Provider or Clinic | Review eligibility or policy-compliance decisions affecting them | A review merely because they dislike its rating |
+
+An appeal concerns **eligibility, verification, or policy compliance only**. It can never directly edit the rating or the review text, and the decision is made by an independent Review Integrity Reviewer who did not make the original decision.
 
 ## 14. Claim / Refund Request Lifecycle — Required
 
@@ -517,18 +622,107 @@ Every sensitive transition must preserve enough information to answer:
 - correlation/idempotency reference where applicable;
 - outcome (success/rejected/failed) without leaking protected payloads.
 
-## 20. Machines Intentionally Not Finalized
+## 20. Operational Work-Item Lifecycle — Required
+
+**Requirements:** FR-OPS-001, NFR-AUDIT-001.
+
+A work item is an operational projection that routes human attention. It never owns business truth: closing a work item cannot fabricate the resolution of the domain condition that created it.
+
+Canonical work-item states:
+
+- `OPEN`
+- `ASSIGNED`
+- `IN_PROGRESS`
+- `WAITING`
+- `COMPLETED`
+
+| Current State | Action/Event | Actor/System | Conditions | Next State | Side Effects | Requirement |
+|---|---|---|---|---|---|---|
+| none | Create | System / emitting domain workflow | A documented source event in `CROSS_PLATFORM_BEHAVIOR.md` section 18.1 occurs | OPEN | Record type, linked resource, responsibility scope, priority, `due_at` | FR-OPS-001 |
+| OPEN | Claim or assign | Authorized staff within scope, or authorized assigner | Actor holds an active grant covering the item scope | ASSIGNED | Record assignee and assignment time | FR-OPS-001 |
+| ASSIGNED | Start | Assigned staff | Item is assigned to the acting staff member | IN_PROGRESS | Record start time | FR-OPS-001 |
+| IN_PROGRESS | Wait for external dependency or action | Assigned staff | A named external dependency blocks progress | WAITING | Record blocking reason | FR-OPS-001 |
+| WAITING | Resume | Assigned staff / system | Blocking dependency is satisfied or withdrawn | IN_PROGRESS | Clear blocking reason | FR-OPS-001 |
+| IN_PROGRESS | Complete | Assigned staff | The underlying domain condition is resolved or the workflow reached its legitimate next state | COMPLETED | Record outcome; audited transition | FR-OPS-001 |
+| COMPLETED | Reopen | Authorized staff where policy permits | Domain condition recurs or was not actually resolved | OPEN or ASSIGNED depending on retained assignment | Append reopen event; preserve prior history | FR-OPS-001 |
+
+```mermaid
+stateDiagram-v2
+    [*] --> OPEN
+    OPEN --> ASSIGNED: claim or assign
+    ASSIGNED --> IN_PROGRESS: start
+    IN_PROGRESS --> WAITING: external dependency blocks progress
+    WAITING --> IN_PROGRESS: resume
+    IN_PROGRESS --> COMPLETED: complete with outcome
+    COMPLETED --> OPEN: reopen without retained assignment
+    COMPLETED --> ASSIGNED: reopen with retained assignment
+```
+
+### 20.1 Flags and Events That Are Not States
+
+`ESCALATED` and `OVERDUE` are **flags and events, not lifecycle states**.
+
+- Escalation may change priority or assignment while **preserving** the lifecycle state.
+- Deadline breach is **derived** from `due_at` rather than stored as a state, and is audited.
+- A work item may therefore be simultaneously `IN_PROGRESS`, escalated, and overdue. Presentation must not collapse these three independent facts into one status value.
+
+### 20.2 Invalid Transitions
+
+- Starting an item that is not assigned to the acting staff member is rejected.
+- Completing an item whose underlying domain condition is unresolved is rejected; section 18.2 of `CROSS_PLATFORM_BEHAVIOR.md` owns this rule.
+- Claiming or acting on an item outside the actor's active role, organization, clinic, branch, case, or subject-matter grant is rejected (`ERR-IDENTITY-002`).
+- Reopening is permitted only where the governing policy allows it, and never rewrites the prior completion record.
+
+## 21. Machines Intentionally Not Finalized
 
 The following state vocabularies are not finalized here because current approved sources do not establish enough canonical lifecycle states to do so safely:
 
-- private evidence binary-transfer/upload session lifecycle — blocked by `Q-PLATFORM-003` provider/transfer-strategy decisions;
-- notification provider delivery lifecycle beyond provider-neutral queued/attempted/success/failure operational metadata;
-- detailed operational work-item states beyond the requirement that assignment, escalation, completion, reopening, and deadline breach are auditable;
+- notification provider **delivery** lifecycle beyond provider-neutral queued/attempted/success/failure operational metadata — the durable patient-facing notification entry is separate and is owned by `FR-PLATFORM-001`;
 - provider/clinic verification sub-state vocabulary not explicitly established by the currently readable source set.
 
 Implementation must not invent these as product truth. When their source decisions become authoritative, update `docs/README.md` registry/open items as needed and then update this file.
 
-## 21. Testing Obligations
+Two vocabularies previously listed here were finalized by `PO-2026-08-25-ux-phase1-reconciliation`: the operational work-item states now live in section 20 (`Q-OPS-002` resolved), and the evidence-transfer session states are fixed by section 21.1 (`Q-PLATFORM-003` resolved for interaction purposes).
+
+### 21.1 Evidence Transfer Session — Provider-Neutral
+
+**Requirements:** NFR-PLATFORM-003, NFR-PLATFORM-006.
+
+The concrete storage and malware-scanning vendor is an infrastructure decision and remains open under `Q-OPS-001`. The **user-visible interaction contract does not depend on it** and is fixed here so that dependent work is not blocked by vendor selection.
+
+Canonical session states:
+
+- `SELECTED`
+- `UPLOADING`
+- `PAUSED`
+- `FAILED_RETRYABLE`
+- `UPLOADED`
+- `VALIDATING_SCANNING`
+- `ACCEPTED`
+- `REJECTED`
+
+| Current State | Action/Event | Actor/System | Next State | Notes |
+|---|---|---|---|---|
+| none | Select file | User | SELECTED | Client-side selection only; nothing transferred |
+| SELECTED | Begin transfer | User / client | UPLOADING | — |
+| UPLOADING | Connection lost or user pauses | System / user | PAUSED | Resume rather than restart where technically possible |
+| PAUSED | Resume | User / client | UPLOADING | Continues the same session |
+| UPLOADING | Transient transfer failure | System | FAILED_RETRYABLE | Retry uses the same session, not a new record |
+| FAILED_RETRYABLE | Retry | User / client | UPLOADING | — |
+| UPLOADING | Transfer completes | System | UPLOADED | Finalization validates allowed type, MIME/magic/decode, and size |
+| UPLOADED | Enter required scanning/validation | System | VALIDATING_SCANNING | Evidence stays quarantined |
+| VALIDATING_SCANNING | Validation and scanning pass | System | ACCEPTED | Only now is the evidence referenceable by `evidence_ids` |
+| VALIDATING_SCANNING | Validation or scanning fails | System | REJECTED | Safe, actionable reason is shown (`ERR-PLATFORM-005`) |
+
+Rules:
+
+1. SHA-256 integrity metadata is recorded;
+2. evidence remains **quarantined** until required scanning and validation pass — `UPLOADED` is not `ACCEPTED`;
+3. private evidence is never exposed through a public URL;
+4. a rejected file reports a safe, actionable reason and never leaks scanner internals or private storage paths;
+5. Laravel Filesystem may use private local storage now or approved S3-compatible storage later without changing these states.
+
+## 22. Testing Obligations
 
 `docs/TESTING_STRATEGY.md` owns the concrete append-only `TC-*` registry and the current state-machine test coverage. Implementation must preserve and execute coverage for every applicable state machine in this document, including:
 

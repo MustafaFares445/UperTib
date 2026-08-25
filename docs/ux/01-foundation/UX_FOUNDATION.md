@@ -39,7 +39,11 @@ Derived from `docs/domain/PERMISSIONS_MATRIX.md` section 4 (20-row actor catalog
 
 These are evidence-based working personas. There are no names, no biographies, and no invented characteristics.
 
-**Environment and expertise are undocumented for every actor.** No research inputs exist for this product — no interviews, no analytics, no support tickets. Rather than assume the statistically common default of a trained expert at a desk on a large monitor, this is raised as `Q-PLATFORM-006` (Major). What the sources *do* establish is context of use: Aleppo only, Arabic-first, right-to-left, weak and intermittent connectivity, low thousands of users.
+**Environment and expertise are confirmed for every actor** by `PO-UX-07`, applied by role class. The six classes are the patient side, the prospective provider applicant, clinic representative and staff, the treating dentist, Admin/Operations/Verification/Finance, and the specialist reviewer group. Each actor below carries its class's confirmed device, setting, interruption pattern and expertise, which closed `Q-PLATFORM-006`.
+
+Two facts from that decision shape more design than the rest combined. The patient is **episodic** on a personal smartphone over weak connectivity, so learned navigation cannot be relied on and every re-entry has to re-orient the user. Staff are **interruption-heavy** in queue-oriented work, so a half-finished task must survive being abandoned mid-way and resumed later by the same person or a colleague.
+
+`PO-UX-18` separately confirmed that **no user research exists** — no interviews, no analytics, no support tickets — and accepted that as a research limitation rather than a blocker. The personas below are therefore evidence-based on documented responsibility and the confirmed contexts, not on observed behaviour. Usability testing remains a recommended validation activity. What the sources establish about context of use is unchanged: Aleppo only, Arabic-first, right-to-left, weak and intermittent connectivity, low thousands of users.
 
 ### 2.1 Patient platform actors
 
@@ -49,7 +53,7 @@ These are evidence-based working personas. There are no names, no biographies, a
 **Accountable for:** nothing. Evaluating whether UberTib can help before committing identity.
 **Primary jobs:** JTBD-CATALOG-001, JTBD-ELIG-001, JTBD-ELIG-002, JTBD-ELIG-003
 **Frequency of use:** rarely — a pre-account state, not a recurring role
-**Environment:** undocumented (`Q-PLATFORM-006`). Established: mobile, Arabic-first, RTL, weak connectivity.
+**Environment:** personal smartphone first; Arabic-first, RTL; weak or intermittent connectivity must be expected (`NFR-PLATFORM-006`). Episodic use — learned navigation cannot be relied on. Confirmed by `PO-UX-07`.
 **Expertise:** first-time. No product knowledge can be assumed.
 **Consequence of error:** abandonment before account creation. No authoritative state can be damaged — every action available is read-only.
 **Hard constraint:** may read only explicitly public audience-safe catalog and eligible-provider discovery data. Never internal risk `I`, never private evidence.
@@ -60,7 +64,7 @@ These are evidence-based working personas. There are no names, no biographies, a
 **Accountable for:** their own care decisions — choosing a provider, accepting clinician-authored treatment and financial terms, reporting money they paid outside the platform, reviewing what they received, raising claims.
 **Primary jobs:** JTBD-IDENTITY-001, JTBD-ELIG-001 through JTBD-ELIG-003, JTBD-BOOKING-001 through JTBD-BOOKING-003, JTBD-CLINICAL-002, JTBD-CLINICAL-004, JTBD-CLINICAL-006, JTBD-FINANCE-001 through JTBD-FINANCE-004, JTBD-FINANCE-006, JTBD-REVIEWS-001, JTBD-CLAIMS-001 through JTBD-CLAIMS-003, JTBD-CLAIMS-006, JTBD-PLATFORM-001
 **Frequency of use:** episodic and bursty. Intense during an active case (daily), silent between cases (monthly or less). This is the single most important fact about the patient's usage shape and it means the app cannot rely on learned navigation.
-**Environment:** undocumented (`Q-PLATFORM-006`). Established: personal mobile device, Arabic-first, RTL, weak and intermittent connectivity (`NFR-PLATFORM-006`).
+**Environment:** personal smartphone first; Arabic-first, RTL; weak or intermittent connectivity must be expected (`NFR-PLATFORM-006`). Episodic use — learned navigation cannot be relied on. Confirmed by `PO-UX-07`.
 **Expertise:** first-time to occasional. Assumed to have no dental training and no knowledge of internal classification concepts (`BP-11`, `FR-CATALOG-001`).
 **Consequence of error:** accepting terms they did not understand; a booking they believe is confirmed when it is not; a duplicate financial assertion; a missed claim deadline that cannot be recovered (`FR-CLAIMS-003`). For the business: disputes, unverifiable financial history, and loss of the operational trust the product exists to build.
 **Hard constraint:** never sees or sets `S`, `P`, `H`, `I`, `K`, `EU`, scientific grade, or final eligibility (`PERMISSIONS_MATRIX` section 5; `PO-UX-04`).
@@ -71,7 +75,7 @@ These are evidence-based working personas. There are no names, no biographies, a
 **Accountable for:** acting for another patient strictly inside an active grant covering exact patient, actions, data scope, purpose and effective period.
 **Primary jobs:** JTBD-IDENTITY-002, JTBD-IDENTITY-003, plus any patient job the grant explicitly permits
 **Frequency of use:** episodic, same shape as the patient
-**Environment:** undocumented (`Q-PLATFORM-006`). Established: mobile, Arabic-first, RTL.
+**Environment:** personal smartphone first; Arabic-first, RTL; weak or intermittent connectivity must be expected (`NFR-PLATFORM-006`). Episodic use — learned navigation cannot be relied on. Confirmed by `PO-UX-07`.
 **Expertise:** first-time to occasional
 **Consequence of error:** acting for the wrong person, or believing authority persists after revocation or expiry. Both are authorization failures with clinical and financial consequences.
 **Hard constraint:** actions are attributed to the guardian, never to the patient. Masquerading as the patient is denied (`PERMISSIONS_MATRIX` section 6). Changing a local active-patient selection grants no authority — every request re-evaluates the grant.
@@ -84,8 +88,8 @@ These are evidence-based working personas. There are no names, no biographies, a
 **Accountable for:** the truthfulness and completeness of the source facts and evidence in their application to join UberTib as an individual dentist or a clinic/dental centre.
 **Primary jobs:** JTBD-IDENTITY-004, JTBD-IDENTITY-005
 **Frequency of use:** once, plus correction cycles. This is a one-time high-stakes task performed by someone who will never become fluent in it.
-**Environment:** undocumented (`Q-PLATFORM-006`). Likely desktop given evidence upload, but this is inference and must not harden into a mobile-hostile design.
-**Expertise:** first-time, permanently. No amount of product use makes an applicant expert at applying.
+**Environment:** responsive web, usable on both smartphone and desktop/laptop. Document and evidence upload is a major part of the task, so neither form factor may be treated as secondary. One-time or rare use. Confirmed by `PO-UX-07`.
+**Expertise:** none assumed. A one-time applicant has no product knowledge and will not acquire any before finishing.
 **Consequence of error:** a rejected or stalled application; correction cycles that cost the applicant and the reviewer time; for the business, provider supply that never activates.
 **Hard constraint:** the applicant supplies facts only. No control anywhere in onboarding selects a scientific grade, `P`, `H`, `I`, or service eligibility (`PO-UX-02`; `SDC-IDENTITY-001`).
 
@@ -95,8 +99,8 @@ These are evidence-based working personas. There are no names, no biographies, a
 **Accountable for:** the clinical content of treatment plans, stage evidence, completion declarations, and follow-up for cases where they hold an active treating relationship.
 **Primary jobs:** JTBD-ELIG-004 through JTBD-ELIG-006, JTBD-CLINICAL-001, JTBD-CLINICAL-003, JTBD-CLINICAL-005, JTBD-CLINICAL-006, JTBD-BOOKING-004
 **Frequency of use:** many times a day during clinic hours
-**Environment:** undocumented (`Q-PLATFORM-006`). A clinical setting with interruptions is likely but not evidenced.
-**Expertise:** trained operator, high domain expertise, low patience for ceremony
+**Environment:** desktop/laptop and tablet inside the clinic. Repeated but interruption-prone use. Optimize for low ceremony on frequent clinical tasks **without** reducing confirmation on irreversible actions. Confirmed by `PO-UX-07`.
+**Expertise:** high clinical, moderate product. Confirmed by `PO-UX-07`.
 **Consequence of error:** an incorrect clinical plan reaching a patient for acceptance; a stage marked complete without required evidence; for the patient, treatment decisions taken on wrong information. These are the highest-severity errors in the product.
 **Hard constraint:** the platform never authors a diagnosis or treatment plan. The dentist is identified as author (`FR-CLINICAL-001`). Accepted snapshots are never edited; amendment creates a new version.
 
@@ -106,8 +110,8 @@ These are evidence-based working personas. There are no names, no biographies, a
 **Accountable for:** provider and branch operations — booking responses within the deadline, availability, prices, activation submissions, external financial assertions, and delegating staff access.
 **Primary jobs:** JTBD-IDENTITY-006, JTBD-IDENTITY-008, JTBD-IDENTITY-011, JTBD-BOOKING-004 through JTBD-BOOKING-006, JTBD-ELIG-004 through JTBD-ELIG-006, JTBD-FINANCE-002, JTBD-FINANCE-003, JTBD-REVIEWS-002, JTBD-CLAIMS-004, JTBD-OPS-001
 **Frequency of use:** many times a day. The booking response deadline — 12 hours, or two hours before the appointment, whichever is earlier (`FR-BOOKING-003`) — makes this the most time-pressured recurring task in the product.
-**Environment:** undocumented (`Q-PLATFORM-006`). Front-desk conditions with interruptions are likely but not evidenced.
-**Expertise:** trained operator after onboarding; first-time during it
+**Environment:** desktop/laptop primary inside the clinic, tablet secondary. Frequent daily use with a high interruption rate, especially front-desk and booking work. Confirmed by `PO-UX-07`.
+**Expertise:** trained operator after onboarding. Confirmed by `PO-UX-07`.
 **Consequence of error:** a missed response deadline loses the booking and the patient; an over-broad staff grant is an authorization breach; a wrong external financial assertion creates a dispute.
 **Hard constraint:** cannot delegate a capability or branch scope they do not hold (`PO-UX-03`). Cannot see raw internal `I`. Cannot edit computed outcomes.
 
@@ -117,8 +121,8 @@ These are evidence-based working personas. There are no names, no biographies, a
 **Accountable for:** work inside the exact provider, branches, capabilities and effective period their accepted invitation granted.
 **Primary jobs:** JTBD-IDENTITY-007, JTBD-IDENTITY-011, plus whichever clinic jobs the grant covers
 **Frequency of use:** acceptance once; scoped work thereafter at the cadence of their capability
-**Environment:** undocumented (`Q-PLATFORM-006`)
-**Expertise:** first-time at acceptance; trained thereafter
+**Environment:** desktop/laptop primary inside the clinic, tablet secondary. Frequent daily use with a high interruption rate, especially front-desk and booking work. Confirmed by `PO-UX-07`.
+**Expertise:** trained operator after onboarding. Confirmed by `PO-UX-07`.
 **Consequence of error:** believing they hold access they do not; attempting work outside scope and being denied without understanding why.
 **Hard constraint:** acceptance creates a scoped grant and nothing more. Being invited as a treating dentist does not confer authority to author clinical treatment — professional verification and a case relationship are still required (`PO-UX-03`).
 
@@ -130,7 +134,7 @@ These are evidence-based working personas. There are no names, no biographies, a
 **Accountable for:** deciding whether submitted source facts and evidence are valid — for provider onboarding applications and for service activation requests.
 **Primary jobs:** JTBD-IDENTITY-009, JTBD-ELIG-007, JTBD-OPS-001
 **Frequency of use:** many times a day — this is queue work
-**Environment:** undocumented (`Q-PLATFORM-006`)
+**Environment:** desktop/laptop with keyboard and mouse. Queue-oriented, interruption-heavy operational work; higher information density is acceptable. Confirmed by `PO-UX-07`.
 **Expertise:** trained operator, high throughput expectations
 **Consequence of error:** approving a false fact admits an unqualified provider; rejecting a valid one blocks legitimate supply. Both are visible to patients through eligibility.
 **Hard constraint:** verifies facts and evidence only. Never edits computed final `S`, `P`, `H`, `I` or eligibility (`PERMISSIONS_MATRIX` section 8; `SDC-ELIG-002`).
@@ -141,7 +145,7 @@ These are evidence-based working personas. There are no names, no biographies, a
 **Accountable for:** medical launch approval and medically sensitive review, under a current independently verified dental credential.
 **Primary jobs:** JTBD-CATALOG-003, JTBD-ELIG-007, JTBD-CLAIMS-005
 **Frequency of use:** weekly to rarely — low volume, highest consequence
-**Environment:** undocumented (`Q-PLATFORM-006`)
+**Environment:** desktop/laptop. Lower-frequency use than Operations, so product familiarity cannot be assumed and complex decisions may carry guided context. Confirmed by `PO-UX-07`.
 **Expertise:** trained clinical professional; occasional product user
 **Consequence of error:** production activation of clinically unready content, or a wrong medically sensitive claim decision affecting a patient and a provider.
 **Hard constraint:** an expired or revoked credential cannot support a current medical approval (`STATE_MACHINES` section 5). A clinical credential cannot be used on a non-medical gate (`PERMISSIONS_MATRIX` section 7). Both are fail-closed.
@@ -152,7 +156,7 @@ These are evidence-based working personas. There are no names, no biographies, a
 **Accountable for:** review publication and eligibility decisions, and review appeals.
 **Primary jobs:** JTBD-REVIEWS-003, JTBD-OPS-001
 **Frequency of use:** weekly
-**Environment:** undocumented (`Q-PLATFORM-006`)
+**Environment:** desktop/laptop. Lower-frequency use than Operations, so product familiarity cannot be assumed and complex decisions may carry guided context. Confirmed by `PO-UX-07`.
 **Expertise:** trained operator
 **Consequence of error:** removing a legitimate review, or leaving a policy-violating one published. Either damages the verified-experience signal the product depends on.
 **Hard constraint:** may decide eligibility and policy compliance. May never rewrite rating content, and `R` never feeds `S`, `P`, `H` or `I` (`PERMISSIONS_MATRIX` section 12).
@@ -163,7 +167,7 @@ These are evidence-based working personas. There are no names, no biographies, a
 **Accountable for:** reasoned human decisions on refund requests, protection claims and disputes within their required subject-matter scope, and appeals under separation of duties.
 **Primary jobs:** JTBD-CLAIMS-005, JTBD-CLAIMS-007, JTBD-OPS-001
 **Frequency of use:** daily
-**Environment:** undocumented (`Q-PLATFORM-006`)
+**Environment:** desktop/laptop. Lower-frequency use than Operations, so product familiarity cannot be assumed and complex decisions may carry guided context. Confirmed by `PO-UX-07`.
 **Expertise:** trained operator with subject-matter competence requirements
 **Consequence of error:** an unjustified decision against a patient or provider, with an appeal path but no way to erase the original. Decisions are immutable by design.
 **Hard constraint:** cannot decide a medically sensitive claim without the required clinical competence. Cannot approve a decision they originated where separation of duties forbids it (`PERMISSIONS_MATRIX` sections 13, 17). System automation cannot make this decision at all.
@@ -174,7 +178,7 @@ These are evidence-based working personas. There are no names, no biographies, a
 **Accountable for:** reviewing recorded external financial events and resolving disputed records within scope.
 **Primary jobs:** JTBD-FINANCE-005, JTBD-OPS-001
 **Frequency of use:** daily
-**Environment:** undocumented (`Q-PLATFORM-006`)
+**Environment:** desktop/laptop with keyboard and mouse. Queue-oriented, interruption-heavy operational work; higher information density is acceptable. Confirmed by `PO-UX-07`.
 **Expertise:** trained operator
 **Consequence of error:** an unresolved dispute leaves a case's financial history ambiguous, which is exactly what the record-only model exists to prevent.
 **Hard constraint:** never moves money. No command in this role authorizes, captures, holds, transfers, settles or refunds funds (`NFR-FINANCE-001`; `SDC-FINANCE-001`).
@@ -185,7 +189,7 @@ These are evidence-based working personas. There are no names, no biographies, a
 **Accountable for:** the versioned lifecycle of classification, eligibility, deadline, evidence, financial and launch policies within their owned domain.
 **Primary jobs:** JTBD-CATALOG-002, JTBD-POLICY-001
 **Frequency of use:** weekly to rarely
-**Environment:** undocumented (`Q-PLATFORM-006`)
+**Environment:** desktop/laptop. Lower-frequency use than Operations, so product familiarity cannot be assumed and complex decisions may carry guided context. Confirmed by `PO-UX-07`.
 **Expertise:** trained operator, deep policy knowledge, infrequent product use
 **Consequence of error:** activating a policy version that silently changes outcomes; or believing a change applies retroactively when it does not.
 **Hard constraint:** activated historical content is immutable. Changes apply prospectively and never rewrite accepted snapshots or prior decisions (`FR-POLICY-001`, `FR-POLICY-002`).
@@ -196,7 +200,7 @@ These are evidence-based working personas. There are no names, no biographies, a
 **Accountable for:** the operational launch gate and operational governance and reporting.
 **Primary jobs:** JTBD-OPS-002, JTBD-OPS-003, JTBD-CATALOG-003
 **Frequency of use:** weekly
-**Environment:** undocumented (`Q-PLATFORM-006`)
+**Environment:** desktop/laptop with keyboard and mouse. Queue-oriented, interruption-heavy operational work; higher information density is acceptable. Confirmed by `PO-UX-07`.
 **Expertise:** trained operator
 **Consequence of error:** approving an operational gate the operation cannot actually support, or misreading provisional data as confirmed.
 **Hard constraint:** the implemented accountable role key is `product_and_operations_owner`. Cannot satisfy the medical, legal or technical gate.
@@ -207,7 +211,7 @@ These are evidence-based working personas. There are no names, no biographies, a
 **Accountable for:** the legal launch gate and explicitly assigned legal review.
 **Primary jobs:** JTBD-CATALOG-003
 **Frequency of use:** rarely
-**Environment:** undocumented (`Q-PLATFORM-006`)
+**Environment:** desktop/laptop. Lower-frequency use than Operations, so product familiarity cannot be assumed and complex decisions may carry guided context. Confirmed by `PO-UX-07`.
 **Expertise:** trained professional, rare product user — this role needs a guided, discoverable path, not a memorised one
 **Consequence of error:** a legal gate approved without basis, or a launch blocked because the decision surface was not findable.
 **Hard constraint:** legal gate scope only. Implemented role key `legal_accountable_owner`.
@@ -218,7 +222,7 @@ These are evidence-based working personas. There are no names, no biographies, a
 **Accountable for:** the technical launch gate and assigned technical review.
 **Primary jobs:** JTBD-CATALOG-003, JTBD-PLATFORM-003
 **Frequency of use:** rarely
-**Environment:** undocumented (`Q-PLATFORM-006`)
+**Environment:** desktop/laptop. Lower-frequency use than Operations, so product familiarity cannot be assumed and complex decisions may carry guided context. Confirmed by `PO-UX-07`.
 **Expertise:** trained professional, rare product user
 **Consequence of error:** a technical gate approved without evidence.
 **Hard constraint:** technical gate scope only. Implemented role key `technical_accountable_owner`.
@@ -229,7 +233,7 @@ These are evidence-based working personas. There are no names, no biographies, a
 **Accountable for:** working scoped queues — deadlines, exceptions, escalations, follow-up, and booking and eligibility exception handling.
 **Primary jobs:** JTBD-OPS-001, JTBD-BOOKING-007, JTBD-ELIG-008, JTBD-CLINICAL-007, JTBD-AUDIT-002
 **Frequency of use:** many times a day. The queue is this actor's home screen, not a report.
-**Environment:** undocumented (`Q-PLATFORM-006`)
+**Environment:** desktop/laptop with keyboard and mouse. Queue-oriented, interruption-heavy operational work; higher information density is acceptable. Confirmed by `PO-UX-07`.
 **Expertise:** trained operator, highest throughput requirement in the product
 **Consequence of error:** an unworked deadline breach; or closing a work item without resolving the underlying condition, which is explicitly forbidden.
 **Hard constraint:** completing a work item does not change the source domain record. Only an authorized domain action does (`CROSS_PLATFORM_BEHAVIOR` sections 3.5, 18.2). Work assignment never grants source-data access.
@@ -240,7 +244,7 @@ These are evidence-based working personas. There are no names, no biographies, a
 **Accountable for:** staff accounts, coarse role and capability assignment, and scoped staff grants.
 **Primary jobs:** JTBD-IDENTITY-010, JTBD-OPS-001
 **Frequency of use:** weekly
-**Environment:** undocumented (`Q-PLATFORM-006`)
+**Environment:** desktop/laptop with keyboard and mouse. Queue-oriented, interruption-heavy operational work; higher information density is acceptable. Confirmed by `PO-UX-07`.
 **Expertise:** trained operator
 **Consequence of error:** an over-broad grant is a direct authorization breach across every interface.
 **Hard constraint:** administration is not a universal data override. No automatic clinical, financial, legal, claim or case-data access. No `super_admin` bypass exists (`PERMISSIONS_MATRIX` sections 5, 20). Cannot self-grant a scope to bypass a policy requiring another accountable reviewer.
@@ -251,7 +255,7 @@ These are evidence-based working personas. There are no names, no biographies, a
 **Accountable for:** tracing sensitive actions and reproducing historical decisions within an explicit purpose and target scope.
 **Primary jobs:** JTBD-AUDIT-001, JTBD-POLICY-002
 **Frequency of use:** rarely, and usually under time pressure when it happens
-**Environment:** undocumented (`Q-PLATFORM-006`)
+**Environment:** desktop/laptop. Lower-frequency use than Operations, so product familiarity cannot be assumed and complex decisions may carry guided context. Confirmed by `PO-UX-07`.
 **Expertise:** trained professional, rare product user
 **Consequence of error:** an unanswerable audit question, or audit access that leaks unrelated protected payload.
 **Hard constraint:** audit records cannot be edited or deleted. Audit access never grants unrelated protected data access (`SDC-AUDIT-001`).
@@ -271,7 +275,7 @@ These are evidence-based working personas. There are no names, no biographies, a
 
 ## 3. Jobs To Be Done
 
-62 jobs, phrased in the actor's terms, each traced to requirements. `Current pain` has no research behind it for any job — no interviews, analytics or support tickets exist for this product. That is recorded once as `Q-PLATFORM-007` (Major) rather than repeated as a fabricated insight per job.
+66 jobs, phrased in the actor's terms, each traced to requirements. `Current pain` has no research behind it for any job — no interviews, analytics or support tickets exist for this product. `PO-UX-18` accepted that as a research limitation rather than an open question, so the field is recorded honestly as an absence rather than filled with a fabricated insight per job. Usability testing stays a recommended validation activity for later phases.
 
 ### 3.1 IDENTITY
 
@@ -362,6 +366,14 @@ These are evidence-based working personas. There are no names, no biographies, a
 **Criticality:** blocking — wrong-branch actions are authorization and operational failures
 **Current pain:** no research (`Q-PLATFORM-007`)
 **Success looks like:** active provider and branch context is continuously evident, switching creates no authority, and only granted contexts are selectable
+
+### JTBD-IDENTITY-012 — When the person I care for cannot give permission themselves, I want to prove I am entitled to act for them, so I can manage their treatment without pretending to be them
+**Actors:** Guardian (as applicant); Verification staff
+**Requirements:** FR-IDENTITY-003; FR-AUDIT-001; API-IDENTITY-006, SDC-IDENTITY-005
+**Frequency:** rarely — once per dependent relationship
+**Criticality:** blocking for dependent care; there is no other route when the subject cannot consent
+**Current pain:** no research (`Q-PLATFORM-007`)
+**Success looks like:** an approved `LEGAL_BASIS` grant exists naming patient, grantee, actions, data scope, purpose, effective period, the evidence relied on and the approving reviewer — and the applicant never gained access merely by submitting
 
 ### 3.2 CATALOG
 
@@ -513,6 +525,14 @@ These are evidence-based working personas. There are no names, no biographies, a
 **Current pain:** no research (`Q-PLATFORM-007`)
 **Success looks like:** the exception, its deadline history and provenance are visible, and no force-confirm override exists
 
+### JTBD-BOOKING-008 — When my confirmed appointment no longer works, I want to ask for a different time, so I can move it without losing the slot I already have
+**Actors:** Patient; Guardian; Clinic representative
+**Requirements:** FR-BOOKING-004; API-BOOKING-006, API-BOOKING-007, SDC-BOOKING-002
+**Frequency:** monthly across the population; occasional per patient
+**Criticality:** non-blocking, but the alternative is cancel-and-rebook, which risks losing the appointment entirely
+**Current pain:** no research (`Q-PLATFORM-007`)
+**Success looks like:** the original appointment stays confirmed until the counterparty accepts, and an unanswered proposal costs nothing
+
 ### 3.5 CLINICAL
 
 ### JTBD-CLINICAL-001 — When I have examined a patient, I want to put my proposed treatment and its cost in front of them, so they can decide with full information
@@ -646,6 +666,14 @@ These are evidence-based working personas. There are no names, no biographies, a
 **Criticality:** important
 **Current pain:** no research (`Q-PLATFORM-007`)
 **Success looks like:** a reasoned decision changing publication or eligibility only, never rating content, and never classification
+
+### JTBD-REVIEWS-004 — When my review is rejected or taken down, I want to contest whether that decision followed the rules, so a decision about my own experience is not final without recourse
+**Actors:** Patient; Guardian; Review integrity reviewer
+**Requirements:** FR-REVIEWS-002; API-REVIEWS-002, SDC-REVIEWS-001
+**Frequency:** rarely
+**Criticality:** non-blocking, but it is the patient's only recourse against a publication decision
+**Current pain:** no research (`Q-PLATFORM-007`)
+**Success looks like:** an independent reviewer who did not make the original decision rules on the eligibility, verification or policy basis, with findings recorded — and the patient understood before writing that an appeal cannot edit rating content
 
 ### 3.8 CLAIMS
 
@@ -793,9 +821,17 @@ These are evidence-based working personas. There are no names, no biographies, a
 **Current pain:** no research (`Q-PLATFORM-007`)
 **Success looks like:** queue age, retry and failure counts, deadline breaches, scan backlog, notification failures, recalculation delay and backup status each have a visible state, and delayed background work is never shown as a completed business outcome
 
+### JTBD-PLATFORM-004 — When I open the app after being away, I want to see what changed and what still needs me, so nothing important passes me by while I was not looking
+**Actors:** Patient; Guardian
+**Requirements:** FR-PLATFORM-001; NFR-PLATFORM-006; API-PLATFORM-002
+**Frequency:** every session
+**Criticality:** blocking in effect — an episodic user who cannot re-orient will miss deadlines that cannot be recovered
+**Current pain:** no research (`Q-PLATFORM-007`)
+**Success looks like:** every obligation is visible without depending on a push, SMS or email having been delivered, and opening an entry re-reads authoritative state rather than trusting what the entry said
+
 ## 4. Task Frequency by Criticality Matrix
 
-Every one of the 62 jobs is plotted. This is the artifact that decides prominence in UX Phase 2, so it is placed here rather than being rediscovered later.
+Every one of the 66 jobs is plotted. This is the artifact that decides prominence in UX Phase 2, so it is placed here rather than being rediscovered later.
 
 Placement rule used, from `ux_01`:
 
@@ -809,15 +845,17 @@ Placement rule used, from `ux_01`:
 
 | Frequency | Blocking | Important | Convenience |
 |---|---|---|---|
-| **Daily+** | IDENTITY-003, IDENTITY-009, IDENTITY-011, ELIG-005, ELIG-007, BOOKING-004, CLINICAL-001, CLINICAL-003, CLAIMS-005, OPS-001, PLATFORM-001 | BOOKING-005, BOOKING-007, FINANCE-005, PLATFORM-003 | — |
-| **Weekly** | IDENTITY-010, ELIG-004, ELIG-008, CLINICAL-002, BOOKING-001 | IDENTITY-006, CLINICAL-004, CLINICAL-006, CLINICAL-007, FINANCE-003, FINANCE-004, REVIEWS-003, CLAIMS-004, CLAIMS-007, OPS-002, AUDIT-002, PLATFORM-002 | CATALOG-001 |
-| **Rare** | IDENTITY-001, IDENTITY-004, IDENTITY-005, IDENTITY-007, IDENTITY-008, IDENTITY-002, CATALOG-003, OPS-003, CLAIMS-001, CLAIMS-002, CLAIMS-003, BOOKING-002 | ELIG-001, ELIG-002, ELIG-006, BOOKING-003, BOOKING-006, CLINICAL-005, FINANCE-001, FINANCE-002, FINANCE-006, REVIEWS-002, CLAIMS-006, CATALOG-002, POLICY-001, POLICY-002, AUDIT-001 | ELIG-003, REVIEWS-001 |
+| **Daily+** | IDENTITY-003, IDENTITY-009, IDENTITY-011, ELIG-005, ELIG-007, BOOKING-004, CLINICAL-001, CLINICAL-003, CLAIMS-005, OPS-001, PLATFORM-001, PLATFORM-004 | BOOKING-005, BOOKING-007, FINANCE-005, PLATFORM-003 | — |
+| **Weekly** | IDENTITY-010, ELIG-004, ELIG-008, CLINICAL-002, BOOKING-001 | IDENTITY-006, CLINICAL-004, CLINICAL-006, CLINICAL-007, FINANCE-003, FINANCE-004, REVIEWS-003, CLAIMS-004, CLAIMS-007, OPS-002, AUDIT-002, PLATFORM-002 | CATALOG-001, BOOKING-008 |
+| **Rare** | IDENTITY-001, IDENTITY-004, IDENTITY-005, IDENTITY-007, IDENTITY-008, IDENTITY-002, IDENTITY-012, CATALOG-003, OPS-003, CLAIMS-001, CLAIMS-002, CLAIMS-003, BOOKING-002 | ELIG-001, ELIG-002, ELIG-006, BOOKING-003, BOOKING-006, CLINICAL-005, FINANCE-001, FINANCE-002, FINANCE-006, REVIEWS-002, REVIEWS-004, CLAIMS-006, CATALOG-002, POLICY-001, POLICY-002, AUDIT-001 | ELIG-003, REVIEWS-001 |
 
 ### 4.2 Findings from the plot
 
 These are findings, not details. Each one constrains UX Phase 2.
 
-**Finding 1 — Eleven jobs land in daily-and-blocking and every one of them must be zero-friction and always visible.** Three belong to the Clinic panel (IDENTITY-011, BOOKING-004, CLINICAL-001 and CLINICAL-003), four to the Admin panel (IDENTITY-009, ELIG-007, CLAIMS-005, OPS-001), and two are cross-cutting patient conditions (IDENTITY-003, PLATFORM-001). No patient *feature* is daily-and-blocking; two patient *conditions* are. That asymmetry should shape all three platforms differently and is the strongest argument against a shared IA.
+**Finding 1 — Twelve jobs land in daily-and-blocking and every one of them must be zero-friction and always visible.** Four belong to the Clinic panel (IDENTITY-011, BOOKING-004, CLINICAL-001, CLINICAL-003), four to the Admin panel (IDENTITY-009, ELIG-007, CLAIMS-005, OPS-001), plus ELIG-005 which spans both panels, and three are cross-cutting patient conditions (IDENTITY-003, PLATFORM-001, PLATFORM-004). No patient *feature* is daily-and-blocking; three patient *conditions* are. That asymmetry should shape all three platforms differently and is the strongest argument against a shared IA.
+
+`PLATFORM-004` — knowing what changed on return — is placed daily-and-blocking on a judgment worth stating. Its literal frequency is once per session, which is not daily for an episodic patient. It is blocking in *effect*: `PO-UX-07` confirms the patient cannot rely on learned navigation, and `FR-CLAIMS-003` deadlines are unrecoverable, so a patient who cannot re-orient on return misses obligations that no later action can repair. This is the same reasoning as Finding 2 applied to re-entry rather than to a task.
 
 **Finding 2 — The literal frequency axis understates patient jobs, and prominence must not follow it blindly.** The patient is an episodic actor: intense during an active case, silent for months between cases. `BOOKING-001` and `CLINICAL-002` are rare per user and simultaneously the two highest-consequence patient actions in the product. Raw frequency would bury them.
 
@@ -827,9 +865,9 @@ These are findings, not details. Each one constrains UX Phase 2.
 
 **Finding 4 — Three rare-and-blocking patient jobs have unrecoverable deadlines.** CLAIMS-001, CLAIMS-002 and CLAIMS-003 are governed by versioned policy windows that are rejected rather than silently extended (`STATE_MACHINES` section 14). An expired window cannot be retried. Remaining time must be unambiguous wherever these appear, and it must be visible before the deadline is close, not only when it is.
 
-**Finding 5 — `BOOKING-002` is rare, blocking, and externally timed.** The alternative-acceptance deadline is set by the provider response rule — 12 hours or two hours before the appointment, whichever is earlier. The patient did not choose this deadline and may not be in the app when it starts running. Combined with `Q-PLATFORM-005` (no confirmed patient notification surface), this is the weakest re-entry path in the product and is recorded as such.
+**Finding 5 — `BOOKING-002` is rare, blocking, and externally timed.** The alternative-acceptance deadline is set by the provider response rule — 12 hours or two hours before the appointment, whichever is earlier. The patient did not choose this deadline and may not be in the app when it starts running. `PO-UX-09` materially improved this: `FR-PLATFORM-001` guarantees a durable entry and an attention item that do not depend on push, SMS or email delivery. It remains the weakest re-entry path in the product, because the deadline can expire while the patient is simply not looking, but it is no longer dependent on an unconfirmed surface.
 
-**Finding 6 — `OPS-001` is the true home screen for six distinct staff roles.** Operations staff, verification staff, finance reviewer, claim reviewer, review integrity reviewer and clinic representative all begin work from a scoped queue. That makes the queue an organism-level surface on two platforms, not a report, and it makes the unfinalized work-item state vocabulary (`Q-OPS-002`) a structural problem rather than a labelling one.
+**Finding 6 — `OPS-001` is the true home screen for six distinct staff roles.** Operations staff, verification staff, finance reviewer, claim reviewer, review integrity reviewer and clinic representative all begin work from a scoped queue. That makes the queue an organism-level surface on two platforms, not a report. `PO-UX-08` settled its state vocabulary, and the rule that matters for prominence is that escalated and overdue are flags rather than states: the queue must be able to show an item that is simultaneously in progress, escalated and overdue, because that is the row a supervisor most needs to find.
 
 ## 5. Content and Data Inventory
 
@@ -1002,15 +1040,15 @@ For this chain that means two things. Permission-denied is a designed state on e
 | ID | Severity | Constraint on UX |
 |---|---|---|
 | `Q-PLATFORM-001` | Blocker | Complete reconciliation against the authoritative SRS cannot be claimed. Journey coverage here is against the approved `.spec` baseline. |
-| `Q-BOOKING-001` | Major | The canonical booking state after an alternative expires or is declined must not be inferred. No terminal node may be drawn for it. |
-| `Q-BOOKING-002` | Major | The existing-booking review workflow after eligibility suspension has no defined actor, state effect, deadline or outcome. That branch cannot be completed. |
-| `Q-PLATFORM-003` | Major | No evidence binary-transfer contract exists. Every upload step is defined up to the point of transfer and no further. |
+| `Q-CATALOG-001`, `Q-ELIG-001` | Major | Production clinical content and classification policy are ungated. Constrains content, not structure. |
 | `Q-CATALOG-001`, `Q-ELIG-001` | Major | Production clinical content and classification policy are ungated. Constrains content, not structure. |
 | `Q-PLATFORM-002` | Major | Final retention and deletion periods await legal validation. |
-| `Q-OPS-001` | Major | Hosting topology unresolved; no base URL or environment can be fixed. |
+| `Q-OPS-001` | Major | Hosting topology unresolved; no base URL or environment can be fixed. Now also carries the storage, malware-scan, OTP and notification vendor selection deferred from `Q-PLATFORM-003`, none of which changes structure. |
 | `Q-PLATFORM-004` | Minor | Expected population versus engineering envelope. |
 
-New open items raised by this phase are recorded in `UPSTREAM_GAPS.md`: `Q-OPS-002`, `Q-PLATFORM-005`, `Q-PLATFORM-006`, `Q-PLATFORM-007`, `Q-IDENTITY-001`, `Q-REVIEWS-001`, `Q-BOOKING-003`, `Q-CLINICAL-001`, and `CONFLICT-BOOKING-001`.
+Open items still recorded in `UPSTREAM_GAPS.md`: `ASM-IDENTITY-001` and `ASM-ELIG-001`, plus the two structural observations in its section 6.
+
+Thirteen items this phase originally raised or inherited were resolved on 2026-08-25 by `.spec/decisions/PO-2026-08-25-ux-phase1-reconciliation.md` and no longer constrain the model: `Q-OPS-002`, `Q-PLATFORM-003`, `Q-PLATFORM-005`, `Q-PLATFORM-006`, `Q-PLATFORM-007`, `Q-IDENTITY-001`, `Q-REVIEWS-001`, `Q-BOOKING-001`, `Q-BOOKING-002`, `Q-BOOKING-003`, `Q-CLINICAL-001`, `CONFLICT-BOOKING-001` and `ASM-PLATFORM-001`. `UPSTREAM_GAPS.md` section 3 records each resolution.
 
 ## 8. What This Phase Did Not Decide
 

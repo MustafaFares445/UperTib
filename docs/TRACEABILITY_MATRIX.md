@@ -104,6 +104,7 @@ The columns describe functional impact, not UI layout.
 | `FR-BOOKING-001` — booking request and safety revalidation | `.spec FR.04.1.1` / SRS `FR-006` | `API-BOOKING-001`–`003`; booking state machine; slots/bookings | Action/Read | Action/Read | Oversight | Patient request → Clinic work → authoritative confirmation visible everywhere | `TC-BOOKING-001`, `TC-BOOKING-002`, `TC-BOOKING-004`, `TC-BOOKING-005`, `TC-BOOKING-007`, `TC-BOOKING-008`; `TC-ELIG-010` | `TASK-BOOKING-001`, `003`–`005`, `007`, `008` | Planned | — | Covered |
 | `FR-BOOKING-002` — cancellation and no-show | `.spec FR.04.1.2` / SRS `FR-033` | `API-BOOKING-005`; booking events/state | Action/Read | Action/Read | Oversight | Transition propagates; record is not hard-deleted | `TC-BOOKING-006`, `008` | `TASK-BOOKING-002`, `006`, `010` | Planned | Policy values versioned | Covered |
 | `FR-BOOKING-003` — provider response/alternative/deadline | `.spec FR.04.2.1` / SRS `FR-007` | `API-BOOKING-004`; shared provider response actions | Action/Read | Action | Oversight | Clinic response → Patient/Admin projection + post-commit notification | `TC-BOOKING-003`–`005`, `008` | `TASK-BOOKING-004`, `005`, `008`, `009` | Planned | — | Covered |
+| `FR-BOOKING-004` — governed booking reschedule | decision `PO-UX-15` | `API-BOOKING-006`, `API-BOOKING-007`, `SDC-BOOKING-002`; reschedule proposal machine | Action/Read | Action/Read | Oversight | Proposal is a separate record; original booking stays `CONFIRMED` until the counterparty accepts | `TC-BOOKING-009` | `TASK-BOOKING-011` | Planned | — | Covered |
 
 ## 5.5 Clinical Case and Treatment
 
@@ -167,6 +168,12 @@ The columns describe functional impact, not UI layout.
 | `FR-AUDIT-002` — classification/financial audit | `.spec FR.11.2.2` / SRS `FR-046` | eligibility snapshots + finance events | Read safe history | Read safe history | Scoped detail | All projections derive from immutable history | `TC-AUDIT-002`, `004`; `TC-ELIG-009`; `TC-FINANCE-005` | `TASK-AUDIT-001`, `TASK-ELIG-006`, `TASK-FINANCE-001` | Planned | — | Covered |
 | `FR-AUDIT-003` — idempotent sensitive commands | `.spec FR.12.1.1` / SRS `FR-045` | idempotency records; `ERR-AUDIT-001` | Action | Action | Action | Retry cannot duplicate state; timeout reconciles from source truth | `TC-AUDIT-003`, `005`; `TC-PLATFORM-009`, `010` | `TASK-AUDIT-002`, `003`; mutation tasks across platforms | Planned | — | Covered |
 
+## 5.12 Patient Attention and Notification
+
+| Requirement | Source | Design / Data / API | Patient | Clinic | Admin | Cross-Platform Behavior | Tests | Tasks | Implementation State | Gate / Open Item | Status |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| `FR-PLATFORM-001` — patient notification and attention center | decision `PO-UX-09` | `API-PLATFORM-002`; notification intent matrix; durable entries | Read/Action | Indirect | Oversight | Durable entry is a post-commit projection; reading changes no business state and delivery failure never changes obligation | `TC-PLATFORM-013` | `TASK-PLATFORM-013` | Planned | — | Covered |
+
 ---
 
 # 6. Non-Functional Requirements
@@ -177,7 +184,7 @@ The columns describe functional impact, not UI layout.
 | `NFR-PLATFORM-002` — availability, backup, recovery | `.spec NFR.02` | Infrastructure; Monitoring; recovery | service availability | Filament availability | recovery oversight | `TC-PLATFORM-007` | `TASK-PLATFORM-004`, `007`, `012` | Planned | Hosting `Q-OPS-001` | Covered |
 | `NFR-IDENTITY-001` — authorization and scope isolation | `.spec NFR.03` | `PERMISSIONS_MATRIX`; authorization tests | patient/guardian isolation | clinic/branch/case isolation | staff scope/SoD | `TC-IDENTITY-004`, `006`, `007`; `TC-PLATFORM-003` | `TASK-IDENTITY-001`, `002`, `004`, `006`, `007`; release gates | Planned | — | Covered |
 | `NFR-IDENTITY-002` — authentication/MFA/OTP safety | `.spec NFR.04` | OTP/MFA strategy; Configuration | OTP/session | privileged Clinic access | privileged Admin access | `TC-IDENTITY-001`–`005` | `TASK-IDENTITY-003`, `005`, `006` | Planned | Provider `Q-PLATFORM-003` | Covered |
-| `NFR-PLATFORM-003` — private file/evidence security | `.spec NFR.05` | ERD evidence; Infrastructure; Permissions | authorized evidence access | scoped upload/read | review/oversight | `TC-PLATFORM-001`–`003` | `TASK-PLATFORM-002`, `006`, `012` | Planned | Provider/transport `Q-PLATFORM-003` | Covered |
+| `NFR-PLATFORM-003` — private file/evidence security | `.spec NFR.05` | `API-PLATFORM-001`; evidence session machine; ERD evidence; Infrastructure; Permissions | authorized evidence access | scoped upload/read | review/oversight | `TC-PLATFORM-001`–`003` | `TASK-PLATFORM-002`, `006`, `012` | Planned | Interaction fixed by `PO-UX-17`; vendor selection `Q-OPS-001` | Covered |
 | `NFR-PLATFORM-004` — privacy, retention, deletion | `.spec NFR.06` | ERD legal holds; Policy; privacy ops | privacy semantics | scoped lifecycle | retention/legal hold operations | `TC-PLATFORM-004` | `TASK-PLATFORM-003`, `012` | Planned | Legal validation `Q-PLATFORM-002` | Covered |
 | `NFR-AUDIT-001` — audit/provenance integrity | `.spec NFR.07` | Audit design; Monitoring | attributed patient action | attributed provider action | reviewer/admin action | `TC-AUDIT-001`, `002`, `004`, `005` | `TASK-AUDIT-001`, `003` | Planned | — | Covered |
 | `NFR-AUDIT-002` — concurrency and idempotency | `.spec NFR.08` | booking/finance/claim tests; MySQL | safe retries | safe provider actions | safe operations | `TC-AUDIT-003`; `TC-BOOKING-007`; `TC-FINANCE-006`; `TC-PLATFORM-009` | `TASK-AUDIT-002`, `003`; booking/finance/claim tasks | Planned | — | Covered |
@@ -237,15 +244,15 @@ A capability above is not implementation-complete if only the initiating platfor
 
 Under the approved `.spec` continuation baseline:
 
-- Functional requirements traced: **51 / 51**.
+- Functional requirements traced: **53 / 53**.
 - Non-functional requirements traced: **14 / 14**.
-- Total FR/NFR rows: **65**.
-- Concrete test cases allocated in Testing Strategy: **82**.
-- Implementation tasks allocated: **82**.
-- API contracts allocated: **31**.
-- Stable error IDs allocated: **19**.
-- Requirement rows with `TASK-*` coverage: **65 / 65**.
-- Requirement rows with concrete `TC-*` coverage: **65 / 65**.
+- Total FR/NFR rows: **67**.
+- Concrete test cases allocated in Testing Strategy: **84**.
+- Implementation tasks allocated: **84**.
+- API contracts allocated: **36**.
+- Stable error IDs allocated: **20**.
+- Requirement rows with `TASK-*` coverage: **67 / 67**.
+- Requirement rows with concrete `TC-*` coverage: **67 / 67**.
 - Rows marked `Uncovered`: **0**.
 - Rows marked `Deprecated`: **0**.
 - Requirement rows marked `Blocked`: **0** under the explicitly approved `.spec` continuation baseline.

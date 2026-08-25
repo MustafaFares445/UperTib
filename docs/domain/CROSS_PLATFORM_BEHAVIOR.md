@@ -288,7 +288,15 @@ A current catalog/policy change never rewrites a previously accepted treatment/f
 
 ### 9.2 Existing-booking safety rule
 
-Automatic suspension blocks **new** affected bookings immediately. Existing bookings enter the configured review workflow. The canonical review workflow, decision authority, deadlines, state effect, and allowed outcomes for those existing bookings remain unresolved under `Q-BOOKING-002`; implementations and clients must not infer automatic cancellation, automatic confirmation, or another terminal outcome until that decision is approved.
+Automatic suspension blocks **new** affected bookings immediately. Each affected `CONFIRMED` booking moves to the non-terminal `ELIGIBILITY_REVIEW` state defined in `STATE_MACHINES.md` section 8.2 (`PO-UX-13`).
+
+| Platform | Projection while `ELIGIBILITY_REVIEW` is active |
+|---|---|
+| Patient | Sees a safe status meaning the appointment is on hold pending a check, with no penalty language and no instruction to attend |
+| Clinic | Sees the booking as not attendable; start and complete actions are unavailable while the suspension remains |
+| Admin/Operations | Sees an urgent work item with the controlling suspension reason and the review due time |
+
+The reserved slot is preserved temporarily. The review is due no later than two hours before the appointment, and becomes immediately due if the suspension occurs inside that window. The outcome is either return to `CONFIRMED` on a new authoritative `ELIGIBLE` evaluation, or `CANCELLED` with reason `PROVIDER_ELIGIBILITY_SUSPENDED` and no patient penalty. **No override of any role may make the booking attendable while the owning scope remains `SUSPENDED`,** and cancellation never transfers the patient to another provider automatically.
 
 ### 9.3 Classification visibility
 
@@ -325,7 +333,9 @@ Changes use the explicit lifecycle supported by canonical requirements, such as:
 
 - alternative proposal + patient acceptance;
 - cancellation + new request where applicable;
-- governed future rescheduling behavior if separately specified.
+- the governed `RescheduleProposal` workflow defined by `FR-BOOKING-004` and `STATE_MACHINES.md` section 8.3.
+
+While a reschedule proposal is `PENDING`, all three platforms continue to show the booking as `CONFIRMED` on its **original** slot. The proposed slot is never rendered as the appointment before the counterparty accepts, and acceptance is the only transition that moves the booking.
 
 If a desired modification is not represented by an approved state/action, it must not be implemented as an unrestricted edit form.
 
@@ -446,6 +456,8 @@ System automation may compute, expire, revalidate, dispatch, and create operatio
 
 ### 17.1 Notification intent versus delivery channel
 
+Patient-addressed intents additionally create a **durable in-system entry** under `FR-PLATFORM-001`, independent of any delivery channel. Reading or dismissing an entry changes no business state. Deadline-bound and action-required items must also be reachable from the patient attention area, so a failed or undelivered push, SMS, or email can never cause a missed obligation.
+
 This document uses **notification intent** because the concrete transport/provider is unresolved.
 
 A notification intent must minimally carry enough safe reference data to let the recipient open or refresh the authoritative record. It must not carry private evidence, OTP values, raw `I`, secrets, or unnecessary sensitive clinical/financial detail.
@@ -505,6 +517,9 @@ The application should bind notification intent generation to the committed busi
 | Evidence failure requiring intervention | Responsible verification/operations scope | Resolve missing/rejected/scan/expiry issue |
 | Eligibility recalculation failure | Operations/technical scope | Retry/investigate recalculation without inventing eligibility |
 | Automatic eligibility suspension requiring action | Provider verification/operations scope | Resolve invalid dependency and existing-booking review |
+| Confirmed booking enters `ELIGIBILITY_REVIEW` | Verification/operations scope, plus licensed clinical reviewer where the suspension reason requires clinical judgment | Reach the review outcome before the deadline; the appointment is not attendable meanwhile |
+| Legal-basis representation request submitted | Verification/admin scope | Assess relationship, legal basis and evidence; approval is the only path that creates the grant |
+| Guardian grant revoked where continuity of care needs follow-up | Operations scope | Arrange continuity; the revocation itself is never delayed or blocked |
 | Patient booking request | Owning Clinic/provider scope | Respond before provider deadline |
 | Booking exception/deadline breach | Operations scope | Investigate/escalate without force-confirm override |
 | Claim/refund submission | Claims review scope | Validate eligibility/evidence/deadline and assign reviewer |
@@ -518,6 +533,8 @@ The application should bind notification intent generation to the committed busi
 ### 18.2 Work completion rule
 
 A work item is complete when the underlying domain condition has been resolved or the workflow has reached its legitimate terminal/next state. Merely clicking "complete" on the work item cannot fabricate the resolution.
+
+Work-item lifecycle states are `OPEN`, `ASSIGNED`, `IN_PROGRESS`, `WAITING` and `COMPLETED`, owned by `STATE_MACHINES.md` section 20. Escalation and overdue are **flags and events, not states**: an item can be simultaneously `IN_PROGRESS`, escalated and overdue, and no projection may collapse those three independent facts into one status value.
 
 ## 19. Shared-Record Ownership Matrix
 
@@ -714,9 +731,7 @@ This contract intentionally does not invent behavior blocked by unresolved decis
 | `Q-PLATFORM-001` | Full SRS-v1.1 reconciliation cannot be claimed |
 | `Q-CATALOG-001` | Production service visibility remains clinically gated |
 | `Q-ELIG-001` | Production clinical calculation values cannot be treated as approved |
-| `Q-BOOKING-001` | Canonical outcome when an alternative proposal expires or is rejected remains unresolved; clients and implementation must not infer a terminal or rollback state |
-| `Q-BOOKING-002` | Existing-booking review workflow, decision authority, deadlines, state effect, and outcomes after eligibility suspension remain unresolved |
-| `Q-PLATFORM-003` | Concrete OTP, notification, malware-scan, private-storage/evidence-transfer providers remain unresolved; use provider-neutral intents/interfaces |
+| `Q-PLATFORM-003` | Resolved 2026-08-25 for interaction purposes by `PO-UX-17`; vendor selection folded into `Q-OPS-001`. Continue to use provider-neutral intents/interfaces |
 | `Q-OPS-001` | Hosting/provider/topology remains unresolved, including managed-versus-self-hosted MySQL deployment, HA/PITR implementation, and real-time delivery infrastructure; the production relational engine is MySQL |
 | `Q-PLATFORM-002` | Physical retention/deletion periods require legal validation |
 

@@ -79,6 +79,16 @@ The UX pipeline must reference these IDs in Phase 4 screen/widget specs under `D
 
 ---
 
+## SDC-IDENTITY-005 — Admin Legal-Basis Representation Verification
+
+**Actors:** authorized verification staff / admin.  
+**Requirements:** FR-IDENTITY-003, FR-AUDIT-001, NFR-IDENTITY-001.  
+**Projection:** request ID and state, subject patient identification, guardian applicant identity, declared relationship and legal basis, requested actions/data scope/purpose, submitted evidence references and their validation state, review history.  
+**Commands:** open request; assess evidence; request changes with itemised reasons; approve, creating the `LEGAL_BASIS` grant with explicit patient, grantee, actions, data scope, purpose, effective period, evidence and approving reviewer; reject with a required reason; revoke an existing legal-basis grant through the authorized workflow.  
+**Rules:** approval is the **only** path that creates the grant — submission grants nothing, and the applicant can never self-authorize (`PO-UX-14`). Historical guardian actions remain attributed to the guardian after revocation.  
+**Scope:** assigned verification queue and subject scope only.  
+**Errors/states:** `ERR-IDENTITY-002`, `ERR-PLATFORM-005`; grant lifecycle owned by `PERMISSIONS_MATRIX.md` section 6.
+
 # 4. Catalog, Eligibility, and Verification
 
 ## SDC-CATALOG-001 — Admin Catalog Governance Workspace
@@ -114,6 +124,16 @@ The UX pipeline must reference these IDs in Phase 4 screen/widget specs under `D
 
 ---
 
+## SDC-ELIG-004 — Admin Booking Eligibility-Review Workspace
+
+**Actors:** authorized verification/operations staff; licensed clinical reviewer where the suspension reason requires clinical judgment.  
+**Requirements:** FR-ELIG-003, FR-BOOKING-002, FR-OPS-001.  
+**Projection:** affected bookings in `ELIGIBILITY_REVIEW`, controlling suspension reason and owning eligibility scope, review due time, appointment time, whether clinical judgment is required, remediation progress, patient/clinic notification state.  
+**Commands:** record verification remediation; request the clinical reviewer's assessment; record the outcome once a new authoritative eligibility evaluation exists.  
+**Rules:** the workspace **cannot** make the appointment attendable. Its only outcomes are the ones the state machine allows — return to `CONFIRMED` when a new evaluation is `ELIGIBLE`, or `CANCELLED` with reason `PROVIDER_ELIGIBILITY_SUSPENDED` at deadline expiry. **No override exists while the owning scope remains `SUSPENDED`** (`PO-UX-13`). The review due time is never later than two hours before the appointment.  
+**Scope:** assigned provider/branch/subject-matter scope only.  
+**Errors/states:** booking states owned by `STATE_MACHINES.md` section 8.2.
+
 # 5. Booking and Clinical Work
 
 ## SDC-BOOKING-001 — Clinic Booking Inbox and Response
@@ -123,6 +143,16 @@ The UX pipeline must reference these IDs in Phase 4 screen/widget specs under `D
 **Projection:** scoped booking requests, service, patient-safe identity/context, branch, requested slot, response deadline, current booking state, alternative proposal if any, capacity/readiness summary.  
 **Commands:** accept; reject with reason; propose alternative; cancel when policy/state permits; record no-show after threshold.  
 **Rules:** every confirmation revalidates eligibility/readiness/capacity; authoritative booking state is shared with Patient/Admin.
+
+## SDC-BOOKING-002 — Clinic Reschedule Proposal Workspace
+
+**Actors:** authorized clinic/provider representative.  
+**Requirements:** FR-BOOKING-004, FR-BOOKING-001, NFR-AUDIT-002.  
+**Projection:** confirmed bookings eligible for reschedule, any existing `PENDING` proposal with its initiator/proposed slot/response deadline, the **unchanged** current booking slot, available target slots, reschedule history.  
+**Commands:** propose a reschedule; respond to a patient-initiated proposal by accepting or declining; withdraw the clinic's own pending proposal.  
+**Rules:** while a proposal is `PENDING` the projection must continue to present the **original** slot as the appointment; the proposed slot is never shown as confirmed. A party cannot respond to its own proposal. Acceptance revalidates eligibility and new-slot capacity before the atomic move and old-slot release. No proposal may be created against a booking in `ELIGIBILITY_REVIEW`. Generic editing of booking date/provider/service is not offered (`PO-UX-15`).  
+**Scope:** exact provider/branch scope only.  
+**Errors/states:** `ERR-BOOKING-001`, `ERR-BOOKING-002`, `ERR-BOOKING-003`, `ERR-ELIG-001`; proposal states owned by `STATE_MACHINES.md` section 8.3.
 
 ## SDC-CLINICAL-001 — Clinic Case and Treatment Workspace
 
@@ -144,7 +174,7 @@ The UX pipeline must reference these IDs in Phase 4 screen/widget specs under `D
 **Commands:** report external payment/refund/compensation event; confirm/dispute when actor is authorized; create correction/reversal event; finance reviewer resolves assigned record-review work.  
 **Boundary:** no command authorizes/captures/holds/transfers/settles money.
 
-## SDC-REVIEWS-001 — Review Integrity and Provider Appeal Workspace
+## SDC-REVIEWS-001 — Review Integrity and Appeal Workspace
 
 **Actors:** authorized clinic/provider appellant; review-integrity staff.  
 **Requirements:** FR-REVIEWS-001–002.  
@@ -168,8 +198,10 @@ The UX pipeline must reference these IDs in Phase 4 screen/widget specs under `D
 
 **Actors:** authorized staff/reviewers.  
 **Requirements:** FR-OPS-001.  
-**Projection:** work item ID/type, linked resource/case, state, priority, due time, responsibility scope, blocking reason, assignment, safe summary.  
-**Commands:** claim/assign where allowed; start; complete with outcome; escalate; reopen where policy permits.  
+**Projection:** work item ID/type, linked resource/case, lifecycle state, escalated flag, overdue flag, priority, due time, responsibility scope, blocking reason, assignment, safe summary.  
+**Commands:** claim/assign where allowed; start; move to waiting with a named blocking reason; resume; complete with outcome; escalate; reopen where policy permits.  
+**States:** `OPEN`, `ASSIGNED`, `IN_PROGRESS`, `WAITING`, `COMPLETED`, owned by `STATE_MACHINES.md` section 20 (`PO-UX-08`).  
+**Rules:** escalated and overdue are **flags, not states** — an item can be `IN_PROGRESS`, escalated and overdue at once, and the projection must expose all three independently rather than as one status value. Deadline breach is derived from `due_at`. Completing an item whose domain condition is unresolved is refused.  
 **Scope:** only work within active role/organization/subject-matter grants.
 
 ## SDC-OPS-002 — Operational Reporting Projection
@@ -213,10 +245,10 @@ This namespace is append-only. Highest allocated values in this file:
 
 | Domain | Highest SDC |
 |---|---:|
-| IDENTITY | 004 |
+| IDENTITY | 005 |
 | CATALOG | 001 |
-| ELIG | 003 |
-| BOOKING | 001 |
+| ELIG | 004 |
+| BOOKING | 002 |
 | CLINICAL | 001 |
 | FINANCE | 001 |
 | REVIEWS | 001 |

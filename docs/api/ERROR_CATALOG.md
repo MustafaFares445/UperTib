@@ -104,6 +104,19 @@ The later UX pipeline decides visual treatment and component choice.
 **Surface:** Action banner/full-page generic error; diagnostic detail is silent-log-only.  
 **Operational rule:** Emit correlation-safe logs/metrics without protected payloads.
 
+### ERR-PLATFORM-005 — Evidence Rejected or Failed Validation
+
+**Stable code:** `EVIDENCE_REJECTED`  
+**HTTP status:** `422 Unprocessable Entity`  
+**Requirements:** NFR-PLATFORM-003, NFR-PLATFORM-006  
+**Client-facing message:** `تعذر قبول الملف المرفوع. يرجى مراجعة نوع الملف وحجمه ثم إعادة المحاولة.`  
+**When raised:** A finalized evidence transfer fails allowed-type, MIME/magic/decode, or size validation, or fails the required malware scan. Owned by the `REJECTED` state in `STATE_MACHINES.md` section 21.1.  
+**APIs:** API-PLATFORM-001.  
+**Retryable:** No for the same file as submitted. The user must correct or replace the file; a transient transfer failure is `FAILED_RETRYABLE` in the session machine and does **not** raise this error.  
+**Surface:** Inline field validation on the evidence item, with a safe actionable reason.  
+**Privacy rule:** The reason must never expose scanner internals, scanner vendor detail, private storage paths, or signed URLs. Detailed scan output is silent-log-only.  
+**Integrity rule:** A rejected file is never referenceable by `evidence_ids` and never leaves quarantine.
+
 ## 5. Identity Errors
 
 ### ERR-IDENTITY-001 — Authentication Required
@@ -214,10 +227,10 @@ The later UX pipeline decides visual treatment and component choice.
 **Requirements:** FR-BOOKING-002–003  
 **Client-facing message:** `لا يمكن تنفيذ هذا الإجراء في الحالة الحالية.`  
 **When raised:** The requested booking transition is not allowed from the authoritative current lifecycle state or applicable policy.  
-**APIs:** API-BOOKING-004, API-BOOKING-005; API-IDENTITY-005 currently references this conditionally if a protected transition policy blocks revocation.  
+**APIs:** API-BOOKING-004, API-BOOKING-005, API-BOOKING-006, API-BOOKING-007.  
 **Retryable:** No until authoritative state/policy changes.  
 **Surface:** Action banner/unavailable-state message.  
-**Contract note:** The cross-domain reference from API-IDENTITY-005 is retained because it exists in the current `API_CONTRACTS.md`; `STATE_MACHINES.md` should confirm whether that reference remains valid or should later be replaced by an identity-specific error without reusing this ID.
+**Contract note:** This error is **booking-domain only**. `PO-UX-11` removed the former conditional reference from `API-IDENTITY-005`: a guardian-grant revocation is always immediate and no booking state may block it, so no booking error may surface on a representation surface. `CONFLICT-BOOKING-001` is resolved.
 
 ### ERR-BOOKING-003 — Booking or Provider-Response Deadline Expired
 
@@ -226,10 +239,10 @@ The later UX pipeline decides visual treatment and component choice.
 **Requirements:** FR-BOOKING-003  
 **Client-facing message:** `انتهت المهلة المتاحة لهذا الإجراء.`  
 **When raised:** The provider response/alternative acceptance or other documented booking action occurs after its policy-governed deadline.  
-**APIs:** API-BOOKING-004.  
+**APIs:** API-BOOKING-004, API-BOOKING-007.  
 **Retryable:** No for the expired action; follow the current authoritative booking state/next available action.  
 **Surface:** Unavailable-state message with current booking status.  
-**State rule:** For alternative expiry or explicit patient decline, this error does not define the resulting booking state. That outcome remains unresolved under `Q-BOOKING-001`; clients must not infer `REJECTED`, `CANCELLED`, or return-to-`REQUESTED` from this error alone.
+**State rule:** Alternative expiry and explicit patient decline both close the booking as `CANCELLED` with reason `ALTERNATIVE_EXPIRED` or `ALTERNATIVE_DECLINED` (`STATE_MACHINES.md` section 8). This is an unconfirmed request closure carrying no patient penalty, so clients must present it as "the appointment was not confirmed" and offer a new booking request rather than a punitive cancellation message. A late acceptance receives this error; the authoritative state is already `CANCELLED`. `Q-BOOKING-001` is resolved.
 
 ## 9. Clinical Error
 
@@ -239,11 +252,11 @@ The later UX pipeline decides visual treatment and component choice.
 **HTTP status:** `409 Conflict`  
 **Requirements:** FR-CLINICAL-001–002, FR-FINANCE-001, NFR-AUDIT-003  
 **Client-facing message:** `لا يمكن قبول الخطة العلاجية بصيغتها الحالية. يرجى مراجعة البيانات أو انتظار تحديث الخطة.`  
-**When raised:** The plan/version is stale, not in an acceptable state, or lacks required service, stage, price, terms, protection-state, or governing policy information.  
+**When raised:** The plan/version is stale, expired, not in an acceptable state, or lacks required service, stage, price, terms, protection-state, or governing policy information. Per `PO-UX-16` a proposal is refused once its policy-governed `expires_at` has passed (V1 default 7 calendar days), and also refused earlier when a material governing fact changed — the relevant plan version, service, price or financial terms, eligibility state, or a required policy/snapshot input.  
 **APIs:** API-CLINICAL-003.  
-**Retryable:** No until a valid plan/version exists.  
+**Retryable:** No. The clinician must issue a new plan version; retrying the same expired proposal can never succeed.  
 **Surface:** Unavailable-state/action banner; do not imply that UberTib authored the treatment decision.  
-**Integrity rule:** A failed acceptance creates no accepted clinical or financial snapshot.
+**Integrity rule:** A failed acceptance creates no accepted clinical or financial snapshot. Expiry applies only to a proposal that was never accepted; an already-accepted snapshot is never invalidated by a later expiry.
 
 ## 10. Financial Record Error
 
@@ -267,11 +280,12 @@ The later UX pipeline decides visual treatment and component choice.
 **HTTP status:** `409 Conflict`  
 **Requirements:** FR-REVIEWS-001–002  
 **Client-facing message:** `لا يمكن تنفيذ إجراء التقييم هذا للحالة الحالية أو ضمن المهلة الحالية.`  
-**When raised:** The experience is not a verified completed eligible experience, an active review already exists where only one is allowed, or the appeal/action is outside the applicable policy eligibility/window.  
+**When raised:** The experience is not a verified completed eligible experience, an active review already exists where only one is allowed, the actor is not an authorized affected party for this appeal, or the appeal/action is outside the applicable policy eligibility/window.  
 **APIs:** API-REVIEWS-001, API-REVIEWS-002.  
 **Retryable:** No until eligibility/state changes; deadline expiry is not solved by blind retry.  
 **Surface:** Unavailable-state/action banner.  
-**Integrity rule:** `R` remains separate from S/P/H/I and this error never changes scientific classification.
+**Integrity rule:** `R` remains separate from S/P/H/I and this error never changes scientific classification.  
+**Appellant rule:** Per `PO-UX-10` both sides can be authorized affected parties — the authoring patient or guardian may appeal a decision that rejects, retires, or unpublishes their review, and the affected provider or clinic may appeal review eligibility or policy-compliance decisions affecting them. An appeal that seeks to edit rating content rather than contest eligibility, verification, or policy compliance receives this error. `Q-REVIEWS-001` is resolved.
 
 ## 12. Claim and Refund-Request Errors
 
@@ -306,6 +320,7 @@ The later UX pipeline decides visual treatment and component choice.
 | ERR-PLATFORM-002 | No | Refresh only when context may legitimately change |
 | ERR-PLATFORM-003 | After retry window | No |
 | ERR-PLATFORM-004 | Conditional/backoff | Mutation retry uses same idempotency key |
+| ERR-PLATFORM-005 | No | Correct or replace the evidence file |
 | ERR-IDENTITY-001 | After authentication | Authenticate/recover session |
 | ERR-IDENTITY-002 | No | Authorization/context must change |
 | ERR-IDENTITY-003 | After throttle window | Wait |
@@ -340,7 +355,7 @@ All remaining `ERR-*` entries belong to proposed APIs and must be verified again
 
 This file canonically defines the `ERR-*` IDs reserved by `API_CONTRACTS.md`:
 
-- `ERR-PLATFORM-001`–`ERR-PLATFORM-004`
+- `ERR-PLATFORM-001`–`ERR-PLATFORM-005`
 - `ERR-IDENTITY-001`–`ERR-IDENTITY-004`
 - `ERR-AUDIT-001`
 - `ERR-ELIG-001`–`ERR-ELIG-002`

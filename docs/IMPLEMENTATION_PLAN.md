@@ -93,14 +93,14 @@ The three detailed plans currently allocate **82 implementation tasks**.
 
 | Domain | Allocated task IDs | Highest allocated |
 |---|---|---:|
-| PLATFORM | `TASK-PLATFORM-001`–`TASK-PLATFORM-012` | 012 |
+| PLATFORM | `TASK-PLATFORM-001`–`TASK-PLATFORM-013` | 013 |
 | IDENTITY | `TASK-IDENTITY-001`–`TASK-IDENTITY-007` | 007 |
 | AUDIT | `TASK-AUDIT-001`–`TASK-AUDIT-003` | 003 |
 | POLICY | `TASK-POLICY-001` | 001 |
 | CATALOG | `TASK-CATALOG-001`–`TASK-CATALOG-002` | 002 |
 | OPS | `TASK-OPS-001`–`TASK-OPS-004` | 004 |
 | ELIG | `TASK-ELIG-001`–`TASK-ELIG-011` | 011 |
-| BOOKING | `TASK-BOOKING-001`–`TASK-BOOKING-010` | 010 |
+| BOOKING | `TASK-BOOKING-001`–`TASK-BOOKING-011` | 011 |
 | CLINICAL | `TASK-CLINICAL-001`–`TASK-CLINICAL-009` | 009 |
 | FINANCE | `TASK-FINANCE-001`–`TASK-FINANCE-011` | 011 |
 | REVIEWS | `TASK-REVIEWS-001`–`TASK-REVIEWS-003` | 003 |
@@ -329,7 +329,7 @@ Implement one transactional booking lifecycle shared by Clinic, Patient, and Adm
 
 ### Patient booking
 
-- `TASK-BOOKING-007`–`TASK-BOOKING-010`.
+- `TASK-BOOKING-007`–`TASK-BOOKING-011`.
 
 ### Admin operational visibility
 

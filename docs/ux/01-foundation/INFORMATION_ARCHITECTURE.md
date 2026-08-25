@@ -4,7 +4,7 @@
 **Baseline:** 2026-08-25
 **Input mode:** Docs-Partial — no screen inventory existed to inherit; every `SCR-*` here is derived
 **Platform profiles:** Patient = C · Clinic/Doctor = A · Admin = A
-**Screens defined:** 155 — Patient 44 · Clinic 54 · Admin 57
+**Screens defined:** 162 — Patient 47 · Clinic 56 · Admin 59
 **Registry:** `docs/README.md` — `SCR-*` allocations appended by this phase
 
 ## 1. Purpose and Authority
@@ -43,7 +43,7 @@ Modals, drawers, sheets and wizard steps are screens when they own state or acti
 
 | Value | Meaning here |
 |---|---|
-| **New** | No implementation exists. Applies to all 155 screens. |
+| **New** | No implementation exists. Applies to all 162 screens. |
 | **Existing** | Implemented business UI. Zero screens qualify. |
 | **Change required** | Existing UI needing modification. Zero screens qualify. |
 
@@ -113,9 +113,11 @@ The platform paradigm is native mobile. No web sidebar is ported. No hover state
 | My care | `SCR-CLINICAL-001` | Cases are the container for plans, timeline, finance, reviews and claims |
 | Profile | `SCR-IDENTITY-004` | Identity, representation, and pending submissions |
 
+**No fifth destination.** `PO-UX-09` confirmed the notification centre and explicitly declined a fifth primary tab for it. The reasoning holds up against the confirmed patient context: an episodic user who cannot rely on learned navigation is served better by *what needs me now* on Home than by a tab whose position they would have to remember. A notification tab would also compete with Home for the same job while carrying weaker information — a list of what happened rather than a list of what is required.
+
 **Secondary navigation** is contextual: within a case, within a booking, within a claim. Finance, reviews and claims are reached through their case rather than as top-level destinations, because every one of them is case-scoped in the data model and a top-level entry would require the patient to pick a case first anyway.
 
-**Utility** is reached from Profile: representation grants, active patient context, pending and failed submissions.
+**Utility** is reached from two places. From the app chrome: `SCR-PLATFORM-009` the notification centre, via a persistent bell available on every screen. From Profile: representation grants including `SCR-IDENTITY-037` add dependent, active patient context, and pending or failed submissions.
 
 ### 3.2 Landing screen per role
 
@@ -162,9 +164,9 @@ Ordered by the frequency-by-criticality plot, not by domain alphabet.
 | Group | Screens | Why here |
 |---|---|---|
 | *(ungrouped root)* | `SCR-PLATFORM-003` dashboard, `SCR-OPS-001` work feed | `JTBD-OPS-001` is daily-and-blocking for this actor |
-| Bookings | `SCR-BOOKING-008` through `SCR-BOOKING-013`, `SCR-BOOKING-007` | `JTBD-BOOKING-004` is daily-and-blocking and deadline-bound |
+| Bookings | `SCR-BOOKING-008` through `SCR-BOOKING-013`, `SCR-BOOKING-007`, `SCR-BOOKING-017` | `JTBD-BOOKING-004` is daily-and-blocking and deadline-bound; `JTBD-BOOKING-008` reschedule is monthly but belongs with the booking it changes |
 | Cases and treatment | `SCR-CLINICAL-008` through `SCR-CLINICAL-017` | `JTBD-CLINICAL-001` and `JTBD-CLINICAL-003` are daily-and-blocking |
-| Services and eligibility | `SCR-ELIG-006` through `SCR-ELIG-013` | Daily while activating, then change-driven |
+| Services and eligibility | `SCR-ELIG-006` through `SCR-ELIG-013`, `SCR-ELIG-021` | Daily while activating, then change-driven. `SCR-ELIG-021` sits here rather than under Bookings because its cause is an eligibility suspension and its remedy is a dependency fix |
 | Financial records | `SCR-FINANCE-006` through `SCR-FINANCE-009` | Weekly |
 | Reviews and claims | `SCR-REVIEWS-005`, `SCR-REVIEWS-006`, `SCR-CLAIMS-006` through `SCR-CLAIMS-008` | Rare |
 | Clinic settings | `SCR-IDENTITY-021` through `SCR-IDENTITY-024`, `SCR-IDENTITY-026` | Rare, and correctly buried |
@@ -200,7 +202,7 @@ Panel id `admin`, path `/admin` — both verified in `app/Providers/Filament/Adm
 |---|---|---|
 | *(ungrouped root)* | `SCR-PLATFORM-004` dashboard, `SCR-OPS-002` work queue, `SCR-OPS-003` work item | `JTBD-OPS-001` is the daily-and-blocking home for six staff roles |
 | Onboarding and providers | `SCR-IDENTITY-027` through `SCR-IDENTITY-032`, `SCR-IDENTITY-036` | `JTBD-IDENTITY-009` is daily-and-blocking |
-| Verification and eligibility | `SCR-ELIG-014` through `SCR-ELIG-020` | `JTBD-ELIG-007` is daily-and-blocking |
+| Verification and eligibility | `SCR-ELIG-014` through `SCR-ELIG-020`, `SCR-ELIG-022` | `JTBD-ELIG-007` is daily-and-blocking. `SCR-ELIG-022` is rare but deadline-bound and safety-critical, so it is reachable from the queue as well as from this group |
 | Claims and disputes | `SCR-CLAIMS-009` through `SCR-CLAIMS-013` | `JTBD-CLAIMS-005` is daily-and-blocking |
 | Financial records | `SCR-FINANCE-010` through `SCR-FINANCE-012` | `JTBD-FINANCE-005` is daily |
 | Bookings and cases | `SCR-BOOKING-014`, `SCR-BOOKING-015`, `SCR-CLINICAL-018`, `SCR-CLINICAL-019` | Daily to weekly oversight |
@@ -208,7 +210,7 @@ Panel id `admin`, path `/admin` — both verified in `app/Providers/Filament/Adm
 | Catalog and launch | `SCR-CATALOG-003` through `SCR-CATALOG-009`, `SCR-OPS-006` | Rare, and rare-and-blocking — needs to be discoverable, not memorised |
 | Policy | `SCR-POLICY-001` through `SCR-POLICY-004` | Rare |
 | Audit and integrity | `SCR-AUDIT-001` through `SCR-AUDIT-004` | Rare, urgent when used |
-| Access and staff | `SCR-IDENTITY-033` through `SCR-IDENTITY-035` | Weekly |
+| Access and staff | `SCR-IDENTITY-033` through `SCR-IDENTITY-035`, `SCR-IDENTITY-038` | Weekly. `SCR-IDENTITY-038` legal-representation verification is rare and reached primarily from the work queue |
 | Reporting | `SCR-OPS-004`, `SCR-OPS-005` | Weekly |
 | Platform operations | `SCR-PLATFORM-006` through `SCR-PLATFORM-008` | Weekly to monthly |
 
@@ -271,6 +273,9 @@ flowchart TD
     subgraph HOME["Home"]
         SCR_PLATFORM_001["SCR-PLATFORM-001 Needs attention"]
     end
+    subgraph UTIL["Utility — app chrome"]
+        SCR_PLATFORM_009["SCR-PLATFORM-009 Notification centre"]
+    end
     subgraph BOOK["Booking"]
         SCR_BOOKING_001["SCR-BOOKING-001 Slot selection"]
         SCR_BOOKING_002["SCR-BOOKING-002 Request review and submit"]
@@ -278,6 +283,7 @@ flowchart TD
         SCR_BOOKING_004["SCR-BOOKING-004 Booking detail"]
         SCR_BOOKING_005["SCR-BOOKING-005 Alternative decision"]
         SCR_BOOKING_006["SCR-BOOKING-006 Cancel booking"]
+        SCR_BOOKING_016["SCR-BOOKING-016 Reschedule request"]
     end
     subgraph CARE["My care"]
         SCR_CLINICAL_001["SCR-CLINICAL-001 My cases"]
@@ -313,6 +319,7 @@ flowchart TD
         SCR_IDENTITY_007["SCR-IDENTITY-007 Grant detail"]
         SCR_IDENTITY_008["SCR-IDENTITY-008 Active patient context"]
         SCR_PLATFORM_002["SCR-PLATFORM-002 Pending submissions"]
+        SCR_IDENTITY_037["SCR-IDENTITY-037 Add dependent"]
     end
     SCR_IDENTITY_001 --> SCR_CATALOG_001
     SCR_IDENTITY_001 --> SCR_IDENTITY_002
@@ -366,6 +373,13 @@ flowchart TD
     SCR_IDENTITY_005 --> SCR_IDENTITY_006
     SCR_IDENTITY_005 --> SCR_IDENTITY_007
     SCR_IDENTITY_005 --> SCR_IDENTITY_008
+    SCR_IDENTITY_005 --> SCR_IDENTITY_037
+    SCR_BOOKING_004 --> SCR_BOOKING_016
+    SCR_PLATFORM_001 --> SCR_PLATFORM_009
+    SCR_PLATFORM_009 --> SCR_BOOKING_004
+    SCR_PLATFORM_009 --> SCR_BOOKING_016
+    SCR_PLATFORM_009 --> SCR_CLINICAL_003
+    SCR_PLATFORM_009 --> SCR_REVIEWS_004
 ```
 
 ### 6.2 Clinic / Doctor panel sitemap
@@ -399,6 +413,7 @@ flowchart TD
         SCR_BOOKING_011["SCR-BOOKING-011 Clinic schedule"]
         SCR_BOOKING_012["SCR-BOOKING-012 Provider cancellation"]
         SCR_BOOKING_013["SCR-BOOKING-013 Record no-show"]
+        SCR_BOOKING_017["SCR-BOOKING-017 Reschedule proposals"]
     end
     subgraph CCASE["Cases and treatment"]
         SCR_CLINICAL_008["SCR-CLINICAL-008 Clinic cases"]
@@ -421,6 +436,7 @@ flowchart TD
         SCR_ELIG_011["SCR-ELIG-011 Eligibility status"]
         SCR_ELIG_012["SCR-ELIG-012 Blocker detail"]
         SCR_ELIG_013["SCR-ELIG-013 Suspension notice"]
+        SCR_ELIG_021["SCR-ELIG-021 Bookings on eligibility hold"]
     end
     subgraph CMONEY["Financial records"]
         SCR_FINANCE_006["SCR-FINANCE-006 Case financial workspace"]
@@ -475,6 +491,9 @@ flowchart TD
     SCR_BOOKING_009 --> SCR_BOOKING_010
     SCR_BOOKING_011 --> SCR_BOOKING_012
     SCR_BOOKING_011 --> SCR_BOOKING_013
+    SCR_BOOKING_011 --> SCR_BOOKING_017
+    SCR_ELIG_013 --> SCR_ELIG_021
+    SCR_ELIG_021 --> SCR_ELIG_012
     SCR_BOOKING_011 --> SCR_CLINICAL_009
     SCR_PLATFORM_003 --> SCR_BOOKING_011
     SCR_CLINICAL_008 --> SCR_CLINICAL_009
@@ -536,6 +555,7 @@ flowchart TD
         SCR_ELIG_018["SCR-ELIG-018 Decision inspector"]
         SCR_ELIG_019["SCR-ELIG-019 Eligibility policy inputs"]
         SCR_ELIG_020["SCR-ELIG-020 Suspension operations"]
+        SCR_ELIG_022["SCR-ELIG-022 Booking eligibility review"]
     end
     subgraph ACLM["Claims and disputes"]
         SCR_CLAIMS_009["SCR-CLAIMS-009 Claims queue"]
@@ -586,6 +606,7 @@ flowchart TD
         SCR_IDENTITY_033["SCR-IDENTITY-033 Staff accounts and roles"]
         SCR_IDENTITY_034["SCR-IDENTITY-034 Staff scope grant"]
         SCR_IDENTITY_035["SCR-IDENTITY-035 Guardian grant oversight"]
+        SCR_IDENTITY_038["SCR-IDENTITY-038 Legal representation verification"]
     end
     subgraph AREP["Reporting and platform operations"]
         SCR_OPS_004["SCR-OPS-004 Operational reports"]
@@ -603,6 +624,8 @@ flowchart TD
     SCR_OPS_003 --> SCR_FINANCE_011
     SCR_OPS_003 --> SCR_REVIEWS_008
     SCR_OPS_003 --> SCR_ELIG_020
+    SCR_OPS_003 --> SCR_ELIG_022
+    SCR_OPS_003 --> SCR_IDENTITY_038
     SCR_PLATFORM_004 --> SCR_IDENTITY_027
     SCR_IDENTITY_027 --> SCR_IDENTITY_028
     SCR_IDENTITY_028 --> SCR_IDENTITY_029
@@ -617,6 +640,7 @@ flowchart TD
     SCR_ELIG_015 --> SCR_ELIG_018
     SCR_ELIG_018 --> SCR_ELIG_019
     SCR_ELIG_018 --> SCR_ELIG_020
+    SCR_ELIG_020 --> SCR_ELIG_022
     SCR_PLATFORM_004 --> SCR_CLAIMS_009
     SCR_CLAIMS_009 --> SCR_CLAIMS_010
     SCR_CLAIMS_010 --> SCR_CLAIMS_011
@@ -655,6 +679,7 @@ flowchart TD
     SCR_PLATFORM_004 --> SCR_IDENTITY_033
     SCR_IDENTITY_033 --> SCR_IDENTITY_034
     SCR_PLATFORM_004 --> SCR_IDENTITY_035
+    SCR_IDENTITY_035 --> SCR_IDENTITY_038
     SCR_PLATFORM_004 --> SCR_OPS_004
     SCR_OPS_004 --> SCR_OPS_005
     SCR_PLATFORM_004 --> SCR_PLATFORM_008
@@ -797,7 +822,7 @@ Shortest authenticated path to submit a booking: `SCR-PLATFORM-001` → `SCR-ELI
 
 **Finding 4 — `SCR-CLINICAL-012` at depth 5 is the deepest Clinic screen and it is a commit step, not browsing.** Author → stages and pricing → propose is an intentional sequence with an irreversible outcome at the end: proposing a plan makes it visible to the patient for acceptance. Depth here is a deliberate friction that the frequency-by-criticality plot supports, since the job is daily but the individual proposal is a considered act.
 
-**Finding 5 — Admin depth is flat by design.** 18 of 57 screens sit at depth 1 and 35 at depth 1 or 2. Eleven roles land on the same dashboard and each needs its own working surface within one or two hops. The alternative — a role-specific landing screen per role — was rejected because navigation visibility already follows active grants, so a shared dashboard with grant-filtered content achieves the same result without eleven near-duplicate screens.
+**Finding 5 — Admin depth is flat by design.** 18 of 59 screens sit at depth 1 and 35 at depth 1 or 2. Eleven roles land on the same dashboard and each needs its own working surface within one or two hops. The alternative — a role-specific landing screen per role — was rejected because navigation visibility already follows active grants, so a shared dashboard with grant-filtered content achieves the same result without eleven near-duplicate screens.
 
 ## 8. Labelling and Taxonomy
 
@@ -832,11 +857,11 @@ Patient-facing labels above state *required meaning*, not final strings. Final A
 | Onboarding checklist | `SCR-IDENTITY-021` | Named by `PO-UX-02` approval effect 6 and `SDC-IDENTITY-004` projection. |
 | Pending submissions | `SCR-PLATFORM-002` | The user-visible face of `NFR-PLATFORM-006` pending, failed, retrying and completed states plus `idempotency_records`. |
 
-### 8.3 Terminology conflict found
+### 8.3 Terminology conflict — resolved
 
-**`CONFLICT-BOOKING-001`** — `ERR-BOOKING-002` is labelled "Booking action invalid for current state" and carries the machine code `BOOKING_ACTION_NOT_ALLOWED`, yet `API-IDENTITY-005` (revoke a guardian grant) references it as the failure for a blocked revocation. Surfacing a booking-domain error and a booking-domain recovery path on a representation-management screen is a defect: wrong domain, wrong mental model, wrong next action.
+**`CONFLICT-BOOKING-001` is resolved.** Phase 1 found that `API-IDENTITY-005` (revoke a guardian grant) referenced `ERR-BOOKING-002`, which is labelled "Booking action invalid for current state" and carries the machine code `BOOKING_ACTION_NOT_ALLOWED`. Surfacing a booking-domain error and a booking-domain recovery path on a representation-management screen would have been wrong domain, wrong mental model, wrong next action.
 
-`ERROR_CATALOG.md` section 8 already flags this reference for confirmation. Recorded in `UPSTREAM_GAPS.md` as `GAP-013`. `SCR-IDENTITY-007` documents the affected surface.
+`PO-UX-11` removed the reference rather than renaming the error, and did so by settling the underlying product question: **a guardian grant may always be revoked immediately, and no booking state may block it.** The conflict was therefore a symptom of an unresolved rule, not a labelling accident. `SCR-IDENTITY-007` now documents an unconditional revocation, and continuity of care is handled by an operational work item instead of by refusing the patient's request.
 
 ### 8.4 Naming rules for the remaining phases
 
@@ -955,7 +980,7 @@ Every `Allow` and `Conditional` row in `PERMISSIONS_MATRIX.md` sections 6 throug
 | Export report data | `SCR-OPS-005` | Reachable |
 | View sensitive audit trail | `SCR-AUDIT-001`, `SCR-AUDIT-002` | Reachable |
 | Review integrity or reproduction exception | `SCR-AUDIT-003`, `SCR-AUDIT-004`, `SCR-POLICY-004` | Reachable |
-| Upload evidence | `SCR-IDENTITY-015`, `SCR-ELIG-009`, `SCR-CLINICAL-014`, `SCR-CLAIMS-004`, `SCR-CLAIMS-007` | Reachable — transfer step bounded by `Q-PLATFORM-003` |
+| Upload evidence | `SCR-IDENTITY-015`, `SCR-IDENTITY-037`, `SCR-ELIG-009`, `SCR-CLINICAL-014`, `SCR-CLAIMS-004`, `SCR-CLAIMS-007` | Reachable — transfer states fixed by `API-PLATFORM-001`, section 10.15 |
 | View or download evidence | `SCR-ELIG-017`, `SCR-IDENTITY-029`, `SCR-PLATFORM-006` | Reachable |
 | Process retention deletion | `SCR-PLATFORM-007` | Reachable |
 | Submit provider onboarding application | `SCR-IDENTITY-016` | Reachable |
@@ -1022,9 +1047,9 @@ The same check applied to the Clinic panel, because `FR-ELIG-007` extends the pr
 
 For every status in every canonical state machine: which actor sees it, which screen displays it, what actions are permitted from it, what must be explained, what comes next, whether the user can recover, and whether it generates work or a notification intent.
 
-**62 statuses across 15 machines.** Thirteen machines are owned by `docs/domain/STATE_MACHINES.md`. Two — the onboarding application and the staff invitation — are owned by `PO-UX-02`, `PO-UX-03` and `docs/domain/STAFF_INTERACTION_CONTRACTS.md`, which name their states directly.
+**82 statuses across 18 machines.** Sixteen machines are owned by `docs/domain/STATE_MACHINES.md`. Two — the onboarding application and the staff invitation — are owned by `PO-UX-02`, `PO-UX-03` and `docs/domain/STAFF_INTERACTION_CONTRACTS.md`, which name their states directly.
 
-No transition is invented. Where a transition is undefined in the sources it is marked as such and no destination is drawn.
+No transition is invented. Every transition below has a canonical owner; the two branches Phase 1 originally left bounded were resolved by `PO-UX-12` and `PO-UX-13` and are now drawn to their defined outcomes.
 
 **On labels:** the `Must be communicated` column states required *meaning*, not final wording. Every user-facing string is a UX Phase 3 `TXT-*` allocation against `CONTENT_GUIDE.md`; canonical Arabic error text already exists in `docs/api/ERROR_CATALOG.md`.
 
@@ -1087,31 +1112,51 @@ stateDiagram-v2
 | `SUSPENDED` | Patient (as unavailable); Clinic; Admin | `SCR-ELIG-004`; `SCR-ELIG-013`, `SCR-ELIG-012`; `SCR-ELIG-020` | Clinic: resolve the invalid dependency. Admin: operate the suspension | New bookings in the affected scope, immediately | The exact affected provider, service and branch scope, and the controlling dependency | `ELIGIBLE`, `NOT_ELIGIBLE` | Yes — restore the dependency, which produces a new decision | Clinic notification intent; Admin work item |
 | `NOT_ELIGIBLE` | Patient (as unavailable); Clinic; Admin | `SCR-ELIG-004`; `SCR-ELIG-011`, `SCR-ELIG-012`; `SCR-ELIG-018` | Clinic: address the controlling gate | Booking; any override | The controlling gate. **This is an eligibility outcome, not scientific grade `F`** | `ELIGIBLE`, `PENDING_EVALUATION` | Yes — change the governed source facts or policy | Work item where action is required |
 
-**Existing bookings in a suspended scope: `Q-BOOKING-002`.** `STATE_MACHINES` section 7 and `CROSS_PLATFORM_BEHAVIOR` section 9.2 both state that existing bookings enter a review workflow whose actor, state effect, deadline and outcomes are unresolved. `SCR-BOOKING-014` and `SCR-BOOKING-015` display the authoritative current booking state and offer no outcome. No screen infers cancellation, confirmation or any other terminal state.
+**Existing bookings in a suspended scope — resolved.** `PO-UX-13` defined the review workflow that `STATE_MACHINES` section 7 and `CROSS_PLATFORM_BEHAVIOR` section 9.2 previously left open. Affected `CONFIRMED` bookings move to `ELIGIBILITY_REVIEW` (section 10.4), reach either restoration or a no-penalty cancellation, and are worked on `SCR-ELIG-022`. `SCR-BOOKING-014` and `SCR-BOOKING-015` still display authoritative state and still offer no override, because the fail-closed rule survives the resolution: no role can make a suspended-scope appointment attendable.
 
 ### 10.4 Booking — `STATE_MACHINES` section 8
 
 | Status | Visible to | Screens | Permitted actions | Disabled | Must be communicated | Next | Recovery | Work / notification |
 |---|---|---|---|---|---|---|---|---|
 | `REQUESTED` | Patient; Clinic; Admin | `SCR-BOOKING-003`, `SCR-BOOKING-004`; `SCR-BOOKING-008`, `SCR-BOOKING-009`; `SCR-BOOKING-014` | Patient: cancel. Clinic: accept, reject, propose alternative, cancel | Clinic response after the deadline; forced confirmation | Awaiting the clinic; the response deadline; to the clinic, remaining time | `CONFIRMED`, `REJECTED`, `ALTERNATIVE_PROPOSED`, `CANCELLED` | Cancel and request again | Clinic notification intent and booking work item |
-| `ALTERNATIVE_PROPOSED` | Patient; Clinic; Admin | `SCR-BOOKING-004`, `SCR-BOOKING-005`; `SCR-BOOKING-009`; `SCR-BOOKING-014` | Patient: accept the alternative, cancel. Clinic: cancel | Acceptance after the deadline | The proposed time, the deadline, and the consequence of inaction | `CONFIRMED`, `CANCELLED`, or **unresolved on expiry — `Q-BOOKING-001`** | Accept while the deadline holds | Patient notification intent |
-| `CONFIRMED` | Patient; Clinic; Admin | `SCR-BOOKING-004`; `SCR-BOOKING-011`; `SCR-BOOKING-014` | Patient: cancel. Clinic: cancel, record no-show after threshold, complete | No-show before the policy threshold; direct status editing | Confirmed time, place, and what to bring or expect | `CANCELLED`, `NO_SHOW`, `COMPLETED` | Cancel per policy | Patient notification intent |
+| `ALTERNATIVE_PROPOSED` | Patient; Clinic; Admin | `SCR-BOOKING-004`, `SCR-BOOKING-005`; `SCR-BOOKING-009`; `SCR-BOOKING-014` | Patient: accept the alternative, decline it, cancel. Clinic: cancel | Acceptance after the deadline | The proposed time, the deadline, and that inaction closes the request without penalty | `CONFIRMED`, or `CANCELLED` reason `ALTERNATIVE_DECLINED` / `ALTERNATIVE_EXPIRED` | Accept while the deadline holds; otherwise request again | Patient notification intent |
+| `CONFIRMED` | Patient; Clinic; Admin | `SCR-BOOKING-004`, `SCR-BOOKING-016`; `SCR-BOOKING-011`, `SCR-BOOKING-017`; `SCR-BOOKING-014` | Patient: cancel, propose a reschedule. Clinic: cancel, propose a reschedule, record no-show after threshold, complete | No-show before the policy threshold; direct status editing; any generic edit of date, provider or service | Confirmed time, place, and what to bring or expect; any pending reschedule proposal and that the original slot still stands | `CANCELLED`, `NO_SHOW`, `COMPLETED`, `ELIGIBILITY_REVIEW` | Cancel per policy; propose a reschedule | Patient notification intent |
+| `ELIGIBILITY_REVIEW` | Patient; Clinic; Admin | `SCR-BOOKING-004`, `SCR-PLATFORM-009`; `SCR-ELIG-021`, `SCR-BOOKING-011`; `SCR-ELIG-022`, `SCR-OPS-001` | Admin: work the review to its outcome. Patient: cancel | Attending; clinic start and complete; recording a no-show; any attendance override at any role; creating a reschedule proposal | That the appointment is on hold pending a check, with no penalty language and no instruction to attend; to staff, the controlling dependency and the review due time | `CONFIRMED` on a new `ELIGIBLE` evaluation, or `CANCELLED` reason `PROVIDER_ELIGIBILITY_SUSPENDED` | Restoration returns the appointment; deadline expiry closes it without penalty | Urgent Admin work item; patient and clinic notification intents |
 | `REJECTED` | Patient; Clinic; Admin | `SCR-BOOKING-004`; `SCR-BOOKING-011`; `SCR-BOOKING-014` | Patient: search again | Any revival of this booking | The safe reason, and a path back to eligible alternatives | terminal | New booking request | Patient notification intent; response work closes |
 | `CANCELLED` | Patient; Clinic; Admin | `SCR-BOOKING-004`; `SCR-BOOKING-011`; `SCR-BOOKING-014` | Patient: search again | Any revival; hard delete | Who cancelled, the safe reason, and any policy consequence | terminal | New booking request | Counterparty notification intent |
 | `NO_SHOW` | Patient; Clinic; Admin | `SCR-BOOKING-004`; `SCR-BOOKING-011`; `SCR-BOOKING-015` | Patient: search again | Any revival; hard delete | That it was recorded, when, and the policy consequence — **and never that money moved** | terminal | New booking request | Patient notification intent where consequence requires awareness |
 | `COMPLETED` | Patient; Clinic; Admin | `SCR-BOOKING-004`, `SCR-CLINICAL-002`; `SCR-BOOKING-011`; `SCR-BOOKING-014` | Patient: review if eligible; raise a claim if entitled | Editing completion history | Completion, and what is now available — review, follow-up, claim | terminal for booking; enables review and claim | n/a | May enable review and follow-up workflows |
 
-`ALTERNATIVE_PROPOSED` on expiry or explicit decline is the single most carefully bounded state in this model. `SCR-BOOKING-005` disables acceptance and shows the authoritative current state. It does not display `REJECTED`, `CANCELLED` or a return to `REQUESTED`, because `Q-BOOKING-001` leaves that outcome undefined and `ERROR_CATALOG` section 8 explicitly forbids clients from inferring it.
+`ALTERNATIVE_PROPOSED` closure and `ELIGIBILITY_REVIEW` are the two states whose engineering label and user-facing meaning diverge most, and both were resolved by `PO-UX-12` and `PO-UX-13`.
+
+An alternative that is declined or expires becomes `CANCELLED`, but it is an **unconfirmed request closure with no penalty**. Presenting it in the same punitive language as cancelling a confirmed appointment would tell the patient something false about a consequence that does not exist, so `SCR-BOOKING-004` must read as "the appointment was not confirmed" and offer a fresh request. The reason code carries the distinction the interface has to honour.
+
+`ELIGIBILITY_REVIEW` is where the fail-closed rule becomes a structural obligation rather than a validation message: `SCR-ELIG-021` **omits** start and complete rather than disabling them, and no screen at any role offers an attendance override, because none exists.
+
+**Reschedule proposal — `STATE_MACHINES` section 8.3.** A separate record with its own lifecycle, kept in this section because the booking is its subject.
+
+| Status | Visible to | Screens | Permitted actions | Disabled | Must be communicated | Next | Recovery | Work / notification |
+|---|---|---|---|---|---|---|---|---|
+| `PENDING` | Patient; Clinic; Admin | `SCR-BOOKING-016`, `SCR-BOOKING-004`; `SCR-BOOKING-017`, `SCR-BOOKING-011`; `SCR-BOOKING-014` | Counterparty: accept, decline. Initiator: withdraw | Responding to one's own proposal; a second concurrent proposal; proposing against `ELIGIBILITY_REVIEW` | **That the original appointment still stands**, the proposed slot, and the response deadline | `ACCEPTED`, `DECLINED`, `EXPIRED`, `WITHDRAWN` | Withdraw, or let it expire harmlessly | Counterparty notification intent |
+| `ACCEPTED` | Patient; Clinic; Admin | `SCR-BOOKING-004`; `SCR-BOOKING-011`; `SCR-BOOKING-014` | none — the booking now carries the change | Any further edit of the moved booking outside a new proposal | The new confirmed time, and that the old slot was released | terminal | New proposal | Both parties notified |
+| `DECLINED` | Patient; Clinic; Admin | `SCR-BOOKING-016`; `SCR-BOOKING-017` | Propose again | Treating the decline as a cancellation | That the original appointment is unchanged | terminal | New proposal | Initiator notification intent |
+| `EXPIRED` | Patient; Clinic; Admin | `SCR-BOOKING-016`; `SCR-BOOKING-017` | Propose again | Treating expiry as acceptance or as a cancellation | That the original appointment is unchanged | terminal | New proposal | Initiator notification intent |
+| `WITHDRAWN` | Patient; Clinic; Admin | `SCR-BOOKING-016`; `SCR-BOOKING-017` | Propose again | — | That the original appointment is unchanged | terminal | New proposal | Counterparty notification intent |
+
+Four of the five terminal states mean *nothing happened to the appointment*, and that is the design point. A patient or clinic that ignores a proposal keeps the slot they already had, so silence is always safe. The presentation risk runs the other way: rendering the proposed slot as the appointment while the proposal is `PENDING` would make a request look like a commitment, which is why the original slot must stay visibly authoritative on both platforms.
 
 ### 10.5 Treatment plan — `STATE_MACHINES` section 9
 
 | Status | Visible to | Screens | Permitted actions | Disabled | Must be communicated | Next | Recovery | Work / notification |
 |---|---|---|---|---|---|---|---|---|
 | `DRAFT` | Treating dentist only | `SCR-CLINICAL-010`, `SCR-CLINICAL-011` | Dentist: edit, propose | Patient visibility of any kind; proposing while required information is absent | Not yet shared with the patient; what is still required | `PROPOSED` | Fully — a draft is freely revisable | None |
-| `PROPOSED` | Patient; Clinic; Admin | `SCR-CLINICAL-003`; `SCR-CLINICAL-012`, `SCR-CLINICAL-013`; `SCR-CLINICAL-019` | Patient: accept. Dentist: revise into a new version | Silent replacement of a version the patient has viewed | Author is the treating dentist, not UberTib; stages, prices, inclusions, exclusions, terms and protection state | `ACCEPTED` | Patient can decline by not accepting; dentist can propose a new version | Patient notification intent |
+| `PROPOSED` | Patient; Clinic; Admin | `SCR-CLINICAL-003`; `SCR-CLINICAL-012`, `SCR-CLINICAL-013`; `SCR-CLINICAL-019` | Patient: accept. Dentist: revise into a new version | Silent replacement of a version the patient has viewed | Author is the treating dentist, not UberTib; stages, prices, inclusions, exclusions, terms and protection state; **the remaining validity window** | `ACCEPTED`, `EXPIRED` | Patient can decline by not accepting; dentist can propose a new version | Patient notification intent |
+| `EXPIRED` | Patient; Clinic; Admin | `SCR-CLINICAL-003`, `SCR-CLINICAL-004`; `SCR-CLINICAL-013`; `SCR-CLINICAL-019` | Dentist: issue a new plan version | Acceptance of any kind | That the proposal is no longer acceptable and why — the validity window elapsed, or a named governing fact changed; never that the patient erred | new version via `DRAFT` | Only through a new version from the clinician | Clinic notification intent to reissue |
 | `ACCEPTED` | Patient; Clinic; Admin | `SCR-CLINICAL-003`, `SCR-FINANCE-001`; `SCR-CLINICAL-013`; `SCR-CLINICAL-019` | Dentist: propose an amendment as a new version | Any edit to the accepted version or its snapshots | That this is permanent and governs what follows; the immutable financial terms | new version via `DRAFT` | Amendment only, never edit | Clinic notification intent |
 
-Acceptance failure is a designed path, not an exception: `ERR-CLINICAL-001` covers a stale or incomplete plan, and `SCR-CLINICAL-004` must show the current plan state rather than implying the patient did something wrong.
+Acceptance failure is a designed path, not an exception: `ERR-CLINICAL-001` covers a stale, expired or incomplete plan, and `SCR-CLINICAL-004` must show the current plan state rather than implying the patient did something wrong.
+
+`PO-UX-16` set the validity policy — a V1 default of 7 calendar days, held as versioned policy data rather than a constant. Two consequences bind the interface. The remaining window must be visible while the plan is still acceptable, because a patient who reads a plan on day six and returns on day eight needs to have been warned. And a proposal can go stale **before** its expiry if a governing fact changes, so the reason shown must name what changed rather than defaulting to "expired" — a price change and a lapsed window are different facts and the patient's next step differs. An accepted snapshot is never invalidated by a later expiry.
 
 ### 10.6 Treatment stage — `STATE_MACHINES` section 10
 
@@ -1131,7 +1176,7 @@ Acceptance failure is a designed path, not an exception: `ERR-CLINICAL-001` cove
 
 No status in this machine may be presented as funds held, captured, settled, a wallet balance, or a platform-executed refund (`STATE_MACHINES` section 11).
 
-### 10.8 Review and review appeal — `STATE_MACHINES` sections 12, 13
+### 10.8 Review and review appeal — `STATE_MACHINES` sections 12, 13, 13.1
 
 | Status | Visible to | Screens | Permitted actions | Disabled | Must be communicated | Next | Recovery | Work / notification |
 |---|---|---|---|---|---|---|---|---|
@@ -1199,15 +1244,47 @@ The same six states as the service definition machine, with each policy domain a
 | `retired` | Policy owner; Admin | `SCR-POLICY-001` | none | Any change | Retired; history unaffected | terminal | New version only |
 | `superseded` | Policy owner; Admin | `SCR-POLICY-001`, `SCR-POLICY-004` | Reproduce a historical decision against it | Any change | Replaced, and still governing the decisions that used it | terminal | n/a |
 
-### 10.14 Lifecycle sweep result
+### 10.14 Operational work item — `STATE_MACHINES` section 20
+
+| Status | Visible to | Screens | Permitted actions | Disabled | Must be communicated | Next | Recovery | Work / notification |
+|---|---|---|---|---|---|---|---|---|
+| `OPEN` | Authorized staff within scope | `SCR-OPS-001`, `SCR-OPS-002` | Claim or assign | Acting on the linked resource without its own authorization | Unclaimed; the responsibility scope and due time | `ASSIGNED` | Fully — nothing is committed | The item itself is the work signal |
+| `ASSIGNED` | Assignee; supervisors within scope | `SCR-OPS-001`, `SCR-OPS-002` | Start; reassign or escalate where granted | Starting an item assigned to someone else | Who holds it and since when | `IN_PROGRESS` | Reassign | Escalation may change priority or assignee |
+| `IN_PROGRESS` | Assignee; supervisors within scope | `SCR-OPS-001`, `SCR-OPS-002`, `SCR-OPS-003` | Move to waiting with a named blocking reason; complete with an outcome | Completing while the domain condition is unresolved | The underlying condition, not merely the item | `WAITING`, `COMPLETED` | Waiting, or reassignment | May carry escalated and overdue flags independently |
+| `WAITING` | Assignee; supervisors within scope | `SCR-OPS-001`, `SCR-OPS-003` | Resume | Completing straight from waiting | **The named external dependency** — a blocked item with no stated blocker is the failure this state exists to prevent | `IN_PROGRESS` | Resume at any time | Overdue is still derived while waiting |
+| `COMPLETED` | Staff within scope; auditors | `SCR-OPS-001`, `SCR-OPS-003`, `SCR-AUDIT-002` | Reopen where policy permits | Editing the completion record | The recorded outcome and who recorded it | `OPEN` or `ASSIGNED` on reopen | Reopen preserves the prior completion | Closes the work signal |
+
+`PO-UX-08` resolved `Q-OPS-002`, and the resolution carries one presentation rule that matters more than the states themselves. **Escalated and overdue are flags, not states.** An item can be `IN_PROGRESS`, escalated and overdue simultaneously, so `SCR-OPS-001` must render all three independently and must not collapse them into a single status column — a queue that shows one value per row cannot express the case that most needs attention. Deadline breach is derived from `due_at`, not stored, so it changes without a transition.
+
+Completing an item whose domain condition is unresolved is refused by the contract, which means the queue is a routing surface and never a place where a resolution can be asserted into existence.
+
+### 10.15 Evidence transfer session — `STATE_MACHINES` section 21.1
+
+| Status | Visible to | Screens | Permitted actions | Disabled | Must be communicated | Next | Recovery | Work / notification |
+|---|---|---|---|---|---|---|---|---|
+| `SELECTED` | The uploading actor | any screen carrying an evidence item | Begin transfer; remove | — | Nothing has been sent yet | `UPLOADING` | Fully | None |
+| `UPLOADING` | The uploading actor | same | Pause | Submitting the owning form as though the file were accepted | Progress, and that leaving may interrupt it | `PAUSED`, `FAILED_RETRYABLE`, `UPLOADED` | Pause and resume | None |
+| `PAUSED` | The uploading actor | same | Resume; remove | — | That it is resumable, **not** that it must restart | `UPLOADING` | Resume | None |
+| `FAILED_RETRYABLE` | The uploading actor | same | Retry | Treating it as a rejection | That this is a transfer problem, not a problem with the file | `UPLOADING` | Retry on the same session | None |
+| `UPLOADED` | The uploading actor; reviewers | same | Wait | Referencing it as accepted evidence | Received but **not yet accepted** | `VALIDATING_SCANNING` | n/a | None |
+| `VALIDATING_SCANNING` | The uploading actor; reviewers | same | Wait | Referencing it as accepted evidence | That a required check is running and the item is quarantined | `ACCEPTED`, `REJECTED` | n/a | May create operational work on scan backlog |
+| `ACCEPTED` | The uploading actor; reviewers | same | Reference in the owning submission | — | That it now counts as evidence | terminal | n/a | None |
+| `REJECTED` | The uploading actor; reviewers | same | Replace or correct the file | Referencing it in any submission | A safe actionable reason via `ERR-PLATFORM-005` — never scanner internals, vendor detail or private paths | terminal | Replace the file | None |
+
+`PO-UX-17` fixed these states without naming a vendor, which is what lets Phase 2 draw the upload interaction while the storage and scanner decisions stay open under `Q-OPS-001`.
+
+Three distinctions here are interaction requirements rather than labels. `UPLOADED` is **not** `ACCEPTED`, so no owning form may treat a transferred file as evidence before validation and scanning pass. `FAILED_RETRYABLE` is **not** `REJECTED`, and conflating them tells a patient on a weak connection that their document was refused when the network merely dropped — the single most likely evidence failure in this product's conditions. And resumption is a stated capability, so an interrupted upload must offer resume rather than silently requiring a restart.
+
+### 10.16 Lifecycle sweep result
 
 | Machine | Statuses | Displayed on a screen | Actions reachable | Gaps |
 |---|---:|---:|---:|---|
 | Onboarding application | 6 | 6 | 6 | none |
 | Staff invitation and grant | 4 | 4 | 4 | none |
-| Eligibility outcome | 4 | 4 | 4 | existing-booking effect bounded by `Q-BOOKING-002` |
-| Booking | 7 | 7 | 7 | alternative-expiry outcome bounded by `Q-BOOKING-001` |
-| Treatment plan | 3 | 3 | 3 | none |
+| Eligibility outcome | 4 | 4 | 4 | none |
+| Booking | 8 | 8 | 8 | none |
+| Reschedule proposal | 5 | 5 | 5 | none |
+| Treatment plan | 4 | 4 | 4 | none |
 | Treatment stage | 3 | 3 | 3 | none |
 | External financial event | 3 | 3 | 3 | none |
 | Review | 2 | 2 | 2 | none |
@@ -1218,30 +1295,31 @@ The same six states as the service definition machine, with each policy domain a
 | Service launch gate | 5 | 5 | 5 | none |
 | Clinical reviewer credential | 3 | 3 | 3 | none |
 | Policy version | 6 | 6 | 6 | none |
-| **Total** | **62** | **62** | **62** | 2 bounded branches |
+| Operational work item | 5 | 5 | 5 | none |
+| Evidence transfer session | 8 | 8 | 8 | none |
+| **Total** | **82** | **82** | **82** | none |
 
-**Lifecycle statuses never displayed: none. 62 of 62 statuses have a screen and every action valid from them is reachable.**
+**Lifecycle statuses never displayed: none. 82 of 82 statuses have a screen and every action valid from them is reachable.**
 
-Two branches are deliberately incomplete because their destination is undefined upstream, not because a screen is missing:
+**No bounded branches remain.** The two that Phase 1 originally reported were resolved on 2026-08-25:
 
-1. `ALTERNATIVE_PROPOSED` on expiry or decline — `Q-BOOKING-001`. `SCR-BOOKING-005` disables acceptance and shows the authoritative current state.
-2. Existing bookings when eligibility becomes `SUSPENDED` — `Q-BOOKING-002`. `SCR-BOOKING-014` and `SCR-BOOKING-015` show authoritative state and offer no outcome.
+1. `ALTERNATIVE_PROPOSED` on decline or expiry now closes as `CANCELLED` with reason `ALTERNATIVE_DECLINED` or `ALTERNATIVE_EXPIRED` — `PO-UX-12`, section 10.4.
+2. Existing bookings when eligibility becomes `SUSPENDED` now move to `ELIGIBILITY_REVIEW` with two defined outcomes — `PO-UX-13`, section 10.4.
 
-### 10.15 Two machines the sources decline to finalize
+### 10.17 What the sources still decline to finalize
 
-`STATE_MACHINES` section 20 explicitly does not finalize the work-item state vocabulary, the provider verification sub-state vocabulary, the notification delivery lifecycle, or the evidence upload-session lifecycle, and instructs that implementation must not invent them as product truth.
+`STATE_MACHINES` section 21 still declines to finalize two vocabularies, and neither blocks Phase 1 or Phase 2:
 
-This collides with a user-visible requirement. `FR-OPS-001` requires a work item's "type, case, state, priority, due time, responsibility scope, and blocking reason" to be visible to authorized staff, and requires assignment, escalation, completion, reopening and deadline breach to be auditable transitions. `SDC-OPS-001` repeats state in its projection and lists claim, assign, start, complete, escalate and reopen as commands.
-
-So the states are named as commands but never enumerated as a vocabulary. `SCR-OPS-002` and `SCR-OPS-003` therefore define the queue structurally — the item, its scope, its due time, its blocking reason and its available commands — and defer the state vocabulary to `Q-OPS-002`. This is a labelling and filtering gap, not a structural one, and it does not block Phase 1.
+1. **Notification provider delivery lifecycle** beyond provider-neutral queued, attempted, success and failure operational metadata. This is deliberately separate from the durable patient-facing entry, which `FR-PLATFORM-001` now owns and section 10.16 of the flows document exercises. Delivery telemetry is an operations concern surfaced on `SCR-PLATFORM-008`, not a patient-facing status.
+2. **Provider and clinic verification sub-state vocabulary.** The onboarding application machine in section 10.1 is authoritative for what the applicant and reviewer see; any finer internal verification sub-state remains unenumerated and no screen displays one.
 
 ## 11. Screen Catalog
 
-155 screens. Every one is `New` — no business UI exists to inherit. Every route or resource path is `(Proposed)`; paths are allocated in UX Phase 5, not here.
+162 screens. Every one is `New` — no business UI exists to inherit. Every route or resource path is `(Proposed)`; paths are allocated in UX Phase 5, not here.
 
 `Roles` references `docs/domain/PERMISSIONS_MATRIX.md` rather than restating any rule. `Contract` names the `API-*` or `SDC-*` owner per `PO-UX-05`.
 
-### 11.1 Patient app — 44 screens
+### 11.1 Patient app — 47 screens
 
 ### SCR-IDENTITY-001 — Patient entry
 **Platform:** Patient (C) · **Classification:** New · **Derived:** pending confirmation
@@ -1280,16 +1358,16 @@ So the states are named as commands but never enumerated as a vocabulary. `SCR-O
 **Notes:** Five-minute expiry, five verification attempts, single use. `ERR-IDENTITY-004` covers invalid, expired, consumed and attempts-exhausted as one code with distinct recovery guidance. Resend invalidates the prior code without resetting accumulated failures. Repeated activation must not create a duplicate active identity.
 
 ### SCR-PLATFORM-001 — Needs attention
-**Platform:** Patient (C) · **Classification:** New · **Derived:** pending confirmation
+**Platform:** Patient (C) · **Classification:** New · **Derived:** confirmed by PO-UX-09
 **Purpose:** Show the patient what their care needs from them right now, and nothing else.
 **Serves:** JTBD-CLINICAL-004, JTBD-BOOKING-002, JTBD-CLAIMS-003, JTBD-FINANCE-003, JTBD-CLINICAL-006
-**Requirements:** FR-CLINICAL-005, FR-BOOKING-003, FR-CLINICAL-002, FR-CLINICAL-004, FR-CLAIMS-003, FR-FINANCE-003
-**Contract:** API-BOOKING-002, API-CLINICAL-001, API-CLAIMS-003, API-FINANCE-005
+**Requirements:** FR-PLATFORM-001, FR-CLINICAL-005, FR-BOOKING-003, FR-CLINICAL-002, FR-CLINICAL-004, FR-CLAIMS-003, FR-FINANCE-003
+**Contract:** API-PLATFORM-002, API-BOOKING-002, API-CLINICAL-001, API-CLAIMS-003, API-FINANCE-005
 **Roles:** Patient; Guardian within grant scope
 **Entry points:** post-verification; primary navigation; app resume
 **Exits:** `SCR-BOOKING-004`, `SCR-CLINICAL-003`, `SCR-CLAIMS-004`, `SCR-FINANCE-004`, `SCR-CLINICAL-007`, and the three other primary destinations
 **Lifecycle statuses shown:** `ALTERNATIVE_PROPOSED`, `PROPOSED`, `EVIDENCE_INCOMPLETE`, `REPORTED_UNCONFIRMED`, follow-up due
-**Notes:** The landing screen and the design realization of principle 3. Composition is a design decision; every item traces to a requirement-backed read. Deadline-bearing items must show remaining time. With no active case the screen is near-empty and says so plainly. This is also the only patient re-entry path that does not depend on a notification, which matters because no patient notification surface is confirmed (`Q-PLATFORM-005`).
+**Notes:** The landing screen and the design realization of principle 3. Composition is a design decision; every item traces to a requirement-backed read. Deadline-bearing items must show remaining time. With no active case the screen is near-empty and says so plainly. Confirmed as the attention surface by `PO-UX-09`, which closed both `Q-PLATFORM-005` and `ASM-PLATFORM-001` and created `FR-PLATFORM-001`. Deadline-bound and action-required items appear here as well as in `SCR-PLATFORM-009`, which is precisely what makes push, SMS and email optional adapters rather than load-bearing infrastructure.
 
 ### SCR-PLATFORM-002 — Pending submissions
 **Platform:** Patient (C) · **Classification:** New · **Derived:** pending confirmation
@@ -1445,7 +1523,7 @@ So the states are named as commands but never enumerated as a vocabulary. `SCR-O
 **Entry points:** `SCR-BOOKING-004`; `SCR-PLATFORM-001`
 **Exits:** `SCR-BOOKING-004` with the outcome
 **Lifecycle statuses shown:** `ALTERNATIVE_PROPOSED`; `CONFIRMED` on success
-**Notes:** Idempotency key required; revalidates deadline, capacity and current eligibility. **On expiry or decline this screen disables acceptance and shows the authoritative current state. It must not display `REJECTED`, `CANCELLED` or a return to `REQUESTED`** — `Q-BOOKING-001` leaves that outcome undefined and `ERR-BOOKING-003` explicitly forbids inferring it. `ERR-BOOKING-001` and `ERR-ELIG-001` are also reachable.
+**Notes:** Idempotency key required; revalidates deadline, capacity and current eligibility. Declining is an explicit action here, and the screen offers it without a second confirmation — declining an unwanted proposal is not destructive. On decline or expiry the booking closes as `CANCELLED` with reason `ALTERNATIVE_DECLINED` or `ALTERNATIVE_EXPIRED` (`PO-UX-12`). **The screen must read as "the appointment was not confirmed" and offer a fresh request; punitive cancellation language would assert a penalty that does not exist.** `ERR-BOOKING-003` on a late acceptance, plus `ERR-BOOKING-001` and `ERR-ELIG-001`, are also reachable.
 
 ### SCR-BOOKING-006 — Cancel booking
 **Platform:** Patient (C) · **Classification:** New · **Derived:** pending confirmation
@@ -1577,7 +1655,7 @@ So the states are named as commands but never enumerated as a vocabulary. `SCR-O
 **Entry points:** `SCR-FINANCE-002`
 **Exits:** `SCR-FINANCE-002` with the appended event
 **Lifecycle statuses shown:** `REPORTED_UNCONFIRMED`
-**Notes:** Idempotency key required — exactly one event per identical command. Records the terms snapshot, amount, currency, external method category and occurrence time. Payer identity derives from the authenticated context, not from a field. `ERR-FINANCE-001` covers a mismatch against the governing terms and must never read as a failed payment, because no payment was attempted. Evidence attachment is bounded by `Q-PLATFORM-003`.
+**Notes:** Idempotency key required — exactly one event per identical command. Records the terms snapshot, amount, currency, external method category and occurrence time. Payer identity derives from the authenticated context, not from a field. `ERR-FINANCE-001` covers a mismatch against the governing terms and must never read as a failed payment, because no payment was attempted. Evidence attachment is bounded by the vendor decision in `Q-OPS-001`.
 
 ### SCR-FINANCE-004 — Financial event response
 **Platform:** Patient (C) · **Classification:** New · **Derived:** pending confirmation
@@ -1640,16 +1718,16 @@ So the states are named as commands but never enumerated as a vocabulary. `SCR-O
 **Notes:** A retirement decision must be shown with its governed reason, not as a silent disappearance. Patient appeal exists only where policy grants the patient that action, per the traceability matrix note on `FR-REVIEWS-002`.
 
 ### SCR-REVIEWS-004 — Review appeal
-**Platform:** Patient (C) · **Classification:** New · **Derived:** pending confirmation
-**Purpose:** Let an authorized patient appeal a review eligibility or policy decision.
-**Serves:** JTBD-REVIEWS-001
+**Platform:** Patient (C) · **Classification:** New · **Derived:** confirmed by PO-UX-10
+**Purpose:** Let the authoring patient contest a decision that rejected, retired or unpublished their review.
+**Serves:** JTBD-REVIEWS-004, JTBD-REVIEWS-001
 **Requirements:** FR-REVIEWS-002
 **Contract:** API-REVIEWS-002
-**Roles:** Patient where review-appeal policy permits; Guardian within grant scope
-**Entry points:** `SCR-REVIEWS-003`
+**Roles:** Authoring patient; Guardian within grant scope — per `PERMISSIONS_MATRIX` section 12
+**Entry points:** `SCR-REVIEWS-003`; a decision entry in `SCR-PLATFORM-009`
 **Exits:** `SCR-REVIEWS-003` with appeal state
 **Lifecycle statuses shown:** appeal `SUBMITTED`, `DECIDED`
-**Notes:** Idempotency key required. Concerns eligibility and policy compliance only — it cannot rewrite rating content. `ERR-REVIEWS-001` covers an out-of-window appeal.
+**Notes:** Confirmed as a real patient surface by `PO-UX-10`, which closed `Q-REVIEWS-001` — the authoring patient is an authorized affected party, not merely a possible one. Idempotency key required. **The screen must state the scope of an appeal before the patient writes anything**: eligibility, verification and policy compliance are contestable, the rating and review text are not. A patient who simply disagrees with the outcome needs to learn that before investing effort, not after submitting. Decided by an independent Review Integrity Reviewer who did not make the original decision. `ERR-REVIEWS-001` covers an out-of-window or unauthorized appeal.
 
 ### SCR-CLAIMS-001 — My claims
 **Platform:** Patient (C) · **Classification:** New · **Derived:** pending confirmation
@@ -1697,7 +1775,7 @@ So the states are named as commands but never enumerated as a vocabulary. `SCR-O
 **Entry points:** `SCR-CLAIMS-001`; `SCR-PLATFORM-001`; deep link
 **Exits:** `SCR-CLAIMS-005`; `SCR-FINANCE-005` after an approved refund
 **Lifecycle statuses shown:** all five claim states; evidence item states; original and effective deadlines; decision; appeal status
-**Notes:** Carries the decision as a section rather than a separate screen, matching `API-CLAIMS-004`. Missing, rejected, expired and accepted evidence must be individually distinguishable with reasons. Shows the effective deadline and its history, because pauses and extensions append rather than replace. A decision must name the accountable human reviewer and any external action due. Reviewer-only findings remain filtered out. Evidence supply is bounded by `Q-PLATFORM-003`.
+**Notes:** Carries the decision as a section rather than a separate screen, matching `API-CLAIMS-004`. Missing, rejected, expired and accepted evidence must be individually distinguishable with reasons. Shows the effective deadline and its history, because pauses and extensions append rather than replace. A decision must name the accountable human reviewer and any external action due. Reviewer-only findings remain filtered out. Evidence supply is bounded by the vendor decision in `Q-OPS-001`.
 
 ### SCR-CLAIMS-005 — Claim appeal
 **Platform:** Patient (C) · **Classification:** New · **Derived:** pending confirmation
@@ -1757,7 +1835,7 @@ So the states are named as commands but never enumerated as a vocabulary. `SCR-O
 **Entry points:** `SCR-IDENTITY-005`
 **Exits:** `SCR-IDENTITY-005` after revocation
 **Lifecycle statuses shown:** grant active, expired, revoked
-**Notes:** Revocation takes effect immediately for future actions while historical attribution is preserved. Repeated revocation is safe. **`API-IDENTITY-005` references `ERR-BOOKING-002` for a policy-blocked revocation, which would surface a booking-domain error and recovery path on this representation screen — recorded as `CONFLICT-BOOKING-001`.**
+**Notes:** Revocation takes effect immediately for future actions while historical attribution is preserved. Repeated revocation is safe. **Revocation is unconditional — no booking or case state may block it, and no booking-domain error appears on this screen** (`PO-UX-11`, which closed `CONFLICT-BOOKING-001`). Revoking does not cancel or delete the patient's existing bookings or case; where continuity of care needs follow-up, the system raises an operational work item rather than refusing the patient.
 
 ### SCR-IDENTITY-008 — Active patient context
 **Platform:** Patient (C) · **Classification:** New · **Derived:** pending confirmation
@@ -1771,9 +1849,45 @@ So the states are named as commands but never enumerated as a vocabulary. `SCR-O
 **Lifecycle statuses shown:** active grant per selectable subject
 **Notes:** Switching changes what is displayed and grants nothing — every request re-evaluates the grant server-side. Only subjects with an active grant are selectable. The acting identity remains the guardian; masquerading as the patient is denied. Because a wrong-subject action is a clinical and authorization failure, the active subject belongs in persistent chrome, not only on this screen.
 
-### 11.2 Clinic / Doctor panel — 54 screens
+### SCR-PLATFORM-009 — Notification centre
+**Platform:** Patient (C) · **Classification:** New · **Derived:** confirmed by PO-UX-09
+**Purpose:** Give the patient the durable record of what changed, separate from whether a push, SMS or email ever arrived.
+**Serves:** JTBD-PLATFORM-004
+**Requirements:** FR-PLATFORM-001
+**Contract:** API-PLATFORM-002
+**Roles:** Patient; Guardian filtered to active grant scope
+**Entry points:** app chrome bell from any screen; `SCR-PLATFORM-001` attention summaries; delivered notification deep link
+**Exits:** the linked authoritative screen for each entry
+**Lifecycle statuses shown:** per-entry read/unread and action-required; no business status is owned here
+**Notes:** A utility destination, not a fifth primary tab — the four tabs stay Home, Discover, My Care, Profile. Every entry links to the authoritative resource and is re-read on open, because an entry written hours ago cannot be trusted to describe a current deadline. Marking read changes no business state, so no control here may read as accepting or acknowledging anything. Deadline-bearing items also appear on `SCR-PLATFORM-001`, which is what makes delivery optional rather than load-bearing.
 
-Panel id `clinic`, path `/clinic` — both `(Proposed)`. All 54 are `New`; no Clinic panel exists.
+### SCR-BOOKING-016 — Reschedule request
+**Platform:** Patient (C) · **Classification:** New · **Derived:** confirmed by PO-UX-15
+**Purpose:** Let the patient propose a different time for a confirmed appointment, or respond to a clinic proposal, without risking the appointment they already hold.
+**Serves:** JTBD-BOOKING-008
+**Requirements:** FR-BOOKING-004
+**Contract:** API-BOOKING-006, API-BOOKING-007
+**Roles:** Patient; Guardian where the grant covers booking actions — per `PERMISSIONS_MATRIX` section 9
+**Entry points:** `SCR-BOOKING-004`; a reschedule entry in `SCR-PLATFORM-009`
+**Exits:** `SCR-BOOKING-004`
+**Lifecycle statuses shown:** proposal `PENDING`, `ACCEPTED`, `DECLINED`, `EXPIRED`, `WITHDRAWN`; the booking's own `CONFIRMED` state alongside
+**Notes:** Two entry modes — proposing, and responding to a clinic proposal — because the content is the same pair of slots either way. The screen must state that the **original appointment still stands** while a proposal is pending; showing the proposed time as though it were the appointment is the specific failure this screen exists to prevent. A party cannot respond to its own proposal, so the response controls appear only for the counterparty. Unavailable against a booking in `ELIGIBILITY_REVIEW`.
+
+### SCR-IDENTITY-037 — Add dependent
+**Platform:** Patient (C) · **Classification:** New · **Derived:** confirmed by PO-UX-14
+**Purpose:** Let a guardian request representation for someone who cannot grant it themselves, and make plain that a human decision stands between the request and any access.
+**Serves:** JTBD-IDENTITY-012
+**Requirements:** FR-IDENTITY-003
+**Contract:** API-IDENTITY-006
+**Roles:** Authenticated guardian applicant — per `PERMISSIONS_MATRIX` section 6
+**Entry points:** `SCR-IDENTITY-005`
+**Exits:** `SCR-IDENTITY-005` on approval; remains here while under review
+**Lifecycle statuses shown:** request draft, submitted, changes requested, approved, rejected
+**Notes:** The screen must never read as granting access. Submission creates a request under verification, and the guardian cannot self-authorize by entering a dependent — that denial is a permission rule, not a UI choice. Evidence items use the transfer states in `STATE_MACHINES` section 21.1, so a rejected file shows a safe actionable reason rather than a generic failure. Distinct from the consent path an adult patient drives on `SCR-IDENTITY-004`, because the evidence burden and the wait differ entirely.
+
+### 11.2 Clinic / Doctor panel — 56 screens
+
+Panel id `clinic`, path `/clinic` — both `(Proposed)`. All 56 are `New`; no Clinic panel exists.
 
 `SCR-IDENTITY-009` through `SCR-IDENTITY-018` are the public onboarding portal and sit outside authenticated panel navigation. `SCR-IDENTITY-025` is reached by invitation only.
 
@@ -1859,7 +1973,7 @@ Panel id `clinic`, path `/clinic` — both `(Proposed)`. All 54 are `New`; no Cl
 **Entry points:** `SCR-IDENTITY-012`; `SCR-IDENTITY-017` when flagged
 **Exits:** `SCR-IDENTITY-012`
 **Lifecycle statuses shown:** per-item evidence status including quarantined-until-scan; validation issues; requested-change items
-**Notes:** Which items are required depends on the provider type chosen at `SCR-IDENTITY-010`. Evidence remains quarantined until the required scan succeeds and cannot be treated as satisfying a requirement before then, per `NFR-PLATFORM-003`. **The binary transfer mechanism is bounded by `Q-PLATFORM-003`** — this screen defines the requirement, the per-item status and the recovery, and stops at the transfer boundary. `Q-PLATFORM-003` remains an upstream question and is not reopened by this phase.
+**Notes:** Which items are required depends on the provider type chosen at `SCR-IDENTITY-010`. Evidence remains quarantined until the required scan succeeds and cannot be treated as satisfying a requirement before then, per `NFR-PLATFORM-003`. **The binary transfer mechanism is bounded by the vendor decision in `Q-OPS-001`** — this screen defines the requirement, the per-item status and the recovery, and stops at the transfer boundary. `Q-OPS-001` remains an upstream question and is not reopened by this phase.
 
 ### SCR-IDENTITY-016 — Review and submit
 **Platform:** Clinic (A) · **Build type:** Custom · **Classification:** New · **Derived:** confirmed by PO-UX-02
@@ -2063,7 +2177,7 @@ Panel id `clinic`, path `/clinic` — both `(Proposed)`. All 54 are `New`; no Cl
 **Entry points:** `SCR-ELIG-008`; `SCR-ELIG-012`
 **Exits:** `SCR-ELIG-008`
 **Lifecycle statuses shown:** per-item evidence state including quarantined, accepted, rejected, expired
-**Notes:** Rejected and expired evidence must state what to do next, not merely that it failed. Quarantined evidence does not satisfy a requirement until the scan succeeds. Transfer bounded by `Q-PLATFORM-003`.
+**Notes:** Rejected and expired evidence must state what to do next, not merely that it failed. Quarantined evidence does not satisfy a requirement until the scan succeeds. Transfer bounded by the vendor decision in `Q-OPS-001`.
 
 ### SCR-ELIG-010 — Service price
 **Platform:** Clinic (A) · **Build type:** Extended · **Classification:** New · **Derived:** pending confirmation
@@ -2279,7 +2393,7 @@ Panel id `clinic`, path `/clinic` — both `(Proposed)`. All 54 are `New`; no Cl
 **Entry points:** `SCR-CLINICAL-009`; `SCR-OPS-001`
 **Exits:** `SCR-CLINICAL-015`, `SCR-CLINICAL-016`
 **Lifecycle statuses shown:** `INCOMPLETE`, `COMPLETED`, `REOPENED`; per-item evidence state
-**Notes:** Required evidence and acknowledgments resolve from the accepted snapshot, so requirements differ per case and must be shown per stage rather than generically. Evidence is private, never a public link. Transfer bounded by `Q-PLATFORM-003`.
+**Notes:** Required evidence and acknowledgments resolve from the accepted snapshot, so requirements differ per case and must be shown per stage rather than generically. Evidence is private, never a public link. Transfer bounded by the vendor decision in `Q-OPS-001`.
 
 ### SCR-CLINICAL-015 — Stage completion
 **Platform:** Clinic (A) · **Build type:** Custom · **Classification:** New · **Derived:** pending confirmation
@@ -2411,7 +2525,7 @@ Panel id `clinic`, path `/clinic` — both `(Proposed)`. All 54 are `New`; no Cl
 **Entry points:** `SCR-CLAIMS-006`; `SCR-OPS-001`
 **Exits:** `SCR-CLAIMS-008`; `SCR-FINANCE-009` after an approved refund
 **Lifecycle statuses shown:** claim state; per-item evidence state; effective deadline and its history
-**Notes:** Shows only requirements assigned to the clinic — not the patient's private evidence. Appends to the same claim. Deadline pauses and extensions append and never replace the original. Transfer bounded by `Q-PLATFORM-003`.
+**Notes:** Shows only requirements assigned to the clinic — not the patient's private evidence. Appends to the same claim. Deadline pauses and extensions append and never replace the original. Transfer bounded by the vendor decision in `Q-OPS-001`.
 
 ### SCR-CLAIMS-008 — Clinic claim appeal
 **Platform:** Clinic (A) · **Build type:** Custom · **Classification:** New · **Derived:** pending confirmation
@@ -2425,9 +2539,33 @@ Panel id `clinic`, path `/clinic` — both `(Proposed)`. All 54 are `New`; no Cl
 **Lifecycle statuses shown:** appeal `SUBMITTED`, `UNDER_REVIEW`, `DECIDED`
 **Notes:** Uses the policy snapshot governing the original decision, so the window is historical. The original decision remains intact. Separation of duties governs who reviews it, and the clinic cannot self-adjudicate.
 
-### 11.3 Admin panel — 57 screens
+### SCR-BOOKING-017 — Reschedule proposals
+**Platform:** Clinic (A) · **Classification:** New · **Derived:** confirmed by PO-UX-15
+**Purpose:** Let the clinic propose a different time for a confirmed appointment and respond to patient proposals, in one place with the response deadline visible.
+**Serves:** JTBD-BOOKING-008
+**Requirements:** FR-BOOKING-004
+**Contract:** SDC-BOOKING-002
+**Roles:** Authorized clinic/provider representative within exact provider and branch scope — per `PERMISSIONS_MATRIX` section 9
+**Entry points:** `SCR-BOOKING-011`; the booking work queue
+**Exits:** `SCR-BOOKING-011`
+**Lifecycle statuses shown:** proposal `PENDING`, `ACCEPTED`, `DECLINED`, `EXPIRED`, `WITHDRAWN`; booking `CONFIRMED`
+**Notes:** Front-desk work is interruption-heavy, so the pending proposal, its deadline and the still-authoritative original slot must all be readable without opening anything further. The original slot stays presented as the appointment until acceptance commits. No generic edit of date, provider or service is offered anywhere on this screen. A clinic party cannot accept its own proposal.
 
-Panel id `admin`, path `/admin` — both verified in `app/Providers/Filament/AdminPanelProvider.php`. The shell exists; all 57 domain screens are `New`.
+### SCR-ELIG-021 — Bookings on eligibility hold
+**Platform:** Clinic (A) · **Classification:** New · **Derived:** confirmed by PO-UX-13
+**Purpose:** Show the clinic which confirmed appointments cannot be attended because their eligibility scope is suspended, and why.
+**Serves:** JTBD-ELIG-005
+**Requirements:** FR-ELIG-003, FR-BOOKING-002
+**Contract:** SDC-ELIG-003, SDC-BOOKING-001
+**Roles:** Authorized clinic/provider representative within provider and branch scope
+**Entry points:** `SCR-ELIG-013` suspension notice; `SCR-BOOKING-011`
+**Exits:** `SCR-ELIG-012` for the controlling dependency; `FLOW-ELIG-011` remediation
+**Lifecycle statuses shown:** booking `ELIGIBILITY_REVIEW`; the owning eligibility scope's `SUSPENDED` state
+**Notes:** Start and complete are **absent, not merely disabled with an error on submit** — the appointment is not attendable while the suspension stands. The screen names the controlling dependency and the review due time so the clinic can act on the cause rather than the symptom. It offers no override, because none exists at any role.
+
+### 11.3 Admin panel — 59 screens
+
+Panel id `admin`, path `/admin` — both verified in `app/Providers/Filament/AdminPanelProvider.php`. The shell exists; all 59 domain screens are `New`.
 
 ### SCR-PLATFORM-005 — Privileged sign-in
 **Platform:** Admin (A) · **Build type:** Extended · **Classification:** New · **Derived:** pending confirmation
@@ -2439,7 +2577,7 @@ Panel id `admin`, path `/admin` — both verified in `app/Providers/Filament/Adm
 **Entry points:** `/admin` unauthenticated
 **Exits:** `SCR-PLATFORM-004`
 **Lifecycle statuses shown:** none
-**Notes:** Privileged production roles require a non-SMS second factor per `NFR-IDENTITY-002`; an SMS-only factor is denied for those roles. Extends Filament's stock login. Concrete provider selection is bounded by `Q-PLATFORM-003`. An identity with no active grant is denied rather than shown an empty panel.
+**Notes:** Privileged production roles require a non-SMS second factor per `NFR-IDENTITY-002`; an SMS-only factor is denied for those roles. Extends Filament's stock login. Concrete provider selection is bounded by the vendor decision in `Q-OPS-001`. An identity with no active grant is denied rather than shown an empty panel.
 
 ### SCR-PLATFORM-004 — Admin dashboard
 **Platform:** Admin (A) · **Build type:** Extended · **Classification:** New · **Derived:** pending confirmation
@@ -2750,8 +2888,8 @@ Panel id `admin`, path `/admin` — both verified in `app/Providers/Filament/Adm
 **Roles:** Operations staff within scope
 **Entry points:** `SCR-PLATFORM-004`; `SCR-ELIG-020`; Bookings navigation
 **Exits:** `SCR-BOOKING-015`
-**Lifecycle statuses shown:** all seven booking states; deadline breaches; suspended-scope bookings
-**Notes:** Oversight only. **No force-confirm, no state override, no generic edit.** Bookings in a suspended scope appear with their authoritative state and no available outcome, pending `Q-BOOKING-002`.
+**Lifecycle statuses shown:** all eight booking states including `ELIGIBILITY_REVIEW`; deadline breaches; suspended-scope bookings
+**Notes:** Oversight only. **No force-confirm, no state override, no generic edit, and no attendance override for a booking in `ELIGIBILITY_REVIEW`.** Suspended-scope bookings appear with their authoritative state; their outcome is reached on `SCR-ELIG-022` through the governed review, never asserted from this screen.
 
 ### SCR-BOOKING-015 — Booking oversight
 **Platform:** Admin (A) · **Build type:** Custom · **Classification:** New · **Derived:** pending confirmation
@@ -3115,7 +3253,26 @@ Panel id `admin`, path `/admin` — both verified in `app/Providers/Filament/Adm
 
 <!-- APPEND-MARK -->
 
+### SCR-IDENTITY-038 — Legal representation verification
+**Platform:** Admin (A) · **Classification:** New · **Derived:** confirmed by PO-UX-14
+**Purpose:** Let verification staff assess a legal-basis representation request and decide it, because approval is the only thing that can create the grant.
+**Serves:** JTBD-IDENTITY-012
+**Requirements:** FR-IDENTITY-003, FR-AUDIT-001
+**Contract:** SDC-IDENTITY-005
+**Roles:** Authorized verification staff or admin within assigned review scope — per `PERMISSIONS_MATRIX` section 6
+**Entry points:** `SCR-OPS-001` work queue; `SCR-IDENTITY-030`
+**Exits:** `SCR-OPS-001`; the created grant on `SCR-IDENTITY-032`
+**Lifecycle statuses shown:** request submitted, changes requested, approved, rejected; resulting grant effective period
+**Notes:** Approval writes an explicit grant recording patient, grantee, actions, data scope, purpose, effective period, evidence and the approving reviewer — the reviewer is part of the record, not an implicit actor. Changes requested returns only the named items. Rejection requires a stated reason. Evidence is read under the quarantine rules, never as a public or signed URL.
 
-
-
-
+### SCR-ELIG-022 — Booking eligibility review
+**Platform:** Admin (A) · **Classification:** New · **Derived:** confirmed by PO-UX-13
+**Purpose:** Work the confirmed appointments held by an eligibility suspension to their outcome before the review deadline.
+**Serves:** JTBD-ELIG-005, JTBD-BOOKING-002
+**Requirements:** FR-ELIG-003, FR-BOOKING-002, FR-OPS-001
+**Contract:** SDC-ELIG-004, SDC-OPS-001
+**Roles:** Authorized verification/operations staff; licensed clinical reviewer where the suspension reason requires clinical judgment
+**Entry points:** `SCR-OPS-001` urgent work item; `SCR-ELIG-020`
+**Exits:** `SCR-BOOKING-014`; `SCR-ELIG-020`
+**Lifecycle statuses shown:** booking `ELIGIBILITY_REVIEW`, then `CONFIRMED` or `CANCELLED` reason `PROVIDER_ELIGIBILITY_SUSPENDED`; work item lifecycle state with escalated and overdue as separate flags
+**Notes:** The screen sorts by review due time because that time is never later than two hours before the appointment and may be immediately due. Whether a licensed clinical reviewer is required is a property of the suspension reason, so the screen states it rather than leaving it to the reviewer's judgment. **It offers exactly two outcomes and no attendance override** — the fail-closed rule is structural here, not a validation message.

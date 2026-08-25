@@ -143,7 +143,7 @@ For the engineering-documentation completion run defined by `prompts/ai_project_
 - Do not modify production application code.
 - Preserve unrelated files.
 - Produce one canonical file at a time.
-- Do not begin `ux_00`, `ux_01`, or later UX phases.
+- The UX pipeline is active: the engineering-documentation run is complete and the UX chain owns `docs/ux/**`. Advance one phase per approved gate.
 - Do not lower testing or validation standards.
 - Keep unresolved behavior as `ASM-*`, `Q-*`, or `CONFLICT-*` with severity.
 - Run `docs/scripts/validate_docs.py` in the verification phase and correct mechanical failures before declaring documentation ready.

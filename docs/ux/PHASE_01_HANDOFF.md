@@ -1,53 +1,80 @@
 # Phase 1 Handoff
 
 **Phase:** UX 1 — Discovery, Information Architecture and User Flows
-**Baseline:** 2026-08-25
+**Baseline:** 2026-08-25 · reconciled 2026-08-25 against `PO-2026-08-25-ux-phase1-reconciliation`
 **Status:** Complete, awaiting the Phase 1 gate
 
 **Platform profile:** Patient = **C** (React Native) · Clinic/Doctor = **A** (Filament 5, panel `clinic`) · Admin = **A** (Filament 5, panel `admin`)
-**Input mode:** **Docs-Partial** — the behavioral engineering doc set is complete; no screen inventory existed to inherit, so all 155 screens are derived and classified `New`
+**Input mode:** **Docs-Partial** — the behavioral engineering doc set is complete; no screen inventory existed to inherit, so all 162 screens are derived and classified `New`
 **Accessibility target:** WCAG 2.2 AA, from `NFR-PLATFORM-005`
+
+## What Changed In The Reconciliation
+
+Phase 1 originally shipped 155 screens and 94 flows with two deliberately bounded branches and seventeen recorded gaps. `PO-2026-08-25-ux-phase1-reconciliation` (`PO-UX-07`–`18`) resolved twelve of those gaps plus one assumption. The effect on the model was structural rather than cosmetic:
+
+| Added | Count |
+|---|---:|
+| Screens | 7 — `SCR-PLATFORM-009`, `SCR-BOOKING-016`, `SCR-BOOKING-017`, `SCR-IDENTITY-037`, `SCR-IDENTITY-038`, `SCR-ELIG-021`, `SCR-ELIG-022` |
+| Flows | 6 — `FLOW-IDENTITY-021`, `FLOW-ELIG-015`, `FLOW-BOOKING-013`, `FLOW-BOOKING-014`, `FLOW-REVIEWS-006`, `FLOW-PLATFORM-004` |
+| Jobs | 4 — `JTBD-IDENTITY-012`, `JTBD-BOOKING-008`, `JTBD-REVIEWS-004`, `JTBD-PLATFORM-004` |
+| Lifecycle machines entering the sweep | 3 — reschedule proposal, operational work item, evidence transfer session |
+| Bounded incomplete branches remaining | 0, down from 2 |
+
+That is the measure of how much of the model those questions were holding open: whole journeys, not labelling.
 
 ## Files Produced
 
-Line counts below are measured, not estimated — `wc -l` over the produced files.
+Line counts are measured with `wc -l`, not estimated.
 
 | Path | Lines | Contents |
 |---|---:|---|
-| `docs/ux/01-foundation/UX_FOUNDATION.md` | 1022 | 19 actors, 62 jobs, frequency-by-criticality plot, 46-entity content inventory, 5 design principles, 9 constraint areas |
-| `docs/ux/01-foundation/INFORMATION_ARCHITECTURE.md` | 3121 | 155 screens, 4 sitemaps, 3 navigation models, depth tables, labelling taxonomy, role sweep, 62-status lifecycle sweep |
-| `docs/ux/01-foundation/USER_FLOWS.md` | 3438 | 94 flows with failure, abandon and re-entry paths and a diagram each; cross-flow checks; friction budget |
-| `docs/ux/01-foundation/UPSTREAM_GAPS.md` | 268 | 17 gaps, 8 new `Q-*`, 1 new `CONFLICT-*`, 3 `ASM-*` |
-| `docs/ux/README.md` | 139 | Index, authority chain, ownership split, phase status, registry additions |
-| `docs/ux/scripts/validate_ux_docs.py` | 166 | Phase-aware validator, `ux_01` Appendix A verbatim |
-| `docs/ux/PHASE_01_HANDOFF.md` | 184 | Handoff and verification report |
+| `docs/ux/01-foundation/UX_FOUNDATION.md` | 1060 | 19 actors with confirmed usage contexts, 66 jobs, frequency-by-criticality plot, 46-entity content inventory, 5 design principles, 9 constraint areas |
+| `docs/ux/01-foundation/INFORMATION_ARCHITECTURE.md` | 3278 | 162 screens, 4 sitemaps, 3 navigation models, depth tables, labelling taxonomy, role sweep, 82-status lifecycle sweep across 18 machines |
+| `docs/ux/01-foundation/USER_FLOWS.md` | 3684 | 100 flows with failure, abandon and re-entry paths and a diagram each; cross-flow checks; friction budget |
+| `docs/ux/01-foundation/UPSTREAM_GAPS.md` | 309 | 17 gaps of which 12 are stamped resolved, 3 `ASM-*` of which 1 is resolved, registry additions, halt check, repository observations |
+| `docs/ux/README.md` | 135 | Index, authority chain, ownership split, phase status, registry additions |
+| `docs/ux/scripts/validate_ux_docs.py` | 166 | Phase-aware validator, `ux_01` Appendix A verbatim — written once in Phase 1, not rewritten |
+| `docs/ux/PHASE_01_HANDOFF.md` | this file | Handoff and verification report |
 
-Total: 8338 lines.
+## Repository Correction
 
-Two files outside `docs/ux/**` were changed, both append-only or corrective, and both required:
+The Phase 1 commit recorded all seven artifacts under `Docs/ux/**` while `docs/README.md`, `prompts/**` and both validators reference `docs/ux/**`. On Windows the two collapse to one directory, so the mismatch was invisible locally and would have produced a split tree on a case-sensitive checkout.
+
+Fixed by normalizing the on-disk directory to lowercase and re-recording the seven files through an intermediate rename — seven pure renames, zero content change. **Verified on a genuinely case-sensitive path**: the `docs` and `Docs` trees were extracted onto a directory with `fsutil file setCaseSensitiveInfo` enabled and the UX validator re-run there, returning 0 failures. `Docs/*.pdf` intentionally keeps its casing, because the six source PDFs are referenced as `Docs/...` from `AGENTS.md`, `docs/PRD.md` and `docs/README.md`.
+
+## Canonical Documents Reconciled
+
+Fourteen files outside `docs/ux/**` were changed — thirteen modified plus the new decision record. Every change is traceable to a numbered decision in the PO file. The last table row bundles five files whose change is the same kind of bookkeeping.
 
 | Path | Change |
 |---|---|
-| `docs/README.md` | Appended this phase's `SCR-*`, `FLOW-*`, `JTBD-*`, `Q-*`, `CONFLICT-*` and `ASM-*` allocations to the canonical registry, plus the nine new open items. No existing entry altered. |
-| `docs/scripts/validate_docs.py` | Repointed `OWNER_FILES["SCR"]` from `docs/ux/SCREEN_INVENTORY.md` to `docs/ux/01-foundation/INFORMATION_ARCHITECTURE.md`, and added the UX gap file to the `ASM` owner list. The validator's own comment prescribes this: *"If an approved source later introduces either artifact, update README and this validator in the same documentation change."* Both changes **strengthen** the checks — `SCR` and `ASM` previously ran over empty sets and passed vacuously; they now verify 155 and 3 real IDs against their actual owners. No check was relaxed, no threshold lowered. |
+| `.spec/decisions/PO-2026-08-25-ux-phase1-reconciliation.md` | **New.** `PO-UX-07`–`18`, the authoritative record for everything below. |
+| `AGENTS.md` | Replaced the superseded "Do not begin `ux_00`, `ux_01`, or later UX phases" line, which would have misdirected the next agent now that the UX pipeline is active. Line count unchanged at 149 against a 150 budget. |
+| `docs/domain/STATE_MACHINES.md` | Booking gains `ELIGIBILITY_REVIEW` and defined alternative-closure reasons; new section 8.3 reschedule proposal; treatment plan gains `EXPIRED`; new section 20 work-item lifecycle; new section 21.1 evidence transfer session; review-appeal appellants in 13.1. Old sections 20 and 21 renumbered to 21 and 22. |
+| `docs/domain/PERMISSIONS_MATRIX.md` | Consent versus legal-basis grant paths, unconditional revocation, eligibility-review denials including the no-override rule, reschedule proposal actors, patient review-appeal authority, work-item lifecycle actions. |
+| `docs/domain/CROSS_PLATFORM_BEHAVIOR.md` | Existing-booking safety rule made concrete with a three-platform projection table; booking modification rule; durable notification entries; work-item states; three new work-item source events; open dependencies. |
+| `docs/domain/STAFF_INTERACTION_CONTRACTS.md` | `SDC-OPS-001` gains the state vocabulary and the flag-versus-state rule; three new contracts; `SDC-REVIEWS-001` retitled to cover both appellants. |
+| `docs/api/API_CONTRACTS.md` | `ERR-BOOKING-002` removed from `API-IDENTITY-005`; five new contracts; section 12 changed from "Blocked Detail" to two real platform contracts. |
+| `docs/api/ERROR_CATALOG.md` | `ERR-BOOKING-002` scoped to booking only; `ERR-BOOKING-003` state rule resolved; `ERR-CLINICAL-001` covers expiry and staleness; `ERR-REVIEWS-001` covers both appellants; new `ERR-PLATFORM-005`. |
+| `docs/PRD.md` | Two new requirements — `FR-BOOKING-004`, `FR-PLATFORM-001`. Acceptance criteria extended on `FR-ELIG-003`, `FR-BOOKING-003`, `FR-CLINICAL-001`, `FR-IDENTITY-003`, `FR-REVIEWS-002`, `FR-OPS-001`. |
+| `docs/TRACEABILITY_MATRIX.md`, `docs/TESTING_STRATEGY.md`, `docs/implementation/USER_IMPLEMENTATION_PLAN.md`, `docs/IMPLEMENTATION_PLAN.md`, `docs/README.md` | Traceability rows, `TC-BOOKING-009`, `TC-PLATFORM-013`, `TASK-BOOKING-011`, `TASK-PLATFORM-013`, and the registry. |
 
-No production application code was modified.
+**No production application code was modified.** The two validator edits made during the original phase — repointing `OWNER_FILES["SCR"]` and adding the gap file as an `ASM` owner — still stand and still **strengthen** the checks rather than relaxing them. No check was weakened and no threshold lowered in this reconciliation either.
 
+## IDs Allocated
 
-## IDs Allocated This Phase
+**`SCR-*` — 162 screens**
+`SCR-IDENTITY-001..038` · `SCR-ELIG-001..022` · `SCR-CLINICAL-001..019` · `SCR-BOOKING-001..017` · `SCR-CLAIMS-001..013` · `SCR-FINANCE-001..012` · `SCR-REVIEWS-001..009` · `SCR-CATALOG-001..009` · `SCR-PLATFORM-001..009` · `SCR-OPS-001..006` · `SCR-POLICY-001..004` · `SCR-AUDIT-001..004`
 
-**`SCR-*` — 155 screens**
-`SCR-IDENTITY-001..036` · `SCR-ELIG-001..020` · `SCR-CLINICAL-001..019` · `SCR-BOOKING-001..015` · `SCR-CLAIMS-001..013` · `SCR-FINANCE-001..012` · `SCR-REVIEWS-001..009` · `SCR-CATALOG-001..009` · `SCR-PLATFORM-001..008` · `SCR-OPS-001..006` · `SCR-POLICY-001..004` · `SCR-AUDIT-001..004`
+**`FLOW-*` — 100 flows**
+`FLOW-IDENTITY-001..021` · `FLOW-ELIG-001..015` · `FLOW-BOOKING-001..014` · `FLOW-CLINICAL-001..010` · `FLOW-CLAIMS-001..009` · `FLOW-FINANCE-001..008` · `FLOW-REVIEWS-001..006` · `FLOW-CATALOG-001..005` · `FLOW-OPS-001..004` · `FLOW-PLATFORM-001..004` · `FLOW-POLICY-001..002` · `FLOW-AUDIT-001..002`
 
-**`FLOW-*` — 94 flows**
-`FLOW-IDENTITY-001..020` · `FLOW-ELIG-001..014` · `FLOW-BOOKING-001..012` · `FLOW-CLINICAL-001..010` · `FLOW-CLAIMS-001..009` · `FLOW-FINANCE-001..008` · `FLOW-REVIEWS-001..005` · `FLOW-CATALOG-001..005` · `FLOW-OPS-001..004` · `FLOW-PLATFORM-001..003` · `FLOW-POLICY-001..002` · `FLOW-AUDIT-001..002`
+**`JTBD-*` — 66 jobs**
+`JTBD-IDENTITY-001..012` · `JTBD-ELIG-001..008` · `JTBD-BOOKING-001..008` · `JTBD-CLINICAL-001..007` · `JTBD-CLAIMS-001..007` · `JTBD-FINANCE-001..006` · `JTBD-REVIEWS-001..004` · `JTBD-PLATFORM-001..004` · `JTBD-CATALOG-001..003` · `JTBD-OPS-001..003` · `JTBD-POLICY-001..002` · `JTBD-AUDIT-001..002`
 
-**`JTBD-*` — 62 jobs**
-`JTBD-IDENTITY-001..011` · `JTBD-ELIG-001..008` · `JTBD-CLINICAL-001..007` · `JTBD-BOOKING-001..007` · `JTBD-CLAIMS-001..007` · `JTBD-FINANCE-001..006` · `JTBD-CATALOG-001..003` · `JTBD-OPS-001..003` · `JTBD-REVIEWS-001..003` · `JTBD-PLATFORM-001..003` · `JTBD-POLICY-001..002` · `JTBD-AUDIT-001..002`
+**Canonical additions** — `FR-BOOKING-004`, `FR-PLATFORM-001`, `API-IDENTITY-006`, `API-BOOKING-006`, `API-BOOKING-007`, `API-PLATFORM-001`, `API-PLATFORM-002`, `ERR-PLATFORM-005`, `SDC-IDENTITY-005`, `SDC-BOOKING-002`, `SDC-ELIG-004`, `TASK-BOOKING-011`, `TASK-PLATFORM-013`, `TC-BOOKING-009`, `TC-PLATFORM-013`
 
-**Shared register** — `Q-OPS-002`, `Q-PLATFORM-005`, `Q-PLATFORM-006`, `Q-PLATFORM-007`, `Q-IDENTITY-001`, `Q-REVIEWS-001`, `Q-BOOKING-003`, `Q-CLINICAL-001`, `CONFLICT-BOOKING-001`, `ASM-PLATFORM-001`, `ASM-IDENTITY-001`, `ASM-ELIG-001`
-
-No existing ID was renumbered, reused or repurposed. `docs/README.md` requires an append-only registry update for the `SCR`, `Q`, `CONFLICT` and `ASM` columns.
+No existing ID was renumbered, reused or repurposed. Resolved `Q-*`, `CONFLICT-*` and `ASM-*` IDs remain permanently allocated and are marked Resolved rather than deleted.
 
 ---
 
@@ -57,128 +84,127 @@ No existing ID was renumbered, reused or repurposed. `docs/README.md` requires a
 
 ```
 $ python docs/ux/scripts/validate_ux_docs.py --phase 1
-phase 1 | 155 screens, 94 flows, 0 wireframes, 0 components, 0 widgets
+phase 1 | 162 screens, 100 flows, 0 wireframes, 0 components, 0 widgets
 
 0 failure(s), 0 warning(s)
 ```
 
-Exit code **0**. Note: `python3` is not on this machine's PATH; the working interpreter is `C:\laragon\bin\python\python-3.13\python.exe` (Python 3.13.0).
+```
+$ python docs/scripts/validate_docs.py
+Result: 0 failure(s), 0 warning(s)
+```
 
-The engineering-docs validator was re-run after the registry update and the owner-path corrections: `python Docs/scripts/validate_docs.py` → **0 failures, 0 warnings**, exit 0, over 30 markdown files (23 before this phase, plus the 7 produced here), 51 `FR-*`, 14 `NFR-*`, 31 `API-*`, 19 `ERR-*`. It now also verifies all 155 `SCR-*` and 3 `ASM-*` allocations against their owning documents, which it could not do before because both sets were empty.
+Both exit **0**. `python3` is not on this machine's PATH; the working interpreter is `C:\laragon\bin\python\python-3.13\python.exe`.
 
-## Coverage
+The engineering validator now reports 67 requirements (53 `FR-*`, 14 `NFR-*`), 36 `API-*`, 20 `ERR-*`, 84 `TASK-*`, 84 `TC-*`, `AGENTS.md` at 149 lines against a 150 budget, and `docs/README.md` at 200 against a 200 budget.
 
-- **Actors:** 19 UI-bearing, plus system automation and 2 explicit non-roles. With environment documented: **0/19** — missing for all 19, raised once as `Q-PLATFORM-006` rather than assumed.
-- **JTBD:** 62 — traced to ≥1 `FR-*`: **62/62**. Untraced: none.
-- **JTBD served by ≥1 screen:** **62/62**. Orphans: none.
-- **JTBD appearing in ≥1 flow:** **62/62**. Orphans: none.
-- **Screens:** 155 — serving ≥1 JTBD: **155/155**. Orphans: none.
-- **Screens referencing ≥1 requirement:** **155/155**.
-- **Screens naming a data or action contract:** **155/155** — `API-*` for Patient, `SDC-*` for Clinic and Admin, per `PO-UX-05`.
-- **User-visible FRs reachable from a screen:** **37/37**. Unreachable: none. The PRD marks the other 14 of 51 as background or system behavior — `FR-IDENTITY-001`, `FR-ELIG-002` to `006`, `FR-ELIG-011` to `015`, `FR-FINANCE-005`, `FR-FINANCE-007`, `FR-AUDIT-003` — and all 14 are nonetheless referenced by screens that display their resulting state.
-- **Flows:** 94 — with failure paths: **94/94**; with abandon paths: **94/94**; with re-entry: **94/94**; with a friction count: **94/94**; with a diagram: **94/94**. Missing: none.
-- **`ERR-*` with a UX destination:** **19/19**. Without: none.
-- **`SDC-*` referenced:** **17/17**.
-- **`API-*` referenced:** **29/31**. Deliberately unreferenced: `API-ELIG-003` and `API-ELIG-004`. `API_CONTRACTS.md` section 6 states that if the doctor experience is Filament-only at implementation time these use cases run in-process and the external endpoints may be omitted. The Clinic panel is Profile A, so `SDC-ELIG-001` is the correct contract for `SCR-ELIG-007` and `SCR-ELIG-008`. Referencing the optional REST variants as well would imply a non-Filament provider client that no approved source establishes.
+## Coverage — Measured
+
+- **Actors:** 19 UI-bearing, plus system automation and 2 explicit non-roles. **With environment and expertise documented: 19/19**, from the six confirmed role classes in `PO-UX-07`.
+- **Jobs:** 66 — traced to at least one requirement **66/66**; served by at least one screen **66/66**; appearing in at least one flow **66/66**. Orphans: none.
+- **Screens:** 162 — serving at least one job **162/162**; naming at least one requirement **162/162**; naming a data or action contract **162/162** (`API-*` for Patient, `SDC-*` for Clinic and Admin, per `PO-UX-05`).
+- **Flows:** 100 — with failure paths **100/100**; abandon paths **100/100**; re-entry **100/100**; a friction count **100/100**; a diagram **100/100**; naming at least one screen **100/100**.
+- **`ERR-*` with a UX destination:** **20/20**.
+- **`SDC-*` referenced:** **20/20**.
+- **`API-*` referenced:** **34/36**. Deliberately unreferenced: `API-ELIG-003` and `API-ELIG-004`. `API_CONTRACTS.md` section 6 states that where the doctor experience is Filament-only these use cases run in-process; the Clinic panel is Profile A, so `SDC-ELIG-001` is the correct contract for `SCR-ELIG-007` and `SCR-ELIG-008`. Referencing the optional REST variants would imply a non-Filament provider client that no approved source establishes.
+- **`FR-*` referenced across the UX set:** **53/53**.
 
 ## Sweeps
 
-- **Roles with a landing screen:** **19/19**. Missing: none.
-- **Permitted actions with no screen:** **none.** All `Allow` and `Conditional` rows across `PERMISSIONS_MATRIX.md` sections 6 to 15 were checked against the screen model; 83 action rows map to reachable screens.
-- **Denied actions visible where they should not be:** **none.** 21 `Deny` categories checked, including direct `S`/`P`/`H`/`I` entry, raw `I` exposure, composite scoring, money movement, Admin clinical authoring, non-treating plan authorship, immutable-record editing, audit mutation, forced booking confirmation, premature no-show, duplicate active review, unentitled protection claim, prohibited self-approval, clinical credential misuse, administrator scope bypass, guardian masquerade, and deletion under legal hold.
-- **Lifecycle statuses never displayed:** **none.** **62/62** statuses across 15 machines have a screen, and every action valid from each is reachable. Two branches are bounded rather than missing: `ALTERNATIVE_PROPOSED` on expiry (`Q-BOOKING-001`) and existing bookings after suspension (`Q-BOOKING-002`).
-- **Daily-blocking JTBD deeper than 2 levels:** **3** — `JTBD-CLINICAL-001`, `JTBD-CLINICAL-003`, `JTBD-CLAIMS-005`. All three reach their working screen at depth 2 from the work queue; the queue is the depth-reduction mechanism, which is why it is the staff landing surface rather than a report. `JTBD-IDENTITY-003` shows depth 3 for `SCR-IDENTITY-008`, but the active-subject indicator is global chrome and that screen exists only for switching.
-- **Flows over friction budget for their frequency:** **3** — `FLOW-BOOKING-003` (daily-blocking, deadline-bound, 3 screens), `FLOW-OPS-001` (daily-blocking, 3–4 screens, structurally inherent to work items referencing rather than replacing source records), and `FLOW-CLINICAL-001` (5 screens, over budget on raw count but deliberate friction on an irreversible patient-visible act). The first two are carried to Phase 2 as compression targets.
-- **Algorithm-hiding sweep:** **10/10 internal concepts pass.** Zero patient screens require the patient to understand or manipulate `S`, `P`, `H`, `I`, `K`, `EU`, a grade cap, a gate result, a policy version or a composite score; zero patient screens contain a control that selects one. The same check was applied to the Clinic panel, since `FR-ELIG-007` extends the prohibition there: `SCR-ELIG-008` captures facts and answers only, and `SCR-ELIG-011` and `SCR-ELIG-012` show computed status and actionable blockers with no override control and no raw `I`.
-- **Cross-platform sweep:** 8 dedicated cross-platform lifecycle flows cover booking, treatment plan, eligibility change, review, claim, external financial event, access revocation and clinic onboarding. Each distinguishes user action, automatic system action and human review, and each names what the other platforms observe and when.
+- **Roles with a landing screen:** **19/19**.
+- **Permitted actions with no screen:** **none.** All `Allow` and `Conditional` rows across `PERMISSIONS_MATRIX.md` sections 6 to 16 map to reachable screens, including the fourteen rows added by this reconciliation.
+- **Denied actions visible where they should not be:** **none.** The `Deny` categories now include the two added by `PO-UX-13` — starting or completing a visit in `ELIGIBILITY_REVIEW`, and any attendance override at any role — plus the `PO-UX-11` rule that no state may block a revocation and the `PO-UX-15` prohibition on generic booking editing.
+- **Lifecycle statuses never displayed:** **none. 82/82** statuses across 18 machines have a screen and every action valid from each is reachable. **No bounded branch remains.**
+- **Algorithm-hiding sweep:** **10/10 internal concepts pass.** Zero patient screens require the patient to understand or manipulate `S`, `P`, `H`, `I`, `K`, `EU`, a grade cap, a gate result, a policy version or a composite score; zero contain a control that selects one. Re-checked against the seven new screens: none exposes an internal value, and `SCR-ELIG-021` and `SCR-ELIG-022` present the controlling dependency and review deadline without raw `I`.
+- **Cross-platform sweep:** 9 dedicated cross-platform lifecycle flows now cover booking, treatment plan, eligibility change, review, claim, external financial event, access revocation, clinic onboarding and eligibility review. Each distinguishes user action, automatic system action and human review.
+- **Visual-detail violations:** **0.** An independent scan of all `docs/ux/*.md` for hex values, pixel, millisecond and rem literals and colour words returns zero matches.
+- **Emoji and pictographs:** **0** across `docs/ux/**` and the new decision file, arrows and typographic dashes excluded as permitted.
 
-## Scope Discipline
+## Fail-Closed Rules Verified In The Model
 
-- **Screens or actions with no requirement source:** **none.** Every screen names at least one `FR-*` and at least one contract. Four candidate screens were rejected during derivation as state variants or owned regions, and the reasoning is recorded in `INFORMATION_ARCHITECTURE.md` section 1.2.
-- **Visual or layout decisions made in this phase:** **none.** No layout, region, component, token, colour, type, icon, copy string, widget or data-state behavior appears in any Phase 1 file. Confirmed mechanically: the validator's raw-value and colour-word scan over `01-foundation/**` returns clean, and an independent scan of all four foundation files for hex values, pixel and millisecond literals, and colour words returns zero matches.
-- **Product behavior invented:** **none.** Two flow branches stop where their destination is undefined upstream rather than being completed by inference.
+Three rules from this reconciliation are safety-critical, so they were checked structurally rather than accepted as prose:
 
-## Gaps Raised
+1. **No attendance override.** `SCR-ELIG-021` omits start and complete rather than disabling them; `SCR-ELIG-022` offers exactly two outcomes; `SCR-BOOKING-014` states no override exists; `PERMISSIONS_MATRIX` carries an explicit `Deny` row at every role.
+2. **Revocation is never blocked.** No booking-domain error is reachable from `SCR-IDENTITY-007`, and `FLOW-IDENTITY-005` has no blocked branch.
+3. **A pending reschedule never moves the appointment.** `SCR-BOOKING-016`, `SCR-BOOKING-017`, `FLOW-BOOKING-013`, `FLOW-BOOKING-014` and the section 10.4 sweep all state that the original slot stays authoritative until acceptance commits.
 
-**Blockers: 0 new** · **Major: 8 new, 5 carried** · **Minor: 2 new IDs, 3 unnumbered notes, 4 carried**
+## Gaps
 
-`Q-PLATFORM-001` remains a carried Blocker against the *completeness claim* only — the authoritative SRS is not machine-readable, so this phase covers the approved `.spec` baseline and the canonical `docs/` set rather than a certified full reconciliation. It blocked no artifact.
+**Blockers: 0 new** · **Resolved this reconciliation: 12 gaps plus 1 assumption**
 
-**Halt check:** 0 of 155 screens blocked; 2 of 94 flows carry a bounded incomplete branch (2%), far under the ~30% threshold. No Blocker touches the role model, the data model or navigation structure. **Phase 1 completes.**
+Still carried, none constraining Phase 2 structure:
+
+| ID | Severity | Effect on Phase 2 |
+|---|---|---|
+| `Q-PLATFORM-001` | Blocker (completeness claim only) | None on wireframes. Limits what may be claimed about SRS coverage. |
+| `Q-CATALOG-001`, `Q-ELIG-001` | Major | Constrain content, not structure. |
+| `Q-PLATFORM-002` | Major | Retention periods await legal validation. |
+| `Q-OPS-001` | Major | Hosting topology, plus the storage, scanner, OTP and notification vendor selection folded in from `Q-PLATFORM-003`. **Does not block the evidence wireframes** — the eight session states are fixed and vendor-independent. |
+| `Q-PLATFORM-004` | Minor | Expected population versus engineering envelope. |
+| `ASM-IDENTITY-001`, `ASM-ELIG-001` | Assumption | Both recorded with what breaks if wrong. |
+
+**Halt check:** 0 of 162 screens blocked; 0 of 100 flows carry a bounded incomplete branch. No Blocker touches the role model, the data model or navigation structure. **Phase 1 completes.**
 
 ---
 
 ## Decisions Made — Do Not Re-Open Downstream
 
 1. **Three platforms, three information architectures.** Attention-driven prominence for the Patient app; stable learnable navigation for both panels. Clinic and Admin are separate panels with separate IA, not one governance console.
-2. **Patient primary navigation is four destinations** — Home, Discover, My care, Profile. Finance, reviews and claims are case-scoped and reached through their case, because every one of them is case-scoped in the data model.
-3. **The staff work queue is the landing surface, not a report.** It is the home for six roles and the depth-reduction mechanism that brings three daily-blocking jobs from depth 3 to depth 2.
-4. **One Admin dashboard for eleven roles**, with content filtered by active grants. Eleven near-duplicate role landing screens were rejected.
-5. **The onboarding portal sits outside the authenticated Clinic panel.** `SCR-IDENTITY-009` to `SCR-IDENTITY-018` are pre-authentication; `SCR-IDENTITY-025` is reachable by invitation only.
+2. **Patient primary navigation is four destinations** — Home, Discover, My care, Profile. Confirmed by `PO-UX-09`, which explicitly declined a fifth tab for notifications. The notification centre is a utility destination from the app chrome.
+3. **The staff work queue is the landing surface, not a report.** Home for six roles and the depth-reduction mechanism bringing three daily-blocking jobs from depth 3 to depth 2.
+4. **One Admin dashboard for eleven roles**, content filtered by active grants. Eleven near-duplicate role landing screens were rejected.
+5. **The onboarding portal sits outside the authenticated Clinic panel.** `SCR-IDENTITY-009` to `SCR-IDENTITY-018` are pre-authentication; `SCR-IDENTITY-025` is invitation-only.
 6. **Applicant contact verification precedes application content**, which is what makes draft save and resume possible (`ASM-IDENTITY-001`).
 7. **Provider and branch context is panel-global chrome** on the Clinic panel, not a per-form field — a deviation from stock Filament justified by `JTBD-IDENTITY-011` being daily-and-blocking.
 8. **The comparison tray is a region of `SCR-ELIG-002`**, not a screen. The comparison itself is `SCR-ELIG-005`.
-9. **Booking may proceed directly from a result row** (`ASM-ELIG-001`), which reduces the shortest booking path from seven hops to four.
-10. **`SCR-PLATFORM-001` is the patient's re-entry surface** for every deadline-bound item, pending `Q-PLATFORM-005` (`ASM-PLATFORM-001`).
-11. **Four candidates were rejected as screens** — booking-submitted confirmation, accepted-plan read-only view, comparison tray, and claim decision view — with reasons recorded.
-12. **State meanings, not state labels.** Every status records what must be communicated to which actor; the final Arabic string is a Phase 3 `TXT-*` allocation.
+9. **Booking may proceed directly from a result row** (`ASM-ELIG-001`), reducing the shortest booking path from seven hops to four.
+10. **`SCR-PLATFORM-001` is the patient's attention surface and `SCR-PLATFORM-009` is the durable record.** Both exist; deadline-bearing items appear on both, which is what makes push, SMS and email optional adapters rather than load-bearing infrastructure.
+11. **Two representation paths, kept separate.** `FLOW-IDENTITY-004` is consent, `FLOW-IDENTITY-021` is legal-basis with Admin verification. Merging them would either over-burden the consenting patient or under-verify the dependent case.
+12. **Rescheduling is a governed proposal, never an edit.** The original slot stays authoritative while a proposal is pending, on every platform.
+13. **Four candidates were rejected as screens** — booking-submitted confirmation, accepted-plan read-only view, comparison tray, and claim decision view — with reasons recorded.
+14. **State meanings, not state labels.** Every status records what must be communicated to which actor; the final Arabic string is a Phase 3 `TXT-*` allocation.
 
-## Assumptions In Force
+## Copy Obligations Carried To Phase 3
 
-| ID | Assumption | What breaks if wrong |
-|---|---|---|
-| `ASM-PLATFORM-001` | The attention surface on `SCR-PLATFORM-001` is the patient's primary re-entry path | If a notification inbox is later established, the attention feed's role changes from load-bearing to supplementary. If no attention surface is wanted, `FLOW-BOOKING-006`, `FLOW-CLAIMS-003`, `FLOW-CLINICAL-007` and `FLOW-FINANCE-004` lose their only delivery-independent re-entry path. |
-| `ASM-IDENTITY-001` | Applicant contact verification precedes application content | If verification belongs at submission, draft resume needs a different identification mechanism and `FLOW-IDENTITY-005` and `FLOW-IDENTITY-006` reorder. |
-| `ASM-ELIG-001` | `SCR-ELIG-003` is an optional deepening, not a mandatory booking step | If the decision card must be viewed before booking, every booking path gains a screen and `FLOW-BOOKING-001` and `FLOW-ELIG-005` lengthen. |
+Three states have an engineering label whose plain reading would tell the user something false. These are `TXT-*` obligations, not suggestions:
 
-## Blockers Carried Forward
-
-| ID | Severity | Effect on Phase 2 |
-|---|---|---|
-| `Q-PLATFORM-001` | Blocker (completeness claim only) | None on wireframes. Limits what may be claimed about SRS coverage. |
-| `Q-BOOKING-001` | Major | `SCR-BOOKING-005` cannot wireframe a terminal outcome state for an expired alternative. Wireframe the disabled-acceptance state only. |
-| `Q-BOOKING-002` | Major | `SCR-ELIG-013`, `SCR-BOOKING-014` and `SCR-BOOKING-015` cannot wireframe an outcome for existing bookings in a suspended scope. |
-| `Q-PLATFORM-003` | Major | Five evidence screens cannot wireframe the transfer interaction, its progress or its resumability. Wireframe the requirement, per-item state and recovery. |
-| `Q-OPS-002` | Major | `SCR-OPS-001`, `SCR-OPS-002` and `SCR-OPS-003` cannot wireframe state chips, state filters or state-based grouping. |
-| `Q-PLATFORM-005` | Major | Affects whether a notification-history screen exists at all. Do not wireframe one. |
-| `Q-PLATFORM-006` | Major | **Directly limits Phase 2.** Density, target size and confirmation friction are the three things wireframes decide, and the environment driving them is undocumented for all 19 actors. |
-| `Q-PLATFORM-007` | Major | Prominence rests on documented responsibility rather than observed behavior. |
-| `Q-IDENTITY-001` | Major | The dependent-who-cannot-self-grant path has no screen to wireframe. |
-| `Q-REVIEWS-001` | Major | Determines whether `SCR-REVIEWS-004` exists for patients. |
-| `CONFLICT-BOOKING-001` | Major | Affects the error surface on `SCR-IDENTITY-007`. |
-| `Q-CATALOG-001`, `Q-ELIG-001` | Major | Constrain content, not structure. |
-| `Q-BOOKING-003`, `Q-CLINICAL-001`, `Q-PLATFORM-002`, `Q-OPS-001`, `Q-PLATFORM-004` | Minor | No effect on wireframe structure. |
+1. **`CANCELLED` with reason `ALTERNATIVE_DECLINED` or `ALTERNATIVE_EXPIRED`** must read as "the appointment was not confirmed". Punitive cancellation language would assert a penalty that does not exist.
+2. **`ELIGIBILITY_REVIEW`** must read as a hold pending a check — never a provider accusation, never an instruction to attend.
+3. **`FAILED_RETRYABLE` versus `REJECTED`** on evidence must stay distinct. Conflating them tells a patient on a weak connection that their document was refused when the network merely dropped, which is the most likely evidence failure in this product's conditions.
 
 ## Phase 2 Must Read
 
 1. `PHASE_01_HANDOFF.md` — this file, especially the next section.
-2. `01-foundation/INFORMATION_ARCHITECTURE.md` — the screen model is the wireframe scope; section 10's lifecycle sweep names which states each screen must show.
+2. `01-foundation/INFORMATION_ARCHITECTURE.md` — the screen model is the wireframe scope; section 10's sweep names which states each screen must show.
 3. `01-foundation/USER_FLOWS.md` — every wireframe must serve at least one flow; the failure and abandon paths are the layout-changing states.
-4. `01-foundation/UX_FOUNDATION.md` sections 4 and 5 — the frequency-by-criticality plot decides prominence; the content inventory supplies worst-case content for sizing.
-5. `01-foundation/UPSTREAM_GAPS.md` — what cannot be wireframed and why.
-6. `docs/database/ERD.md` — real entity and field names for placeholder content. Never lorem ipsum.
-7. `docs/domain/STAFF_INTERACTION_CONTRACTS.md` — the `SDC-*` projections bound what each staff screen may display.
+4. `01-foundation/UX_FOUNDATION.md` sections 2, 4 and 5 — the confirmed usage contexts drive density and target size; the frequency-by-criticality plot decides prominence; the content inventory supplies worst-case content for sizing.
+5. `01-foundation/UPSTREAM_GAPS.md` — what is resolved, what remains, and what breaks if the two assumptions are wrong.
+6. `.spec/decisions/PO-2026-08-25-ux-phase1-reconciliation.md` — the authority for everything the reconciliation changed.
+7. `docs/database/ERD.md` — real entity and field names for placeholder content. Never lorem ipsum.
+8. `docs/domain/STAFF_INTERACTION_CONTRACTS.md` — the `SDC-*` projections bound what each staff screen may display.
 
 ## Phase 2 Must NOT Re-Decide
 
-- **The screen model.** All 155 screens, their IDs, their platform assignment and their classification. A needed split is a `Q-*`, not a wireframe decision.
-- **The navigation structure.** Primary, secondary and utility navigation on all three platforms; the four Patient destinations; both panels' navigation groups and their ordering; every landing screen.
-- **The flow set.** All 94 flows, their screen sequences, their failure and abandon paths and their re-entry behavior.
-- **The platform profiles.** Patient = C, Clinic = A, Admin = A. In particular: no hover state may be emitted for the Patient app, and both panels specify framework configuration rather than free-form layout.
+- **The screen model.** All 162 screens, their IDs, platform assignment and classification. A needed split is a `Q-*`, not a wireframe decision.
+- **The navigation structure.** Primary, secondary and utility navigation on all three platforms; the four Patient destinations and the decision not to add a fifth; both panels' navigation groups and ordering; every landing screen.
+- **The flow set.** All 100 flows, their screen sequences, failure and abandon paths, and re-entry behavior.
+- **The platform profiles.** Patient = C, Clinic = A, Admin = A. No hover state may be emitted for the Patient app; both panels specify framework configuration rather than free-form layout.
 - **The three-platform separation.** Do not converge the panels or port a panel pattern into the Patient app.
-- **Depth and the queue's role.** The work queue as staff landing surface, and the depth reductions recorded in `INFORMATION_ARCHITECTURE.md` section 7.4.
-- **The twelve decisions** listed above, and the three `ASM-*`.
+- **The confirmed usage contexts.** `PO-UX-07` is settled. Density, target size and confirmation friction follow from it and are not re-argued per screen.
+- **Depth and the queue's role.** The work queue as staff landing surface, and the depth reductions in `INFORMATION_ARCHITECTURE.md` section 7.4.
+- **The fourteen decisions** above, and the two remaining `ASM-*`.
 - **The labelling taxonomy** in `INFORMATION_ARCHITECTURE.md` section 8, including every audience translation of an internal term. A deviation is a `CONFLICT-*`.
-- **The algorithm-hiding boundary.** No wireframe may introduce a control that selects `S`, `P`, `H`, `I`, `K`, `EU`, a grade or a final eligibility value, on any platform. No wireframe may show a composite score or raw `I`.
+- **The algorithm-hiding boundary.** No wireframe may introduce a control that selects `S`, `P`, `H`, `I`, `K`, `EU`, a grade or a final eligibility value, on any platform, nor show a composite score or raw `I`.
 - **The financial boundary.** No wireframe may contain a pay, wallet, balance, top-up, withdraw or platform-refund affordance.
-- **The two bounded branches.** Do not complete `FLOW-BOOKING-007` or the existing-booking branch of `FLOW-ELIG-012` with an invented outcome.
+- **The three fail-closed rules.** No attendance override for `ELIGIBILITY_REVIEW`; no state may block a guardian revocation; a pending reschedule never displaces the original appointment.
+- **Escalated and overdue are flags, not states.** The work queue must render them independently of the lifecycle state.
 
 ## Recommendation
 
-Phase 1 is mechanically clean and structurally complete: 0 failures, 0 warnings, 155 of 155 screens and 94 of 94 flows passing every check, 62 of 62 lifecycle statuses mapped, 19 of 19 roles with a landing screen, and no permitted action without a screen.
+Phase 1 is mechanically clean and structurally complete: 0 failures and 0 warnings from both validators, 162 of 162 screens and 100 of 100 flows passing every check, 82 of 82 lifecycle statuses mapped across 18 machines, 66 of 66 jobs traced and served, 19 of 19 roles with a landing screen, no permitted action without a screen, and no bounded incomplete branch.
 
-**Before Phase 2 begins, `Q-PLATFORM-006` should be answered.** Environment and expertise are undocumented for all 19 actors, and density, target size and confirmation friction — the three things wireframes exist to decide — depend on them. Answering it for the three highest-frequency roles (clinic representative, treating dentist, operations staff) would cover most of the 111 panel screens.
+**The blocker that previously stood in front of Phase 2 is gone.** `Q-PLATFORM-006` was the one open item that directly limited wireframing, because density, target size and confirmation friction are exactly what wireframes decide and the environment driving them was undocumented for all 19 actors. `PO-UX-07` answered it for every role class.
 
-The four remaining Phase-2-relevant Majors — `Q-OPS-002`, `Q-PLATFORM-005`, `Q-REVIEWS-001` and `Q-PLATFORM-003` — each remove a specific region or screen from wireframe scope rather than blocking the phase. Phase 2 can proceed without them provided those regions are left explicitly deferred rather than filled in.
+**Phase 2 can proceed on the full 162-screen scope.** No remaining open item removes a screen or a region from wireframe scope. In particular the five evidence-bearing screens are now fully wireframable: `PO-UX-17` fixed the eight session states without naming a vendor, so the storage and scanner decision under `Q-OPS-001` does not touch the interaction.
 
-`Q-PLATFORM-007` will not be resolved by a decision. Five usability sessions with clinic staff would validate the frequency-by-criticality plot's daily-and-blocking placements at low cost, and that plot drives every prominence decision Phase 2 makes.
+Two things worth carrying into Phase 2 as deliberate work rather than assumptions. The **three copy obligations** above are places where a literal rendering of the engineering state would misinform the user, and they need to be caught at wireframe stage where the state is placed, not discovered at Phase 3 when the string is written. And **`Q-PLATFORM-007` will not be resolved by a decision** — `PO-UX-18` accepted it. Five usability sessions with clinic staff would validate the frequency-by-criticality plot's daily-and-blocking placements at low cost, and that plot drives every prominence decision Phase 2 makes.

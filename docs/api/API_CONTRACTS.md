@@ -52,6 +52,7 @@ The following error IDs are referenced by contracts below and are defined canoni
 - `ERR-REVIEWS-001` — review or appeal is not eligible.
 - `ERR-CLAIMS-001` — claim/refund request is not eligible or is outside its policy window.
 - `ERR-CLAIMS-002` — required claim evidence is incomplete or invalid.
+- `ERR-PLATFORM-005` — evidence rejected or failed validation.
 
 ## 4. Implemented Contract
 
@@ -163,11 +164,28 @@ Current route and current OpenAPI evidence align on this single public route. `C
 **Actor / Auth:** Authenticated authorized grantor/administrator according to governing policy.  
 **Request:** Optional required-by-policy `reason: string`.  
 **Response:** `204`.  
-**Errors:** `ERR-IDENTITY-001`, `ERR-IDENTITY-002`, `ERR-PLATFORM-002`, `ERR-BOOKING-002` only if policy forbids revocation in a specific protected transition; otherwise revocation is immediate.  
-**Side Effects:** Ends authorization immediately while retaining historical grant/audit records.  
+**Errors:** `ERR-IDENTITY-001`, `ERR-IDENTITY-002`, `ERR-PLATFORM-002`.  
+**Business Rules:** Revocation is **always immediate**. No booking state may block it, and no booking-domain error is raised by this identity action (`PO-UX-11`). Revocation denies subsequent guardian actions, preserves all historical attribution, and does not delete or cancel the patient's existing booking or case. Where continuity of care needs follow-up, an operational attention item is created instead of refusing the revocation.  
+**Side Effects:** Ends authorization immediately while retaining historical grant/audit records; may create a continuity-of-care work item.  
 **Idempotency / Concurrency:** Repeated revocation is safe and creates no duplicate effect.  
 **Data Touched:** Grant lifecycle/audit.  
 **Tests:** Required coverage includes immediate denial after revocation and repeated-action safety.
+
+
+### API-IDENTITY-006 — Submit Legal-Basis Representation Request
+
+**Requirements:** FR-IDENTITY-003, NFR-IDENTITY-001, NFR-AUDIT-001  
+**Status:** **Proposed**  
+**Method / Path:** `POST /api/v1/legal-representation-requests`  
+**Actor / Auth:** Authenticated guardian applicant. This is the **only** patient-facing path for a grant the subject patient cannot consent to.  
+**Request:** `subject_identification: object`, `relationship: string`, `legal_basis: string`, `requested_actions: string[]`, `requested_data_scope: string[]`, `purpose: string`, `evidence_ids: string[]`; idempotency key required.  
+**Response:** `201` with request ID and review state.  
+**Errors:** `ERR-PLATFORM-001`, `ERR-IDENTITY-001`, `ERR-IDENTITY-002`, `ERR-PLATFORM-005`, `ERR-AUDIT-001`.  
+**Business Rules:** Submission creates a **request under Admin Verification, never a grant**. The guardian cannot self-authorize by entering a dependent. Only an authorized Verification/Admin decision creates the `LEGAL_BASIS` GuardianGrant, with explicit patient, grantee, actions, data scope, purpose, effective period, evidence, and approving reviewer (`PO-UX-14`). The staff review side is in-process and is owned by `SDC-IDENTITY-005`, not by a REST contract.  
+**Side Effects:** Creates the request plus a verification work item; grants nothing.  
+**Idempotency / Concurrency:** Required; one committed request per equivalent submission.  
+**Data Touched:** Representation request, evidence refs, work queue, audit/idempotency.  
+**Tests:** Required coverage includes that submission alone grants no access, missing/invalid evidence rejection, duplicate submission, and that approval is the only path that creates an effective grant.
 
 ## 6. Eligibility and Provider Discovery
 
@@ -280,11 +298,11 @@ Current route and current OpenAPI evidence align on this single public route. `C
 **Request:** `proposal_id: string`; idempotency key required.  
 **Response:** `200` with resulting booking state and confirmed/proposed slot metadata.  
 **Errors:** `ERR-IDENTITY-001`, `ERR-IDENTITY-002`, `ERR-PLATFORM-002`, `ERR-BOOKING-001`, `ERR-BOOKING-002`, `ERR-BOOKING-003`, `ERR-ELIG-001`, `ERR-AUDIT-001`.  
-**Business Rules:** Revalidate deadline, slot capacity, and current eligibility before confirmation. An expired or otherwise non-actionable alternative must be rejected; the canonical resulting booking state after alternative expiry or explicit patient decline remains unresolved under `Q-BOOKING-001` and must not be inferred by this API or its clients.  
+**Business Rules:** Revalidate deadline, slot capacity, and current eligibility before confirmation. An expired or declined alternative is rejected: the booking is already `CANCELLED` with reason `ALTERNATIVE_EXPIRED` or `ALTERNATIVE_DECLINED` (`PO-UX-12`). That closure is an unconfirmed request closure with no patient penalty, so the response must let the client present "the appointment was not confirmed" and offer a new booking request rather than a punitive cancellation.  
 **Side Effects:** Confirms accepted alternative when valid; releases superseded provisional capacity if modeled; queues notifications.  
 **Idempotency / Concurrency:** Mandatory; one committed acceptance outcome.  
 **Data Touched:** Booking/proposal, slot capacity, eligibility, audit/idempotency.  
-**Tests:** Required coverage includes expired proposal rejection without inventing a terminal state, full alternative slot, revalidation failure, and repeated acceptance.
+**Tests:** Required coverage includes expired and declined proposal rejection with the correct cancellation reason, no penalty applied, full alternative slot, revalidation failure, and repeated acceptance.
 
 ### API-BOOKING-005 — Cancel Booking
 
@@ -300,9 +318,39 @@ Current route and current OpenAPI evidence align on this single public route. `C
 **Data Touched:** Booking lifecycle, capacity, policy snapshot reference, audit/derived work.  
 **Tests:** Required coverage includes allowed/forbidden states, deadline boundary, duplicate request, and no-money-movement assertion.
 
+### API-BOOKING-006 — Create Reschedule Proposal
+
+**Requirements:** FR-BOOKING-004, NFR-AUDIT-002  
+**Status:** **Proposed**  
+**Method / Path:** `POST /api/v1/bookings/{booking}/reschedule-proposals`  
+**Actor / Auth:** Authenticated booking patient/authorized guardian. The clinic side of the same workflow is in-process and owned by `SDC-BOOKING-002`.  
+**Request:** `proposed_slot_id: string`, `reason: string|null`; idempotency key required.  
+**Response:** `201` with proposal ID, state `PENDING`, response deadline, and the **unchanged** current booking state.  
+**Errors:** `ERR-PLATFORM-001`, `ERR-IDENTITY-001`, `ERR-IDENTITY-002`, `ERR-PLATFORM-002`, `ERR-BOOKING-001`, `ERR-BOOKING-002`, `ERR-AUDIT-001`.  
+**Business Rules:** The booking must be `CONFIRMED` and policy must permit this party to initiate. While the proposal is `PENDING` the original booking stays `CONFIRMED` and **the original slot remains the authoritative appointment** — the new slot is never silently substituted (`PO-UX-15`). At most one `PENDING` proposal exists per booking. A proposal cannot be created against a booking in `ELIGIBILITY_REVIEW`.  
+**Side Effects:** Creates the proposal and notifies the counterparty; changes no booking state.  
+**Idempotency / Concurrency:** Mandatory; at most one `PENDING` proposal is committed.  
+**Data Touched:** Reschedule proposal, booking read, slot availability, audit/idempotency.  
+**Tests:** Required coverage includes that the booking state and slot are unchanged while pending, duplicate-proposal rejection, forbidden initiating party, `ELIGIBILITY_REVIEW` rejection, and repeated submission.
+
+### API-BOOKING-007 — Respond to Reschedule Proposal
+
+**Requirements:** FR-BOOKING-004, FR-BOOKING-001, NFR-AUDIT-002  
+**Status:** **Proposed**  
+**Method / Path:** `POST /api/v1/reschedule-proposals/{proposal}/response`  
+**Actor / Auth:** Authenticated counterparty to the initiator. A party may not respond to its own proposal.  
+**Request:** `decision: "accept"|"decline"`, `reason: string|null`; idempotency key required.  
+**Response:** `200` with resulting proposal state and the resulting authoritative booking state/slot.  
+**Errors:** `ERR-IDENTITY-001`, `ERR-IDENTITY-002`, `ERR-PLATFORM-002`, `ERR-BOOKING-001`, `ERR-BOOKING-002`, `ERR-BOOKING-003`, `ERR-ELIG-001`, `ERR-ELIG-002`, `ERR-AUDIT-001`.  
+**Business Rules:** On `accept`, revalidate provider/service/branch eligibility and new-slot capacity, then atomically move the booking to the accepted slot, release the old slot, and append reschedule history. Failed revalidation leaves both the proposal and the booking unchanged. On `decline`, or when the response deadline has passed, the proposal closes and the original confirmed appointment remains unchanged. **No date, provider, or service change occurs without acceptance and successful revalidation.**  
+**Side Effects:** Atomic slot move and old-slot release on acceptance; notifications to both parties; appended history.  
+**Idempotency / Concurrency:** Mandatory; one committed response. Acceptance competes for the target slot under the same capacity guarantee as an original confirmation.  
+**Data Touched:** Reschedule proposal, booking lifecycle, slot capacity, eligibility, audit/idempotency.  
+**Tests:** Required coverage includes self-response rejection, atomic slot move, old-slot release, revalidation failure leaving both records unchanged, deadline expiry, and repeated response.
+
 Provider accept/reject/alternative response is a confirmed use case under FR-BOOKING-003. Because the current product architecture assigns doctor/clinic operations to Filament, no external REST contract is mandated here; Filament should call the shared application action directly. If a non-Filament provider client is later approved, allocate a separate `API-BOOKING-*` contract rather than exposing an internal route implicitly.
 
-`Q-BOOKING-002` also remains authoritative for the unresolved review workflow applied to existing bookings when a previously eligible provider/service/branch becomes suspended. Booking read contracts must expose the current authoritative state; they must not manufacture automatic cancellation, confirmation, or another outcome while that workflow remains unresolved.
+Booking read contracts must expose `ELIGIBILITY_REVIEW` as the current authoritative state when an owning eligibility scope is suspended (`PO-UX-13`). They must not present such a booking as attendable, and no client may infer confirmation or cancellation before the governed review reaches its outcome.
 
 ## 8. Clinical Case
 
@@ -539,11 +587,37 @@ All contracts in this section are record-only. No request or response represents
 **Data Touched:** Original decision, appeal, evidence refs, work queue, audit/idempotency.  
 **Tests:** Required appeal-window boundary, separation-of-duties, duplicate, and original-decision immutability coverage.
 
-## 12. Evidence Transfer Contract — Blocked Detail
+## 12. Platform Contracts
 
-The product requires private clinical, credential, claim, identity, and financial evidence. However the exact binary-transfer mechanism must support weak connectivity, quarantine, malware scanning, size/type limits, SHA-256 integrity, fresh authorization, and provider-neutral storage while concrete storage/scanning providers remain unresolved under `Q-PLATFORM-003` and infrastructure placement remains governed by `Q-OPS-001`.
+### API-PLATFORM-001 — Private Evidence Transfer
 
-Therefore this document does **not** invent a presigned-upload, multipart-upload, chunking, or resumable-upload endpoint. Proposed domain write contracts use `evidence_ids` only after an evidence record has been safely created through the eventual private-evidence transfer contract. That contract must be allocated as `API-PLATFORM-*` only after the transfer strategy is approved. This prevents a speculative provider-specific API from becoming an accidental product contract.
+**Requirements:** NFR-PLATFORM-003, NFR-PLATFORM-006  
+**Status:** **Proposed**  
+**Method / Path:** `POST /api/v1/evidence-sessions` to open a session, `PUT /api/v1/evidence-sessions/{session}/content` to transfer, `POST /api/v1/evidence-sessions/{session}/finalize` to finalize.  
+**Actor / Auth:** Authenticated actor authorized for the target evidence purpose and case/application scope.  
+**Request:** Open — `purpose: string`, `target_scope: object`, `declared_filename: string`, `declared_size: integer`, `declared_content_type: string`, `sha256: string`. Transfer — opaque binary with a byte-range offset for resumption. Finalize — no body. Idempotency key required on open and finalize.  
+**Response:** `201` with session ID and current session state; `200` on finalize with the terminal session state and, on `ACCEPTED`, the `evidence_id` usable by domain write contracts.  
+**Errors:** `ERR-PLATFORM-001`, `ERR-IDENTITY-001`, `ERR-IDENTITY-002`, `ERR-PLATFORM-002`, `ERR-PLATFORM-003`, `ERR-PLATFORM-005`, `ERR-AUDIT-001`.  
+**Business Rules:** **Deliberately provider-neutral.** The contract fixes the interaction, not the vendor: it names no presigned URL, no vendor SDK, and no vendor-specific multipart protocol, so the concrete storage and scanner can be selected later without a contract change (`PO-UX-17`). Session states are owned by `STATE_MACHINES.md` section 21.1. An interrupted transfer resumes from a byte offset rather than restarting. Finalization validates allowed type, MIME/magic/decode, and size, and records SHA-256 integrity metadata. Evidence stays quarantined until required scanning and validation pass; `UPLOADED` is not `ACCEPTED`. Private evidence is never returned as a raw storage path, a public URL, or a signed URL in this or any other contract.  
+**Side Effects:** Creates a quarantined evidence record; emits scan/validation work; on rejection retains a safe auditable reason.  
+**Idempotency / Concurrency:** Required on open and finalize. Repeated finalize returns the original terminal outcome. A transient transfer failure is retried on the **same** session, never as a new evidence record.  
+**Data Touched:** Evidence session/record, integrity metadata, quarantine state, audit/idempotency.  
+**Tests:** Required coverage includes resume after interruption, type/MIME/magic/size rejection, SHA-256 mismatch, quarantine enforcement before acceptance, absence of public/signed URL exposure, and repeated finalize.
+
+### API-PLATFORM-002 — Patient Notification Center
+
+**Requirements:** FR-PLATFORM-001, NFR-PLATFORM-006  
+**Status:** **Proposed**  
+**Method / Path:** `GET /api/v1/notifications` to list, `POST /api/v1/notifications/{notification}/read` to mark read.  
+**Actor / Auth:** Authenticated patient, or guardian within an active grant scope.  
+**Request:** List — optional `unread_only: boolean`, `cursor: string`. Mark read — no body.  
+**Response:** `200` with durable entries carrying safe title/summary, linked authoritative resource reference, timestamp, read/unread, action-required indication, and applicable due time; plus an unread count in `meta`.  
+**Errors:** `ERR-PLATFORM-001`, `ERR-IDENTITY-001`, `ERR-IDENTITY-002`, `ERR-PLATFORM-002`, `ERR-PLATFORM-003`.  
+**Business Rules:** Entries are **durable in-system records**, independent of push/SMS/email delivery, which remain optional adapters (`PO-UX-09`). **Reading or dismissing a notification never changes business state** — it is not an acknowledgement, an acceptance, or a deadline response. Every entry links to the authoritative resource rather than restating business state, because an entry created hours ago cannot be trusted to describe a current deadline or eligibility state. Deadline-bound and action-required items must also be reachable from the patient attention surface, so correctness never depends on this endpoint or on successful delivery. Guardian access is filtered to the active grant scope.  
+**Side Effects:** Mark-read updates only the read flag.  
+**Idempotency / Concurrency:** Mark-read is naturally idempotent; repeated calls create no additional effect.  
+**Data Touched:** Notification entries, read state, grant scope.  
+**Tests:** Required coverage includes that mark-read changes no business state, revoked-grant filtering, unread-count correctness, cursor stability, and that a stale entry resolves through an authoritative re-read.
 
 ## 13. Operations, Policy, Audit, and Provider Workflows
 
@@ -582,28 +656,29 @@ The exact HTTP header name is intentionally not fixed by current source material
 | Domain | Implemented | Proposed | Main requirement coverage |
 |---|---:|---:|---|
 | CATALOG | 1 | 0 | FR-CATALOG-001, FR-OPS-003 |
-| IDENTITY | 0 | 5 | FR-IDENTITY-002–003, NFR-IDENTITY-001–002 |
+| IDENTITY | 0 | 6 | FR-IDENTITY-002–003, NFR-IDENTITY-001–002 |
 | ELIG | 0 | 4 | FR-ELIG-001, 007–008, 016–017 and dependent eligibility rules |
-| BOOKING | 0 | 5 | FR-BOOKING-001–003 |
+| BOOKING | 0 | 7 | FR-BOOKING-001–004 |
 | CLINICAL | 0 | 4 | FR-CLINICAL-001–005 |
 | FINANCE | 0 | 5 | FR-FINANCE-001–007 |
 | REVIEWS | 0 | 2 | FR-REVIEWS-001–002 |
 | CLAIMS | 0 | 5 | FR-CLAIMS-001–005 |
-| PLATFORM evidence transfer | 0 | Blocked | NFR-PLATFORM-003, NFR-PLATFORM-006 |
+| PLATFORM | 0 | 2 | FR-PLATFORM-001, NFR-PLATFORM-003, NFR-PLATFORM-006 |
 
-Total defined contracts: **31** (`1 Implemented`, `30 Proposed`). Staff-only/in-process Filament use cases are intentionally not counted as REST contracts.
+Total defined contracts: **36** (`1 Implemented`, `35 Proposed`). Staff-only/in-process Filament use cases are intentionally not counted as REST contracts.
 
 ## 18. Registry Allocation Status
 
 The following API ranges are synchronized in the canonical `docs/README.md` registry. Allocations are append-only; future additions must update the registry without renumbering or repurposing existing IDs:
 
 - `API-CATALOG-001`
-- `API-IDENTITY-001`–`API-IDENTITY-005`
+- `API-IDENTITY-001`–`API-IDENTITY-006`
 - `API-ELIG-001`–`API-ELIG-004`
-- `API-BOOKING-001`–`API-BOOKING-005`
+- `API-BOOKING-001`–`API-BOOKING-007`
 - `API-CLINICAL-001`–`API-CLINICAL-004`
 - `API-FINANCE-001`–`API-FINANCE-005`
 - `API-REVIEWS-001`–`API-REVIEWS-002`
 - `API-CLAIMS-001`–`API-CLAIMS-005`
+- `API-PLATFORM-001`–`API-PLATFORM-002`
 
 The `ERR-*` references listed in Section 3 are defined by the current `docs/api/ERROR_CATALOG.md` and synchronized in the registry. No `API-PLATFORM-*` is allocated until the private-evidence transfer strategy is approved.

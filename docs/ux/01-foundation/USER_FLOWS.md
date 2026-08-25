@@ -25,16 +25,18 @@ One `FLOW-*` per job that spans more than a single screen-action. Every flow car
 
 **Contracts** name the `API-*` owner for Patient-app behavior and the `SDC-*` owner for Clinic and Admin in-process behavior, per `PO-UX-05`.
 
-### 1.2 Two deliberately incomplete branches
+### 1.2 No deliberately incomplete branches
 
-Two flows stop where their destination is undefined upstream. This is not an omission:
+Phase 1 originally stopped two flows where their destination was undefined upstream. Both were resolved on 2026-08-25 and now run to a defined outcome:
 
-- `FLOW-BOOKING-007` — an alternative proposal that expires or is declined has no canonical resulting booking state (`Q-BOOKING-001`). The flow records that acceptance becomes impossible and stops.
-- `FLOW-ELIG-012` — existing bookings in a newly suspended scope enter a review workflow whose actor, deadline, state effect and outcome are unresolved (`Q-BOOKING-002`). The flow reaches that point and stops.
+- `FLOW-BOOKING-007` — a declined or expired alternative closes the booking as `CANCELLED` with reason `ALTERNATIVE_DECLINED` or `ALTERNATIVE_EXPIRED`, with no patient penalty (`PO-UX-12`).
+- `FLOW-ELIG-012` — existing bookings in a newly suspended scope move to `ELIGIBILITY_REVIEW` and hand off to `FLOW-ELIG-015`, which owns the two permitted outcomes (`PO-UX-13`).
+
+Every flow in this document now reaches a defined outcome. Where a flow still ends in an open decision it is a **product** choice awaiting an owner, not a gap in this model, and section 13 lists those explicitly.
 
 ### 1.3 Universal failure paths
 
-Rather than repeat them in all 94 flows, these apply everywhere and each flow names only its own additions:
+Rather than repeat them in all 100 flows, these apply everywhere and each flow names only its own additions:
 
 | Condition | Behavior | Owner |
 |---|---|---|
@@ -65,7 +67,7 @@ Rather than repeat them in all 94 flows, these apply everywhere and each flow na
 **Abandon path:** Leaving before verification preserves nothing beyond the challenge, which expires in five minutes. No account is created — an unverified identity cannot become active. Any screen context that triggered the gate is preserved for the return.
 **Re-entry:** Restart at `SCR-IDENTITY-002`. A resend invalidates the prior code without resetting accumulated failures, which must be evident so the user does not believe attempts were restored.
 **Friction:** 3 screens / 3 actions / 2 required fields
-**Notes:** Concrete delivery provider unresolved (`Q-PLATFORM-003`); the flow is provider-neutral. Repeated activation for the same verified identity must not create a second active patient identity.
+**Notes:** Concrete delivery vendor unresolved (`Q-OPS-001`); the flow is provider-neutral. Repeated activation for the same verified identity must not create a second active patient identity.
 
 ```mermaid
 flowchart TD
@@ -99,7 +101,7 @@ flowchart TD
 **Abandon path:** Leaving before commit creates nothing. No partial grant exists — a half-specified scope would be an authorization hole, so there is no draft state here.
 **Re-entry:** Restart at `SCR-IDENTITY-006`. Existing grants remain listed on `SCR-IDENTITY-005`.
 **Friction:** 3 screens / 2 actions / 6 required fields
-**Notes:** `PERMISSIONS_MATRIX` permits creation by "patient or authorized legal-basis workflow", but the second path has no defined actor, screen or contract — recorded as `Q-IDENTITY-001`. That gap means a dependent who cannot self-grant has no documented route, so this flow currently covers only the patient-as-grantor case.
+**Notes:** This flow is the **consent** path: an adult patient with capacity grants access themselves. The legal-basis path, for a minor or a patient who cannot consent, is a separate journey with an Admin verification step — see `FLOW-IDENTITY-021`. `PO-UX-14` defined it and closed `Q-IDENTITY-001`. Keeping the two apart matters because the evidence burden and the waiting period differ completely, and a single merged flow would either over-burden the consenting patient or under-verify the dependent case.
 
 ```mermaid
 flowchart TD
@@ -153,8 +155,8 @@ flowchart TD
 1. User opens the grant → System returns its exact scope and effective state.
 2. User revokes, with a reason where policy requires → System ends authorization immediately and audits it.
 3. System retains the historical grant record.
-**Decision points:** Policy forbids revocation during a specific protected transition → the action is blocked with a reason. Repeated revocation → safe, with no duplicate effect.
-**Failure paths:** `ERR-IDENTITY-002` the actor is not authorized to revoke. `ERR-PLATFORM-002` the grant is not addressable. **`ERR-BOOKING-002` is referenced by `API-IDENTITY-005` for a policy-blocked revocation — surfacing a booking-domain error and recovery path on a representation screen is a defect, recorded as `CONFLICT-BOOKING-001`.**
+**Decision points:** **Revocation is unconditional.** No booking state, case state or protected transition may block it (`PO-UX-11`). Repeated revocation is safe, with no duplicate effect. Where continuity of care needs follow-up, the system raises an operational work item rather than refusing the patient's request.
+**Failure paths:** `ERR-IDENTITY-002` the actor is not authorized to revoke. `ERR-PLATFORM-002` the grant is not addressable. **No booking-domain error is reachable from this screen** — `PO-UX-11` removed `ERR-BOOKING-002` from `API-IDENTITY-005` and closed `CONFLICT-BOOKING-001`. Universal failure paths per section 1.3.
 **Abandon path:** Leaving before confirming changes nothing; the grant stays active. Because the consequence is immediate and irreversible, the scope being ended must be visible in the confirmation rather than only the grantee's name.
 **Re-entry:** Not applicable — revocation is atomic. A new grant is required to restore access.
 **Friction:** 2 screens / 2 actions / 0 to 1 required fields
@@ -165,7 +167,6 @@ flowchart TD
     A["SCR-IDENTITY-005 representation list"] --> B["SCR-IDENTITY-007 grant detail"]
     B --> C{"System: actor authorized to revoke"}
     C -->|"not authorized"| D["ERR-IDENTITY-002 permission denied"]
-    C -->|"policy blocks this transition"| E["Blocked with reason — see CONFLICT-BOOKING-001"]
     C -->|"authorized"| F["System: end authorization immediately, audit"]
     F --> G["Historical grant and attribution retained"]
     G --> A
@@ -217,7 +218,7 @@ flowchart TD
 4. User attaches required identity, license, registration and authorization evidence → System records each item and its intake state; items remain quarantined until the required scan succeeds.
 5. System recomputes completeness → submission becomes available only when every requirement is satisfied.
 **Decision points:** Sections are completable in any order, because a permanent novice benefits from seeing the whole task. Required evidence differs by provider type. Quarantined evidence does not satisfy a requirement.
-**Failure paths:** `ERR-PLATFORM-001` invalid or missing field values, attributed to the field. Evidence rejected by type, size or count validation — the allowlist is PDF, JPEG and PNG with per-file and per-action limits. Evidence quarantined pending scan is not a failure but must not read as accepted. **Binary transfer failure is bounded by `Q-PLATFORM-003`**, so the flow defines requirement, per-item status and recovery and stops at the transfer boundary.
+**Failure paths:** `ERR-PLATFORM-001` invalid or missing field values, attributed to the field. Evidence rejected by type, size or count validation — the allowlist is PDF, JPEG and PNG with per-file and per-action limits. Evidence quarantined pending scan is not a failure but must not read as accepted. **Binary transfer failure is bounded by the vendor decision in `Q-OPS-001`**, so the flow defines requirement, per-item status and recovery and stops at the transfer boundary.
 **Abandon path:** Everything saved persists as `DRAFT`. Nothing is submitted, no reviewer work exists, and nothing is visible to Admin. This is the deliberate consequence of verifying contact first.
 **Re-entry:** `FLOW-IDENTITY-005` resume path returns the applicant to `SCR-IDENTITY-012` with completeness intact.
 **Friction:** 4 screens / variable actions / approximately 14 to 20 required fields plus 3 to 6 evidence items depending on provider type
@@ -610,7 +611,7 @@ flowchart TD
 **Abandon path:** Leaving before completing authentication grants nothing. No partial session exists.
 **Re-entry:** Restart authentication. Session expiry mid-work returns here and then to the originating screen where safe.
 **Friction:** 1 to 2 screens / 2 to 3 actions / 2 to 3 required fields
-**Notes:** Concrete second-factor provider unresolved (`Q-PLATFORM-003`); the flow is provider-neutral. A stale session cannot survive a grant revocation.
+**Notes:** Concrete second-factor vendor unresolved (`Q-OPS-001`); the flow is provider-neutral. A stale session cannot survive a grant revocation.
 
 ```mermaid
 flowchart TD
@@ -756,6 +757,50 @@ flowchart TD
     A7 --> C1
     C1 --> C2
     C2 --> C3
+```
+
+### FLOW-IDENTITY-021 — Establish representation on a legal basis
+**Platform:** Patient (C) → Admin (A) · **Serves:** JTBD-IDENTITY-012 · **Frequency:** Rare / blocking
+**Actors:** User — guardian applicant. Human review — verification staff or authorized admin. System — request creation, work item, grant creation on approval.
+**Trigger:** A guardian needs access to a dependent's care where the subject patient cannot legally or self-consensually grant it — typically a minor.
+**Success criterion:** The guardian gains exactly the approved scope, and only after a human verified the relationship and legal basis. Submission alone grants nothing.
+**Screens:** `SCR-IDENTITY-037` → `SCR-IDENTITY-038` and `SCR-OPS-001` on the Admin side → `SCR-IDENTITY-005`
+**Contracts:** API-IDENTITY-006, SDC-IDENTITY-005, SDC-OPS-001, API-PLATFORM-002
+**Steps:**
+1. User starts an Add Dependent request on `SCR-IDENTITY-037` from their own authenticated profile.
+2. User identifies the subject patient or dependent.
+3. User declares the relationship and the legal basis.
+4. User supplies the required identity and legal evidence.
+5. User submits. System creates a **request under verification, not a grant**, plus a verification work item.
+6. Human review opens the request on `SCR-IDENTITY-038`, assesses the evidence, and accepts, requests changes with itemised reasons, or rejects with a required reason.
+7. On approval System creates the `LEGAL_BASIS` grant recording patient, grantee, actions, data scope, purpose, effective period, evidence and the approving reviewer.
+8. User sees the dependent appear in `SCR-IDENTITY-005` with the approved scope.
+**Decision points:** **The guardian cannot self-authorize.** Nothing on `SCR-IDENTITY-037` may read as granting access, and the submitted state must say plainly that a human decision is pending. Changes requested returns only the named items for correction, not the whole submission.
+**Failure paths:** `ERR-PLATFORM-001` incomplete declaration. `ERR-PLATFORM-005` rejected evidence file with a safe actionable reason. `ERR-IDENTITY-002` acting on the dependent before approval. Rejection closes the request with a stated reason and does not silently permit a retry loop without new facts. Universal failure paths per section 1.3.
+**Abandon path:** A draft request is resumable by the same authenticated applicant. Abandoning after submission leaves the request in the verification queue; the applicant is never left believing they have access they do not have.
+**Re-entry:** `SCR-IDENTITY-037` shows the current request state; the notification entry links back to it.
+**Friction:** Patient 3 to 4 screens · Admin 2 screens
+**Notes:** This is the second of the two representation paths. `FLOW-IDENTITY-004` remains the consent path an adult patient drives themselves. The distinction must be visible in the interface, because the evidence burden and the waiting period differ entirely. Historical guardian actions stay attributed to the guardian even after the grant ends. Resolved by `PO-UX-14`.
+
+```mermaid
+flowchart TD
+    A["SCR-IDENTITY-005 own profile"] --> B["User: start Add Dependent request"]
+    B --> C["SCR-IDENTITY-037 identify subject patient"]
+    C --> D["User: declare relationship and legal basis"]
+    D --> E["User: supply identity and legal evidence"]
+    E --> F{"Evidence accepted by validation"}
+    F -->|"no"| G["ERR-PLATFORM-005 safe actionable reason, correct the file"]
+    G --> E
+    F -->|"yes"| H["User: submit"]
+    H --> I["System: REQUEST created under verification, no grant"]
+    I --> J["System: verification work item"]
+    J --> K["SCR-IDENTITY-038 human review assesses evidence"]
+    K --> L{"Human decision"}
+    L -->|"request changes"| M["Named items returned for correction"]
+    M --> E
+    L -->|"reject with reason"| N["Request closed, no access granted"]
+    L -->|"approve"| O["System: LEGAL_BASIS grant with explicit scope, evidence and reviewer"]
+    O --> P["SCR-IDENTITY-005 dependent visible within approved scope"]
 ```
 
 ## 3. CATALOG Flows
@@ -1121,7 +1166,7 @@ flowchart TD
 3. User attaches required evidence → System records intake state; items stay quarantined until scanned.
 4. User submits → System validates completeness, creates the request and the verification work item.
 **Decision points:** Required evidence differs by service definition version. Quarantined evidence does not satisfy a requirement. Insufficient inputs at evaluation → `PENDING_EVALUATION`, which is a legitimate outcome rather than a failure.
-**Failure paths:** `ERR-PLATFORM-001` invalid or missing answers. `ERR-ELIG-002` insufficient inputs for evaluation — presented as assessment pending, **never as grade `F`**. `ERR-AUDIT-001` duplicate submission with a reused key and a different payload; an identical retry returns the original request. `ERR-IDENTITY-002` outside provider, service or branch scope. Evidence transfer bounded by `Q-PLATFORM-003`.
+**Failure paths:** `ERR-PLATFORM-001` invalid or missing answers. `ERR-ELIG-002` insufficient inputs for evaluation — presented as assessment pending, **never as grade `F`**. `ERR-AUDIT-001` duplicate submission with a reused key and a different payload; an identical retry returns the original request. `ERR-IDENTITY-002` outside provider, service or branch scope. Evidence transfer bounded by the vendor decision in `Q-OPS-001`.
 **Abandon path:** Answers and attached evidence persist on the unsubmitted request. No verification work exists and Admin sees nothing.
 **Re-entry:** Reopen the request from `SCR-ELIG-007` with everything intact.
 **Friction:** 3 screens / variable actions / questionnaire-dependent fields
@@ -1297,7 +1342,7 @@ flowchart TD
 5. System reevaluates on restoration; a new passing decision can return the scope to `ELIGIBLE`.
 6. Operations track the exception and the affected existing bookings.
 **Decision points:** Only dependent scopes are affected — unaffected combinations remain usable, and the interface must be precise about which is which. Dependency restored → a new decision, never a revival of the old one.
-**Failure paths:** `ERR-ELIG-001` a patient attempting to book the suspended scope. `ERR-IDENTITY-002` remediation outside scope. **Existing bookings in the suspended scope enter a review workflow whose actor, deadline, state effect and allowed outcomes are unresolved under `Q-BOOKING-002` — this flow reaches that point and stops. No screen infers cancellation, confirmation or any other terminal state.**
+**Failure paths:** `ERR-ELIG-001` a patient attempting to book the suspended scope. `ERR-IDENTITY-002` remediation outside scope. Existing `CONFIRMED` bookings in the suspended scope move to `ELIGIBILITY_REVIEW` and hand off to `FLOW-ELIG-015`, which owns their outcome. Universal failure paths per section 1.3.
 **Abandon path:** The suspension persists regardless of whether anyone acts. It is not a notification the provider can dismiss away — the scope stays non-bookable until a new passing evaluation.
 **Re-entry:** Any time through `SCR-ELIG-011` or the work item.
 **Friction:** Clinic 2 to 4 screens · Admin 1 to 2 screens
@@ -1316,7 +1361,7 @@ flowchart TD
     I --> J["New passing decision may return scope to ELIGIBLE"]
     E --> K["SCR-ELIG-020 suspension operations"]
     K --> L["SCR-BOOKING-014 existing bookings shown as authoritative state"]
-    L --> M["Existing-booking review workflow UNRESOLVED — Q-BOOKING-002, flow stops here"]
+    L --> M["Confirmed bookings move to ELIGIBILITY_REVIEW — FLOW-ELIG-015"]
     C --> N["Patient booking attempt returns ERR-ELIG-001"]
 ```
 
@@ -1417,7 +1462,49 @@ flowchart TD
     C3 --> S2
     P1 --> P2
     P1 --> P3
-    D4 --> E["Existing bookings after suspension unresolved — Q-BOOKING-002"]
+    D4 --> E["Existing confirmed bookings move to ELIGIBILITY_REVIEW — FLOW-ELIG-015"]
+```
+
+### FLOW-ELIG-015 — Resolve a confirmed booking held for eligibility review
+**Platform:** System → Admin (A) → Clinic (A) and Patient (C) · **Serves:** JTBD-ELIG-005, JTBD-BOOKING-002 · **Frequency:** Rare / safety-critical
+**Actors:** System — state move, work creation, deadline. Human review — verification staff, and a licensed clinical reviewer where the suspension reason requires clinical judgment.
+**Trigger:** A provider, service or branch owning a `CONFIRMED` booking becomes `SUSPENDED`, per `FLOW-ELIG-012`.
+**Success criterion:** The appointment is prevented from being attended while its eligibility is invalid, and it reaches either restoration or a no-penalty cancellation before the deadline — with a human accountable for the outcome.
+**Screens:** `SCR-ELIG-022` and `SCR-OPS-001` on the Admin side; `SCR-ELIG-021` and `SCR-BOOKING-011` on the Clinic side; `SCR-BOOKING-004` and `SCR-PLATFORM-009` on the Patient side
+**Contracts:** SDC-ELIG-004, SDC-OPS-001, SDC-BOOKING-001, API-BOOKING-003, API-PLATFORM-002
+**Steps:**
+1. System moves the booking `CONFIRMED` → `ELIGIBILITY_REVIEW`, preserving the reserved slot.
+2. System sets the review due time — never later than two hours before the appointment, and immediately due if the suspension falls inside that window.
+3. System creates the urgent Admin work item and sends safe status notifications to patient and clinic.
+4. Clinic sees the booking as not attendable on `SCR-ELIG-021`; start and complete are unavailable.
+5. Human review works the remediation on `SCR-ELIG-022`, adding the licensed clinical reviewer when the controlling reason requires clinical judgment.
+6. System reevaluates. A new authoritative `ELIGIBLE` decision before the deadline returns the booking to `CONFIRMED`.
+7. If the suspension is unresolved at the deadline, System closes the booking as `CANCELLED` with reason `PROVIDER_ELIGIBILITY_SUSPENDED`, no penalty, history preserved.
+**Decision points:** Whether clinical judgment is required is a property of the suspension reason, not a reviewer preference. The two outcomes are the only two available — **there is no override that makes the appointment attendable while the scope is still `SUSPENDED`**, and the interface must offer no control that implies one.
+**Failure paths:** `ERR-BOOKING-002` on any attempt to start, complete or record a no-show against the held booking. `ERR-IDENTITY-002` for review outside scope. Universal failure paths per section 1.3.
+**Abandon path:** Deadline expiry is a real outcome, not a stall — it produces the no-penalty cancellation. Nobody abandoning the work leaves the patient attending an ineligible appointment, which is the point of the design.
+**Re-entry:** Admin through the work item or `SCR-ELIG-022`; patient through `SCR-BOOKING-004` or the notification centre.
+**Friction:** Admin 2 to 3 screens · Clinic 1 screen · Patient 1 screen
+**Notes:** The patient-facing copy must convey a hold pending a check, never a provider accusation and never an instruction to attend. Cancellation here never auto-transfers the patient to another provider; rebooking is the patient's choice through `FLOW-ELIG-001`. Resolved by `PO-UX-13`.
+
+```mermaid
+flowchart TD
+    A["System: owning eligibility scope becomes SUSPENDED"] --> B["System: CONFIRMED to ELIGIBILITY_REVIEW, slot preserved"]
+    B --> C["System: review due no later than two hours before appointment"]
+    B --> D["System: urgent Admin work item"]
+    B --> E["System: safe status notification to patient and clinic"]
+    D --> F["SCR-ELIG-022 human review of remediation"]
+    F --> G{"Suspension reason requires clinical judgment"}
+    G -->|"yes"| H["Human review: licensed clinical reviewer included"]
+    G -->|"no"| I["Human review: verification staff only"]
+    H --> J["System: reevaluate eligibility"]
+    I --> J
+    J --> K{"New authoritative decision is ELIGIBLE before deadline"}
+    K -->|"yes"| L["System: back to CONFIRMED, appointment attendable"]
+    K -->|"no, deadline expires"| M["System: CANCELLED reason PROVIDER_ELIGIBILITY_SUSPENDED, no penalty"]
+    E --> N["SCR-ELIG-021 clinic sees not attendable, start and complete unavailable"]
+    N --> O["Start or complete attempt returns ERR-BOOKING-002"]
+    M --> P["Patient returns to eligible discovery — FLOW-ELIG-001"]
 ```
 
 ## 5. BOOKING Flows
@@ -1597,7 +1684,7 @@ flowchart TD
 **Decision points:** Accept while the deadline holds → confirmation attempt. Do nothing → see `FLOW-BOOKING-007`.
 **Failure paths:** `ERR-BOOKING-003` deadline expired — acceptance is disabled and the authoritative current state is shown. `ERR-BOOKING-001` the alternative slot filled meanwhile. `ERR-ELIG-001` the combination is no longer eligible. `ERR-BOOKING-002` invalid for the current state. `ERR-AUDIT-001` reused key with a different payload.
 **Abandon path:** Leaving without accepting keeps the proposal open until its deadline. Nothing is committed, and the deadline continues running whether or not the patient is in the app.
-**Re-entry:** Through `SCR-PLATFORM-001` or the booking. **This is the weakest re-entry path in the product**: the deadline is externally set, the patient did not choose it, and no patient notification surface is confirmed (`Q-PLATFORM-005`). The attention feed on `SCR-PLATFORM-001` is the only re-entry that does not depend on delivery.
+**Re-entry:** Through `SCR-PLATFORM-001` or the booking. **This is the weakest re-entry path in the product**: the deadline is externally set and the patient did not choose it. `FR-PLATFORM-001` now guarantees a durable entry and an attention item for it, which is what keeps the deadline visible without depending on delivery. The attention feed on `SCR-PLATFORM-001` is the only re-entry that does not depend on delivery.
 **Friction:** 3 screens / 2 actions / 0 required fields
 **Notes:** A deep link that arrived hours ago cannot be trusted about the deadline, which is why state is re-fetched on entry.
 
@@ -1614,39 +1701,40 @@ flowchart TD
     I --> B
 ```
 
-### FLOW-BOOKING-007 — An alternative expires or is declined
+### FLOW-BOOKING-007 — An alternative is declined or expires
 **Platform:** System → Patient (C) and Clinic (A) · **Serves:** JTBD-BOOKING-002 · **Frequency:** Rare / blocking
 **Actors:** System — deadline expiry. User — patient declining, or simply not acting.
-**Trigger:** The proposal deadline passes, or the patient explicitly declines.
-**Success criterion:** Acceptance becomes impossible, the proposal and decline or expiry history is preserved, and the authoritative current booking state is shown without inventing an outcome.
+**Trigger:** The patient explicitly declines the proposed alternative, or its acceptance deadline passes.
+**Success criterion:** The booking request closes as `CANCELLED` with the correct reason, the patient is told plainly that the appointment was not confirmed and is offered a fresh request, and no penalty is applied.
 **Screens:** `SCR-BOOKING-005` and `SCR-BOOKING-004` on the Patient side; `SCR-BOOKING-008` and `SCR-BOOKING-011` on the Clinic side; `SCR-BOOKING-014` on the Admin side
 **Contracts:** API-BOOKING-003, API-BOOKING-004, SDC-BOOKING-001
 **Steps:**
-1. System reaches the versioned deadline, or the patient records a decline.
-2. System makes the proposal non-actionable and rejects any late acceptance.
-3. System preserves the proposal, decline and expiry history.
-4. All three platforms show the authoritative current booking state.
-**Decision points:** **None available. The canonical resulting booking state is unresolved under `Q-BOOKING-001`, so this flow stops here.**
-**Failure paths:** `ERR-BOOKING-003` on any late acceptance attempt. That error explicitly **does not** define the resulting booking state, and `ERROR_CATALOG` section 8 forbids clients from inferring one.
-**Abandon path:** Not applicable — expiry is the abandon path, and it is exactly what this flow models. The patient walking away is the normal case rather than an exception.
-**Re-entry:** The patient may create a new booking request via `FLOW-BOOKING-001`. The expired proposal is never revived.
-**Friction:** Not meaningful — the flow's defining characteristic is the absence of an available action.
-**Notes:** **Deliberately incomplete.** No screen may display `REJECTED`, `CANCELLED` or a return to `REQUESTED` as the outcome. Until `Q-BOOKING-001` is resolved, the interface states that the alternative can no longer be accepted and shows the current authoritative state, and nothing more. Recorded as `GAP-002`.
+1. User declines on `SCR-BOOKING-005`, or System reaches the versioned acceptance deadline.
+2. System closes the booking as `CANCELLED` with reason `ALTERNATIVE_DECLINED` or `ALTERNATIVE_EXPIRED`.
+3. System preserves the full proposal, decline and expiry history and rejects any late acceptance.
+4. System applies **no patient penalty** — this is an unconfirmed request closure, not a cancellation of a confirmed appointment.
+5. Patient sees "the appointment was not confirmed" on `SCR-BOOKING-004` with a direct action to choose another time or provider.
+6. Clinic and Admin see the same closure and reason.
+**Decision points:** Decline is explicit and immediate; expiry is automatic. Both reach the same state, and the reason code is the only difference the interface must preserve. The patient is never asked to confirm a decline twice — declining a proposal they did not want is not a destructive act.
+**Failure paths:** `ERR-BOOKING-003` on any late acceptance attempt, which now names the authoritative `CANCELLED` state and its reason rather than leaving the outcome open. Universal failure paths per section 1.3.
+**Abandon path:** Not acting **is** the expiry route, and it is the ordinary case rather than an exception. The patient who walks away lands in exactly the same state as the patient who declines, and neither is penalised.
+**Re-entry:** `FLOW-BOOKING-001` for a new request. The closed proposal is never revived.
+**Friction:** Patient 1 to 2 screens · declining is a single action from the proposal screen
+**Notes:** The copy obligation is the substance of this flow. `CANCELLED` is the engineering state, but a punitive cancellation message here would be wrong and would misinform the patient about a penalty that does not exist. `TXT-*` in Phase 3 owns the exact Arabic wording; the requirement is that it reads as a non-event, not as a loss. Resolved by `PO-UX-12`.
 
 ```mermaid
 flowchart TD
-    A["ALTERNATIVE_PROPOSED"] --> B{"Deadline reached or patient declines"}
-    B -->|"deadline reached"| C["System: proposal non-actionable"]
-    B -->|"patient declines"| C
-    C --> D["System: preserve proposal, decline and expiry history"]
-    D --> E["Late acceptance rejected with ERR-BOOKING-003"]
-    D --> F["Patient sees authoritative current state, no outcome asserted"]
-    D --> G["Clinic sees expired non-actionable proposal"]
-    D --> H["Admin sees deadline and unresolved outcome semantics"]
-    F --> I["Canonical resulting state UNRESOLVED — Q-BOOKING-001"]
-    G --> I
-    H --> I
-    I --> J["Patient may create a new request — FLOW-BOOKING-001"]
+    A["ALTERNATIVE_PROPOSED"] --> B{"Patient declines or deadline reached"}
+    B -->|"patient declines"| C["System: CANCELLED reason ALTERNATIVE_DECLINED"]
+    B -->|"deadline reached"| D["System: CANCELLED reason ALTERNATIVE_EXPIRED"]
+    C --> E["System: preserve proposal and closure history"]
+    D --> E
+    E --> F["System: no patient penalty applied"]
+    F --> G["SCR-BOOKING-004 shows appointment was not confirmed"]
+    F --> H["Clinic sees closure and reason"]
+    F --> I["Admin sees closure and reason"]
+    E --> J["Late acceptance rejected with ERR-BOOKING-003"]
+    G --> K["Patient chooses another time or provider — FLOW-BOOKING-001"]
 ```
 
 ### FLOW-BOOKING-008 — Patient cancels a booking
@@ -1768,7 +1856,7 @@ flowchart TD
     D -->|"legitimate domain action by authorized party"| F["Owning flow performs the transition"]
     D -->|"force-confirm"| G["Does not exist as an affordance"]
     C --> H["SCR-AUDIT-002 audit event detail"]
-    B --> I["Suspended-scope bookings: authoritative state, no outcome — Q-BOOKING-002"]
+    B --> I["Suspended-scope bookings: ELIGIBILITY_REVIEW, outcome owned by FLOW-ELIG-015"]
 ```
 
 ### FLOW-BOOKING-012 — Cross-platform booking lifecycle
@@ -1785,7 +1873,7 @@ flowchart TD
 4. Either party may cancel where state and policy permit; the clinic may record a no-show after the threshold.
 5. Completion enables review and follow-up workflows.
 6. Operations inspect throughout without overriding anything.
-**Decision points:** Accept, reject, propose alternative; patient accept or not act; cancel; no-show; complete. **Alternative expiry has no canonical outcome — `Q-BOOKING-001`.**
+**Decision points:** Accept, reject, propose alternative; patient accept, decline or not act; reschedule by proposal; cancel; no-show; complete. A declined or expired alternative closes as `CANCELLED` with its reason and no penalty (`PO-UX-12`). A suspended owning scope moves a confirmed booking to `ELIGIBILITY_REVIEW` (`PO-UX-13`).
 **Failure paths:** `ERR-ELIG-001`, `ERR-ELIG-002`, `ERR-BOOKING-001`, `ERR-BOOKING-002`, `ERR-BOOKING-003` at their respective points. **A notification-delivery failure never reverts a committed booking** — the booking stays `CONFIRMED` and all three platforms read `CONFIRMED` on their next authoritative fetch.
 **Abandon path:** Patient abandons before submit → nothing exists. Clinic abandons within the deadline → the request stays `REQUESTED` and the deadline runs. Patient abandons a proposal → `FLOW-BOOKING-007`.
 **Re-entry:** Every platform re-fetches authoritative state on entry, on refocus, on explicit refresh and after its own mutations. No platform manufactures the next state locally.
@@ -1838,11 +1926,93 @@ flowchart TD
     P3 --> S4
     P4 --> S5
     C5 --> S5
-    S6 --> Q["Alternative expiry outcome UNRESOLVED — Q-BOOKING-001"]
+    S6 --> Q["Alternative declined or expired: CANCELLED with reason, no penalty"]
     S5 --> A1
     A1 --> A2
     A2 --> A3
     S7 --> R["Delivery failure never reverts a committed booking"]
+```
+
+### FLOW-BOOKING-013 — Patient proposes a reschedule
+**Platform:** Patient (C) → Clinic (A) · **Serves:** JTBD-BOOKING-008 · **Frequency:** Monthly / non-blocking
+**Actors:** User — patient or guardian proposing, clinic party responding. System — revalidation, atomic move, notification.
+**Trigger:** The patient needs a confirmed appointment at a different time and does not want to lose it by cancelling.
+**Success criterion:** The appointment moves only after the clinic accepts and revalidation passes, and until then the original appointment is untouched.
+**Screens:** `SCR-BOOKING-004` → `SCR-BOOKING-016` → `SCR-BOOKING-017` on the Clinic side → back to `SCR-BOOKING-004`
+**Contracts:** API-BOOKING-006, API-BOOKING-007, SDC-BOOKING-002, API-PLATFORM-002
+**Steps:**
+1. User opens the confirmed booking on `SCR-BOOKING-004` and chooses to propose a new time.
+2. User picks a target slot on `SCR-BOOKING-016` and submits.
+3. System creates a `PENDING` proposal and **leaves the booking `CONFIRMED` on its original slot**.
+4. System notifies the clinic; the proposal appears on `SCR-BOOKING-017`.
+5. User on the clinic side accepts or declines within the response deadline.
+6. On acceptance System revalidates eligibility and new-slot capacity, then atomically moves the booking, releases the old slot, appends history and notifies both parties.
+7. On decline, expiry or withdrawal the proposal closes and the original appointment is unchanged.
+**Decision points:** The patient must understand that proposing is not moving — the screen states the original appointment still stands. Withdrawal is available while the proposal is pending. The patient cannot accept their own proposal.
+**Failure paths:** `ERR-BOOKING-001` target slot taken during the wait. `ERR-ELIG-001` or `ERR-ELIG-002` eligibility changed before acceptance, leaving both records unchanged. `ERR-BOOKING-002` a second concurrent proposal, or a proposal against a booking in `ELIGIBILITY_REVIEW`. `ERR-BOOKING-003` a response after the deadline. Universal failure paths per section 1.3.
+**Abandon path:** Abandoning `SCR-BOOKING-016` before submitting costs nothing. Abandoning a pending proposal lets it expire, which leaves the original appointment intact — the safe default.
+**Re-entry:** `SCR-BOOKING-004` always shows any pending proposal and its deadline.
+**Friction:** Patient 2 to 3 screens · Clinic 1 to 2 screens
+**Notes:** The design hazard is showing the proposed time as if it were the appointment. Both platforms must render the original slot as authoritative while a proposal is pending, and the proposed slot as a request. Resolved by `PO-UX-15`.
+
+```mermaid
+flowchart TD
+    A["SCR-BOOKING-004 confirmed booking"] --> B["User: propose a new time"]
+    B --> C["SCR-BOOKING-016 pick target slot"]
+    C --> D["System: PENDING proposal created"]
+    D --> E["System: booking stays CONFIRMED on the ORIGINAL slot"]
+    D --> F["System: notify clinic"]
+    F --> G["SCR-BOOKING-017 clinic reviews proposal"]
+    G --> H{"Clinic response within deadline"}
+    H -->|"accept"| I["System: revalidate eligibility and new-slot capacity"]
+    I --> J{"Revalidation passes"}
+    J -->|"yes"| K["System: atomic move, release old slot, append history, notify both"]
+    J -->|"no"| L["ERR-ELIG-001 or ERR-BOOKING-001, both records unchanged"]
+    H -->|"decline"| M["Proposal closes, original appointment unchanged"]
+    H -->|"no response, deadline passes"| N["Proposal EXPIRED, original appointment unchanged"]
+    K --> O["SCR-BOOKING-004 shows the new slot"]
+    M --> O
+    N --> O
+```
+
+### FLOW-BOOKING-014 — Clinic proposes a reschedule
+**Platform:** Clinic (A) → Patient (C) · **Serves:** JTBD-BOOKING-008 · **Frequency:** Monthly / non-blocking
+**Actors:** User — clinic party proposing, patient or guardian responding. System — revalidation, atomic move, notification.
+**Trigger:** The clinic needs to move a confirmed appointment, for example a clinician schedule change, without cancelling it outright.
+**Success criterion:** The patient decides. The appointment moves only on the patient's acceptance with revalidation, and a patient who does not respond keeps the original appointment.
+**Screens:** `SCR-BOOKING-011` → `SCR-BOOKING-017` → `SCR-PLATFORM-009` and `SCR-BOOKING-016` on the Patient side
+**Contracts:** SDC-BOOKING-002, API-BOOKING-007, API-BOOKING-003, API-PLATFORM-002
+**Steps:**
+1. User on the clinic side opens the confirmed booking and proposes a target slot on `SCR-BOOKING-017`.
+2. System creates a `PENDING` proposal and leaves the booking `CONFIRMED` on its original slot.
+3. System notifies the patient; a durable entry appears in `SCR-PLATFORM-009` and on the attention surface.
+4. User on the patient side reviews the proposal on `SCR-BOOKING-016` and accepts or declines.
+5. On acceptance System revalidates and performs the atomic move, old-slot release, history append and notifications.
+6. On decline or expiry the proposal closes and the original appointment stands.
+**Decision points:** The patient is never opted in by silence. Expiry preserves the original appointment rather than cancelling it, which is the conservative default the patient would choose. The clinic cannot accept its own proposal.
+**Failure paths:** `ERR-BOOKING-001` target slot taken. `ERR-ELIG-001` or `ERR-ELIG-002` eligibility changed, both records unchanged. `ERR-BOOKING-002` clinic attempting to respond to its own proposal, or a proposal against an `ELIGIBILITY_REVIEW` booking. `ERR-BOOKING-003` a late response. `ERR-IDENTITY-002` outside branch scope. Universal failure paths per section 1.3.
+**Abandon path:** The patient ignoring the proposal is safe by construction — the original appointment survives. This is the deliberate asymmetry: an unanswered clinic proposal must never cost the patient their slot.
+**Re-entry:** The durable notification entry and `SCR-BOOKING-004` both persist until the proposal closes.
+**Friction:** Clinic 1 to 2 screens · Patient 2 screens
+**Notes:** A clinic-initiated proposal is the case where the interruption-heavy clinic environment meets the episodic patient. Because the patient may not open the app for days, the response deadline and the surviving original appointment must both be stated in the notification entry, not only in the app. Resolved by `PO-UX-15`.
+
+```mermaid
+flowchart TD
+    A["SCR-BOOKING-011 clinic booking detail"] --> B["User: propose target slot on SCR-BOOKING-017"]
+    B --> C["System: PENDING proposal, booking stays CONFIRMED on original slot"]
+    C --> D["System: notify patient"]
+    D --> E["SCR-PLATFORM-009 durable entry plus attention surface"]
+    E --> F["SCR-BOOKING-016 patient reviews proposal"]
+    F --> G{"Patient response within deadline"}
+    G -->|"accept"| H["System: revalidate eligibility and capacity"]
+    H --> I{"Revalidation passes"}
+    I -->|"yes"| J["System: atomic move, release old slot, notify both"]
+    I -->|"no"| K["ERR-ELIG-001 or ERR-BOOKING-001, both records unchanged"]
+    G -->|"decline"| L["Proposal closes, original appointment stands"]
+    G -->|"no response"| M["Proposal EXPIRED, original appointment stands"]
+    J --> N["Both platforms show the new slot"]
+    L --> O["Both platforms show the unchanged original slot"]
+    M --> O
 ```
 
 ## 6. CLINICAL Flows
@@ -1961,7 +2131,7 @@ flowchart TD
 2. User records progress and attaches evidence → System validates intake and holds items quarantined until scanned.
 3. System binds each evidence item to the exact stage.
 **Decision points:** Requirements differ per case because they come from that case's accepted snapshot, so they must be shown per stage rather than generically. Clinical versus non-clinical facts → different actors are authorized.
-**Failure paths:** `ERR-IDENTITY-002` outside case, stage or treating scope. Evidence rejected by type, size or count validation. Quarantined evidence does not satisfy a requirement. **Transfer bounded by `Q-PLATFORM-003`.**
+**Failure paths:** `ERR-IDENTITY-002` outside case, stage or treating scope. Evidence rejected by type, size or count validation. Quarantined evidence does not satisfy a requirement. **Transfer bounded by the vendor decision in `Q-OPS-001`.**
 **Abandon path:** Recorded progress and accepted evidence persist. The stage stays `INCOMPLETE`, and the patient sees no completion.
 **Re-entry:** Any time through the case or the work feed.
 **Friction:** 2 screens / variable actions / snapshot-dependent fields
@@ -2059,7 +2229,7 @@ flowchart TD
 **Abandon path:** An unactioned follow-up stays due and becomes overdue. It does not silently expire, because the obligation comes from the accepted plan rather than from the reminder.
 **Re-entry:** Through the case, the attention feed, or the work feed.
 **Friction:** Patient 2 screens / 1 action · Clinic 2 screens / 1 action
-**Notes:** Reminder delivery is not the obligation. `Q-PLATFORM-003` leaves the transport unresolved, and `Q-PLATFORM-005` leaves the patient's notification surface unconfirmed — which is why the attention feed carries it.
+**Notes:** Reminder delivery is not the obligation. `Q-OPS-001` leaves the delivery vendor unresolved, and the patient's durable notification surface is confirmed as `FR-PLATFORM-001` — which is why the attention feed carries it.
 
 ```mermaid
 flowchart TD
@@ -2250,7 +2420,7 @@ flowchart TD
 2. User submits with an idempotency key → System appends the assertion; payer identity derives from the authenticated context, not a field.
 3. System routes the counterparty review and creates the clinic notification intent.
 **Decision points:** Which terms snapshot governs — a case with an amendment has more than one, and the wrong one produces a mismatch.
-**Failure paths:** `ERR-FINANCE-001` the event conflicts with the governing terms, currency or amount rules. **This must never read as a failed payment, because no payment was attempted.** `ERR-PLATFORM-001` invalid values. `ERR-IDENTITY-002` grant lacks financial action authority. `ERR-AUDIT-001` reused key with a different payload. Evidence attachment bounded by `Q-PLATFORM-003`.
+**Failure paths:** `ERR-FINANCE-001` the event conflicts with the governing terms, currency or amount rules. **This must never read as a failed payment, because no payment was attempted.** `ERR-PLATFORM-001` invalid values. `ERR-IDENTITY-002` grant lacks financial action authority. `ERR-AUDIT-001` reused key with a different payload. Evidence attachment bounded by the vendor decision in `Q-OPS-001`.
 **Abandon path:** Leaving before submit creates nothing. No partial event exists — an append-only stream cannot hold a draft.
 **Re-entry:** Through the financial timeline. After an unknown outcome, reconcile via `SCR-PLATFORM-002` and retry with the same key.
 **Friction:** 2 screens / 2 actions / 4 required fields
@@ -2377,7 +2547,7 @@ flowchart TD
 2. User submits with idempotency → System appends the execution assertion.
 3. System routes the counterparty confirmation or dispute.
 **Decision points:** Which approved decision the execution satisfies — an amount mismatch against it is a validation failure rather than a partial execution.
-**Failure paths:** `ERR-FINANCE-001` no approved refund decision, or an amount or currency mismatch. `ERR-PLATFORM-001` invalid values. `ERR-AUDIT-001` mismatched retry. Evidence bounded by `Q-PLATFORM-003`.
+**Failure paths:** `ERR-FINANCE-001` no approved refund decision, or an amount or currency mismatch. `ERR-PLATFORM-001` invalid values. `ERR-AUDIT-001` mismatched retry. Evidence bounded by the vendor decision in `Q-OPS-001`.
 **Abandon path:** Nothing created. The approved obligation remains outstanding and visible in external execution tracking.
 **Re-entry:** Through the claim or the financial timeline.
 **Friction:** 2 screens / 2 actions / 3 required fields
@@ -2539,7 +2709,7 @@ flowchart TD
 2. User submits an appeal with policy-grounded reasons and evidence → System validates eligibility and the window.
 3. System creates the appeal and the integrity work item.
 **Decision points:** Policy grounds versus disagreement with the opinion — the form must make that boundary obvious, since an appeal written as a rebuttal will fail.
-**Failure paths:** `ERR-REVIEWS-001` appeal outside the applicable window or otherwise ineligible. `ERR-PLATFORM-001` no policy-grounded reason. `ERR-IDENTITY-002` not an authorized appellant. Evidence bounded by `Q-PLATFORM-003`.
+**Failure paths:** `ERR-REVIEWS-001` appeal outside the applicable window or otherwise ineligible. `ERR-PLATFORM-001` no policy-grounded reason. `ERR-IDENTITY-002` not an authorized appellant. Evidence bounded by the vendor decision in `Q-OPS-001`.
 **Abandon path:** Nothing created. The review remains published and the window continues running, so window visibility matters.
 **Re-entry:** Through provider reviews while the window holds.
 **Friction:** 3 screens / 2 actions / 1 required field plus optional evidence
@@ -2681,6 +2851,43 @@ flowchart TD
     S3 --> S5
 ```
 
+### FLOW-REVIEWS-006 — Patient appeals a decision about their own review
+**Platform:** Patient (C) → Admin (A) · **Serves:** JTBD-REVIEWS-004 · **Frequency:** Rare / non-blocking
+**Actors:** User — authoring patient or guardian. Human review — independent Review Integrity Reviewer. System — appeal record, work item.
+**Trigger:** A decision rejects, retires or unpublishes the patient's own review.
+**Success criterion:** The patient can contest the eligibility, verification or policy basis of the decision, and an independent reviewer who did not make the original decision decides it.
+**Screens:** `SCR-REVIEWS-004` → `SCR-REVIEWS-008` and `SCR-OPS-001` on the Admin side
+**Contracts:** API-REVIEWS-002, SDC-REVIEWS-001, SDC-OPS-001, API-PLATFORM-002
+**Steps:**
+1. System notifies the patient that their review was rejected, retired or unpublished, with the policy ground.
+2. User opens `SCR-REVIEWS-004` and sees the decision, its stated ground, and the appeal window.
+3. User submits policy-grounded appeal reasons and any supporting evidence.
+4. System creates the appeal record and the integrity work item, preserving the original review and decision.
+5. Human review decides on `SCR-REVIEWS-008`, recording findings and reason.
+6. User sees the decision and its reason.
+**Decision points:** The screen must make the **scope of an appeal** clear before the patient writes anything: eligibility, verification and policy compliance are contestable; the rating and the review text are not editable through an appeal. A patient who simply disagrees with the outcome needs to know that before investing effort, not after submitting.
+**Failure paths:** `ERR-REVIEWS-001` outside the appeal window, not an authorized affected party, or an appeal seeking to edit rating content. `ERR-PLATFORM-001` missing grounds. `ERR-PLATFORM-005` rejected evidence. `ERR-AUDIT-001` duplicate submission on a reused key. Universal failure paths per section 1.3.
+**Abandon path:** An unsubmitted appeal is discarded; the original decision stands and the window continues to run. The window's remaining time must be visible so abandoning is an informed choice.
+**Re-entry:** `SCR-REVIEWS-004` from the review history or the durable notification entry.
+**Friction:** Patient 2 to 3 screens · Admin 1 to 2 screens
+**Notes:** `FLOW-REVIEWS-004` remains the provider-side appeal. Both sides reach the same independent reviewer, and the interface must not suggest that the platform advocates for either party. The appeal never rewrites the original review. Resolved by `PO-UX-10`.
+
+```mermaid
+flowchart TD
+    A["System: review rejected, retired or unpublished"] --> B["System: durable notification with policy ground"]
+    B --> C["SCR-REVIEWS-004 decision, ground and appeal window"]
+    C --> D{"Patient contests eligibility, verification or policy"}
+    D -->|"no, only dislikes outcome"| E["Screen states an appeal cannot edit rating content"]
+    D -->|"yes"| F["User: submit grounds and evidence"]
+    F --> G{"Within window and authorized affected party"}
+    G -->|"no"| H["ERR-REVIEWS-001 with the reason"]
+    G -->|"yes"| I["System: appeal record plus integrity work item"]
+    I --> J["Original review and decision preserved"]
+    I --> K["SCR-REVIEWS-008 independent Review Integrity Reviewer decides"]
+    K --> L["System: findings and reason recorded"]
+    L --> M["Patient sees decision and reason"]
+```
+
 ## 9. CLAIMS Flows
 
 ### FLOW-CLAIMS-001 — Submit a refund request
@@ -2757,7 +2964,7 @@ flowchart TD
 2. User supplies or replaces items → System validates intake; items stay quarantined until scanned.
 3. System progresses the claim to `UNDER_REVIEW` once required evidence is sufficient.
 **Decision points:** Which items to supply — missing, rejected, expired and accepted must be individually distinguishable with reasons, because "evidence incomplete" alone is unactionable.
-**Failure paths:** `ERR-CLAIMS-002` items still missing, rejected, expired or invalid for the claim type. Evidence rejected by type, size or count. Quarantined evidence does not satisfy a requirement. **Transfer bounded by `Q-PLATFORM-003`.** An expired deadline is rejected rather than silently extended.
+**Failure paths:** `ERR-CLAIMS-002` items still missing, rejected, expired or invalid for the claim type. Evidence rejected by type, size or count. Quarantined evidence does not satisfy a requirement. **Transfer bounded by the vendor decision in `Q-OPS-001`.** An expired deadline is rejected rather than silently extended.
 **Abandon path:** Supplied items persist. The claim stays `EVIDENCE_INCOMPLETE` and **the deadline continues running — this is the least recoverable abandon path in the product**, which is why remaining time must be visible well before it is critical.
 **Re-entry:** Through the attention feed or claims.
 **Friction:** 2 screens / variable actions / policy-dependent evidence items
@@ -2790,7 +2997,7 @@ flowchart TD
 2. User responds and supplies evidence → System validates intake and appends to the same claim.
 3. System updates the reviewer work item.
 **Decision points:** What to contest and what to concede, within the requirements assigned to the clinic.
-**Failure paths:** `ERR-CLAIMS-002` assigned evidence incomplete or invalid. `ERR-IDENTITY-002` not an authorized case party. Evidence bounded by `Q-PLATFORM-003`. The patient's private evidence is not returned to the clinic at all.
+**Failure paths:** `ERR-CLAIMS-002` assigned evidence incomplete or invalid. `ERR-IDENTITY-002` not an authorized case party. Evidence bounded by the vendor decision in `Q-OPS-001`. The patient's private evidence is not returned to the clinic at all.
 **Abandon path:** Supplied items persist. The claim keeps its state and the deadline runs.
 **Re-entry:** Through the work feed or clinic claims.
 **Friction:** 2 screens / variable actions / assigned evidence items
@@ -3039,7 +3246,7 @@ flowchart TD
 **Abandon path:** The item stays assigned and open. Work does not silently return to the pool, so an assigned-but-abandoned item is itself an operational signal.
 **Re-entry:** Through the queue.
 **Friction:** 3 to 4 screens / 3 actions / 0 required fields
-**Notes:** The home screen for six roles. **The work-item state vocabulary is not finalized upstream (`Q-OPS-002`)**, so state labels and filters are deferred to a later phase; structure, scope, due time, blocking reason and commands are defined here.
+**Notes:** The home screen for six roles. The work-item states are `OPEN`, `ASSIGNED`, `IN_PROGRESS`, `WAITING` and `COMPLETED` (`PO-UX-08`, which closed `Q-OPS-002`). **Escalated and overdue are flags, not states**, so the queue must show them independently of the lifecycle state — an item can be `IN_PROGRESS`, escalated and overdue at once, and that is precisely the row a supervisor most needs to find. Collapsing the three into one status column would hide it.
 
 ```mermaid
 flowchart TD
@@ -3071,7 +3278,7 @@ flowchart TD
 **Abandon path:** Items persist. Booking deadlines continue running whether or not the feed was opened — the feed does not hold them.
 **Re-entry:** Through the dashboard or the feed.
 **Friction:** 2 to 3 screens / 2 actions / 0 required fields
-**Notes:** This is the depth-reduction mechanism for the Clinic panel, bringing three otherwise depth-3 daily-blocking jobs to depth 2. Same `Q-OPS-002` state-vocabulary deferral as `FLOW-OPS-001`.
+**Notes:** This is the depth-reduction mechanism for the Clinic panel, bringing three otherwise depth-3 daily-blocking jobs to depth 2. Work-item states and the flag-versus-state rule are as `FLOW-OPS-001`.
 
 ```mermaid
 flowchart TD
@@ -3300,7 +3507,7 @@ flowchart TD
 3. System releases it for use only after the required scan succeeds.
 4. An authorized reviewer requests access → System issues short-lived authorization for that exact resource and purpose and audits the download.
 **Decision points:** Item accepted, rejected, or quarantined pending scan — three distinct states with different meaning for the requirement.
-**Failure paths:** Rejected by extension, magic bytes, MIME, decode, size or count. **Quarantined items do not satisfy a requirement.** Reusing an expired access authorization is denied. Deleting an item under an active legal hold is denied. `ERR-IDENTITY-002` access outside the exact purpose or resource. **The binary transfer mechanism is unresolved under `Q-PLATFORM-003`, so this flow defines requirement, per-item state and recovery and stops at the transfer boundary.**
+**Failure paths:** Rejected by extension, magic bytes, MIME, decode, size or count. **Quarantined items do not satisfy a requirement.** Reusing an expired access authorization is denied. Deleting an item under an active legal hold is denied. `ERR-IDENTITY-002` access outside the exact purpose or resource. **The transfer states are fixed by `API-PLATFORM-001` and `STATE_MACHINES` section 21.1, so this flow runs through selection, transfer, resume, validation, scanning and acceptance or rejection. Only the storage and scanner vendor remains open under `Q-OPS-001`, and it does not change any state above.**
 **Abandon path:** Accepted and quarantined items persist against the owning record. The domain requirement stays unsatisfied until a scan succeeds, which the interface must show rather than implying the upload was enough.
 **Re-entry:** Through the owning domain screen.
 **Friction:** Embedded in the owning flow; not separately meaningful.
@@ -3320,7 +3527,7 @@ flowchart TD
     I -->|"authorized"| K["Short-lived access, download audited"]
     D --> L{"Deletion attempted under active legal hold"}
     L -->|"yes"| M["Denied"]
-    G --> N["Binary transfer mechanism unresolved — Q-PLATFORM-003"]
+    G --> N["Transfer states fixed by API-PLATFORM-001; vendor open under Q-OPS-001"]
 ```
 
 ### FLOW-PLATFORM-002 — Weak-connectivity submission recovery
@@ -3390,6 +3597,44 @@ flowchart TD
     B --> L["Retention periods provisional pending Q-PLATFORM-002"]
 ```
 
+### FLOW-PLATFORM-004 — Return to the app and find what changed
+**Platform:** Patient (C) · **Serves:** JTBD-PLATFORM-004 · **Frequency:** Every session / non-blocking
+**Actors:** User — patient or guardian. System — durable entry creation, authoritative re-read.
+**Trigger:** The patient opens or resumes the app, or taps a notification.
+**Success criterion:** The patient learns what changed and what needs them, and every action they take from there is validated against current authoritative state rather than the state the entry described.
+**Screens:** `SCR-PLATFORM-001` and `SCR-PLATFORM-009` → the linked authoritative screen
+**Contracts:** API-PLATFORM-002, API-BOOKING-002, API-CLINICAL-001, API-CLAIMS-003, API-FINANCE-005
+**Steps:**
+1. User opens the app, or taps a delivered push, SMS or email.
+2. System presents the attention surface `SCR-PLATFORM-001` with everything currently awaiting the patient.
+3. User optionally opens `SCR-PLATFORM-009` from the app chrome for the full durable history.
+4. User opens an entry. System **re-reads the authoritative resource** before rendering any action.
+5. User acts on the authoritative screen, or marks the entry read, which changes no business state.
+**Decision points:** Reading is not responding. Marking read, dismissing, or simply opening an entry must never be interpreted as an acknowledgement, an acceptance, or a deadline response — and the interface must not offer a control that blurs the two. Where an entry has gone stale, the authoritative screen governs and the entry defers to it.
+**Failure paths:** A stale entry whose underlying deadline has passed shows the current authoritative state and withdraws the action rather than failing on submit. `ERR-PLATFORM-002` for a resource the guardian's grant no longer covers. `ERR-IDENTITY-001` when the session lapsed, returning to the entry after re-authentication. Universal failure paths per section 1.3.
+**Abandon path:** Unread entries persist. Nothing expires because the patient did not read it, and no obligation depends on delivery having succeeded — the attention surface carries the same item independently.
+**Re-entry:** This flow **is** the re-entry path. It is reachable from the app chrome on every screen.
+**Friction:** Patient 1 to 2 screens to any actionable item
+**Notes:** Four primary tabs stay as they are — Home, Discover, My Care, Profile. The notification centre is a utility destination from the chrome bell and from Home attention summaries, not a fifth tab, because episodic patients navigate by what needs them rather than by a learned tab position. Push, SMS and email remain optional adapters: correctness lives in the durable entry and the attention surface. Resolved by `PO-UX-09`, which also closed `ASM-PLATFORM-001`.
+
+```mermaid
+flowchart TD
+    A{"How the patient arrives"} -->|"opens or resumes app"| B["SCR-PLATFORM-001 attention surface"]
+    A -->|"taps push, SMS or email"| C["Deep link"]
+    A -->|"taps chrome bell"| D["SCR-PLATFORM-009 notification centre"]
+    B --> D
+    C --> E["System: re-read authoritative resource"]
+    D --> F["User: open a durable entry"]
+    F --> E
+    B --> E
+    E --> G{"Entry still matches authoritative state"}
+    G -->|"yes"| H["Linked screen offers the action"]
+    G -->|"no, stale"| I["Current state shown, action withdrawn, no failed submit"]
+    F --> J["User: mark read"]
+    J --> K["System: read flag only, no business state change"]
+    H --> L["User acts on the authoritative screen"]
+```
+
 ## 13. Cross-Flow Checks and Friction Budget
 
 ### 13.1 What carries across flow boundaries
@@ -3407,7 +3652,8 @@ Where flows intersect, state must survive the handoff. This is where multi-step 
 | `FLOW-CLINICAL-002` → `FLOW-FINANCE-001` | The accepted `FinancialTermsSnapshot` identity | Every later financial and claim decision resolves against this exact snapshot |
 | `FLOW-CLAIMS-006` → `FLOW-FINANCE-006` | The approved refund decision reference, amount and currency | An execution assertion with no decision reference is invalid |
 | `FLOW-OPS-001` → owning domain flow | Work item context, but **no authorization** | Assignment never grants source-data access |
-| `FLOW-ELIG-012` → `FLOW-BOOKING-011` | Affected scope and authoritative booking state, **but no outcome** | `Q-BOOKING-002` leaves the outcome undefined |
+| `FLOW-ELIG-012` → `FLOW-ELIG-015` | Affected scope, the controlling dependency, and the review due time | The outcome is reached by governed review; no role may make a suspended-scope appointment attendable |
+| `FLOW-BOOKING-013` / `FLOW-BOOKING-014` → the booking | The accepted slot, atomically, with the old slot released | A proposal that is not accepted must leave the original appointment untouched |
 | Any flow → `FLOW-PLATFORM-002` | The original idempotency key | A new key is a new intent and would create a duplicate |
 
 ### 13.2 Filter and selection persistence

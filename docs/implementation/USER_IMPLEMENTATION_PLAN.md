@@ -730,6 +730,38 @@ Backend domain foundations from Admin/Clinic plans may be developed earlier, but
 - [ ] Clinical/catalog production gates fail closed
 - [ ] Release evidence satisfies applicable NFRs
 
+## TASK-BOOKING-011 — Implement Patient Reschedule Proposal and Response
+**Implements:** FR-BOOKING-004, FR-BOOKING-001, NFR-AUDIT-002  
+**Goal:** Implement `API-BOOKING-006`/`API-BOOKING-007` and the patient side of the governed reschedule workflow.  
+**Dependencies:** TASK-BOOKING-008, TASK-BOOKING-010, TASK-AUDIT-003  
+**Expected Files / Areas:** shared reschedule proposal actions/model; API endpoints; React Native reschedule flow `(Proposed)`  
+**Implementation Notes:** The proposal is a separate record. While it is `PENDING` the booking stays `CONFIRMED` on its original slot; never optimistically render the proposed slot as the appointment. Acceptance revalidates eligibility and new-slot capacity, then moves the booking and releases the old slot in one transaction. Only the counterparty may respond. Reject proposals against a booking in `ELIGIBILITY_REVIEW`.  
+**Data / Migration Impact:** New reschedule proposal table plus appended booking history; no booking column is mutated in place.  
+**API Impact:** Implement API-BOOKING-006 and API-BOOKING-007.  
+**Tests Required:** pending-state invariance, atomic slot move and old-slot release, self-response rejection, decline/expiry/withdrawal, revalidation failure, `ELIGIBILITY_REVIEW` rejection, duplicate response.  
+**Verification:** targeted reschedule API tests; `composer test`; mobile verified scripts.  
+**Definition of Done:**
+- [ ] Original slot stays authoritative while a proposal is pending
+- [ ] Acceptance revalidates eligibility and capacity before committing
+- [ ] Slot move and old-slot release are atomic
+- [ ] Reschedule history is appended, never overwritten
+
+## TASK-PLATFORM-013 — Implement Patient Notification and Attention Center
+**Implements:** FR-PLATFORM-001, NFR-PLATFORM-006  
+**Goal:** Implement `API-PLATFORM-002` and the durable patient notification/attention surface.  
+**Dependencies:** TASK-PLATFORM-008, TASK-IDENTITY-007, emitting domain tasks  
+**Expected Files / Areas:** durable notification entry model/queries; list and mark-read endpoints; React Native notification centre and Home attention area `(Proposed)`  
+**Implementation Notes:** Entries are durable records independent of push/SMS/email adapters. Mark-read touches only the read flag and must not be reachable as a business acknowledgement. Store a reference to the authoritative resource rather than a copy of business state, and re-read that resource when the entry is opened. Filter guardian visibility to the active grant scope. Do not add a fifth primary navigation tab.  
+**Data / Migration Impact:** New notification entry table with read state; no domain state duplicated as truth.  
+**API Impact:** Implement API-PLATFORM-002.  
+**Tests Required:** durable entry creation per intent, mark-read changes no business state, delivery-failure independence, revoked-grant filtering, unread count, cursor stability, stale-entry re-read.  
+**Verification:** targeted notification API tests; `composer test`; mobile verified scripts.  
+**Definition of Done:**
+- [ ] Every required patient intent creates a durable entry
+- [ ] Reading or dismissing changes no business state
+- [ ] Deadline-bound items remain visible when delivery fails
+- [ ] Guardian visibility respects the active grant scope
+
 ## 10. Cross-Platform Journey Dependencies
 
 | Patient journey | Patient tasks | Required Clinic/Admin/shared readiness |
@@ -740,6 +772,7 @@ Backend domain foundations from Admin/Clinic plans may be developed earlier, but
 | Search providers | TASK-ELIG-010–011 | provider verification + eligibility engine/recalculation |
 | Request booking | TASK-BOOKING-007–008 | Clinic availability + provider response workflow |
 | Accept alternative/cancel | TASK-BOOKING-009–010 | Clinic booking response + shared state machine |
+| Reschedule a confirmed appointment | TASK-BOOKING-011 | Clinic reschedule workspace + shared proposal machine |
 | Review/accept plan | TASK-CLINICAL-007–008 | treating-dentist plan authoring + financial proposal |
 | Follow treatment | TASK-CLINICAL-009 | Clinic stage/evidence/follow-up workflow |
 | Record external finance | TASK-FINANCE-008–011 | shared immutable finance model + Clinic/Admin counterpart workflows |
@@ -832,12 +865,12 @@ This file continues task numbering after the Admin and Clinic implementation pla
 - `TASK-AUDIT-003`;
 - `TASK-CATALOG-002`;
 - `TASK-ELIG-010` through `TASK-ELIG-011`;
-- `TASK-BOOKING-007` through `TASK-BOOKING-010`;
+- `TASK-BOOKING-007` through `TASK-BOOKING-011`;
 - `TASK-CLINICAL-007` through `TASK-CLINICAL-009`;
 - `TASK-FINANCE-008` through `TASK-FINANCE-011`;
 - `TASK-REVIEWS-003`;
 - `TASK-CLAIMS-007` through `TASK-CLAIMS-009`;
-- `TASK-PLATFORM-008` through `TASK-PLATFORM-012`.
+- `TASK-PLATFORM-008` through `TASK-PLATFORM-013`.
 
 These IDs are append-only and are synchronized in the canonical `docs/README.md` registry. Future task additions must update that registry without renumbering or reusing earlier task IDs.
 

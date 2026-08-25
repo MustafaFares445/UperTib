@@ -96,8 +96,13 @@ The launch-gate implementation currently uses the exact accountable role keys `l
 | Read another patient's identity | Ordinary patient/provider/staff | Deny | Unless another explicit scoped authorization below applies | NFR-IDENTITY-001 |
 | Act for patient | Guardian/family grantee | Conditional | Active grant covers exact patient, action, data scope, purpose, and time | FR-IDENTITY-003 |
 | Act after grant expiry/revocation | Guardian/family grantee | Deny | Revocation/expiry takes effect immediately | FR-IDENTITY-003 |
-| Create representation grant | Patient / authorized legal-basis workflow | Conditional | Grantor/legal basis, grantee, actions, data scope, purpose, and effective period recorded | FR-IDENTITY-003 |
-| Revoke representation grant | Grantor / actor explicitly authorized by governing legal-basis workflow | Conditional | Revocation is attributed and audited | FR-IDENTITY-003 |
+| Create consent representation grant | Adult patient with capacity | Allow | Own identity; grantee, actions, data scope, purpose, and effective period recorded | FR-IDENTITY-003 |
+| Submit legal-basis representation request | Authenticated guardian applicant | Allow | Declared relationship and legal basis plus required identity/legal evidence; creates a request, never a grant | FR-IDENTITY-003 |
+| Self-authorize a legal-basis grant by entering a dependent | Guardian applicant | Deny | Only an authorized verification decision may create a `LEGAL_BASIS` grant | FR-IDENTITY-003 |
+| Approve/reject legal-basis representation request | Verification staff / authorized admin | Conditional | Assigned review scope; evidence assessed; grant records patient, grantee, actions, data scope, purpose, effective period, evidence, and approving reviewer | FR-IDENTITY-003, FR-AUDIT-001 |
+| Revoke consent representation grant | Patient grantor | Allow | Always immediate; no booking, case, or workflow state may block it | FR-IDENTITY-003 |
+| Revoke legal-basis representation grant | Actor authorized by the governing legal basis / authorized admin workflow | Conditional | Revocation is attributed and audited; follows the legal basis | FR-IDENTITY-003 |
+| Block a revocation because of booking or case state | Any actor/system | Deny | Revocation is never blocked by downstream state; continuity of care is handled by an operational work item instead | FR-IDENTITY-003 |
 | Masquerade guardian action as patient action | Guardian/system | Deny | Acting identity must remain guardian identity | FR-IDENTITY-003 |
 | Manage coarse staff role/permission assignments | System administrator | Conditional | Administrative authorization; change audited; does not grant unscoped business access | FR-IDENTITY-001, FR-AUDIT-001 |
 | Create/change scoped staff grant | System administrator / authorized access administrator | Conditional | Organization/branch/capability/subject/purpose/effective period are explicit | FR-IDENTITY-001 |
@@ -161,6 +166,13 @@ Production clinical approval remains governed by `Q-CATALOG-001` and `Q-ELIG-001
 | Record patient no-show | Authorized provider representative | Conditional | Policy-defined no-show threshold has passed; exact booking scope | FR-BOOKING-002 |
 | Mark no-show before threshold | Any actor | Deny | Threshold is mandatory | FR-BOOKING-002 |
 | Force booking confirmation despite failed eligibility/capacity | Provider/admin/operations | Deny | Safety-critical revalidation cannot be overridden | FR-BOOKING-001 |
+| Start or complete a visit for a booking in `ELIGIBILITY_REVIEW` | Clinic/provider representative | Deny | The appointment is not attendable while the owning eligibility scope is suspended | FR-BOOKING-002, FR-ELIG-003 |
+| Override `ELIGIBILITY_REVIEW` to make a booking attendable | Admin/operations/any role | Deny | Fail-closed medical safety rule; no override exists while the scope remains `SUSPENDED` | FR-ELIG-003, FR-BOOKING-002 |
+| Resolve an eligibility-review booking outcome | Verification/operations scope, with licensed clinical reviewer where the suspension reason requires clinical judgment | Conditional | Assigned review scope; outcome limited to return-to-`CONFIRMED` on a new `ELIGIBLE` evaluation or `CANCELLED` on deadline expiry | FR-ELIG-003, FR-OPS-001 |
+| Propose a reschedule of a confirmed booking | Patient, guardian within grant scope, or authorized clinic party | Conditional | Booking is `CONFIRMED`; policy permits this initiating party; no other `PENDING` proposal exists | FR-BOOKING-004 |
+| Respond to a reschedule proposal | Counterparty to the initiator | Conditional | Within response deadline; acceptance revalidates eligibility and new-slot capacity | FR-BOOKING-004, FR-BOOKING-001 |
+| Accept one's own reschedule proposal | Initiating party | Deny | A reschedule requires the counterparty's acceptance | FR-BOOKING-004 |
+| Edit a confirmed booking's date/provider/service directly | Any actor | Deny | Changes occur only through the governed proposal and acceptance path | FR-BOOKING-004, FR-BOOKING-002 |
 | Resolve slot capacity atomically | System/application action | Allow | Transaction/locking/constraints protect configured capacity | FR-BOOKING-001, NFR-AUDIT-002 |
 
 Operations or administrators do not receive a general booking-state override from current requirements. Any future exception workflow requires an explicit requirement and auditable state transition.
@@ -212,8 +224,10 @@ Every permission in this section is about recording or reviewing activity perfor
 | Submit review for represented patient | Guardian | Conditional | Active grant covers review action and experience is eligible | FR-REVIEWS-001, FR-IDENTITY-003 |
 | Submit review without verified experience | Any patient/guardian | Deny | Verified experience required | FR-REVIEWS-001 |
 | Create second active review for same experience | Patient/guardian | Deny | One active review per eligible experience | FR-REVIEWS-001 |
-| Appeal review eligibility/policy decision | Authorized affected party | Conditional | Policy-grounded appeal; evidence/grounds; applicable window | FR-REVIEWS-002 |
-| Decide review publication/integrity appeal | Review integrity reviewer | Conditional | Assigned scope; findings/reason recorded; separation rule where applicable | FR-REVIEWS-002 |
+| Appeal a decision rejecting/retiring/unpublishing own review | Authoring patient, or guardian within grant scope | Conditional | Policy-grounded appeal; evidence/grounds; applicable window | FR-REVIEWS-002 |
+| Appeal review eligibility/policy decision affecting the provider | Affected provider/clinic representative | Conditional | Policy-grounded appeal; evidence/grounds; applicable window | FR-REVIEWS-002 |
+| Appeal another party's review merely because its rating is unwelcome | Provider/patient/guardian | Deny | An appeal must contest eligibility, verification, or policy compliance | FR-REVIEWS-002 |
+| Decide review publication/integrity appeal | Independent review integrity reviewer | Conditional | Assigned scope; reviewer did not make the original decision; findings/reason recorded | FR-REVIEWS-002 |
 | Directly change rating content through appeal | Integrity reviewer/provider/admin | Deny | Appeal concerns eligibility/policy compliance, not rewriting rating content | FR-REVIEWS-002 |
 | Feed R into S/P/H/I | System/reviewer/admin | Deny | Patient rating remains separate from classification | FR-REVIEWS-001–002 |
 
@@ -243,7 +257,13 @@ Every permission in this section is about recording or reviewing activity perfor
 |---|---|---|---|---|
 | View operational work queue | Operations/verification/reviewer role | Conditional | Queue filtered to actor's role, organization, branch, subject, and workflow scope | FR-OPS-001, FR-IDENTITY-001 |
 | Claim/assign work item | Authorized operations/queue actor | Conditional | Assignment capability and source-resource scope active | FR-OPS-001 |
-| Reassign/escalate work item | Authorized operations supervisor/owner | Conditional | Explicit assignment/escalation grant; audited | FR-OPS-001, FR-AUDIT-001 |
+| Reassign/escalate work item | Authorized operations supervisor/owner | Conditional | Explicit assignment/escalation grant; audited; escalation preserves the lifecycle state and changes only priority/assignment | FR-OPS-001, FR-AUDIT-001 |
+| Start a work item | Assigned staff | Conditional | Item is `ASSIGNED` to the acting staff member | FR-OPS-001 |
+| Start a work item assigned to someone else | Any staff actor | Deny | Start requires the acting staff member to hold the assignment | FR-OPS-001 |
+| Move a work item to `WAITING` and resume it | Assigned staff | Conditional | A named external dependency is recorded as the blocking reason | FR-OPS-001 |
+| Complete a work item | Assigned staff | Conditional | The underlying domain condition is resolved or the workflow reached its legitimate next state | FR-OPS-001 |
+| Complete a work item whose domain condition is unresolved | Any staff actor | Deny | Closing the projection cannot fabricate the resolution | FR-OPS-001 |
+| Reopen a completed work item | Authorized staff where policy permits | Conditional | Prior completion record is preserved; returns to `OPEN` or `ASSIGNED` by retained assignment | FR-OPS-001 |
 | Use work-item assignment to gain unauthorized source-data access | Any staff actor | Deny | Source resource authorization remains independently enforced | FR-IDENTITY-001 |
 | View operational report | Operations/management actor | Conditional | Report scope and underlying drill-down data authorization apply | FR-OPS-002, FR-IDENTITY-001 |
 | Export report data | Authorized reporting actor | Conditional | Same or stricter authorization as source data; export audited when sensitive | FR-OPS-002, FR-AUDIT-001 |
@@ -385,7 +405,7 @@ Any required production-data access for those actors must be introduced through 
 | Q-CATALOG-001 | Medical production approval cannot be considered complete solely from provisional catalog data. |
 | Q-ELIG-001 | Clinical eligibility formulas and reviewer-governed production policy still require licensed approval. |
 | Q-PLATFORM-002 | Final legal retention/deletion authorization conditions remain subject to legal validation. |
-| Q-PLATFORM-003 | Concrete OTP/MFA, evidence-storage, malware-scan, and notification provider boundaries are unresolved. |
+| Q-PLATFORM-003 | Resolved 2026-08-25 for interaction and authorization purposes by `PO-UX-17`: the evidence-transfer contract and its authorization points are provider-neutral. Concrete OTP/MFA, evidence-storage, malware-scan and notification vendor selection moved to `Q-OPS-001`. |
 | Q-OPS-001 | Infrastructure/provider administration model is not yet selected. |
 
 ## 24. Requirement Coverage

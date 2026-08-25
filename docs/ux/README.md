@@ -1,13 +1,13 @@
 # UberTib UX Documentation — Start Here
 
 **Chain phase:** 1 of 5 complete — Discovery, Information Architecture and User Flows
-**Baseline:** 2026-08-25
+**Baseline:** 2026-08-25, reconciled 2026-08-25 against `PO-2026-08-25-ux-phase1-reconciliation`
 **Validator:** `python docs/ux/scripts/validate_ux_docs.py --phase 1` → 0 failures, 0 warnings
 
 ## Authority Chain
 
 1. **Engineering docs** — canonical for behavior, data, permissions, lifecycle, errors. `docs/PRD.md`, `docs/SDD.md`, `docs/domain/*`, `docs/api/*`, `docs/database/*`.
-2. **Product Owner decisions** — `.spec/decisions/`. `PO-2026-08-25-ux-gap-resolution.md` governs clinic onboarding, doctor comparison, staff contracts and run scope.
+2. **Product Owner decisions** — `.spec/decisions/`. `PO-2026-08-25-ux-gap-resolution.md` (`PO-UX-01`–`06`) governs clinic onboarding, doctor comparison, staff contracts and run scope. `PO-2026-08-25-ux-phase1-reconciliation.md` (`PO-UX-07`–`18`) governs actor context, work-item states, patient notifications, review appeals, guardian revocation, alternative closure, eligibility review, legal-basis representation, reschedule, plan validity, evidence transfer and the research limitation.
 3. **This chain's outputs** — canonical for structure, presentation and interaction.
 4. **Tokens** — canonical for style, from UX Phase 3 onward. Not yet produced.
 5. **Figma** — derived, authoritative over nothing. Not yet produced.
@@ -32,11 +32,11 @@ Declared here and never re-litigated downstream.
 
 | Platform | Runtime | Profile | Screens |
 |---|---|---|---:|
-| Patient app | React Native, consumes `/api/v1` | **C** — native | 44 |
-| Clinic / Doctor | Filament 5, panel `clinic` at `/clinic` (Proposed) | **A** — admin panel | 54 |
-| Admin | Filament 5, panel `admin` at `/admin` | **A** — admin panel | 57 |
+| Patient app | React Native, consumes `/api/v1` | **C** — native | 47 |
+| Clinic / Doctor | Filament 5, panel `clinic` at `/clinic` (Proposed) | **A** — admin panel | 56 |
+| Admin | Filament 5, panel `admin` at `/admin` | **A** — admin panel | 59 |
 
-**Input mode:** Docs-Partial. No screen inventory existed to inherit; all 155 screens are derived and `New`. Verified directly: `app/Filament/` does not exist, one API route is implemented, no React Native repository is verified.
+**Input mode:** Docs-Partial. No screen inventory existed to inherit; all 162 screens are derived and `New`. Verified directly: `app/Filament/` does not exist, one API route is implemented, no React Native repository is verified.
 
 **Accessibility target:** WCAG 2.2 AA, from `NFR-PLATFORM-005`. This chain specifies obligations and never claims conformance.
 
@@ -67,11 +67,11 @@ Profile C emits no hover state. Profile A specifies framework configuration and 
 | Artifact | Count |
 |---|---:|
 | Actors with evidence-based personas | 19 UI-bearing, plus system automation and 2 explicit non-roles |
-| Jobs to be done | 62 |
-| Screens | 155 — Patient 44, Clinic 54, Admin 57 |
-| Flows | 94, including 8 cross-platform lifecycle flows |
-| Lifecycle statuses mapped to screens | 62 of 62 across 15 machines |
-| Gaps recorded | 17 |
+| Jobs to be done | 66 |
+| Screens | 162 — Patient 47, Clinic 56, Admin 59 |
+| Flows | 100, including 9 cross-platform lifecycle flows |
+| Lifecycle statuses mapped to screens | 82 of 82 across 18 machines |
+| Gaps recorded | 17, of which 12 are resolved |
 
 ## ID Conventions
 
@@ -87,46 +87,42 @@ Introduced by this chain: `SCR-*` and `FLOW-*` in Phase 1; `WF-*` in Phase 2; `C
 
 | Domain | SCR | Domain | SCR |
 |---|---:|---|---:|
-| IDENTITY | 036 | FINANCE | 012 |
-| ELIG | 020 | REVIEWS | 009 |
+| IDENTITY | 038 | FINANCE | 012 |
+| ELIG | 022 | REVIEWS | 009 |
 | CLINICAL | 019 | CATALOG | 009 |
-| BOOKING | 015 | PLATFORM | 008 |
+| BOOKING | 017 | PLATFORM | 009 |
 | CLAIMS | 013 | OPS | 006 |
 | POLICY | 004 | AUDIT | 004 |
 
-`FLOW-*` highest allocated per domain: IDENTITY 020 · ELIG 014 · BOOKING 012 · CLINICAL 010 · CLAIMS 009 · FINANCE 008 · REVIEWS 005 · CATALOG 005 · OPS 004 · PLATFORM 003 · POLICY 002 · AUDIT 002.
+`FLOW-*` highest allocated per domain: IDENTITY 021 · ELIG 015 · BOOKING 014 · CLINICAL 010 · CLAIMS 009 · FINANCE 008 · REVIEWS 006 · CATALOG 005 · OPS 004 · PLATFORM 004 · POLICY 002 · AUDIT 002.
 
-`JTBD-*` highest allocated per domain: IDENTITY 011 · ELIG 008 · CLINICAL 007 · BOOKING 007 · CLAIMS 007 · FINANCE 006 · CATALOG 003 · OPS 003 · REVIEWS 003 · PLATFORM 003 · POLICY 002 · AUDIT 002.
+`JTBD-*` highest allocated per domain: IDENTITY 012 · ELIG 008 · BOOKING 008 · CLINICAL 007 · CLAIMS 007 · FINANCE 006 · REVIEWS 004 · PLATFORM 004 · CATALOG 003 · OPS 003 · POLICY 002 · AUDIT 002.
 
 ## Open Items
 
-New from Phase 1 — full detail in `01-foundation/UPSTREAM_GAPS.md`:
+Nothing raised by this phase is still open. Twelve of the seventeen gaps, plus one assumption, were resolved on 2026-08-25 by `.spec/decisions/PO-2026-08-25-ux-phase1-reconciliation.md`:
 
-| ID | Severity | Needs a decision on |
-|---|---|---|
-| `Q-OPS-002` | Major | Work-item state vocabulary, which is required to be user-visible but is unfinalized |
-| `Q-PLATFORM-005` | Major | Whether a patient notification or attention surface exists in V1 |
-| `Q-PLATFORM-006` | Major | Environment and expertise for all 19 actors |
-| `Q-PLATFORM-007` | Major | Any research input at all — none exists |
-| `Q-IDENTITY-001` | Major | Who establishes a representation grant on a legal basis, and where |
-| `Q-REVIEWS-001` | Major | Whether a patient may appeal a review decision |
-| `CONFLICT-BOOKING-001` | Major | `ERR-BOOKING-002` reused on a guardian-revocation surface |
-| `Q-BOOKING-003` | Minor | Whether a confirmed booking can be rescheduled |
-| `Q-CLINICAL-001` | Minor | Whether a proposed treatment plan expires |
-| `ASM-PLATFORM-001` | Assumption | The attention surface is the patient's primary re-entry path |
-| `ASM-IDENTITY-001` | Assumption | Applicant contact verification precedes application content |
-| `ASM-ELIG-001` | Assumption | Booking may proceed directly from a result row |
+| Resolved | Became |
+|---|---|
+| `Q-PLATFORM-006` environment and expertise | Confirmed contexts for six role classes (`PO-UX-07`) |
+| `Q-OPS-002` work-item states | `OPEN`/`ASSIGNED`/`IN_PROGRESS`/`WAITING`/`COMPLETED`, escalation and overdue as flags |
+| `Q-PLATFORM-005` patient notifications | `FR-PLATFORM-001`, `API-PLATFORM-002`, `SCR-PLATFORM-009` |
+| `Q-REVIEWS-001` review appeals | Patient is an authorized affected party; `FLOW-REVIEWS-006` |
+| `CONFLICT-BOOKING-001` guardian revocation | `ERR-BOOKING-002` removed from `API-IDENTITY-005`; revocation is unconditional |
+| `Q-BOOKING-001` alternative closure | `CANCELLED` with `ALTERNATIVE_DECLINED` / `ALTERNATIVE_EXPIRED`, no penalty |
+| `Q-BOOKING-002` suspended-scope bookings | `ELIGIBILITY_REVIEW` state; `FLOW-ELIG-015`, `SCR-ELIG-022` |
+| `Q-IDENTITY-001` legal-basis access | `API-IDENTITY-006`, `SDC-IDENTITY-005`, `FLOW-IDENTITY-021` |
+| `Q-BOOKING-003` rescheduling | `FR-BOOKING-004` governed proposal; `FLOW-BOOKING-013`, `FLOW-BOOKING-014` |
+| `Q-CLINICAL-001` plan validity | Policy-governed `expires_at`, V1 default 7 days, plus early staleness |
+| `Q-PLATFORM-003` evidence transfer | `API-PLATFORM-001` and eight provider-neutral session states |
+| `Q-PLATFORM-007` research | Accepted limitation, not a blocker |
+| `ASM-PLATFORM-001` attention surface | Confirmed as requirement, no longer an assumption |
 
-Carried forward from canonical documentation: `Q-PLATFORM-001` Blocker for the completeness claim only; `Q-BOOKING-001`, `Q-BOOKING-002`, `Q-PLATFORM-003`, `Q-CATALOG-001`, `Q-ELIG-001`, `Q-PLATFORM-002`, `Q-OPS-001` Major; `Q-PLATFORM-004` Minor.
+Still carried from canonical documentation, none of which constrains Phase 2 structure: `Q-PLATFORM-001` Blocker for the completeness claim only; `Q-CATALOG-001`, `Q-ELIG-001`, `Q-PLATFORM-002` and `Q-OPS-001` Major — the last now also carries the storage, scanner, OTP and notification vendor selection deferred from `Q-PLATFORM-003`; `Q-PLATFORM-004` Minor.
 
-**Resolved and not reopened:** staff-facing data contracts, clinic and provider onboarding, doctor comparison, and full three-platform scope are confirmed product behavior under `PO-2026-08-25` and are implemented in this phase.
+Two assumptions remain in force: `ASM-IDENTITY-001` and `ASM-ELIG-001`. Both are recorded with what breaks if wrong in `01-foundation/UPSTREAM_GAPS.md` section 5.
 
-## Two Bounded Incomplete Branches
-
-Not defects. Both flows are complete up to the point where their destination is undefined upstream, and neither invents an outcome.
-
-- `FLOW-BOOKING-007` — an alternative proposal that expires or is declined has no canonical resulting booking state (`Q-BOOKING-001`).
-- `FLOW-ELIG-012` — existing bookings in a newly suspended scope enter a review workflow with no defined actor, deadline, state effect or outcome (`Q-BOOKING-002`).
+**No bounded incomplete branches remain.** The two Phase 1 reported — `FLOW-BOOKING-007` and `FLOW-ELIG-012` — now run to defined outcomes.
 
 ## Verification
 
