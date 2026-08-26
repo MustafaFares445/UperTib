@@ -21,7 +21,7 @@ permissions:
 
 jobs:
   validate-docs:
-    name: Validate engineering documentation
+    name: Validate engineering and UX documentation
     runs-on: ubuntu-latest
     timeout-minutes: 5
 
@@ -34,14 +34,33 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Run documentation validator
+      - name: Run documentation validators
         id: validator
         shell: bash
         run: |
           set +e
-          python docs/scripts/validate_docs.py > validation-output.txt 2>&1
-          status=$?
-          cat validation-output.txt
+
+          python docs/scripts/validate_docs.py > engineering-validation-output.txt 2>&1
+          engineering_status=$?
+
+          python docs/ux/scripts/validate_ux_docs.py --phase 2 > ux-validation-output.txt 2>&1
+          ux_status=$?
+
+          {
+            echo '=== Engineering documentation ==='
+            cat engineering-validation-output.txt
+            echo
+            echo '=== UX Phase 2 ==='
+            cat ux-validation-output.txt
+          } | tee validation-output.txt
+
+          status=0
+          if [ "$engineering_status" -ne 0 ] || [ "$ux_status" -ne 0 ]; then
+            status=1
+          fi
+
+          echo "engineering_status=$engineering_status" >> "$GITHUB_OUTPUT"
+          echo "ux_status=$ux_status" >> "$GITHUB_OUTPUT"
           echo "status=$status" >> "$GITHUB_OUTPUT"
           exit 0
 
@@ -50,13 +69,17 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           VALIDATOR_STATUS: ${{ steps.validator.outputs.status }}
+          ENGINEERING_STATUS: ${{ steps.validator.outputs.engineering_status }}
+          UX_STATUS: ${{ steps.validator.outputs.ux_status }}
         shell: bash
         run: |
           {
             echo '# Documentation Validation Report'
             echo
             echo "- Commit: \`$GITHUB_SHA\`"
-            echo "- Validator exit code: \`$VALIDATOR_STATUS\`"
+            echo "- Combined exit code: \`$VALIDATOR_STATUS\`"
+            echo "- Engineering validator: \`$ENGINEERING_STATUS\`"
+            echo "- UX Phase 2 validator: \`$UX_STATUS\`"
             echo "- Workflow: \`Documentation Validation\`"
             echo
             echo '```text'
