@@ -73,11 +73,11 @@ There is intentionally **no payment gateway or money-transfer entity** in the co
 | Store | Logical responsibility | Main ERD tables |
 |---|---|---|
 | D1 — Identity & Authorization | identities, verified contacts, guardian grants, staff/provider scope | `users`, `identity_contacts`, `contact_verification_challenges`, `guardian_grants`, `providers`, `clinics`, `branches`, `provider_branch_assignments`, `staff_scope_grants` |
-| D2 — Catalog & Policy | stable services, versioned definitions, policy versions, launch governance | `service_groups`, `services`, `service_definitions`, `policy_versions`, `clinical_reviewer_credentials`, `service_launch_gates` |
+| D2 — Catalog & Policy | stable families and procedure items, versioned definitions, family-to-procedure mapping, commercial options, policy versions, launch governance | `service_groups`, `services`, `service_definitions`, `procedure_items`, `procedure_item_versions`, `service_family_procedure_maps`, `commercial_options`, `policy_versions`, `clinical_reviewer_credentials`, `service_launch_gates` |
 | D3 — Evidence | private evidence metadata, scan state, resource binding, legal hold | `evidence_items`, `evidence_bindings`, `legal_holds` |
-| D4 — Eligibility | source facts, price facts, activation requests, computed immutable decisions/gates | `service_activation_requests`, `approved_facts`, `provider_service_prices`, `eligibility_decisions`, `eligibility_gate_results` |
-| D5 — Booking & Clinical Case | capacity, booking lifecycle, treatment/case/follow-up history | `appointment_slots`, `bookings`, `booking_alternatives`, `booking_events`, `cases`, `treatment_plan_versions`, `treatment_plan_stages`, `accepted_treatment_snapshots`, `case_treatment_stages`, `follow_ups` |
-| D6 — Financial Records | immutable accepted financial terms and append-only external financial facts | `financial_terms_snapshots`, `financial_events` |
+| D4 — Eligibility | source facts, provider price facts, market observations, activation requests, computed immutable decisions/gates | `service_activation_requests`, `approved_facts`, `provider_service_prices`, `market_price_observations`, `eligibility_decisions`, `eligibility_gate_results` |
+| D5 — Booking & Clinical Case | capacity, booking lifecycle, treatment/case/follow-up history, structured plan lines and modifiers | `appointment_slots`, `bookings`, `booking_alternatives`, `booking_events`, `cases`, `treatment_plan_versions`, `treatment_plan_stages`, `treatment_plan_lines`, `treatment_line_modifiers`, `accepted_treatment_snapshots`, `case_treatment_stages`, `follow_ups` |
+| D6 — Financial Records | immutable accepted financial terms, append-only external financial facts, currency-normalization provenance | `financial_terms_snapshots`, `financial_events`, `currency_normalizations` |
 | D7 — Reviews & Claims | verified reviews, appeals, claims, deadlines, human decisions | `reviews`, `review_appeals`, `claims`, `claim_deadline_events`, `claim_decisions`, `claim_appeals` |
 | D8 — Audit & Operations | idempotency, work queues, audit/provenance, notifications, integrity exceptions | `work_items`, `audit_events`, `idempotency_records`, `integrity_exceptions`, `notification_intents` |
 
@@ -224,6 +224,7 @@ flowchart TD
     P21((P2.1 Capture Activation Facts & Evidence))
     P22((P2.2 Validate / Verify Evidence & Facts))
     P23((P2.3 Resolve Versioned Policy Inputs))
+    P23B((P2.3b Calibrate Market Comparison Basis))
     P24((P2.4 Compute S / P / H / I Components))
     P25((P2.5 Evaluate Mandatory Gates))
     P26((P2.6 Commit Immutable Eligibility Decision))
@@ -243,8 +244,11 @@ flowchart TD
     P22 -->|approved / rejected / pending fact state| D4
     P22 -->|work/audit outcome| D8
 
-    D2 -->|service definition, policy versions, launch gates| P23
-    D4 -->|effective verified facts and price facts| P23
+    D2 -->|service and procedure definitions, price policy versions, launch gates| P23
+    D4 -->|effective verified facts and provider price facts with display mode| P23
+    D4 -->|market observations in scope and window| P23B
+    D2 -->|effective price policy sample and confidence rules| P23B
+    P23B -->|comparison basis or non-final calibration state| P23
     P23 -->|exact versioned inputs| P24
 
     P24 -->|computed component values + confidence + provenance| P25
@@ -260,7 +264,10 @@ flowchart TD
 
 - `PENDING_EVALUATION` is different from scientific grade `F`.
 - `I` is internal and not exposed as a patient rating.
-- Production S/P/H/I formulas, weights, thresholds, and defaults remain governed by `Q-ELIG-001`.
+- The provider supplies an actual price and its approved display mode; the provider never supplies `P` and never selects a grade as a price menu.
+- When the effective price policy's sample or confidence rule is unmet, P2.3b returns a non-final calibration state, the decision records that state instead of a class, and patient discovery still shows the provider's own price.
+- No fixed ratio of the comparison basis participates; the boundaries come from the effective versioned price policy.
+- Production S/H/I formulas, weights, thresholds, grade bands, and calibration thresholds remain governed by `Q-ELIG-001`.
 - A passing component cannot override a failing or pending mandatory gate.
 - Corrections create new facts and a new eligibility decision rather than rewriting historical decisions.
 
@@ -334,8 +341,8 @@ flowchart TD
     PROVIDER[Clinician / Clinic]
     PATIENT[Patient / Guardian]
 
-    P41((P3.7 Author Versioned Treatment Plan))
-    P42((P3.8 Validate Plan Completeness))
+    P41((P3.7 Author Versioned Treatment Plan and Lines))
+    P42((P3.8 Validate Plan Completeness and Commercial Integrity))
     P43((P3.9 Accept Plan & Terms))
     P44((P3.10 Progress Treatment Stage))
     P45((P3.11 Schedule Follow-Up / Build Timeline))
@@ -346,11 +353,13 @@ flowchart TD
     D6[(D6 Financial Records)]
     D8[(D8 Audit & Operations)]
 
-    PROVIDER -->|clinician-authored plan, stages, prices, inclusions/exclusions| P41
-    P41 -->|new plan version| D5
-    D2 -->|service/policy requirements| P42
-    D5 -->|plan version| P42
-    P42 -->|complete proposed plan| PATIENT
+    PROVIDER -->|clinician-authored plan, stages, procedure lines, quantities, modifiers, third-party costs| P41
+    D2 -->|procedure definition versions, family mapping, approved commercial options| P41
+    P41 -->|new plan version with lines and modifiers| D5
+    D2 -->|service/procedure requirements, inclusion sets, policy requirements| P42
+    D5 -->|plan version, lines, modifiers, superseded version| P42
+    P42 -->|rejected: duplicate included component or uncategorized charge| PROVIDER
+    P42 -->|complete proposed plan with amendment summary when superseding| PATIENT
 
     PATIENT -->|explicit acceptance of exact plan version| P43
     D5 -->|proposed plan content/hash| P43
@@ -376,7 +385,9 @@ flowchart TD
 
 - The treatment plan is clinician-authored; UberTib does not autonomously diagnose or generate a treatment plan.
 - Acceptance binds the exact plan version and creates immutable clinical and financial snapshots.
-- Amendments create linked new versions/snapshots rather than editing previously accepted terms.
+- Amendments create linked new versions/snapshots rather than editing previously accepted terms, and a superseding version carries the changed lines, the reason per change, and the price difference so the patient sees the delta before accepting.
+- A line binds the exact procedure definition version and the mapping generation it was reached through, so a later catalog, price, band, or currency change never alters what was quoted.
+- A charge for a component the governing definition marks as included, and any charge without a governed category and reason, is rejected at P3.8 rather than surfacing to the patient.
 - Stage completion uses the accepted historical requirements, not mutable current defaults.
 
 ## 10. Level 1 — External Financial Event Recording
@@ -559,8 +570,9 @@ flowchart TD
     CLINICAL[Licensed Clinical Reviewer]
     OPS[Legal / Operational / Technical Approver]
 
-    P81((P6.1 Draft Versioned Policy / Definition))
+    P81((P6.1 Draft Versioned Policy / Catalog / Commercial Content))
     P82((P6.2 Record Evidence-Bound Approval))
+    P82B((P6.2b Record and Verify Market Observations))
     P83((P6.3 Evaluate Launch Readiness))
     P84((P6.4 Activate Effective Version))
     P85((P6.5 Resolve Affected Eligibility Scopes))
@@ -571,8 +583,12 @@ flowchart TD
     D4[(D4 Eligibility)]
     D8[(D8 Audit & Operations)]
 
-    POLICY -->|versioned rule content + source| P81
-    P81 -->|draft definition/policy + hash| D2
+    POLICY -->|versioned rule content, catalog content, mapping, commercial options + source| P81
+    P81 -->|draft definition/policy/mapping/option + hash| D2
+
+    POLICY -->|observation amount, locality, source, date, material variant| P82B
+    P82B -->|verified or pending observation with provenance| D4
+    P82B -->|observation audit| D8
 
     CLINICAL -->|medical approval + credential evidence| P82
     OPS -->|legal / operational / technical decisions| P82
@@ -595,7 +611,9 @@ flowchart TD
     P87 -->|integrity mismatch exception if any| D8
 ```
 
-The current implemented service-definition/launch-gate slice is evidence for this pattern. Production medical publication still depends on licensed clinical approval; the 26 evaluation records are not production-ready merely because they exist in the database.
+The current implemented service-definition/launch-gate slice is evidence for this pattern. Production medical publication still depends on licensed clinical approval; evaluation records and imported candidate procedures are not production-ready merely because they exist in the database.
+
+**Authority separation in P6.1 and P6.2.** A catalog or commercial administrator drafting content in P6.1 cannot supply the clinical approval P6.2 requires, and P6.3 fails closed without it. A change touching clinical scope, risk level, provider qualification, equipment, evidence, clinically meaningful inclusions or exclusions, follow-up, completion, escalation, or a safety gate therefore cannot reach an activated production version through catalog administration alone. Market observations and price-band drafts follow the commercial authority path and never substitute for clinical approval.
 
 ## 14. Derived Read Flows
 
@@ -641,7 +659,10 @@ Cross-scope requests may be returned as not found when existence itself is prote
 
 | Area | Current verified information flow | V1 target status |
 |---|---|---|
-| Catalog | Public request → `ListVisibleServiceGroups` → existing catalog/launch data → API response | Existing narrow slice |
+| Catalog | Public request → `ListVisibleServiceGroups` → existing family/launch data → API response | Existing family-layer slice |
+| Detailed procedure layer and mapping | Not verified as implemented | Proposed / clinically governed |
+| Market observations and price calibration | Not verified as implemented | Proposed / commercially governed |
+| Commercial options and plan lines | Not verified as implemented | Proposed |
 | Launch governance | Service definition + credential + launch-gate actions → append-only readiness state | Existing narrow slice / extend |
 | Identity/guardian | Framework user baseline only | Proposed |
 | Provider eligibility | Not verified as implemented | Proposed / clinically governed |
@@ -656,9 +677,10 @@ Cross-scope requests may be returned as not found when existence itself is prote
 | Flow | Primary coverage |
 |---|---|
 | Identity verification / representation | FR-IDENTITY-002–003, NFR-IDENTITY-001–002 |
-| Provider activation / eligibility | FR-ELIG-002–017, FR-POLICY-001–002, FR-OPS-003 |
-| Discovery / booking | FR-CATALOG-001, FR-ELIG-001, FR-BOOKING-001–003 |
-| Treatment / case progress | FR-CLINICAL-001–005, FR-FINANCE-001 |
+| Provider activation / eligibility | FR-ELIG-002–019, FR-POLICY-001–002, FR-OPS-003 |
+| Discovery / booking | FR-CATALOG-001–002, FR-ELIG-001, FR-ELIG-018, FR-BOOKING-001–003 |
+| Catalog and commercial governance | FR-CATALOG-002–003, FR-ELIG-018–019, FR-POLICY-003 |
+| Treatment / case progress | FR-CLINICAL-001–007, FR-FINANCE-001 |
 | External financial records | FR-FINANCE-001–007, NFR-FINANCE-001 |
 | Reviews / claims / appeals | FR-REVIEWS-001–002, FR-CLAIMS-001–005 |
 | Evidence lifecycle | NFR-PLATFORM-003–004 plus evidence-bearing FRs |
@@ -670,8 +692,8 @@ Cross-scope requests may be returned as not found when existence itself is prote
 | ID | Severity | DFD impact |
 |---|---|---|
 | Q-PLATFORM-001 | Blocker | Complete SRS-to-flow reconciliation cannot yet be certified. |
-| Q-CATALOG-001 | Major | Production catalog flow cannot treat provisional records as clinically approved. |
-| Q-ELIG-001 | Major | Production S/P/H/I calculation inputs/thresholds remain clinically governed. |
+| Q-CATALOG-001 | Major | Production catalog flow cannot treat provisional families or imported candidate procedures as clinically approved; the flow shape itself is settled. |
+| Q-ELIG-001 | Major | Production S/H/I calculation inputs, grade bands, and market-calibration thresholds remain clinically governed; the price-calibration flow shape is settled. |
 | Q-PLATFORM-002 | Major | Retention/destruction flow needs final legal/compliance validation. |
 | Q-OPS-001 | Major | Concrete hosting/storage/queue topology and the managed/self-hosted MySQL product, HA, PITR implementation, and network placement remain unresolved; the production relational engine is MySQL. |
 | Q-PLATFORM-003 | Major | OTP/MFA, storage, malware-scan and notification provider contracts remain unresolved. |

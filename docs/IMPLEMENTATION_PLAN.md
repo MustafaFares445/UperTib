@@ -58,7 +58,7 @@ The React Native patient repository/path and its actual build/test/lint commands
 Every implementation stage must preserve all of the following:
 
 1. V1 is Aleppo-first and dental-only within approved service scope.
-2. The current 26 service records are provisional evaluation records, not automatic production clinical approval.
+2. The currently seeded service records are provisional evaluation records and candidate patient-facing family content, not automatic production clinical approval and not a fixed count.
 3. Patients, clinics, and Admin users do not manually choose final `S`, `P`, `H`, `I`, scientific grade, or eligibility.
 4. Source facts and governed policy versions drive system-derived classifications and eligibility.
 5. `PENDING_EVALUATION` is distinct from scientific grade `F`.
@@ -72,6 +72,9 @@ Every implementation stage must preserve all of the following:
 13. Authorization is deny-by-default and enforced server-side; hiding a UI control is not authorization.
 14. Booking confirmation must synchronously revalidate safety-critical state and cannot trust stale search/cache data.
 15. Retry-prone sensitive commands must be idempotent and concurrency-safe.
+16. Behavior expected to change operationally — catalog content and mapping, service risk level, clinical prerequisites, inclusions and exclusions, price-display modes, price bands, market-calibration thresholds, approved modifiers, third-party-cost categories, proposal validity, exchange-rate source, rounding rules — is governed data or versioned policy, never a code, `config/`, `.env`, seeder, or panel constant. Safety and integrity invariants stay enforced in code.
+17. No charge lacking a governed category, reason, and patient-visible meaning can become an accepted commercial term, and no treatment amendment governs future work until the patient accepts it.
+18. A clinically meaningful catalog change requires licensed clinical approval regardless of how configurable the value is.
 
 Any task implementation that violates one of these boundaries is incomplete even when its local tests or UI appear functional.
 
@@ -89,20 +92,20 @@ This master plan does not redefine task bodies. If a task description conflicts 
 
 ## 6. Allocated Task Registry Snapshot
 
-The three detailed plans currently allocate **82 implementation tasks**.
+The three detailed plans currently allocate **92 implementation tasks**.
 
 | Domain | Allocated task IDs | Highest allocated |
 |---|---|---:|
 | PLATFORM | `TASK-PLATFORM-001`–`TASK-PLATFORM-013` | 013 |
 | IDENTITY | `TASK-IDENTITY-001`–`TASK-IDENTITY-007` | 007 |
 | AUDIT | `TASK-AUDIT-001`–`TASK-AUDIT-003` | 003 |
-| POLICY | `TASK-POLICY-001` | 001 |
-| CATALOG | `TASK-CATALOG-001`–`TASK-CATALOG-002` | 002 |
+| POLICY | `TASK-POLICY-001`–`TASK-POLICY-002` | 002 |
+| CATALOG | `TASK-CATALOG-001`–`TASK-CATALOG-004` | 004 |
 | OPS | `TASK-OPS-001`–`TASK-OPS-004` | 004 |
-| ELIG | `TASK-ELIG-001`–`TASK-ELIG-011` | 011 |
+| ELIG | `TASK-ELIG-001`–`TASK-ELIG-012` | 012 |
 | BOOKING | `TASK-BOOKING-001`–`TASK-BOOKING-011` | 011 |
-| CLINICAL | `TASK-CLINICAL-001`–`TASK-CLINICAL-009` | 009 |
-| FINANCE | `TASK-FINANCE-001`–`TASK-FINANCE-011` | 011 |
+| CLINICAL | `TASK-CLINICAL-001`–`TASK-CLINICAL-012` | 012 |
+| FINANCE | `TASK-FINANCE-001`–`TASK-FINANCE-012` | 012 |
 | REVIEWS | `TASK-REVIEWS-001`–`TASK-REVIEWS-003` | 003 |
 | CLAIMS | `TASK-CLAIMS-001`–`TASK-CLAIMS-009` | 009 |
 
@@ -217,7 +220,10 @@ Create the governed inputs and operational primitives required by eligibility, b
 2. `TASK-PLATFORM-002` — private evidence intake/quarantine/authorized access foundation.
 3. `TASK-OPS-002` — unified operational work-item model **moved forward in master sequencing because downstream booking/claims tasks depend on it**.
 4. `TASK-CATALOG-001` — Admin catalog/service-definition governance.
-5. `TASK-OPS-001` — launch-gate review and publication operations.
+5. `TASK-CATALOG-003` — two-layer catalog: families, detailed procedure items, versioned mapping, candidate import.
+6. `TASK-CATALOG-004` — clinical service-definition governance and its licensed-clinical-approval gate.
+7. `TASK-POLICY-002` — commercial, calibration, and currency policy domains and the commercial-option catalog.
+8. `TASK-OPS-001` — launch-gate review and publication operations.
 
 `TASK-OPS-003` reporting remains later because meaningful source-domain data does not yet exist.
 
@@ -230,6 +236,7 @@ At this point migrations should establish only shared, justified foundations suc
 - versioned policies;
 - evidence items/bindings and quarantine metadata;
 - operational work items;
+- procedure items, procedure definition versions, family-to-procedure mapping, and commercial options;
 - any missing catalog/governance fields required by canonical designs.
 
 Do not create booking, case, claim, or financial tables early merely to reserve schema names.
@@ -239,8 +246,10 @@ Do not create booking, case, claim, or financial tables early merely to reserve 
 - activated policy/history cannot be silently rewritten;
 - evidence is private and unusable while quarantine/validation rules fail;
 - work items reference authoritative source records instead of replacing domain state;
-- catalog evaluation/production separation remains fail-closed;
-- publication requires accountable launch gates.
+- catalog evaluation/production separation remains fail-closed and no visibility or activation control promotes evaluation content;
+- publication requires accountable launch gates;
+- a clinically meaningful procedure change cannot be activated by catalog or commercial administration alone;
+- an ordinary catalog, price-band, modifier, or currency-policy change is demonstrably achievable through governed data with no code change.
 
 # Stage 3 — Clinic Panel, Provider/Branch Activation, Pricing, and Verification
 
@@ -265,14 +274,14 @@ The exact detailed task semantics remain in the Admin and Clinic plans. The cros
 1. create provider/clinic/branch relationships and scoped access;
 2. Clinic submits factual provider/service/branch information;
 3. Clinic uploads/binds evidence through the shared evidence service;
-4. Clinic records actual price inputs where required;
+4. Clinic records actual price inputs and their approved display mode where required, including a legitimately zero-cost price;
 5. Admin verification reviews source facts/evidence;
 6. approved/rejected facts retain provenance and effective/expiry context;
 7. influential changes become eligible inputs for recalculation.
 
 ## Critical rule
 
-No Clinic or Admin form may accept a final scientific grade, pricing class, protection level, risk profile, or eligibility decision as source input.
+No Clinic or Admin form may accept a final scientific grade, pricing class, protection level, risk profile, or eligibility decision as source input. No Clinic form may set the market comparison basis, a sample threshold, or a calibration state, and no Clinic surface may present A/B/C/D/F as a pricing menu.
 
 ## Exit gate
 
@@ -814,8 +823,8 @@ The current implemented public catalog route is production code evidence and mus
 | ID | Severity | Implementation behavior |
 |---|---|---|
 | `Q-PLATFORM-001` | Blocker | Continue only under explicitly approved `.spec` baseline; do not claim complete SRS reconciliation or invent missing SRS-only behavior. |
-| `Q-CATALOG-001` | Major | Build catalog/governance mechanics; production clinical readiness of provisional 26 services waits for licensed approval. |
-| `Q-ELIG-001` | Major | Build versioned eligibility engine/framework; production formulas/weights/thresholds/defaults wait for licensed approval. |
+| `Q-CATALOG-001` | Major | Build the two-layer catalog and its governance mechanics; production clinical readiness of provisional families and imported candidate procedures waits for licensed approval. |
+| `Q-ELIG-001` | Major | Build the versioned eligibility engine and the market-calibration framework; production S/H/I formulas, weights, grade bands, and calibration thresholds wait for licensed approval. |
 | `Q-PLATFORM-002` | Major | Implement retention mechanism/policy versioning; do not label provisional retention periods legally final. |
 | `Q-OPS-001` | Major | Keep deployment provider-neutral until concrete production topology is selected. |
 | `Q-PLATFORM-003` | Major | Use provider-neutral OTP/MFA/malware/storage/notification boundaries; do not invent provider contracts or patient binary evidence transport. |
@@ -833,6 +842,12 @@ The following shortcuts must be rejected during code review:
 - implementing authorization only through Filament `visible()` callbacks or mobile navigation guards;
 - creating a “super admin bypass” that skips medical/financial/claim domain rules;
 - allowing Clinic/Admin to enter final S/P/H/I values;
+- hard-coding catalog identities, `service_risk_level` values, price bands, market-sample thresholds, a fixed comparison multiplier, an exchange rate or rate source, a rounding rule, approved modifiers, third-party-cost categories, or a proposal-validity period anywhere in code, `config/`, `.env`, a production-truth seeder, a Filament resource, or React Native;
+- building a rule-scripting engine, dynamic code execution, database-stored code, or a generic workflow or state-machine designer in order to avoid future development;
+- offering a free-text or uncategorized surcharge on a treatment line;
+- treating an unaccepted treatment amendment as agreed, or billing against it;
+- publishing a procedure list as the patient discovery experience;
+- labelling a price a market or city average while calibration is non-final;
 - treating cached provider search as current booking eligibility;
 - optimistic local confirmation of booking/treatment acceptance/financial event without committed server response;
 - mutating accepted plan/financial snapshots to represent an amendment;

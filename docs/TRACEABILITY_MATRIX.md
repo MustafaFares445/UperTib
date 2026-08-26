@@ -73,7 +73,9 @@ The columns describe functional impact, not UI layout.
 
 | Requirement | Source | Design / Data / API | Patient | Clinic | Admin | Cross-Platform Behavior | Tests | Tasks | Implementation State | Gate / Open Item | Status |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| `FR-CATALOG-001` — understandable governed service catalog | `.spec FR.12.2.1` / SRS `FR-002` | `API-CATALOG-001`; ServiceDefinition lifecycle; ERD catalog | Read | Read / activation input | Action/Oversight | Draft → gates → publication → shared projections | `TC-CATALOG-001`–`005`, `TC-PLATFORM-012` | `TASK-CATALOG-001`, `002`; `TASK-OPS-001` | **Partial existing** | Clinical approval `Q-CATALOG-001` | Covered |
+| `FR-CATALOG-001` — understandable governed service catalog | `.spec FR.12.2.1` / SRS `FR-002` | `API-CATALOG-001`; ServiceDefinition lifecycle; ERD catalog | Read families, never procedure codes | Read / activation input | Action/Oversight | Draft → gates → publication → shared projections | `TC-CATALOG-001`–`005`, `TC-PLATFORM-012` | `TASK-CATALOG-001`, `002`; `TASK-OPS-001` | **Partial existing** | Clinical approval `Q-CATALOG-001` | Covered |
+| `FR-CATALOG-002` — two-layer governed catalog | `PO-2026-08-25-syria-catalog-pricing-governance` `PO-SYRIA-03`/`04` | `ERD` 4.3, 6.9–6.11; `SDC-CATALOG-001`/`002`; `API-CATALOG-001` additive fields | Read families only | Read / plan-line selection | Action/Oversight | Catalog and mapping changes propagate prospectively; history keeps its captured version | `TC-CATALOG-006`, `TC-CATALOG-003` | `TASK-CATALOG-003`, `TASK-CATALOG-001` | Planned | Content approval `Q-CATALOG-001` | Covered |
+| `FR-CATALOG-003` — clinically governed procedure definitions | `PO-2026-08-25-syria-catalog-pricing-governance` `PO-SYRIA-02`/`13` | `ERD` 6.10; `SDC-CATALOG-003`; `STATE_MACHINES` 3; launch gates | Practical eligibility meaning only | Read prerequisites; no authoring | Action/Approval separated | Clinical activation gates propagation; risk codes never leave internal scope | `TC-CATALOG-007`, `TC-ELIG-005` | `TASK-CATALOG-004`, `TASK-OPS-001` | Planned | Licensed clinical approval `Q-CATALOG-001`, `Q-ELIG-001` | Covered |
 
 ## 5.3 Eligibility, Classification, Provider Discovery
 
@@ -87,15 +89,17 @@ The columns describe functional impact, not UI layout.
 | `FR-ELIG-006` — periodic/event reevaluation | `.spec FR.01.2.5` / SRS `FR-039` | jobs + synchronous booking revalidation | Indirect | Read | Oversight | Recalculation updates search/booking/work | `TC-ELIG-006`, `010` | `TASK-ELIG-005`, `TASK-PLATFORM-004` | Planned | — | Covered |
 | `FR-ELIG-007` — service activation evidence | `.spec FR.02.1.1` / SRS `FR-010` | activation/facts/evidence; optional `API-ELIG-003`/`004` | — | Action | Action/Oversight | Clinic factual submission → Admin verification → evaluation | `TC-ELIG-001`, `TC-PLATFORM-001`–`003` | `TASK-ELIG-001`, `002`, `007`, `008`; `TASK-PLATFORM-002`, `006` | Planned | Evidence provider `Q-PLATFORM-003` | Covered |
 | `FR-ELIG-008` — pending evaluation for insufficient evidence | `.spec FR.02.2.1` / SRS `FR-012` | `ERR-ELIG-002`; evaluator state | Read safe status | Read blockers | Oversight | Missing evidence is PENDING, never grade F | `TC-ELIG-002`, `008` | `TASK-ELIG-004`, `009`, `011` | Planned | — | Covered |
-| `FR-ELIG-009` — actual price as source input | `.spec FR.02.2.2` / SRS `FR-013` | provider prices + versioned P policy | Read safe price | Action | Oversight | Price is source fact; P computed prospectively | `TC-ELIG-003` | `TASK-ELIG-003`, `TASK-FINANCE-004` | Planned | `Q-ELIG-001` for bands | Covered |
+| `FR-ELIG-009` — actual price as source input | `.spec FR.02.2.2` / SRS `FR-013` | provider prices + versioned P policy; governed display mode | Read safe price and its mode | Action | Oversight | Price is source fact; P computed prospectively; a zero-cost price is valid | `TC-ELIG-003`, `TC-ELIG-011` | `TASK-ELIG-003`, `TASK-FINANCE-004`, `TASK-FINANCE-012` | Planned | `Q-ELIG-001` for bands | Covered |
 | `FR-ELIG-010` — automatic protection selection | `.spec FR.02.2.3` / SRS `FR-014` | governed H policy + accepted snapshot | Read safe meaning | Read safe meaning | Oversight | Derived H can become historical entitlement context | `TC-ELIG-004`, `TC-CLAIMS-002` | `TASK-ELIG-003`, `004` | Planned | `Q-ELIG-001`; V1 non-funded | Covered |
 | `FR-ELIG-011` — S score and immutable snapshot | `.spec FR.02.2.4` / SRS `FR-036` | eligibility snapshot | Safe explanation | Safe result | Scoped detail | One immutable decision underlies all views | `TC-ELIG-004`, `005` | `TASK-ELIG-003`, `004`, `006` | Planned | `Q-ELIG-001` | Covered |
 | `FR-ELIG-012` — confidence and grade cap | `.spec FR.02.2.5` / SRS `FR-037` | versioned evaluator policy | Safe result | Safe result | Scoped detail | Derived outcome only; no manual override | `TC-ELIG-004` | `TASK-ELIG-003`, `004` | Planned | `Q-ELIG-001` | Covered |
 | `FR-ELIG-013` — grade bands and F separation | `.spec FR.02.2.6` / SRS `FR-040` | scientific-grade policy | Safe result | Safe result | Scoped detail | Pending remains distinct from F on every projection | `TC-ELIG-002`, `004` | `TASK-ELIG-003`, `004` | Planned | `Q-ELIG-001` | Covered |
-| `FR-ELIG-014` — automatic P from versioned price bands | `.spec FR.02.2.7` / SRS `FR-041` | price + versioned band policy | Safe meaning | Price action / safe derived read | Scoped detail | Clinic price → backend-derived P → patient-safe projection | `TC-ELIG-003` | `TASK-ELIG-003`, `004`; `TASK-FINANCE-004` | Planned | `Q-ELIG-001` | Covered |
+| `FR-ELIG-014` — automatic P from versioned price bands | `.spec FR.02.2.7` / SRS `FR-041` | price + versioned market-calibrated band policy | Safe meaning; never `P` | Price action / safe derived read | Scoped detail | Clinic price → calibrated basis → backend-derived P or non-final state → patient-safe projection | `TC-ELIG-003`, `TC-ELIG-012` | `TASK-ELIG-003`, `004`, `012`; `TASK-FINANCE-004` | Planned | `Q-ELIG-001` | Covered |
 | `FR-ELIG-015` — automatic H and I | `.spec FR.02.2.8` / SRS `FR-042` | versioned H/I policies + filtering | H safe; I hidden | H safe; I hidden | Scoped detail | Same decision with role-filtered fields | `TC-ELIG-004`, `008` | `TASK-ELIG-003`, `004`, `006` | Planned | `Q-ELIG-001` | Covered |
 | `FR-ELIG-016` — provider decision card | `.spec FR.03.1.1` / SRS `FR-004` | `API-ELIG-001`; patient-safe read model | Read | Read own status | Oversight | Role-specific projection from same decision | `TC-ELIG-007`, `008` | `TASK-ELIG-006`, `009`, `010` | Planned | — | Covered |
 | `FR-ELIG-017` — eligibility explanation | `.spec FR.03.1.2` / SRS `FR-005` | `API-ELIG-002`; provenance/reproduction | Read | Read | Oversight/detail | Same reason/provenance with privacy filtering | `TC-ELIG-008`, `009` | `TASK-ELIG-006`, `009`, `011` | Planned | — | Covered |
+| `FR-ELIG-018` — governed price presentation modes | `PO-2026-08-25-syria-catalog-pricing-governance` `PO-SYRIA-05`/`08` | `ERD` 6.4, 6.13; `SDC-ELIG-005`; `API-ELIG-001`, `API-CATALOG-001` | Read practical price meaning | Action within scope | Oversight / mode governance | Provider price fact → patient-safe presentation; supersession never rewrites accepted amounts | `TC-ELIG-011`, `TC-ELIG-003` | `TASK-FINANCE-012`, `TASK-FINANCE-004`, `TASK-POLICY-002` | Planned | — | Covered |
+| `FR-ELIG-019` — market observations and calibrated price policy | `PO-2026-08-25-syria-catalog-pricing-governance` `PO-SYRIA-06`/`07` | `ERD` 6.12; `SDC-POLICY-002`; `STATE_MACHINES` 7.1; `SEQUENCE_DIAGRAMS` 4 | No exposure of any calibration internal | No exposure; price unaffected | Action/Oversight | A price-policy change is invisible to Patient and Clinic and recalculates prospectively | `TC-ELIG-012`, `TC-ELIG-003`, `TC-ELIG-008` | `TASK-ELIG-012`, `TASK-POLICY-002`, `TASK-ELIG-003` | Planned | Production thresholds `Q-ELIG-001` | Covered |
 
 ## 5.4 Booking
 
@@ -115,6 +119,8 @@ The columns describe functional impact, not UI layout.
 | `FR-CLINICAL-003` — treatment-stage evidence | `.spec FR.07.1.1` / SRS `FR-023` | stage state; evidence bindings | Read | Action | Oversight | Clinic completion/evidence → Patient timeline/Admin projection | `TC-CLINICAL-006`, `007`; `TC-PLATFORM-001`–`003` | `TASK-CLINICAL-005`, `009`; `TASK-PLATFORM-006` | Planned | Evidence provider `Q-PLATFORM-003` | Covered |
 | `FR-CLINICAL-004` — follow-up reminders | `.spec FR.07.2.1` / SRS `FR-024` | follow-up state; notification intent | Read | Action/Read | Oversight | Due state shared; delivery failure does not complete/revert clinical state | `TC-CLINICAL-007`, `TC-PLATFORM-010` | `TASK-CLINICAL-006`, `009`; `TASK-OPS-004` | Planned | Notification provider `Q-PLATFORM-003` | Covered |
 | `FR-CLINICAL-005` — unified patient case timeline | `.spec FR.07.2.2` / SRS `FR-034` | `API-CLINICAL-004`; role-filtered case read model | Read | Read/Action where scoped | Oversight | One case truth with authorized projections | `TC-CLINICAL-007`, `TC-CLAIMS-004`, `TC-FINANCE-005` | `TASK-CLINICAL-001`, `002`, `006`, `007`, `009` | Planned | — | Covered |
+| `FR-CLINICAL-006` — structured plan lines and commercial integrity | `PO-2026-08-25-syria-catalog-pricing-governance` `PO-SYRIA-11`/`12` | `ERD` 8.7–8.8; `ERR-CLINICAL-002`; `SDC-CLINICAL-001`; `API-CLINICAL-002` | Read line detail and included content | Action authoring within case | Oversight; option governance | Rejected line never reaches the patient; accepted lines keep their definition version | `TC-CLINICAL-008`, `TC-CLINICAL-002` | `TASK-CLINICAL-010`, `TASK-POLICY-002`, `TASK-CLINICAL-012` | Planned | Inclusion content `Q-CATALOG-001` | Covered |
+| `FR-CLINICAL-007` — disclosed amendment and re-acceptance | `PO-2026-08-25-syria-catalog-pricing-governance` `PO-SYRIA-10`/`11` | `ERD` 8.2; `STATE_MACHINES` 9; `API-CLINICAL-002`/`003` | Action: read delta then accept | Action: compose and propose | Oversight of version chain | Unaccepted amendment governs nothing on any platform | `TC-CLINICAL-009`, `TC-CLINICAL-005` | `TASK-CLINICAL-011`, `TASK-CLINICAL-012`, `TASK-CLINICAL-008` | Planned | — | Covered |
 
 ## 5.6 Financial Records — External Activity Only
 
@@ -151,7 +157,7 @@ The columns describe functional impact, not UI layout.
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | `FR-OPS-001` — operational work queues | `.spec FR.10.1.1` / SRS `FR-029` | work items; monitoring; cross-platform work rules | Indirect | Read/Action scoped | Action/Oversight | Work references but never replaces source record | `TC-OPS-001`, `TC-OPS-002`, `TC-OPS-005`; `TC-BOOKING-002`, `TC-CLAIMS-004` | `TASK-OPS-002`, `004`; emitting domain tasks | Planned | — | Covered |
 | `FR-OPS-002` — operational reporting | `.spec FR.14.1.1` / SRS `FR-035` | reporting read models; monitoring | — | Scoped if approved | Action/Read | Reports derive from authoritative data | `TC-OPS-003`, `005` | `TASK-OPS-003`, `TASK-PLATFORM-004` | Planned | — | Covered |
-| `FR-OPS-003` — launch readiness gate | `.spec FR.14.2.1` / PO-2026-08-23 | existing launch gates/publication | Indirect catalog result | Indirect activation availability | Action | Publication/readiness propagates to catalog/Clinic availability | `TC-OPS-004`, `TC-CATALOG-004`, `005` | `TASK-OPS-001`, `TASK-CATALOG-001` | **Partial existing** | `Q-CATALOG-001` | Covered |
+| `FR-OPS-003` — launch readiness gate | `.spec FR.14.2.1` / PO-2026-08-23 | existing launch gates/publication; catalog/clinical/commercial authority split | Indirect catalog result | Indirect activation availability | Action, authorities separated | Publication/readiness propagates to catalog/Clinic availability | `TC-OPS-004`, `TC-CATALOG-004`, `005`, `007` | `TASK-OPS-001`, `TASK-CATALOG-001`, `TASK-CATALOG-004` | **Partial existing** | `Q-CATALOG-001` | Covered |
 
 ## 5.10 Policy
 
@@ -159,6 +165,7 @@ The columns describe functional impact, not UI layout.
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | `FR-POLICY-001` — versioned policy lifecycle | `.spec FR.13.1.1` / PO-2026-08-23 | `STATE_MACHINES`; policy versions | Indirect | Indirect | Action | Prospective replacement; historical snapshots stay bound | `TC-POLICY-001`, `002`, `004`; `TC-CATALOG-003`–`005` | `TASK-POLICY-001`, `TASK-CATALOG-001` | **Partial pattern existing** | — | Covered |
 | `FR-POLICY-002` — historical decision reproduction | `.spec FR.13.2.1` / PO-2026-08-23 | snapshots; reproduction; integrity exceptions | Indirect | Read safe history | Action/Oversight | Reproduction cannot rewrite original | `TC-POLICY-003`, `004`; `TC-ELIG-009`; `TC-AUDIT-004` | `TASK-POLICY-001`, `TASK-ELIG-006`, `TASK-AUDIT-002` | Planned | — | Covered |
+| `FR-POLICY-003` — currency presentation and normalization provenance | `PO-2026-08-25-syria-catalog-pricing-governance` `PO-SYRIA-09` | `ERD` 9.3; `SDC-POLICY-002`; `API-FINANCE-001` | Read amount in the agreed currency | Read own agreed currency | Action/Oversight of the policy | A later rate or rounding change recomputes no accepted amount anywhere | `TC-POLICY-005`, `TC-FINANCE-001` | `TASK-POLICY-002`, `TASK-FINANCE-012`, `TASK-FINANCE-001` | Planned | — | Covered |
 
 ## 5.11 Audit and Retry Safety
 
@@ -244,25 +251,27 @@ A capability above is not implementation-complete if only the initiating platfor
 
 Under the approved `.spec` continuation baseline:
 
-- Functional requirements traced: **53 / 53**.
+- Functional requirements traced: **60 / 60**.
 - Non-functional requirements traced: **14 / 14**.
-- Total FR/NFR rows: **67**.
-- Concrete test cases allocated in Testing Strategy: **84**.
-- Implementation tasks allocated: **84**.
+- Total FR/NFR rows: **74**.
+- Concrete test cases allocated in Testing Strategy: **91**.
+- Implementation tasks allocated: **92**.
 - API contracts allocated: **36**.
-- Stable error IDs allocated: **20**.
-- Requirement rows with `TASK-*` coverage: **67 / 67**.
-- Requirement rows with concrete `TC-*` coverage: **67 / 67**.
+- Stable error IDs allocated: **21**.
+- Requirement rows with `TASK-*` coverage: **74 / 74**.
+- Requirement rows with concrete `TC-*` coverage: **74 / 74**.
 - Rows marked `Uncovered`: **0**.
 - Rows marked `Deprecated`: **0**.
 - Requirement rows marked `Blocked`: **0** under the explicitly approved `.spec` continuation baseline.
 - Full independent authoritative SRS v1.1 reconciliation: **Blocked by `Q-PLATFORM-001`**.
-- Production clinical catalog readiness remains governed by `Q-CATALOG-001`.
-- Production S/P/H/I medical policy readiness remains governed by `Q-ELIG-001`.
+- Production clinical catalog and procedure readiness remains governed by `Q-CATALOG-001`; the catalog model, its governance, and the authority split are reconciled and no longer waiting on it.
+- Production S/H/I medical policy and market-calibration thresholds remain governed by `Q-ELIG-001`; the `P` derivation shape and the no-manual-selection rule are reconciled.
 - Retention-period legal acceptance remains governed by `Q-PLATFORM-002`.
 - Infrastructure/provider finalization remains governed by `Q-OPS-001` / `Q-PLATFORM-003`.
 
-These are documentation coverage counts. They do not state that 82 planned test cases or 82 implementation tasks already exist in production code.
+These are documentation coverage counts. They do not state that the planned test cases or implementation tasks already exist in production code.
+
+The 2026-08-25 Syria catalog and pricing reconciliation added seven requirements (`FR-CATALOG-002`, `FR-CATALOG-003`, `FR-ELIG-018`, `FR-ELIG-019`, `FR-CLINICAL-006`, `FR-CLINICAL-007`, `FR-POLICY-003`), one stable error (`ERR-CLINICAL-002`), four staff contracts (`SDC-CATALOG-002`, `SDC-CATALOG-003`, `SDC-ELIG-005`, `SDC-POLICY-002`), seven verification cases, and eight implementation tasks. It allocated **no** new `API-*`: four existing patient contracts were extended additively and every new workflow is a staff surface.
 
 `CONFLICT-CATALOG-001` remains allocated historically but is **Resolved**: the currently verified route and current OpenAPI agree for the implemented `API-CATALOG-001` slice.
 

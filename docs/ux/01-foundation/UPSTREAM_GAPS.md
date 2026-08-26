@@ -4,10 +4,11 @@
 **Baseline:** 2026-08-25
 **Gaps recorded:** 17 — 0 new Blockers · 8 Major · 9 Minor
 **New IDs allocated:** 8 `Q-*` · 1 `CONFLICT-*` · 3 `ASM-*`
+**Last reconciled:** 2026-08-25 against `PO-2026-08-25-syria-catalog-pricing-governance` — no new gap raised, `GAP-004` narrowed
 
 ## 1. Purpose
 
-Designing the structure is the most thorough audit the requirements will ever get. This file records every gap that surfaced while deriving 162 screens and 100 flows across three platforms, and the resolution of each one that has been answered.
+Designing the structure is the most thorough audit the requirements will ever get. This file records every gap that surfaced while deriving 165 screens and 103 flows across three platforms, and the resolution of each one that has been answered.
 
 A gap here is an upstream problem, not a design task. Suggested resolutions are labelled as suggestions and decide nothing.
 
@@ -64,12 +65,13 @@ These pre-existed this phase. They are restated with their concrete UX consequen
 ### GAP-004 — Production clinical content and classification policy remain ungated
 **Found while:** mapping `FLOW-CATALOG-001`, `FLOW-CATALOG-003`, `FLOW-ELIG-010` and `FLOW-OPS-004`
 **Type:** Ambiguous rule
-**Detail:** the 26 dental service records are provisional evaluation records awaiting licensed clinical approval, and production `S`, `P`, `H` and `I` formulas, weights, thresholds and defaults likewise await it.
-**UX consequence:** constrains content rather than structure. `SCR-CATALOG-003`, `SCR-CATALOG-004`, `SCR-ELIG-019` and `SCR-OPS-006` must state that current values are provisional evaluation configuration, and no patient surface may present provisional catalog data as clinically approved. Evaluation context must never render as a real-patient production experience.
-**Affects:** `SCR-CATALOG-001` to `SCR-CATALOG-005`, `SCR-ELIG-018`, `SCR-ELIG-019`, `SCR-OPS-006`, FR-CATALOG-001, FR-ELIG-011 to FR-ELIG-015, FR-OPS-003
+**Detail:** the seeded dental service records, and the imported candidate procedure content alongside them, are provisional evaluation records awaiting licensed clinical approval; production `S`, `H` and `I` formulas, weights, thresholds and defaults, and the market-calibration minimums, likewise await it.
+**UX consequence:** constrains content rather than structure. `SCR-CATALOG-003`, `SCR-CATALOG-004`, `SCR-CATALOG-010`, `SCR-ELIG-019`, `SCR-ELIG-023` and `SCR-OPS-006` must state that current values are provisional evaluation configuration, and no patient surface may present provisional catalog data as clinically approved. Evaluation context must never render as a real-patient production experience, and no audience, visibility or effective-date control may be shown as a way to change that.
+**Affects:** `SCR-CATALOG-001` to `SCR-CATALOG-005`, `SCR-CATALOG-010`, `SCR-ELIG-018`, `SCR-ELIG-019`, `SCR-ELIG-023`, `SCR-OPS-006`, FR-CATALOG-001 to FR-CATALOG-003, FR-ELIG-011 to FR-ELIG-015, FR-ELIG-019, FR-OPS-003
 **Severity:** Major
 **Raised as:** `Q-CATALOG-001`, `Q-ELIG-001` — pre-existing
-**Suggested resolution (suggestion only):** none proposed. This requires licensed clinical approval, not a design or engineering decision.
+**Narrowed 2026-08-25 by `PO-2026-08-25-syria-catalog-pricing-governance`.** The parts of this gap that were structural are now answered: the catalog has an approved two-layer shape and a settled governance model (`FR-CATALOG-002`), the authority split between catalog, clinical and commercial administration is defined, and the internal `P` direction is settled as provider price compared against a market-calibrated versioned policy (`FR-ELIG-019`) with the spreadsheet's fixed multipliers rejected as production logic. **What remains is exactly what always required a clinician:** approval of production service and procedure content, including inclusions, exclusions, `service_risk_level`, evidence, follow-up and completion rules, and approval of production formulas, weights, thresholds, grade bands and calibration minimums. That residue is not narrowable by design work.
+**Suggested resolution (suggestion only):** none proposed for the remainder. It requires licensed clinical approval, not a design or engineering decision.
 
 ### GAP-005 — Retention periods, hosting topology and load envelope remain open
 **Found while:** mapping `FLOW-PLATFORM-003`, and while fixing platform constraints
@@ -86,7 +88,7 @@ These pre-existed this phase. They are restated with their concrete UX consequen
 **Type:** Missing behavior
 **Detail:** `Docs/UberTib_SRS_Etkan_v1.1.pdf` exists in the repository but its full text is not available, so complete reconciliation against the authoritative source cannot be certified.
 **UX consequence:** none on any artifact — every screen and flow derives from the approved `.spec` baseline, the canonical `docs/` set and the Product Owner decisions, all of which are sufficient. The consequence is a limit on what may be *claimed*: this phase covers the approved baseline, not a certified complete reconciliation with the SRS.
-**Affects:** the coverage claim for all 162 screens and 100 flows
+**Affects:** the coverage claim for all 165 screens and 103 flows
 **Severity:** Blocker for the completeness claim; not a blocker for any artifact
 **Raised as:** `Q-PLATFORM-001` — pre-existing
 **Suggested resolution (suggestion only):** obtain readable SRS text, then re-run the requirement sweep against it. Until then, journey coverage should be described as against the approved baseline.
@@ -203,7 +205,7 @@ These pre-existed this phase. They are restated with their concrete UX consequen
 **Suggested resolution (suggestion only):** decide whether a proposal expires, whether a price change invalidates an unaccepted proposal, or whether indefinite validity is intended. The third is a legitimate answer and worth stating explicitly.
 
 ### GAP-017 — Staff-panel surfaces are absent from the error presentation vocabulary
-**Found while:** mapping error destinations across all 100 flows
+**Found while:** mapping error destinations across all 103 flows
 **Type:** Ambiguous rule
 **Detail:** `ERROR_CATALOG.md` section 3 defines five presentation surfaces — inline field validation, action banner or toast, full-page or auth gate, unavailable-state message, and silent-log-only. All five are client and API oriented. `SDC-IDENTITY-004` establishes that `ERR-IDENTITY-001` and `ERR-IDENTITY-002` semantics apply in-process, so the error identifiers do reach the panels, but the catalog's surface vocabulary does not describe panel-native presentation.
 **UX consequence:** minor and confined to UX Phase 3. All 19 `ERR-*` have a destination in this phase's flows, and no error was found without one. The gap is that Phase 3 will allocate `TXT-*` copy against surface descriptions that do not name the Filament-native equivalents, so the mapping from error to surface has to be established rather than inherited for the panels.
@@ -275,6 +277,26 @@ The resolutions introduced new requirement, contract and chain identifiers. All 
 | `SCR-PLATFORM-009`, `SCR-BOOKING-016`, `SCR-BOOKING-017`, `SCR-IDENTITY-037`, `SCR-IDENTITY-038`, `SCR-ELIG-021`, `SCR-ELIG-022` | Screens | `INFORMATION_ARCHITECTURE.md` |
 | `FLOW-IDENTITY-021`, `FLOW-ELIG-015`, `FLOW-BOOKING-013`, `FLOW-BOOKING-014`, `FLOW-REVIEWS-006`, `FLOW-PLATFORM-004` | Flows | `USER_FLOWS.md` |
 
+### 6.2 Additions from the 2026-08-25 Syria catalog and pricing reconciliation
+
+`.spec/decisions/PO-2026-08-25-syria-catalog-pricing-governance.md` moved catalog and pricing values out of code and into governed data. It raised **no new gap** — it narrowed `GAP-004` — and it allocated the following, all `max + 1` per domain and synchronized into `docs/README.md`.
+
+| ID | Type | Owner document |
+|---|---|---|
+| `FR-CATALOG-002`, `FR-CATALOG-003` | Requirements — two-layer governed catalog, clinically governed procedure definitions | `docs/PRD.md` |
+| `FR-ELIG-018`, `FR-ELIG-019` | Requirements — governed price presentation modes, market observations and calibrated price policy | `docs/PRD.md` |
+| `FR-CLINICAL-006`, `FR-CLINICAL-007` | Requirements — structured plan lines and commercial integrity, disclosed amendment and re-acceptance | `docs/PRD.md` |
+| `FR-POLICY-003` | Requirement — currency presentation and normalization provenance | `docs/PRD.md` |
+| `ERR-CLINICAL-002` | Error — plan line commercial option invalid, retired or out of scope | `docs/api/ERROR_CATALOG.md` |
+| `SDC-CATALOG-002`, `SDC-CATALOG-003`, `SDC-ELIG-005`, `SDC-POLICY-002` | Staff contracts | `docs/domain/STAFF_INTERACTION_CONTRACTS.md` |
+| `TASK-CATALOG-003`, `TASK-CATALOG-004`, `TASK-ELIG-012`, `TASK-FINANCE-012`, `TASK-POLICY-002`, `TASK-CLINICAL-010`, `TASK-CLINICAL-011`, `TASK-CLINICAL-012` | Implementation tasks | the three implementation plans |
+| `TC-CATALOG-006`, `TC-CATALOG-007`, `TC-ELIG-011`, `TC-ELIG-012`, `TC-CLINICAL-008`, `TC-CLINICAL-009`, `TC-POLICY-005` | Verification cases | `docs/TESTING_STRATEGY.md` |
+| `JTBD-CATALOG-004`, `JTBD-CATALOG-005`, `JTBD-ELIG-009` | Jobs | `UX_FOUNDATION.md` |
+| `SCR-CATALOG-010`, `SCR-CATALOG-011`, `SCR-ELIG-023` | Screens | `INFORMATION_ARCHITECTURE.md` |
+| `FLOW-CATALOG-006`, `FLOW-CATALOG-007`, `FLOW-ELIG-016` | Flows | `USER_FLOWS.md` |
+
+**No `API-*` was allocated, deliberately.** Every new workflow is a staff surface governed by an `SDC-*` per `PO-UX-05`, and the patient-facing consequences — governed price display modes, structured plan lines, amendment deltas, agreed currency — are additive fields on `API-CATALOG-001`, `API-ELIG-001`, `API-CLINICAL-002` and `API-FINANCE-001` rather than new contracts. No lifecycle machine and no status was added either; section 10.16 of `INFORMATION_ARCHITECTURE.md` records the three candidates and why each resolved into an existing mechanism.
+
 ## 7. Severity Summary
 
 Counts reflect the state after the 2026-08-25 reconciliation. Resolved IDs remain permanently allocated and are never reused.
@@ -282,7 +304,7 @@ Counts reflect the state after the 2026-08-25 reconciliation. Resolved IDs remai
 | Severity | Open | IDs |
 |---|---:|---|
 | **Blocker** | 1 carried | `Q-PLATFORM-001` — blocks the completeness claim against the authoritative SRS, not any artifact |
-| **Major** | 4 carried | `Q-CATALOG-001`, `Q-ELIG-001`, `Q-PLATFORM-002`, `Q-OPS-001` — the last now also carries the storage, scanner, OTP and notification vendor selection deferred from `Q-PLATFORM-003` |
+| **Major** | 4 carried | `Q-CATALOG-001` and `Q-ELIG-001`, **both narrowed on 2026-08-25 to their clinical residue only** — see `GAP-004`; `Q-PLATFORM-002`; `Q-OPS-001`, which now also carries the storage, scanner, OTP and notification vendor selection deferred from `Q-PLATFORM-003` |
 | **Minor** | 1 carried · 2 unnumbered notes | `Q-PLATFORM-004`. Notes: `GAP-014` and `GAP-017`. `CONFLICT-PLATFORM-001` and `CONFLICT-PLATFORM-002` remain open where UX-relevant |
 | **Assumption** | 2 in force | `ASM-IDENTITY-001`, `ASM-ELIG-001` |
 
@@ -290,9 +312,12 @@ Counts reflect the state after the 2026-08-25 reconciliation. Resolved IDs remai
 
 **What the resolutions changed structurally.** Seven screens and six flows were added, two bounded branches were completed, and three lifecycle machines entered the sweep — the reschedule proposal, the operational work item and the evidence transfer session. That is the measure of how much of the model these questions were holding open: not labelling, but whole journeys.
 
+**Narrowed on 2026-08-25 by `.spec/decisions/PO-2026-08-25-syria-catalog-pricing-governance.md`:** `Q-CATALOG-001` and `Q-ELIG-001`. Neither is closed and neither is claimed closed — the catalog model, its governance and the authority split are settled, and what is left is licensed clinical approval of production content and production classification values. Three screens and three flows were added and no lifecycle machine was, which is the honest measure of this decision: it changed who may change what, not how many journeys exist.
+
 **Halt check.** Convention C5 requires halting if more than roughly 30% of the phase's artifacts are Blocked, or if any Blocker touches the role model, the data model or navigation structure.
 
-- Blocked artifacts: 0 of 162 screens, 0 of 100 flows. **No bounded incomplete branch remains** — the two Phase 1 reported were resolved.
+- Blocked artifacts: 0 of 165 screens, 0 of 103 flows. **No bounded incomplete branch remains** — the two Phase 1 reported were resolved.
+- The catalog and pricing reconciliation added three screens and three flows, all unblocked, and narrowed the two Major clinical questions without closing either.
 - No Blocker touches the role model: 19 of 19 roles have a landing screen and every permitted action is reachable.
 - No Blocker touches the data model or navigation structure.
 

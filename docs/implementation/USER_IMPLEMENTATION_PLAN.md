@@ -98,9 +98,9 @@ The application must never display raw internal risk `I`, private reviewer evide
 1. Application starts and resolves environment/API configuration.
 2. Public service catalog may load before patient authentication.
 3. Production mode shows only production-visible service definitions.
-4. Patient selects a practical service, not an algorithm classification.
+4. Patient selects a practical service **family**, not an algorithm classification and not a professional procedure code. A flat list of technical procedure codes is never the discovery experience; detailed procedures appear only inside a clinician-authored plan the patient reads after examination.
 5. Provider search returns currently passing provider/service/branch combinations only.
-6. Search results may include safe price, protection meaning, verified-experience rating, location/branch summary, available appointment information, and assessment freshness when supported by the contract.
+6. Search results may include the provider's price presentation and its governed mode as understandable meaning, protection meaning, verified-experience rating, location/branch summary, available appointment information, and assessment freshness when supported by the contract. The client never receives `P`, its calibration state, the market comparison basis, sample counts, confidence figures, or raw `service_risk_level` codes, and never labels a price a market or city average.
 7. Cached discovery can assist weak connectivity, but stale data is never considered authoritative for booking.
 
 ### 6.2 Patient verification and session bootstrap
@@ -134,7 +134,7 @@ OTP behavior must preserve five-minute expiry, single use, maximum five verifica
 6. Internal `I` and internal calculation details remain hidden.
 7. Search data is informational; booking performs current revalidation again.
 
-If a previously eligible provider/service/branch becomes suspended, new affected bookings are blocked. Any already-existing booking remains governed by its authoritative current state while the review workflow specifics are unresolved under `Q-BOOKING-002`; the mobile client must not infer automatic cancellation, confirmation, or another outcome.
+If a previously eligible provider/service/branch becomes suspended, new affected bookings are blocked and each already-existing `CONFIRMED` booking moves to `ELIGIBILITY_REVIEW` per `PO-UX-13`. The app presents that as a hold pending a check — never a penalty, never an instruction to attend — and the outcome comes from the server: back to `CONFIRMED`, or `CANCELLED` with reason `PROVIDER_ELIGIBILITY_SUSPENDED` and no penalty.
 
 ### 6.5 Booking request and provider response
 
@@ -145,7 +145,7 @@ If a previously eligible provider/service/branch becomes suspended, new affected
 5. Clinic may accept, reject with reason, or propose an alternative.
 6. Patient reads booking detail/list to see the current result and deadline context.
 7. If an alternative is proposed, patient explicitly accepts it while it remains current and unexpired; backend revalidates eligibility and alternative capacity before confirmation.
-8. If the proposal expires or the patient explicitly declines it, the proposal becomes non-actionable, but the resulting booking state remains unresolved under `Q-BOOKING-001`; the app must not infer `REJECTED`, `CANCELLED`, or return-to-`REQUESTED`.
+8. If the proposal expires or the patient explicitly declines it, the booking closes as `CANCELLED` with reason `ALTERNATIVE_EXPIRED` or `ALTERNATIVE_DECLINED` per `PO-UX-12`. The copy must read as an appointment that was never confirmed, not as a punitive cancellation, and the next action is a fresh booking request.
 9. Concurrent requests cannot overbook the slot.
 10. Mobile never treats a local tap or timeout as confirmation without a committed server response.
 
@@ -160,12 +160,12 @@ If a previously eligible provider/service/branch becomes suspended, new affected
 ### 6.7 Treatment plan and acceptance
 
 1. Treating dentist authors/proposes a treatment plan through Clinic Filament.
-2. Patient fetches the exact proposed plan version plus linked financial terms.
-3. Patient can review the full version that will be accepted.
+2. Patient fetches the exact proposed plan version plus linked financial terms, including its structured lines with patient-readable procedure names, quantities, unit and line prices, what each line includes, and any typed additional cost with its reason and price difference.
+3. Patient can review the full version that will be accepted. When the version supersedes an earlier proposed or accepted version, the patient sees the amendment summary — what changed, why, and the price difference — before any acceptance action exists, and an unaccepted amendment governs nothing.
 4. Acceptance sends the exact version identity through an idempotent API command.
 5. Backend rejects stale/incomplete/replaced versions.
 6. Successful acceptance atomically creates immutable accepted clinical and financial snapshots.
-7. Later amendment is a new version and requires a new acceptance workflow; previous accepted history remains unchanged.
+7. Later amendment is a new version and requires a new acceptance workflow; previous accepted history remains unchanged. No later catalog, price, band, exchange-rate, or rounding change alters an amount the patient already accepted.
 8. UberTib never generates the diagnosis or clinician treatment plan for the patient.
 
 ### 6.8 Treatment progress and follow-up
@@ -262,7 +262,7 @@ Core mappings include:
 - review eligibility → `ERR-REVIEWS-001`;
 - claim eligibility/evidence → `ERR-CLAIMS-001`–`002`.
 
-`ERR-BOOKING-003` makes an expired alternative action unavailable; it does not tell the client which booking state should result from expiry/decline while `Q-BOOKING-001` remains unresolved.
+`ERR-BOOKING-003` makes an expired alternative action unavailable. The resulting booking state is defined by `PO-UX-12` — `CANCELLED` with `ALTERNATIVE_EXPIRED` or `ALTERNATIVE_DECLINED` — and the client reads it from the authoritative booking rather than deriving it locally.
 
 Unexpected errors show a safe generic state and correlation identifier when available. Raw stack traces, provider responses, secrets, private paths, or protected domain detail never reach the patient UI.
 
@@ -453,7 +453,7 @@ Backend domain foundations from Admin/Clinic plans may be developed earlier, but
 **Goal:** Implement `API-BOOKING-002`/`003` and scoped mobile booking history/current-detail behavior.  
 **Dependencies:** TASK-BOOKING-007  
 **Expected Files / Areas:** booking patient queries/resources; React Native booking list/detail feature `(Proposed)`  
-**Implementation Notes:** Return safe canonical state, service/provider/branch/slot, deadlines, rejection/alternative reason where allowed, and actionable next-step flags derived server-side. Guardian sees only grants in active data scope. For suspended eligibility affecting an existing booking, expose the current authoritative booking state only; do not derive an unapproved outcome while `Q-BOOKING-002` is open.  
+**Implementation Notes:** Return safe canonical state, service/provider/branch/slot, deadlines, rejection/alternative reason where allowed, and actionable next-step flags derived server-side. Guardian sees only grants in active data scope. For suspended eligibility affecting an existing booking, expose the authoritative `ELIGIBILITY_REVIEW` state and its safe meaning; never derive the outcome locally and never present the appointment as attendable.  
 **Data / Migration Impact:** None beyond shared booking domain.  
 **API Impact:** Implement API-BOOKING-002/003.  
 **Tests Required:** self/guardian isolation, status filter, resource-not-found/undisclosed behavior, stale cached detail refresh, existing suspended-scope booking remains server-authoritative without an invented client state.  
@@ -469,7 +469,7 @@ Backend domain foundations from Admin/Clinic plans may be developed earlier, but
 **Goal:** Implement `API-BOOKING-004` and explicit patient/guardian acceptance of a provider-proposed alternative.  
 **Dependencies:** TASK-BOOKING-006–008, TASK-AUDIT-003  
 **Expected Files / Areas:** shared alternative acceptance action; API endpoint; React Native alternative-action flow `(Proposed)`  
-**Implementation Notes:** Accept exact alternative/version only. At commit time revalidate actor authority, deadline, current eligibility/readiness and target slot capacity. Repeated acceptance returns original outcome; stale/full alternatives fail deterministically. When an alternative expires or is explicitly declined, preserve history and make acceptance non-actionable, but do not infer the resulting booking state while `Q-BOOKING-001` remains unresolved.  
+**Implementation Notes:** Accept exact alternative/version only. At commit time revalidate actor authority, deadline, current eligibility/readiness and target slot capacity. Repeated acceptance returns original outcome; stale/full alternatives fail deterministically. When an alternative expires or is explicitly declined, preserve history, reject a late acceptance, and read the resulting `CANCELLED` state and its reason code from the authoritative booking per `PO-UX-12`.  
 **Data / Migration Impact:** Reuse booking alternatives/events and capacity structures.  
 **API Impact:** Implement API-BOOKING-004.  
 **Tests Required:** expired alternative rejected without asserting `REJECTED`, `CANCELLED`, or return-to-`REQUESTED`; replaced alternative; full slot; revalidation failure; duplicate/repeated acceptance; guardian authorization.  
@@ -530,6 +530,22 @@ Backend domain foundations from Admin/Clinic plans may be developed earlier, but
 - [ ] Acceptance creates one immutable outcome
 - [ ] Amendments cannot rewrite prior acceptance
 - [ ] No automated diagnosis/treatment-plan generation is introduced
+
+## TASK-CLINICAL-012 — Implement Patient Amendment Review and Re-Acceptance
+**Implements:** FR-CLINICAL-007, FR-CLINICAL-006, FR-FINANCE-001  
+**Goal:** Let the patient understand exactly what a superseding plan version changes, and why, before accepting it.  
+**Dependencies:** TASK-CLINICAL-008, TASK-CLINICAL-011  
+**Expected Files / Areas:** amendment projection in `API-CLINICAL-002`; acceptance path in `API-CLINICAL-003`; React Native plan and acceptance feature `(Proposed)`  
+**Implementation Notes:** Present the changed lines, the reason for each change, and the price difference against the superseded version **before** the acceptance action exists — a replacement document with no visible delta is the failure this task prevents. Present structured lines as patient-readable procedure names, quantities, unit and line prices, what each line includes, and any typed additional cost with its reason; never a procedure code as the primary label. While the amendment is unaccepted the previously accepted terms remain the ones shown as governing. Acceptance reuses the existing idempotent acceptance command. `ERR-CLINICAL-001` and `ERR-CLINICAL-002` must read as a plan needing correction, never as patient error.  
+**Data / Migration Impact:** None beyond the shared clinical domain.  
+**API Impact:** Consume the amendment summary on `API-CLINICAL-002`; no new endpoint.  
+**Tests Required:** amendment summary rendered before any acceptance affordance; unaccepted amendment never shown as governing; accepted amendment creates one immutable outcome; superseded snapshot still reachable; no internal `P`, calibration state, or raw risk code in the projection.  
+**Verification:** treatment-amendment API/projection tests; `composer test`; mobile verified scripts.  
+**Definition of Done:**
+- [ ] The delta is visible before acceptance is possible
+- [ ] An unaccepted amendment never appears as agreed terms
+- [ ] Accepted history remains reachable and unchanged
+- [ ] No internal classification reaches the patient projection
 
 ## TASK-CLINICAL-009 — Implement Patient Treatment Progress and Follow-Up Consumption
 **Implements:** FR-CLINICAL-003–005, NFR-PLATFORM-006  
@@ -825,10 +841,9 @@ The following are not to be silently invented during implementation:
 | Item | Governing open item | Impact |
 |---|---|---|
 | Readable full authoritative SRS v1.1 reconciliation | `Q-PLATFORM-001` — Blocker | Cannot claim complete SRS coverage until resolved |
-| Clinical approval of provisional 26-service catalog | `Q-CATALOG-001` — Major | Production patient catalog/readiness remains gated |
+| Clinical approval of the provisional seeded catalog and imported candidate procedures | `Q-CATALOG-001` — Major, narrowed 2026-08-25 | Production patient catalog/readiness remains gated; the catalog shape and its governance are settled and the record count is not a constant |
 | Production S/P/H/I formulas/thresholds/defaults | `Q-ELIG-001` — Major | Patient discovery can be engineered, but production medical outcome policy requires approval |
-| Alternative expiry / explicit decline outcome | `Q-BOOKING-001` — Major | Make the alternative non-actionable and preserve history; do not infer `REJECTED`, `CANCELLED`, return-to-`REQUESTED`, or another outcome |
-| Existing-booking review after eligibility suspension | `Q-BOOKING-002` — Major | New affected bookings are blocked, but the mobile client must surface authoritative current booking state until review authority/deadline/state-effect/outcomes are approved |
+| Production catalog and procedure content | `Q-CATALOG-001` — Major | The patient reads families, never procedure codes; production content remains clinically gated |
 | Concrete OTP delivery / privileged provider choices | `Q-PLATFORM-003` — Major | OTP application logic can be implemented behind adapter; real production delivery waits for provider configuration |
 | Patient private-evidence upload/download transport/provider | `Q-PLATFORM-003` — Major | Claims/evidence references can be modeled, but do not invent binary transfer endpoints/provider contract; production attachment flow remains incomplete until resolved |
 | Hosting/deployment topology | `Q-OPS-001` — Major | MySQL is the required production relational engine; mobile base URL and release environments depend on selected hosting/provider/topology and deployment configuration |
@@ -846,8 +861,8 @@ No payment-provider decision is awaited because payment/custody/money movement i
 | Guardian | allow/deny, revocation, wrong patient, attribution |
 | Catalog | production filtering, Arabic payload, cache/error states |
 | Provider search | only passing combinations, privacy filtering, freshness/performance |
-| Booking | happy path, full/ineligible, alternative acceptance/expiry non-actionability without invented outcome, cancellation, idempotency, 100-way concurrency, existing-booking suspension behavior remains authoritative pending `Q-BOOKING-002` |
-| Treatment acceptance | exact version, stale version, duplicate/concurrent acceptance, immutable snapshots |
+| Booking | happy path, full/ineligible, alternative acceptance, expiry and decline closing as `CANCELLED` with the correct reason and no penalty copy, cancellation, idempotency, 100-way concurrency, and `ELIGIBILITY_REVIEW` presented as a hold that is never attendable |
+| Treatment acceptance | exact version, stale version, duplicate/concurrent acceptance, immutable snapshots, amendment delta visible before acceptance, unaccepted amendment never shown as governing |
 | Timeline | authorization, field filtering, event order |
 | External finance | report/confirm/dispute/refund assertions, duplicate safety, zero money movement |
 | Review | eligible/ineligible, uniqueness, guardian, R independence |
@@ -866,7 +881,7 @@ This file continues task numbering after the Admin and Clinic implementation pla
 - `TASK-CATALOG-002`;
 - `TASK-ELIG-010` through `TASK-ELIG-011`;
 - `TASK-BOOKING-007` through `TASK-BOOKING-011`;
-- `TASK-CLINICAL-007` through `TASK-CLINICAL-009`;
+- `TASK-CLINICAL-007` through `TASK-CLINICAL-009`, `TASK-CLINICAL-012`;
 - `TASK-FINANCE-008` through `TASK-FINANCE-011`;
 - `TASK-REVIEWS-003`;
 - `TASK-CLAIMS-007` through `TASK-CLAIMS-009`;
@@ -883,7 +898,7 @@ The canonical high-level implementation order across all three detailed plans is
 3. Clinic provider/branch activation facts and evidence;
 4. eligibility computation/recalculation and patient-safe provider projections;
 5. Clinic availability + shared booking lifecycle + patient booking flows;
-6. Clinic clinician-authored treatment plans + patient immutable acceptance;
+6. Clinic clinician-authored treatment plans with structured lines and disclosed amendments + patient immutable acceptance;
 7. treatment stages/follow-up + patient case timeline;
 8. shared external financial events + Clinic/Patient counterparty workflows;
 9. verified reviews;

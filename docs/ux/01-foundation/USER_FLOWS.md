@@ -2,7 +2,7 @@
 
 **Phase:** UX 1 — Discovery, Information Architecture and User Flows
 **Baseline:** 2026-08-25
-**Flows defined:** 94 — including 8 cross-platform lifecycle flows
+**Flows defined:** 103 — including 8 cross-platform lifecycle flows
 **Platform profiles:** Patient = C · Clinic/Doctor = A · Admin = A
 
 ## 1. Reading This Document
@@ -813,15 +813,15 @@ flowchart TD
 **Screens:** `SCR-CATALOG-001` → `SCR-CATALOG-002` → `SCR-ELIG-001`
 **Contracts:** API-CATALOG-001
 **Steps:**
-1. User opens the catalog → System returns production-visible groups and services for the configured audience.
-2. User opens a service → System returns its non-diagnostic practical purpose.
+1. User opens the catalog → System returns production-visible groups and service families for the configured audience.
+2. User opens a family → System returns its non-diagnostic practical purpose.
 3. User proceeds to search → System carries `service_code` forward, which `API-ELIG-001` requires.
 **Decision points:** Production mode with no publishable service → an honest unavailable state, not an empty list. Groups with no visible services are omitted rather than rendered empty.
 **Failure paths:** `ERR-PLATFORM-003` rate limited — action-level message with the retry window, cached content preserved where a documented cache policy allows. `ERR-PLATFORM-004` server failure — retry affordance, no server detail exposed. A malformed or partial response fails safely as unavailable rather than enabling actions from incomplete data.
 **Abandon path:** Nothing to lose — the whole flow is read-only and creates no state.
 **Re-entry:** Any point, freely. Content may change between visits as definitions publish or retire; stable service codes preserve list identity where useful.
 **Friction:** 3 screens / 2 actions / 0 required fields
-**Notes:** Four groups, 26 provisional service records. **These are evaluation records, not clinically approved production content (`Q-CATALOG-001`)** and evaluation context must never render as a real-patient production experience. Copy must not recommend treatment or imply a clinical opinion.
+**Notes:** Four groups leading to patient-facing service families. The number of families is governed catalog data, not a design constant, so the flow must read correctly whether a group holds one family or thirty. **Detailed professional procedure items are never part of this flow** — the patient chooses a family and meets procedure detail only inside a clinician-authored plan after examination (`FR-CATALOG-002`). **The seeded records are evaluation content, not clinically approved production content (`Q-CATALOG-001`)** and evaluation context must never render as a real-patient production experience. Copy must not recommend treatment or imply a clinical opinion.
 
 ```mermaid
 flowchart TD
@@ -964,6 +964,75 @@ flowchart TD
     D --> F["System: operational work for dependent scopes"]
     E --> F
     F --> G["Historical accepted snapshots and captured versions unchanged"]
+```
+
+### FLOW-CATALOG-006 — Change catalog content and procedure mapping as governed data
+**Platform:** Admin (A) · **Serves:** JTBD-CATALOG-004 · **Frequency:** Weekly at launch, monthly after / important
+**Actors:** User — catalog / product administrator; licensed clinical reviewer where the change is clinically meaningful. System — identity stability, effective dating, propagation.
+**Trigger:** A service family must be added, renamed, regrouped, merged, split or retired, or a detailed procedure must be created, remapped or retired.
+**Success criterion:** The change is made entirely through governed data with no code release, history still resolves the version and mapping it was authored against, and a clinically meaningful change reached production only through the licensed reviewer.
+**Screens:** `SCR-CATALOG-003` → `SCR-CATALOG-010` → `SCR-CATALOG-005` → `SCR-CATALOG-006` → `SCR-CATALOG-004`
+**Contracts:** SDC-CATALOG-002, SDC-CATALOG-003
+**Steps:**
+1. User opens the catalog structure → System shows groups, families and the procedures mapped into each, with audience marked.
+2. User makes the change — create, rename, regroup, retire, or map a procedure to a family with an effective date → System validates that a referenced identity is superseded rather than repurposed and that the mapping's effective period does not contradict an existing one.
+3. Where the change touches clinical content, User drafts the procedure definition version → System routes it to the licensed clinical reviewer and refuses activation on the drafter's authority.
+4. Reviewer approves and the launch gates pass → System activates prospectively from the effective date.
+5. System propagates to discovery, plan authoring and staff surfaces; historical plan lines and decisions keep the version and mapping they captured.
+**Decision points:** Rename versus supersede — a rename keeps the identity and its history, superseding creates a new one and retires the old, and the wrong choice silently breaks historical resolution. Retire versus remap — retiring removes a procedure from new authoring, remapping only changes which families offer it. Whether the change is clinically meaningful decides whether the licensed reviewer is required, and that is a property of the field changed, not the administrator's judgment.
+**Failure paths:** `ERR-IDENTITY-002` outside the owned catalog scope, or a catalog administrator attempting the clinical activation. `ERR-PLATFORM-001` a mapping whose effective period overlaps an existing one for the same family and procedure, or a retirement that would orphan a procedure referenced by an in-flight draft. An attempt to reach production by toggling audience, visibility or an effective date is not an available action — the launch gates are the only route. Any lifecycle change on already `retired` or `superseded` content is rejected.
+**Abandon path:** Leaving before committing changes nothing; drafts stay invisible outside governance and the currently active structure stands. Nothing partially propagates.
+**Re-entry:** Any time through `SCR-CATALOG-003` or `SCR-CATALOG-010`. A draft is resumable by anyone holding the same catalog scope.
+**Friction:** 3 to 5 screens / 2 to 4 actions / change-dependent fields
+**Notes:** This flow exists so that ordinary catalog change never waits for a deployment, which is the whole point of `FR-CATALOG-002`. What it deliberately does not do is let configurability erode approval: the values moved into data, the clinical authority did not (`FR-CATALOG-003`). The imported candidate procedure dataset enters here on the evaluation audience and is subject to exactly this flow before any of it is production. No count in this flow is a design constant.
+
+```mermaid
+flowchart TD
+    A["SCR-CATALOG-003 groups, families, mapped procedures"] --> B["SCR-CATALOG-010 procedure catalog and mapping"]
+    B --> C{"System: identity superseded not repurposed, effective periods consistent"}
+    C -->|"ERR-PLATFORM-001 overlap or orphan"| B
+    C -->|"valid"| D{"Change is clinically meaningful"}
+    D -->|"no"| H["System: activate prospectively from effective date"]
+    D -->|"yes"| E["SCR-CATALOG-005 draft clinical definition"]
+    E --> F{"System: drafter cannot approve own draft"}
+    F -->|"same actor"| G["ERR-IDENTITY-002, activation not offered"]
+    F -->|"licensed reviewer"| I["SCR-CATALOG-006 launch gates"]
+    I --> H
+    H --> J["SCR-CATALOG-004 version history"]
+    H --> K["Historical plan lines and decisions keep captured version and mapping"]
+```
+
+### FLOW-CATALOG-007 — Govern the commercial options a clinic may select
+**Platform:** Admin (A) · **Serves:** JTBD-CATALOG-005 · **Frequency:** Monthly to rare / important
+**Actors:** User — commercial / pricing administrator. System — category enforcement, prospective effect.
+**Trigger:** The approved set of price display modes, material upgrades, third-party cost categories or quantity rules must change.
+**Success criterion:** The option set a clinic can select from is updated prospectively, every option carries a category and a patient-visible meaning, and accepted plans keep the option they referenced.
+**Screens:** `SCR-PLATFORM-004` → `SCR-CATALOG-011` → `SCR-POLICY-001`
+**Contracts:** SDC-POLICY-002
+**Steps:**
+1. User opens the commercial options → System shows each option, its category, its patient-visible meaning and whether a clinic can currently select it.
+2. User adds or retires an option, choosing one of the four governed categories and writing the meaning a patient will read → System requires both before the option can become selectable.
+3. System applies the change from its effective date forward.
+4. System leaves every accepted plan line pointing at the option version it referenced.
+**Decision points:** Which of the four categories the option belongs to — an additional clinical service, a material or option upgrade, an identifiable third-party cost, or a quantity change — because the category decides how it must be explained and what it may not be used for. **Adding a genuinely new clinical service is not a decision available here**: it means adding a catalog procedure through `FLOW-CATALOG-006` under clinical review.
+**Failure paths:** `ERR-IDENTITY-002` outside the commercial scope, and any attempt to edit a clinical field from this surface. `ERR-PLATFORM-001` an option with no category or no patient-visible meaning. **There is no uncategorized or other category to select** — the absence is the enforcement, not a validation message. Retiring an option that an in-flight draft references warns rather than silently invalidating the draft; the draft's clinic sees `ERR-CLINICAL-002` at proposal.
+**Abandon path:** Leaving before committing changes nothing; the currently effective option set stands.
+**Re-entry:** Any time. Changes apply prospectively only.
+**Friction:** 2 screens / 1 to 2 actions / 3 required fields
+**Notes:** This is the flow that makes billing integrity structural rather than advisory (`FR-CLINICAL-006`). Nothing here moves money, sets a price, publishes a tariff or recommends an amount — it defines what kinds of amounts may legitimately appear on a plan and how each must be explained. Commercial authority is separate from clinical authority by design, so this flow can never produce a clinical activation.
+
+```mermaid
+flowchart TD
+    A["SCR-PLATFORM-004 admin landing"] --> B["SCR-CATALOG-011 commercial options"]
+    B --> C{"Add or retire an option"}
+    C -->|"add"| D{"System: one of four categories plus patient-visible meaning"}
+    D -->|"ERR-PLATFORM-001 missing category or meaning"| B
+    D -->|"complete"| E["System: selectable from effective date forward"]
+    C -->|"retire"| F["System: leaves new authoring, accepted plans keep referenced version"]
+    B --> G{"Attempt to add a clinical service or edit a clinical field"}
+    G -->|"not available here"| H["Route to FLOW-CATALOG-006 under clinical review"]
+    E --> I["SCR-POLICY-001 policy versions"]
+    F --> I
 ```
 
 ## 4. ELIG Flows
@@ -1191,19 +1260,19 @@ flowchart TD
 **Platform:** Clinic (A) · **Serves:** JTBD-ELIG-006 · **Frequency:** Rare / important
 **Actors:** User — clinic representative or treating dentist within scope. System — price fact recording, `P` computation.
 **Trigger:** The provider sets or changes their price for a service at a branch.
-**Success criterion:** The price is stored with service, branch, currency, amount, effective period and provenance, and `P` is derived prospectively.
+**Success criterion:** The price is stored with catalog scope, branch, governed display mode, currency, amount or bounds, effective period and provenance, and `P` is derived prospectively where calibration permits.
 **Screens:** `SCR-ELIG-008` or `SCR-ELIG-011` → `SCR-ELIG-010` → `SCR-ELIG-011`
 **Contracts:** SDC-ELIG-001
 **Steps:**
-1. User enters the amount, currency and effective period → System validates against the applicable price-band policy scope.
-2. System records the price fact with provenance.
-3. System computes `P` against the effective versioned bands and retains the calculation snapshot.
-**Decision points:** Currency or scope mismatch against the band policy → calculation is prevented with an explicit reason rather than producing a wrong classification.
-**Failure paths:** `ERR-PLATFORM-001` invalid amount, currency or period. A currency or market-scope mismatch prevents `P` calculation with a stated reason — the price is still recorded as a fact. `ERR-IDENTITY-002` outside scope.
+1. User picks the governed display mode — free, fixed, from, range or requires-a-plan — from the approved commercial options, then enters the amount or bounds, currency and effective period → System validates the combination against the mode and the applicable price-policy scope.
+2. System records the price fact with provenance, superseding any previous fact for the same scope rather than overwriting it.
+3. System computes `P` against the effective market-calibrated versioned bands and retains the calculation snapshot, or records a non-final `pricing_class_state` and no class.
+**Decision points:** The mode governs what the amount means, so a free service and a missing price are different outcomes and a zero amount is valid. Currency or scope mismatch against the price policy, or a scope whose calibration is not `FINAL`, prevents classification with an explicit reason rather than producing a wrong one — in either case the price itself is recorded and the patient still sees it.
+**Failure paths:** `ERR-PLATFORM-001` invalid amount, bounds, currency, period or a combination the chosen mode forbids, such as a range with one bound. A retired or out-of-scope display mode is not selectable. A currency or market-scope mismatch, or insufficient market evidence, prevents `P` calculation with a stated reason — the price is still recorded as a fact. `ERR-IDENTITY-002` outside scope.
 **Abandon path:** Leaving before commit changes nothing. The prior effective price stands.
 **Re-entry:** Any time. Changes apply prospectively.
 **Friction:** 2 screens / 1 action / 3 required fields
-**Notes:** Price is a source fact; `P` is computed and never editable here, and never shown to the provider as a quality grade. A change never alters an accepted historical financial snapshot.
+**Notes:** Price is a source fact; `P` is computed, never editable here, never offered as a menu of grades, and never shown to the provider as a quality grade. The provider is also never shown where their price sits relative to the market corpus. A change never alters an accepted historical financial snapshot (`FR-ELIG-018`, `FR-ELIG-019`).
 
 ```mermaid
 flowchart TD
@@ -1413,7 +1482,7 @@ flowchart TD
 5. On invalidation, System suspends only dependent scopes, blocks new bookings immediately, and creates clinic notification and Admin work.
 6. On restoration, System produces a new passing decision; the scope can reappear in discovery.
 **Decision points:** `PENDING_EVALUATION`, `ELIGIBLE`, `SUSPENDED` or `NOT_ELIGIBLE`. **No human sets any of them.** Patient sees practical meaning; clinic sees safe status and blockers without raw `I`; only authorized internal Admin roles see internal components.
-**Failure paths:** `ERR-ELIG-001` and `ERR-ELIG-002` at the patient boundary. `ERR-IDENTITY-002` at every staff boundary. A failed background evaluation is an observable exception, never a success. **Existing bookings after suspension remain unresolved under `Q-BOOKING-002`.**
+**Failure paths:** `ERR-ELIG-001` and `ERR-ELIG-002` at the patient boundary. `ERR-IDENTITY-002` at every staff boundary. A failed background evaluation is an observable exception, never a success. Existing bookings after suspension move to `ELIGIBILITY_REVIEW` and are worked to one of two outcomes in `FLOW-ELIG-015` (`PO-UX-13`).
 **Abandon path:** Not applicable at lifecycle level. Each constituent flow's abandon behavior holds, and none of them leaves eligibility in an indeterminate state — the last immutable decision always stands.
 **Re-entry:** Every surface re-reads authoritative state on entry. A cached provider card may be stale, and booking revalidates rather than trusting it.
 **Friction:** Not meaningful at lifecycle level; see constituent flows.
@@ -1505,6 +1574,42 @@ flowchart TD
     E --> N["SCR-ELIG-021 clinic sees not attendable, start and complete unavailable"]
     N --> O["Start or complete attempt returns ERR-BOOKING-002"]
     M --> P["Patient returns to eligible discovery — FLOW-ELIG-001"]
+```
+
+### FLOW-ELIG-016 — Record market observations and read calibration state
+**Platform:** Admin (A) · **Serves:** JTBD-ELIG-009 · **Frequency:** Weekly during calibration, monthly after / important
+**Actors:** User — commercial / pricing administrator. System — append-only recording, sample and confidence evaluation, prospective recalculation.
+**Trigger:** New market price evidence is available for a locality and catalog scope, or the calibration state of a scope must be checked before trusting its internal classification.
+**Success criterion:** Observations are recorded with full provenance and confidence, the calibration state of each locality and scope is legible against the effective policy's own rules, and no patient or clinic surface changes as a result.
+**Screens:** `SCR-ELIG-023` → `SCR-ELIG-019` or `SCR-POLICY-002`
+**Contracts:** SDC-POLICY-002
+**Steps:**
+1. User opens the calibration surface for a locality and scope → System shows the effective policy's window, locality scope, minimum sample and confidence rules against the actual sample, and the resulting calibration state.
+2. User records an observation with its catalog scope, locality, amount and currency, date observed, source type and reference, whether material or laboratory cost is included, verification state and confidence → System appends it and never edits an earlier one.
+3. User corrects an earlier observation → System appends a superseding observation with a reason; the original remains readable.
+4. System recomputes the derived basis prospectively where the sample now satisfies the policy, and leaves it non-final where it does not.
+5. System recalculates internal `P` prospectively for affected scopes; every historical decision keeps the policy version and basis it was computed under.
+**Decision points:** Whether the sample supports classifying at all. Below the effective minimum the honest outcome is `CALIBRATING` and no class, not a weak class — and that choice is the reason the flow exists. Whether the policy itself is approved production calibration or provisional evaluation configuration, which is what separates `FINAL` from `PROVISIONAL`. Whether a scope's price mode makes classification meaningless, which is `NOT_APPLICABLE`.
+**Failure paths:** `ERR-IDENTITY-002` outside the commercial scope, and a clinic actor holding the scope may not approve a band that classifies their own price without the independent approval the policy requires. `ERR-PLATFORM-001` an observation missing its locality, catalog scope, source, date or currency — an unattributed number cannot be judged later and is refused rather than stored. An in-place edit of a recorded observation is not an available action. A recalculation failure is an observable exception on `SCR-AUDIT-003`, never a silent success.
+**Abandon path:** Leaving before recording changes nothing. Existing observations, the effective policy and every provider price stand exactly as they were.
+**Re-entry:** Any time through `SCR-ELIG-023`, or from `SCR-ELIG-018` when inspecting why a decision carries no class.
+**Friction:** 1 to 2 screens / 1 to 2 actions / 8 required fields per observation
+**Notes:** **Internal end to end.** No patient or clinic screen reads anything in this flow, no provider is shown where their price sits in the distribution, and a non-final calibration state suppresses internal `P` while leaving the provider's own displayed price untouched (`FR-ELIG-019`). Nothing recorded here is a market average, a city average or a tariff — it is evidence of a distribution, and the honest label is whatever the sample supports. Production calibration minimums still require licensed clinical approval (`Q-ELIG-001`), so current values are provisional.
+
+```mermaid
+flowchart TD
+    A["SCR-ELIG-023 observations and calibration"] --> B{"System: window, locality, minimum sample, confidence vs actual sample"}
+    B -->|"below minimum"| C["CALIBRATING — no class produced"]
+    B -->|"policy is provisional"| D["PROVISIONAL — no production class"]
+    B -->|"mode makes it meaningless"| E["NOT_APPLICABLE"]
+    B -->|"satisfied"| F["FINAL — basis derived"]
+    A --> G{"Record or correct an observation"}
+    G -->|"missing provenance"| H["ERR-PLATFORM-001, not stored"]
+    G -->|"complete"| I["System: append only, correction supersedes with reason"]
+    I --> B
+    F --> J["System: recalculate internal P prospectively"]
+    J --> K["Historical decisions keep captured policy version and basis"]
+    J --> L["Patient and clinic surfaces unchanged; provider price untouched"]
 ```
 
 ## 5. BOOKING Flows
@@ -1841,7 +1946,7 @@ flowchart TD
 2. User opens one → System returns full state, append-only event history, deadline history and provenance.
 3. User investigates or escalates → System records the operational action.
 **Decision points:** Escalate, or resolve through a legitimate domain action performed by the authorized party. **Operations receive no general booking-state override from current requirements.**
-**Failure paths:** `ERR-IDENTITY-002` outside operational scope. Attempting a force-confirm does not exist as an affordance. Bookings in a suspended scope show authoritative state with no available outcome, pending `Q-BOOKING-002`.
+**Failure paths:** `ERR-IDENTITY-002` outside operational scope. Attempting a force-confirm does not exist as an affordance. Bookings in a suspended scope show authoritative state here and no outcome is available on this surface — the outcome is reached through the governed review of `FLOW-ELIG-015`.
 **Abandon path:** The exception persists as work. The booking keeps its authoritative state; nothing is inferred from operations having looked at it.
 **Re-entry:** Through the queue or booking operations.
 **Friction:** 3 to 4 screens / 2 actions / 0 required fields
@@ -2021,21 +2126,21 @@ flowchart TD
 **Platform:** Clinic (A) · **Serves:** JTBD-CLINICAL-001 · **Frequency:** Daily+ / blocking
 **Actors:** User — treating dentist for the exact case. System — completeness validation, version freeze, notification.
 **Trigger:** The dentist has examined the patient and has a treatment proposal.
-**Success criterion:** A versioned plan is `PROPOSED` naming service, stages, stage prices, inclusions, exclusions and terms, attributed to the dentist as author.
+**Success criterion:** A versioned plan is `PROPOSED` naming service, stages, structured lines with quantities, units and amounts, categorized modifiers with reasons, inclusions, exclusions and terms, attributed to the dentist as author.
 **Screens:** `SCR-CLINICAL-008` → `SCR-CLINICAL-009` → `SCR-CLINICAL-010` → `SCR-CLINICAL-011` → `SCR-CLINICAL-012`
 **Contracts:** SDC-CLINICAL-001
 **Steps:**
 1. User opens the case → System confirms the treating relationship.
 2. User creates a draft → System stores clinician authorship.
-3. User defines stages, stage prices, inclusions, exclusions and applicable terms → System validates completeness as they work.
+3. User defines stages, then the lines within them — procedure item and its active definition version, quantity and unit, unit and line amount, inclusions and exclusions — and attaches any material upgrade, third-party cost or quantity change to its line as a categorized modifier chosen from the approved commercial options with a reason → System validates completeness and commercial integrity as they work.
 4. User proposes → System freezes the version as the current offer and transitions to `PROPOSED`.
 5. System creates the patient notification intent after commit.
 **Decision points:** Draft remains invisible to the patient and freely revisable. Proposing is the irreversible step — it makes the version patient-visible and starts the acceptance path.
-**Failure paths:** `ERR-IDENTITY-002` the actor is not the authorized treating clinician — clinic staff without treating authority cannot author clinical content. `ERR-PLATFORM-001` required service, stage, price, terms or policy information missing, which blocks proposal. `ERR-CLINICAL-001` at the patient's acceptance if the version later becomes stale or incomplete.
+**Failure paths:** `ERR-IDENTITY-002` the actor is not the authorized treating clinician — clinic staff without treating authority cannot author clinical content. `ERR-PLATFORM-001` required service, stage, line, price, terms or policy information missing, which blocks proposal. `ERR-CLINICAL-002` a line whose commercial option is uncategorized, retired or out of scope, or a modifier that charges a component already inside the line's inclusions — both block proposal rather than reaching the patient. `ERR-CLINICAL-001` at the patient's acceptance if the version later becomes stale or incomplete.
 **Abandon path:** The draft persists and stays invisible to the patient. Nothing is proposed and no notification is sent, so an unfinished clinical thought never reaches the patient.
 **Re-entry:** Any time through `SCR-CLINICAL-009` or `SCR-CLINICAL-013`.
 **Friction:** 5 screens / 4 actions / stage-dependent fields
-**Notes:** **The platform never generates a diagnosis or treatment plan.** The dentist is identified as author on every patient-facing surface. Depth 5 for the propose step is deliberate friction on an irreversible act.
+**Notes:** **The platform never generates a diagnosis or treatment plan.** The dentist is identified as author on every patient-facing surface. Depth 5 for the propose step is deliberate friction on an irreversible act. **There is no free-text charge field anywhere in this flow** (`FR-CLINICAL-006`): every amount the patient will read belongs to a governed category and carries a reason and a patient-visible meaning, which is what makes a hidden charge structurally impossible rather than merely forbidden. Adding a genuinely new clinical service means adding a catalog procedure under clinical review, not inventing a line here.
 
 ```mermaid
 flowchart TD
@@ -2043,8 +2148,10 @@ flowchart TD
     B --> C{"System: treating relationship confirmed"}
     C -->|"not treating clinician"| D["ERR-IDENTITY-002, authoring not offered"]
     C -->|"treating"| E["SCR-CLINICAL-010 draft with clinician authorship"]
-    E --> F["SCR-CLINICAL-011 stages, prices, inclusions, exclusions, terms"]
-    F --> G{"System: required information complete"}
+    E --> F["SCR-CLINICAL-011 stages, lines, modifiers, inclusions, exclusions, terms"]
+    F --> F2{"System: every line has a governed option, reason and no duplicate inclusion"}
+    F2 -->|"ERR-CLINICAL-002"| F
+    F2 -->|"integrity holds"| G{"System: required information complete"}
     G -->|"incomplete"| F
     G -->|"complete"| H["SCR-CLINICAL-012 propose"]
     H --> I["System: freeze version, transition PROPOSED"]
@@ -2060,12 +2167,12 @@ flowchart TD
 **Contracts:** API-CLINICAL-002, API-CLINICAL-003
 **Steps:**
 1. User opens the plan → System returns the exact proposed version with the dentist named as author.
-2. User reads stages, stage prices, inclusions, exclusions, terms and protection state → System presents all of it, with no internal classification symbol.
+2. User reads stages, the lines within them with their quantities, units and amounts, every categorized modifier with its reason, inclusions, exclusions, terms and protection state, and — when this version supersedes an earlier one — the stated delta and price difference → System presents all of it, with no internal classification symbol.
 3. User accepts with an idempotency key → System validates that the version is current and complete.
 4. System atomically creates the accepted clinical snapshot and the `FinancialTermsSnapshot`, and audits the acceptance.
 5. System creates the clinic notification intent.
 **Decision points:** Accept or not act. **There is no partial acceptance** — the plan is accepted whole or not at all.
-**Failure paths:** `ERR-CLINICAL-001` the version is stale, not in an acceptable state, or missing required information. This must present as the plan needing updating, **not as the patient having done something wrong.** `ERR-IDENTITY-002` guardian grant lacks acceptance authority. `ERR-AUDIT-001` reused key with a different payload. Concurrent acceptance cannot produce two accepted outcomes. **A failed acceptance creates no partial snapshot.**
+**Failure paths:** `ERR-CLINICAL-001` the version is stale, not in an acceptable state, or missing required information. `ERR-CLINICAL-002` a line references a commercial option that is uncategorized, retired or out of scope. Both must present as the plan needing correction by the clinic, **not as the patient having done something wrong.** `ERR-IDENTITY-002` guardian grant lacks acceptance authority. `ERR-AUDIT-001` reused key with a different payload. Concurrent acceptance cannot produce two accepted outcomes. **A failed acceptance creates no partial snapshot.**
 **Abandon path:** Leaving without accepting keeps the plan `PROPOSED` indefinitely — there is no acceptance deadline in the sources. Nothing is created, and the dentist sees the awaiting state.
 **Re-entry:** Through `SCR-PLATFORM-001` or the case. If the dentist proposed a newer version meanwhile, the patient sees that version rather than the one they left.
 **Friction:** 3 screens / 2 actions / 0 to 1 required fields
@@ -2090,30 +2197,33 @@ flowchart TD
 **Platform:** Clinic (A) → Patient (C) · **Serves:** JTBD-CLINICAL-005 · **Frequency:** Rare / important
 **Actors:** User — treating dentist, then patient. System — new version creation, new snapshot on acceptance.
 **Trigger:** Treatment must change after the patient already accepted.
-**Success criterion:** A new plan version is proposed and accepted, creating a new immutable snapshot, while the prior accepted snapshot remains untouched and still governs earlier events.
+**Success criterion:** A new plan version is proposed with a disclosed amendment summary and accepted, creating a new immutable snapshot, while the prior accepted snapshot remains untouched and still governs earlier events.
 **Screens:** `SCR-CLINICAL-013` → `SCR-CLINICAL-010` → `SCR-CLINICAL-011` → `SCR-CLINICAL-012`; then patient `SCR-CLINICAL-003` → `SCR-CLINICAL-004`
 **Contracts:** SDC-CLINICAL-001, API-CLINICAL-002, API-CLINICAL-003
 **Steps:**
 1. User opens version history → System returns every version and which is accepted.
-2. User creates an amendment → System creates a new draft version; the accepted snapshot is not touched.
-3. User proposes the new version → System transitions it to `PROPOSED` and notifies the patient.
-4. Patient accepts → System creates a new immutable accepted snapshot linked to the new version.
-**Decision points:** Amend versus start a new case — amendment keeps the case and its history. The prior accepted version stays historical rather than being replaced.
-**Failure paths:** `ERR-IDENTITY-002` non-treating actor. Any attempt to edit the accepted version or its snapshots is denied — amendment is the only route. `ERR-CLINICAL-001` at acceptance if the new version is incomplete.
+2. User creates an amendment → System creates a new draft version linked to the one it supersedes; the accepted snapshot is not touched.
+3. User states what changed, why, which lines are affected and the price difference → System requires the summary before the version can be proposed.
+4. User proposes the new version → System transitions it to `PROPOSED` and notifies the patient.
+5. Patient reads the delta and accepts → System creates a new immutable accepted snapshot linked to the new version.
+**Decision points:** Amend versus start a new case — amendment keeps the case and its history. The prior accepted version stays historical rather than being replaced. **A material change requires a new version and the patient's acceptance; it is never applied to the accepted one** (`FR-CLINICAL-007`), so until the patient accepts, the earlier terms remain the only thing in force.
+**Failure paths:** `ERR-IDENTITY-002` non-treating actor. Any attempt to edit the accepted version or its snapshots is denied — amendment is the only route. `ERR-PLATFORM-001` the amendment summary is missing or does not state the price difference, which blocks proposal. `ERR-CLINICAL-002` an added line uses an uncategorized, retired or out-of-scope commercial option. `ERR-CLINICAL-001` at acceptance if the new version is incomplete.
 **Abandon path:** The amendment draft persists and stays invisible. The previously accepted version remains in force, which is the safe resting state.
 **Re-entry:** Through version history.
 **Friction:** Clinic 4 screens / 3 actions · Patient 2 screens / 2 actions
-**Notes:** **An accepted version is never returned to draft.** The old snapshot remains accessible because it governs the financial events and claims that occurred under it.
+**Notes:** **An accepted version is never returned to draft.** The old snapshot remains accessible because it governs the financial events and claims that occurred under it. **An unaccepted amendment governs nothing on any platform** — not the clinic's schedule, not the financial timeline, not a claim — and no price the patient already accepted changes retroactively. The disclosure is the point of the flow: an amendment the patient cannot read a reason and a price difference for is a defect, not a formatting choice.
 
 ```mermaid
 flowchart TD
     A["SCR-CLINICAL-013 version history"] --> B{"System: actor is treating clinician"}
     B -->|"no"| C["ERR-IDENTITY-002"]
     B -->|"yes"| D["SCR-CLINICAL-010 new amendment version"]
-    D --> E["SCR-CLINICAL-011 stages and pricing"]
-    E --> F["SCR-CLINICAL-012 propose new version"]
+    D --> E["SCR-CLINICAL-011 stages, lines and amendment summary"]
+    E --> E2{"System: summary states what changed, why, which lines, price difference"}
+    E2 -->|"missing"| E
+    E2 -->|"stated"| F["SCR-CLINICAL-012 propose new version"]
     F --> G["System: prior accepted snapshot untouched"]
-    F --> H["Patient SCR-CLINICAL-003 reads new version"]
+    F --> H["Patient SCR-CLINICAL-003 reads new version and its delta"]
     H --> I["SCR-CLINICAL-004 accept"]
     I --> J["System: new immutable accepted snapshot linked to new version"]
     J --> K["Prior snapshot still governs earlier events"]
@@ -3655,6 +3765,13 @@ Where flows intersect, state must survive the handoff. This is where multi-step 
 | `FLOW-ELIG-012` → `FLOW-ELIG-015` | Affected scope, the controlling dependency, and the review due time | The outcome is reached by governed review; no role may make a suspended-scope appointment attendable |
 | `FLOW-BOOKING-013` / `FLOW-BOOKING-014` → the booking | The accepted slot, atomically, with the old slot released | A proposal that is not accepted must leave the original appointment untouched |
 | Any flow → `FLOW-PLATFORM-002` | The original idempotency key | A new key is a new intent and would create a duplicate |
+| `FLOW-CATALOG-006` → `FLOW-CLINICAL-001` | The procedure item, its active definition version and its family mapping as of authoring time | A plan line captures the version it was authored against; a later remapping or retirement must not silently redefine what the patient accepted |
+| `FLOW-CATALOG-007` → `FLOW-CLINICAL-001` | The selectable option set with each option's category and patient-visible meaning | A clinic can only compose from approved options, which is what makes an unexplained charge impossible rather than merely forbidden |
+| `FLOW-ELIG-016` → `FLOW-ELIG-010` | The effective price policy version, the derived basis and the calibration state | A non-final state must suppress internal `P` rather than produce a weak one, and the decision must record which basis it used |
+| `FLOW-ELIG-016` → `FLOW-ELIG-008` | **Nothing.** No calibration output reaches the Clinic surface | A provider who could see the distribution could price against it, which would corrupt the evidence the classification rests on |
+| `FLOW-ELIG-008` → `FLOW-ELIG-001` | The price fact and its governed display mode, never the class | The patient reads a price and its mode; `P` is internal and a from-amount must not read as a quoted total |
+| `FLOW-CLINICAL-003` → `FLOW-CLINICAL-002` | The superseded version reference and the amendment summary with its price difference | Acceptance of an amendment is only meaningful if the patient can read what changed and what it costs |
+| `FLOW-CLINICAL-002` → `FLOW-FINANCE-001` | The agreed currency alongside the amount | A later rate, rounding or currency-policy change must never recompute an accepted amount |
 
 ### 13.2 Filter and selection persistence
 
@@ -3677,8 +3794,15 @@ Flows are checked against their frequency-by-criticality placement. Named below 
 | `FLOW-PLATFORM-002` | Daily+ / blocking | 2 screens / 1 action | Within budget |
 | `FLOW-IDENTITY-006` | Rare / blocking | 4 screens / ~20 fields | Within budget for a one-time high-stakes application |
 | `FLOW-CLAIMS-003` | Rare / blocking | 2 screens / variable | Within budget, but **the deadline is the real risk, not the friction** |
+| `FLOW-CATALOG-006` | Weekly to monthly / important | 3 to 5 screens / 2 to 4 actions | Within budget. The clinical branch is longer than the structural one on purpose: a rename should be quick and a clinical redefinition should not be |
+| `FLOW-CATALOG-007` | Monthly to rare / important | 2 screens / 1 to 2 actions | Within budget |
+| `FLOW-ELIG-016` | Weekly to monthly / important | 1 to 2 screens / 1 to 2 actions | Within budget on navigation, but **8 required fields per observation is the real cost.** Every one of them is what makes the observation judgeable later, so the fields stay; `SCR-ELIG-023` is flagged for UX Phase 2 to make repeated entry fast rather than shorter |
 
 **Three flows are over budget: `FLOW-BOOKING-003`, `FLOW-CLINICAL-001` and `FLOW-OPS-001`.** One is deliberate friction on an irreversible clinical act. Two are carried into UX Phase 2 as compression targets.
+
+The three flows added by the 2026-08-25 catalog and pricing reconciliation are all within navigation budget, and one — `FLOW-ELIG-016` — carries a field cost rather than a depth cost. Its fields are not trimmable: an observation without its locality, source, date or currency cannot be judged when a later decision depends on it. UX Phase 2 inherits it as an entry-speed problem, not a field-count problem.
+
+One friction change lands on an existing flow. `FLOW-CLINICAL-001` now authors structured lines and categorized modifiers rather than a stage price, which adds fields without adding screens. It was already over budget on screen count for deliberate reasons, and this does not change the verdict — but it does raise the stakes of the Phase 2 compression work, because the daily-and-blocking job now carries more required input than it did.
 
 
 

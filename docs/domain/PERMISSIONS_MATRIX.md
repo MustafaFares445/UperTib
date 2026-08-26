@@ -62,6 +62,8 @@ Possessing an administrative account, a Filament login, or a broad package role 
 | Claim/dispute reviewer | Staff assigned to complaints, refund, protection, or dispute review | Human decisions within assigned scope and separation-of-duties rules |
 | Finance reviewer | Scoped reviewer for external financial records/disputes | Record review/confirmation resolution only; never money movement |
 | Policy owner/reviewer | Authorized owner/reviewer of a versioned policy | Draft/review/schedule/retire policy versions within owned domain |
+| Catalog/product administrator | Policy-owner authority scoped to catalog content: groups, patient-facing families, detailed procedure items, mapping, labels, ordering, visibility, retirement | Draft and prospectively activate catalog content changes that carry no clinical meaning; never clinical activation |
+| Commercial/pricing administrator | Policy-owner authority scoped to commercial policy: market observations, price bands, calibration and confidence rules, price-display modes, approved modifiers, third-party-cost categories, currency and rounding policy | Draft and, subject to separation of duties, approve commercial policy versions; never clinical activation and never a final computed outcome |
 | Product/operations owner | Accountable operations owner | Operational launch gate and authorized operations governance |
 | Legal accountable owner | Accountable legal reviewer | Legal launch gate and explicitly assigned legal review only |
 | Technical accountable owner | Accountable technical reviewer | Technical launch gate and explicitly assigned technical review only |
@@ -72,6 +74,8 @@ Possessing an administrative account, a Filament login, or a broad package role 
 | Developer/tester | Engineering role | No standing production business-data access is defined by current requirements |
 
 The launch-gate implementation currently uses the exact accountable role keys `licensed_clinical_reviewer`, `legal_accountable_owner`, `product_and_operations_owner`, and `technical_accountable_owner`. Other actor names in this document are domain categories, not yet fixed permission-string names.
+
+The catalog and commercial administrator rows are **authority scopes, not new job titles**. One person may hold both where no separation-of-duties rule forbids it, but neither scope can ever produce the clinical activation that the licensed clinical reviewer owns, and no combination of them substitutes for that reviewer. This is the authorization consequence of making catalog and pricing values configurable: the values moved into data, the approval authority did not.
 
 ## 5. Global Permission Rules
 
@@ -114,6 +118,21 @@ The launch-gate implementation currently uses the exact accountable role keys `l
 |---|---|---|---|---|
 | View visible service catalog | Public visitor / any actor | Allow | Audience-safe fields only | FR-CATALOG-001 |
 | Edit draft policy/service-definition content | Policy owner | Conditional | Exact owned policy/catalog scope; version remains editable | FR-POLICY-001, FR-CATALOG-001 |
+| Create/rename/re-describe/reorder/hide/retire a patient-facing service family | Catalog/product administrator | Conditional | Owned catalog scope; change is prospective; a family referenced by history is retired or superseded rather than repurposed | FR-CATALOG-002 |
+| Create/rename/retire a detailed procedure item and set its billing unit | Catalog/product administrator | Conditional | Owned catalog scope; identity immutable once referenced by accepted or historical records | FR-CATALOG-002 |
+| Create/change a family-to-procedure mapping | Catalog/product administrator | Conditional | Effective-dated superseding row; historical records keep their captured mapping generation | FR-CATALOG-002 |
+| Import candidate catalog content from an external source | Catalog/product administrator | Conditional | Evaluation audience only; provenance recorded; clinical review state is never set to approved by import | FR-CATALOG-002, FR-CATALOG-003 |
+| Edit a draft procedure definition's clinical fields — risk level, minimum/allowed grade, credentials, equipment, evidence, clinically meaningful inclusions/exclusions, follow-up, completion, escalation | Catalog/product administrator | Conditional | **Draft only.** The draft cannot be activated by this actor | FR-CATALOG-003 |
+| Activate a procedure definition version whose change is clinically meaningful | Licensed clinical reviewer | Conditional | Current verified credential; approval bound to the exact content hash | FR-CATALOG-003, FR-OPS-003 |
+| Activate a clinically meaningful procedure change without licensed clinical approval | Catalog/commercial administrator, system administrator, policy owner, system automation | Deny | No visibility flag, activation flag, effective date, or administrative convenience substitutes for the clinical gate | FR-CATALOG-003, FR-OPS-003 |
+| Promote evaluation-audience catalog content to production by toggling visibility | Any actor | Deny | Production audience requires the governed readiness and clinical gates | FR-CATALOG-002, FR-OPS-003 |
+| Record/verify a market price observation | Commercial/pricing administrator | Conditional | Owned locality/catalog scope; source, date, verification state and provenance recorded; correction inserts a superseding observation | FR-ELIG-019 |
+| Edit or delete a recorded market observation in place | Any actor | Deny | Corrections supersede so a prior calibration result stays reproducible | FR-ELIG-019, NFR-AUDIT-003 |
+| Draft a price-band, calibration-threshold, or confidence policy version | Commercial/pricing administrator | Conditional | Owned commercial scope; effective-dated; prospective only | FR-ELIG-019, FR-POLICY-001 |
+| Approve/activate a commercial policy version | Commercial/pricing administrator per separation-of-duties rules | Conditional | Required independent approval where the policy demands it; activation is prospective | FR-ELIG-019, FR-POLICY-001 |
+| Manage approved price-display modes, material/option upgrades, third-party-cost categories, quantity rules, and external financial method labels | Commercial/pricing administrator | Conditional | Governed commercial-option rows; prospective effect; an option whose use constitutes a new clinical procedure additionally requires clinical approval | FR-ELIG-018, FR-CLINICAL-006 |
+| Enable a money-movement capability by adding a payment-method label | Any actor | Deny | The zero-money-movement V1 boundary is code and domain enforced, never a configuration toggle | FR-FINANCE-007, NFR-FINANCE-001 |
+| Draft/activate currency presentation, approved rate source, and rounding policy | Commercial/pricing administrator | Conditional | Effective-dated policy version; accepted snapshots are never recomputed | FR-POLICY-003 |
 | Review policy/service-definition version | Authorized policy reviewer | Conditional | Assigned policy domain/scope; required review checks pass | FR-POLICY-001 |
 | Schedule policy/service-definition version | Policy owner/reviewer workflow | Conditional | Required approvals complete; no unresolved effective overlap | FR-POLICY-001 |
 | Directly activate production service without gates | Policy owner/admin | Deny | Publication must pass launch readiness | FR-OPS-003, FR-CATALOG-001 |
@@ -139,7 +158,12 @@ Production clinical approval remains governed by `Q-CATALOG-001` and `Q-ELIG-001
 | Verify source facts/evidence | Verification staff | Conditional | Assigned work item, organization/subject competence, no prohibited conflict | FR-ELIG-007–008, FR-IDENTITY-001 |
 | Make required medical evidence decision | Licensed clinical reviewer | Conditional | Clinical competence/credential and assigned scope where policy requires clinician judgment | FR-ELIG-007–008 |
 | Directly enter scientific grade S | Provider/verifier/reviewer/admin | Deny | S is computed from approved rules/facts | FR-ELIG-011–013 |
-| Directly enter pricing class P | Provider/verifier/reviewer/admin | Deny | P is computed from actual price and versioned price bands | FR-ELIG-009, FR-ELIG-014 |
+| Directly enter pricing class P | Provider/verifier/reviewer/admin | Deny | P is computed from actual price and versioned market-calibrated price bands | FR-ELIG-009, FR-ELIG-014, FR-ELIG-019 |
+| Record own actual price and select its display mode | Clinic/provider representative or treating dentist within scope | Conditional | Exact provider/branch/catalog scope; mode chosen only from active approved options; effective-dated superseding fact | FR-ELIG-009, FR-ELIG-018 |
+| Record a zero-cost price | Clinic/provider representative within scope | Allow | The governed free mode is valid; no rule requires a positive amount | FR-ELIG-018 |
+| Choose A/B/C/D/F as a pricing menu, or set the market comparison basis, sample threshold, or calibration state | Clinic/provider actor | Deny | These are commercial policy, not provider input | FR-ELIG-014, FR-ELIG-019 |
+| Edit another provider's price fact or a global market band | Clinic/provider actor | Deny | Unless the same person separately holds the commercial administrator scope | FR-ELIG-018, FR-ELIG-019, NFR-IDENTITY-001 |
+| Silently change a clinic's historical price assertion | Admin/system | Deny | A governed correction is attributable and superseding; accepted snapshots are untouched | FR-ELIG-009, NFR-AUDIT-003 |
 | Directly enter protection H | Provider/verifier/reviewer/admin | Deny | H is computed | FR-ELIG-010, FR-ELIG-015 |
 | Directly enter internal risk I | Provider/verifier/reviewer/admin | Deny | I is computed | FR-ELIG-015 |
 | Compute eligibility/classification | System automation | Allow | Uses approved facts/evidence and effective versioned policy; immutable snapshot created | FR-ELIG-002, FR-ELIG-011–015 |
@@ -185,6 +209,13 @@ Operations or administrators do not receive a general booking-state override fro
 | View represented patient's case | Guardian | Conditional | Active grant includes required clinical data/action scope | FR-IDENTITY-003, FR-CLINICAL-005 |
 | View assigned case | Treating dentist | Conditional | Treating relationship and provider/branch scope active | FR-CLINICAL-001–005 |
 | Author treatment plan | Treating dentist | Conditional | Authorized treating clinician for exact case | FR-CLINICAL-001 |
+| Author plan lines, quantities, and typed commercial modifiers | Treating dentist | Conditional | Exact case; procedure definition versions and commercial options must be active and applicable | FR-CLINICAL-006 |
+| Record a third-party cost on a line | Treating dentist or authorized clinic staff per policy | Conditional | Approved third-party category, attributable party or reference, and reason recorded | FR-CLINICAL-006 |
+| Charge again for a component the governing procedure definition includes | Any actor | Deny | Rejected unless a governed new change explains it | FR-CLINICAL-006 |
+| Record an additional charge with no governed category or with only free-text justification | Any actor | Deny | There is no uncategorized surcharge path | FR-CLINICAL-006 |
+| Propose an amendment without its disclosed change summary and price difference | Treating dentist | Deny | A superseding version cannot be proposed without the summary | FR-CLINICAL-007 |
+| Accept an amendment on the patient's behalf | Guardian | Conditional | Grant includes acceptance authority for the exact patient/case | FR-IDENTITY-003, FR-CLINICAL-007 |
+| Treat an unaccepted amendment as governing future treatment | Clinic/admin/system | Deny | The previously accepted snapshot governs until the amendment is accepted | FR-CLINICAL-007 |
 | Author clinical plan | Clinic staff without treating-clinician authority | Deny | Clinical authorship belongs to authorized treating clinician | FR-CLINICAL-001 |
 | Generate autonomous diagnosis/treatment plan | System/AI/admin | Deny | Platform is not the diagnosing/treating authority | FR-CLINICAL-001 |
 | Read proposed treatment plan | Patient / authorized guardian | Allow/Conditional | Case ownership or valid representation grant | FR-CLINICAL-001–002 |
@@ -311,7 +342,10 @@ Separation of duties is mandatory whenever the governing policy requires indepen
 - the same actor cannot satisfy a prohibited originator-and-approver combination;
 - sensitive claim/dispute decisions must be assigned according to required subject-matter competence;
 - an appeal must preserve the original decision and be routed according to the applicable independent-review policy;
-- system administrators cannot self-grant a business scope and immediately bypass a policy requiring another accountable reviewer merely because they control account administration.
+- system administrators cannot self-grant a business scope and immediately bypass a policy requiring another accountable reviewer merely because they control account administration;
+- a catalog or commercial administrator who drafted a clinically meaningful procedure change cannot be the licensed clinical reviewer who activates it;
+- where commercial policy demands independent approval, the drafter of a price band or calibration threshold cannot be its approver;
+- a clinic actor holding a commercial administrator scope cannot use it to approve a market band that classifies their own price without the independent approval the policy requires.
 
 The exact separation combinations for every future policy domain are policy data, not hard-coded assumptions in this matrix.
 
@@ -325,6 +359,8 @@ May include:
 - eligible provider discovery data;
 - patient-safe eligibility reasons;
 - provider/service/branch identity and practical booking information;
+- the provider's own price presentation and its governed mode as understandable meaning;
+- what a price includes and what may cost extra, in patient-safe wording;
 - own case/terms/financial/review/claim data according to relationship and grant scope.
 
 ### Restricted internal
@@ -332,6 +368,9 @@ May include:
 Requires explicit scoped authorization:
 
 - raw internal risk `I`;
+- internal pricing class `P` and its calibration state;
+- the market comparison basis, observation corpus, sample counts, percentiles, and confidence figures;
+- raw `service_risk_level` codes and minimum/allowed grade configuration;
 - private evidence and storage metadata;
 - reviewer credential details beyond public-safe verification indicators;
 - internal reviewer findings before they are authorized for case-party disclosure;
@@ -402,8 +441,8 @@ Any required production-data access for those actors must be introduced through 
 | ID | Impact |
 |---|---|
 | Q-PLATFORM-001 | Full role/action reconciliation cannot be certified against unreadable SRS v1.1 text. |
-| Q-CATALOG-001 | Medical production approval cannot be considered complete solely from provisional catalog data. |
-| Q-ELIG-001 | Clinical eligibility formulas and reviewer-governed production policy still require licensed approval. |
+| Q-CATALOG-001 | Medical production approval cannot be considered complete solely from provisional or imported candidate catalog data. The catalog and clinical authority split above is settled and is not waiting on this item. |
+| Q-ELIG-001 | Clinical eligibility formulas, grade bands, and production calibration thresholds still require licensed approval. The rule that no actor selects `P` or the comparison basis is settled and is not waiting on this item. |
 | Q-PLATFORM-002 | Final legal retention/deletion authorization conditions remain subject to legal validation. |
 | Q-PLATFORM-003 | Resolved 2026-08-25 for interaction and authorization purposes by `PO-UX-17`: the evidence-transfer contract and its authorization points are provider-neutral. Concrete OTP/MFA, evidence-storage, malware-scan and notification vendor selection moved to `Q-OPS-001`. |
 | Q-OPS-001 | Infrastructure/provider administration model is not yet selected. |
@@ -413,15 +452,15 @@ Any required production-data access for those actors must be introduced through 
 This matrix materially covers authorization requirements for:
 
 - FR-IDENTITY-001–003;
-- FR-CATALOG-001;
-- FR-ELIG-001–017;
+- FR-CATALOG-001–003;
+- FR-ELIG-001–019;
 - FR-BOOKING-001–003;
-- FR-CLINICAL-001–005;
+- FR-CLINICAL-001–007;
 - FR-FINANCE-001–007;
 - FR-REVIEWS-001–002;
 - FR-CLAIMS-001–005;
 - FR-OPS-001–003;
-- FR-POLICY-001–002;
+- FR-POLICY-001–003;
 - FR-AUDIT-001–003;
 - NFR-IDENTITY-001–002;
 - NFR-PLATFORM-003–004;

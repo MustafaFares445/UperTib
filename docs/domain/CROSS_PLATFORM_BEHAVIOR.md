@@ -257,9 +257,28 @@ Changing local UI state does not grant or retain access. Both Filament panels an
 | Production service definition published | Authorized governed publication action | New active definition; prior active superseded atomically | Catalog reflects newly production-visible definition on fresh read | Service becomes available for provider-side activation/use according to policy | Publication/readiness state updated | No mandatory patient notification; operational publication event audited | New version active; previous superseded, not deleted |
 | Production definition becomes unavailable/retired | Governed Admin/system action | Current production visibility changes prospectively | No longer offered as new production service where rules require | New activation/selection constrained accordingly | Governance state visible | Operational work if dependent scopes require review | Historical accepted/case records retain captured version |
 
+| Family or procedure created, renamed, re-described, or reordered | Catalog/product administrator | Governed catalog data change, prospective | Fresh read shows the new label or order; nothing already agreed changes | Fresh read shows the new label or order in activation and planning surfaces | Change, actor, reason and effective time visible in catalog governance | No mandatory patient notification; change audited | Stable identity unchanged; content change is data, not a release |
+| Family or procedure retired | Catalog/product administrator | Visibility ends prospectively | No longer offered for new discovery or planning | No longer selectable for new activation or new plan lines | Retirement and its effective time visible | Operational work where dependent scopes need review | History retained; nothing deleted; existing cases unaffected |
+| Family-to-procedure mapping changed | Catalog/product administrator | Superseding effective-dated map row | New discovery paths reflect the new mapping | New plan lines resolve through the new mapping | Both map generations visible | Audited | Existing plan lines keep the map generation they were reached through |
+| Procedure definition version activated | Licensed clinical reviewer approval plus governed activation | New active definition; prior superseded | Applies to new planning only | Applies to new plan lines only | Version chain, approving credential and content hash visible | Launch-readiness work updates | Accepted plan lines keep the definition version they bound |
+| Market observation recorded or verified | Commercial/pricing administrator | Observation appended with provenance | No patient exposure whatsoever | No clinic exposure as ordinary provider information | Visible in market calibration governance | Audited | Corrections supersede; the original assertion stays readable |
+| Price-band or calibration policy activated | Commercial/pricing administrator | New effective price policy | **Nothing visible changes** — the patient sees the provider's own price either way | No clinic-visible pricing class change; the clinic never chose it | New and prior policy versions visible; recalculation queued | Recalculation work | New eligibility decisions use the new version; earlier decisions keep theirs |
+| Commercial option added, changed, or retired | Commercial/pricing administrator | Governed option row, prospective | New plans may present the new option's meaning | New plan lines may select it; retired options disappear from selection | Option lifecycle and approval visible | Audited | Accepted plan lines keep the option they referenced |
+
 ### 7.1 Historical version rule
 
 A current catalog/policy change never rewrites a previously accepted treatment/financial snapshot or the policy version used by an earlier eligibility/claim decision.
+
+This rule is what makes frequent operational configuration safe, so it is stated concretely across the surfaces the Syria catalog and pricing decision touches. When an administrator changes catalog content, a mapping, a provider price, a price band, a calibration threshold, a commercial option, an exchange-rate source, or a rounding rule:
+
+- new discovery, new planning, and new evaluations use the current applicable version from their effective date;
+- a not-yet-accepted proposal whose governing fact materially changed becomes stale and must be reissued rather than silently repriced;
+- an already-accepted treatment or financial snapshot keeps its captured amount, currency, lines, options, and policy references forever;
+- an earlier eligibility decision keeps its captured policy version, comparison basis, and calibration state and remains reproducible;
+- prior financial events remain append-only;
+- provenance records the actor, the version, the reason, and the effective time.
+
+A change that appears to alter an accepted historical amount on any platform is a defect, not a configuration outcome.
 
 ## 8. Provider / Branch Activation, Evidence, and Verification
 
@@ -303,6 +322,9 @@ The reserved slot is preserved temporarily. The review is due no later than two 
 - Patient never receives raw internal `I`.
 - Clinic does not receive raw internal `I` as ordinary provider information.
 - Patient/Clinic cannot edit S/P/H/I or final eligibility.
+- Neither Patient nor Clinic receives internal `P`, its calibration state, the market comparison basis, sample counts, percentiles, confidence figures, or raw `service_risk_level` codes.
+- The provider's own price presentation and its governed mode **are** patient-safe and are shown whatever the internal calibration state is; a non-final calibration state changes nothing any patient or clinic sees.
+- No surface may label a price as a market or city average while the effective policy reports a non-final calibration state.
 - Authorized Admin roles may inspect internal components only within their permission/subject-matter scope.
 
 ## 10. Booking Cross-Platform Contract
@@ -367,8 +389,11 @@ Admin oversight does not grant Admin the right to author a diagnosis or treatmen
 | Dentist proposes plan | Treating dentist | Transition exact plan version to proposed/current offer | Patient can read exact proposed plan + linked financial proposal | Clinic sees awaiting patient response | Authorized Admin oversight sees status | **Patient notification intent** after commit | Proposed version must not be silently replaced after patient viewed/accepted; amendment uses versioning |
 | Patient accepts plan | Patient/guardian | Atomically create immutable accepted clinical + financial terms snapshots | Shows accepted version | Clinic sees accepted state/snapshot reference | Admin oversight updates | **Clinic notification intent** after commit | Accepted version immutable; no delete/edit |
 | Acceptance fails due stale/incomplete plan | Patient request rejected | No authoritative acceptance mutation | Patient sees error/current plan | Clinic remains at current plan state | Admin unchanged except audit/error if applicable | No success notification | No partial snapshot |
-| Dentist needs amendment after acceptance | Treating dentist | Create new plan version/amendment | Existing accepted version stays historical; new proposal appears only when proposed | Clinic authors new version | Admin sees version chain if authorized | Notify Patient when new version is proposed | Never edit accepted version in place |
+| Dentist authors or revises plan lines and modifiers | Treating dentist | Lines and typed modifiers stored on the draft version | Hidden while draft | Line detail, quantities, included components and price differences visible to the author | Purpose-scoped oversight only | None required while draft | Rejected line or uncategorized charge never reaches a proposal (`ERR-CLINICAL-002`) |
+| Dentist needs amendment after acceptance | Treating dentist | Create new plan version/amendment with its disclosed change summary | Existing accepted version stays historical; new proposal appears only when proposed | Clinic authors new version and must supply the change summary | Admin sees version chain if authorized | Notify Patient when new version is proposed | Never edit accepted version in place; a superseding version cannot be proposed without its summary |
+| Patient reads a proposed amendment | Patient/guardian | None | Sees changed lines, reason per change, and price difference against the superseded version before any acceptance action | Clinic sees awaiting patient response | Oversight sees pending amendment | None | Read changes no state |
 | Patient accepts amendment | Patient/guardian | New immutable accepted snapshot linked to new version | Current accepted view changes prospectively; old snapshot remains accessible where required | Clinic sees new accepted version | Admin sees full authorized history | Clinic notification intent | Previous acceptance never overwritten |
+| Amendment left unaccepted | — | No authoritative change | Previously accepted terms still govern; the amendment is visibly pending, never applied | Clinic must not treat the amendment as agreed or bill against it | Oversight sees it pending | Reminder intents per policy | An unaccepted amendment governs nothing (`FR-CLINICAL-007`) |
 
 ### 11.3 No autonomous treatment authoring
 
@@ -543,6 +568,14 @@ Work-item lifecycle states are `OPEN`, `ASSIGNED`, `IN_PROGRESS`, `WAITING` and 
 | Patient identity/contact | Patient verification workflow | Patient + authorized identity/admin workflows | Own identity | Only case-necessary safe identity | Scoped identity/support/audit |
 | Guardian grant | Authorized grantor/legal workflow | Grantor/authorized Admin for revoke per policy | Subject/grantee safe context | Acting representative context only where case-relevant | Full scoped grant governance |
 | Service definition | Admin governance | Policy/catalog/launch accountable roles | Production-safe catalog | Production activation/use context | Full governed versions/gates |
+| Patient-facing service family | Catalog/product administrator | Catalog administrator; clinical reviewer where content carries clinical meaning | Production-safe discovery content | Activation and planning context | Full governed content, order, visibility, retirement |
+| Detailed procedure item and its definition versions | Catalog/product administrator drafts | Licensed clinical reviewer activates clinically meaningful change | Not exposed as primary discovery | Planning and pricing context | Full versions, gates, approving credential |
+| Family-to-procedure mapping | Catalog/product administrator | Catalog administrator, effective-dated | Indirect, through discovery paths | Indirect, through plan-line resolution | Both generations and effective periods |
+| Provider price fact | Clinic/provider within scope | Clinic supersedes; Admin corrects only through an attributable governed workflow | Practical price and its governed mode | Own price history and effective periods | Oversight and correction provenance |
+| Market observation | Commercial/pricing administrator | Commercial administrator; corrections supersede | None | None | Full corpus, verification state, provenance |
+| Price-band / calibration policy | Commercial/pricing administrator | Commercial administrator per separation of duties | None | None | Full versions and effective periods |
+| Commercial option | Commercial/pricing administrator | Commercial administrator; clinical approval where the option is a clinical procedure | Meaning only, where it affects a quoted plan | Selectable active options | Full lifecycle and approvals |
+| Treatment plan line and modifier | Treating dentist | Treating dentist authors; Patient accepts the version | Line and modifier detail on the version shown | Authoritative authoring view | Oversight only; no authorship |
 | Provider/branch activation request | Clinic | Clinic supplies facts; Admin verifies | Hidden until resulting eligibility makes provider discoverable | Full own request safe detail | Verification/work detail |
 | Evidence | Authorized domain actor | Uploader + scoped verifier/reviewer | Only own/case-safe metadata | Own/assigned evidence | Purpose-scoped review/download |
 | Eligibility decision | System | No human direct edit | Patient-safe eligibility | Provider-safe status/blockers | Scoped internal/provenance view |
@@ -729,8 +762,8 @@ This contract intentionally does not invent behavior blocked by unresolved decis
 | Open item | Cross-platform impact |
 |---|---|
 | `Q-PLATFORM-001` | Full SRS-v1.1 reconciliation cannot be claimed |
-| `Q-CATALOG-001` | Production service visibility remains clinically gated |
-| `Q-ELIG-001` | Production clinical calculation values cannot be treated as approved |
+| `Q-CATALOG-001` | Production service and procedure visibility remains clinically gated. The catalog propagation rules above are settled and are not waiting on this item |
+| `Q-ELIG-001` | Production clinical calculation values and calibration thresholds cannot be treated as approved. The rule that a price-policy change is invisible to Patient and Clinic is settled |
 | `Q-PLATFORM-003` | Resolved 2026-08-25 for interaction purposes by `PO-UX-17`; vendor selection folded into `Q-OPS-001`. Continue to use provider-neutral intents/interfaces |
 | `Q-OPS-001` | Hosting/provider/topology remains unresolved, including managed-versus-self-hosted MySQL deployment, HA/PITR implementation, and real-time delivery infrastructure; the production relational engine is MySQL |
 | `Q-PLATFORM-002` | Physical retention/deletion periods require legal validation |
@@ -747,7 +780,7 @@ Before a V1 release, the following statements must all be true:
 4. A work item never substitutes for or overrides the source domain record.
 5. Generic hard delete is absent for historical bookings, accepted plans, financial events, claims, decisions, appeals, and eligibility decisions.
 6. Corrections use state transitions, append-only events, or new versions according to the owning domain.
-7. Patient and Clinic cannot manually edit final S/P/H/I or eligibility.
+7. Patient and Clinic cannot manually edit final S/P/H/I or eligibility, and neither receives `P`, its calibration state, or the market comparison basis.
 8. Patient cannot book from stale eligibility/capacity without synchronous server revalidation.
 9. Treatment plans are clinician-authored; Patient acceptance creates immutable snapshots visible to Clinic/Admin according to scope.
 10. Financial facts recorded by Patient/Clinic/Admin all resolve from one append-only event history and never move money.
@@ -756,5 +789,7 @@ Before a V1 release, the following statements must all be true:
 13. Private evidence remains private regardless of which platform uploaded or reviews it.
 14. Sensitive human decisions remain human-attributed and separation-of-duties controlled.
 15. Cross-platform integration tests prove propagation instead of relying on manual UI assumptions.
+16. An administrator changing catalog content, a mapping, a provider price, a price band, a calibration threshold, a commercial option, an exchange-rate source, or a rounding rule changes no accepted historical amount, term, or decision on any platform.
+17. A treatment amendment governs nothing on any platform until the patient accepts it, and the change summary is available before the acceptance action.
 
 These invariants are mandatory implementation acceptance criteria for the shared platform behavior.

@@ -99,7 +99,11 @@ flowchart LR
 
 Service publication, provider eligibility, booking confirmation, authorization, and sensitive evidence access fail closed when mandatory facts, approvals, credentials, policies, or evidence are missing or invalid.
 
-The existing 26 service records are provisional evaluation records and do not establish production clinical readiness.
+The existing 26 service records are provisional evaluation records and do not establish production clinical readiness. They are candidate patient-facing family content; their count and naming are not architectural constants.
+
+### Configuration over code for operational policy
+
+Catalog content, family-to-procedure mapping, service risk level, clinical prerequisites, inclusions and exclusions, evidence, follow-up and completion rules, price-display modes, price bands, market-calibration thresholds, additional-cost categories and approved modifiers, proposal validity, currency and rounding policy are governed data or versioned policy resolved at runtime. They are not enums, constants, seeder literals, controller conditions, panel-resource literals, mobile constants, or environment variables. This is an architecture driver because it decides where these values live and who may change them, and because the safety invariants below must stay enforced in code while everything around them becomes data.
 
 ### Historical reproducibility
 
@@ -126,15 +130,15 @@ Authorization combines actor identity with role, organization/clinic/branch, cas
 | Module | Responsibility |
 |---|---|
 | Identity & Access | Accounts, verification, MFA/OTP, guardian grants, staff scopes |
-| Catalog | Service groups, services, definitions, public visibility |
-| Eligibility | Facts, evidence, S/P/H/I, confidence, gates, decisions, recalculation |
+| Catalog | Service groups, patient-facing service families, detailed procedure items, versioned mapping, definitions, public visibility |
+| Eligibility | Facts, evidence, provider price facts, market observations, calibrated price policy, S/P/H/I, confidence, gates, decisions, recalculation |
 | Booking | Requests, responses, alternatives, confirmation, cancellation, no-show |
-| Clinical Case | Treatment plans, accepted clinical terms, stages, evidence, follow-up, timeline |
+| Clinical Case | Treatment plans and structured lines, typed commercial modifiers, third-party costs, amendments, accepted clinical terms, stages, evidence, follow-up, timeline |
 | Financial Records | Financial terms snapshots and append-only external financial events |
 | Reviews | Verified experience reviews and appeals |
 | Claims & Disputes | Refund/protection claims, evidence, deadlines, decisions, appeals |
 | Operations | Work queues, reporting, launch readiness |
-| Policy | Versioned/effective rule sets and historical reproduction |
+| Policy | Versioned/effective rule sets, commercial and currency policy, historical reproduction |
 | Audit & Integrity | Provenance, immutable history, idempotency evidence |
 | Platform | Files, queues, notifications, runtime and observability concerns |
 
@@ -200,7 +204,8 @@ The following require immutable or append-only handling where defined by their o
 
 - accepted treatment/financial snapshots;
 - computed eligibility/classification decisions;
-- activated policy versions used for historical reproduction;
+- activated policy versions used for historical reproduction, including price-band, commercial-option, and currency policy;
+- activated catalog and procedure definition versions and the mapping versions they were used with;
 - external financial events;
 - launch-gate decisions;
 - credential snapshots;
@@ -366,6 +371,8 @@ Production clinical behavior must preserve versioned rules, evidence provenance,
 
 The software may evaluate configured rules, but it must not present provisional configuration as licensed clinical truth or generate autonomous diagnosis/treatment plans.
 
+Configurability does not weaken this boundary. A change to a procedure's clinical scope, risk level, provider qualification, equipment requirement, required evidence, clinically meaningful inclusion or exclusion, follow-up, completion, escalation, or safety gate is Admin-editable **as a draft only**; activation requires a licensed clinical reviewer holding a current credential. Catalog and commercial administrators are separate authorities from that reviewer, and no generic administrator role substitutes for either.
+
 `Q-CATALOG-001` and `Q-ELIG-001` remain production-governance constraints.
 
 ## 24. Financial Governance Boundary
@@ -416,10 +423,11 @@ Future money-movement capability requires a new authoritative product decision a
 6. Correct immutable history by new linked records, never silent rewrites.
 7. Fail closed for readiness, eligibility, authorization, and private evidence.
 8. Do not introduce V1 money-movement capability.
-9. Do not treat evaluation catalog data as production clinical approval.
+9. Do not treat evaluation catalog data as production clinical approval, and do not let a visibility flag promote it.
 10. Do not claim routes, providers, integrations, or infrastructure that are not established by evidence.
 11. Keep hosting and infrastructure services provider-neutral while `Q-OPS-001` is open, while preserving MySQL as the approved production database engine.
 12. Do not implement unresolved `Q-*` or `CONFLICT-*` as confirmed behavior.
+13. Represent expected operational change as governed data or versioned policy and keep safety/integrity invariants in code. Do not build a general rule-scripting engine, dynamic code execution, database-stored code, or a generic workflow or state-machine designer in order to avoid all future development.
 
 ## 27. Related Canonical Documents
 

@@ -252,11 +252,23 @@ The later UX pipeline decides visual treatment and component choice.
 **HTTP status:** `409 Conflict`  
 **Requirements:** FR-CLINICAL-001–002, FR-FINANCE-001, NFR-AUDIT-003  
 **Client-facing message:** `لا يمكن قبول الخطة العلاجية بصيغتها الحالية. يرجى مراجعة البيانات أو انتظار تحديث الخطة.`  
-**When raised:** The plan/version is stale, expired, not in an acceptable state, or lacks required service, stage, price, terms, protection-state, or governing policy information. Per `PO-UX-16` a proposal is refused once its policy-governed `expires_at` has passed (V1 default 7 calendar days), and also refused earlier when a material governing fact changed — the relevant plan version, service, price or financial terms, eligibility state, or a required policy/snapshot input.  
+**When raised:** The plan/version is stale, expired, not in an acceptable state, or lacks required service, stage, line, price, terms, protection-state, or governing policy information. Per `PO-UX-16` a proposal is refused once its policy-governed `expires_at` has passed (V1 default 7 calendar days), and also refused earlier when a material governing fact changed — the relevant plan version, service, price or financial terms, eligibility state, or a required policy/snapshot input.  
 **APIs:** API-CLINICAL-003.  
 **Retryable:** No. The clinician must issue a new plan version; retrying the same expired proposal can never succeed.  
 **Surface:** Unavailable-state/action banner; do not imply that UberTib authored the treatment decision.  
 **Integrity rule:** A failed acceptance creates no accepted clinical or financial snapshot. Expiry applies only to a proposal that was never accepted; an already-accepted snapshot is never invalidated by a later expiry.
+
+### ERR-CLINICAL-002 — Treatment Line Violates a Commercial Integrity Rule
+
+**Stable code:** `TREATMENT_LINE_INTEGRITY_VIOLATION`  
+**HTTP status:** `422 Unprocessable Entity`  
+**Requirements:** FR-CLINICAL-006, FR-CLINICAL-007, FR-FINANCE-001  
+**Client-facing message:** `لا يمكن إضافة هذا البند بصيغته الحالية. كل تكلفة إضافية يجب أن تكون ضمن نوع معتمد مع سبب واضح.`  
+**When raised:** A treatment-plan line or line modifier breaks a governed commercial-integrity rule of `PO-SYRIA-11` and `PO-SYRIA-12`: it charges again for a component the governing procedure definition version marks as included without a valid new change; it carries no approved commercial-option category; it carries a category the referenced option does not belong to; it supplies only generic free-text justification instead of a defined reason; it references a retired or not-yet-effective commercial option; or a quantity change is asserted without an explicit quantity delta against the procedure's billing unit.  
+**APIs:** API-CLINICAL-003 on acceptance of a version containing such a line. Authoring is a staff surface, so the same code is raised in-process by `SDC-CLINICAL-001`.  
+**Retryable:** No. The clinician must correct the line, choose an approved category, or represent an added treatment as its own procedure line.  
+**Surface:** Inline field validation on the offending line where the surface is authoring; action-level rejection on acceptance. Patient-facing wording must describe a plan that needs correcting, never accuse the patient or the clinic.  
+**Integrity rule:** A rejected line produces no accepted snapshot and no partial plan version. An added clinical service is an actual procedure line rather than a fee, and there is no fallback path that records an uncategorized surcharge.
 
 ## 10. Financial Record Error
 
@@ -332,6 +344,7 @@ The later UX pipeline decides visual treatment and component choice.
 | ERR-BOOKING-002 | No | Booking/state/policy must change |
 | ERR-BOOKING-003 | No | Follow current booking state |
 | ERR-CLINICAL-001 | No | Plan/version must be corrected |
+| ERR-CLINICAL-002 | No | Line category, reason, or represented treatment must be corrected |
 | ERR-FINANCE-001 | No | Submitted fact/workflow state must be corrected |
 | ERR-REVIEWS-001 | No | Eligibility/window must permit action |
 | ERR-CLAIMS-001 | No | Eligibility/window must permit action |
@@ -360,7 +373,7 @@ This file canonically defines the `ERR-*` IDs reserved by `API_CONTRACTS.md`:
 - `ERR-AUDIT-001`
 - `ERR-ELIG-001`–`ERR-ELIG-002`
 - `ERR-BOOKING-001`–`ERR-BOOKING-003`
-- `ERR-CLINICAL-001`
+- `ERR-CLINICAL-001`–`ERR-CLINICAL-002`
 - `ERR-FINANCE-001`
 - `ERR-REVIEWS-001`
 - `ERR-CLAIMS-001`–`ERR-CLAIMS-002`

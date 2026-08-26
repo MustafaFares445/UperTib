@@ -55,7 +55,8 @@ Canonical `FR-*` and `NFR-*` IDs are defined in `docs/README.md`. Existing dotte
 - Patient, guardian, dentist, clinic/staff identity and verification behaviors established by the requirements.
 - Provider/branch/service facts, evidence, eligibility, classification, search, comparison, booking, rescheduling, cancellation, attendance/no-show.
 - Treatment plans, accepted terms, stages, evidence, follow-up, completion, and unified case history.
-- Provider-entered actual prices with automatic internal `P`; automatic `H` and internal `I` according to versioned policies.
+- A two-layer governed catalog: patient-facing service families for discovery and detailed procedure items for clinical planning, pricing, and billing integrity.
+- Provider-entered actual prices with governed price-display modes, automatic internal `P` from market-calibrated versioned policy, and automatic `H` and internal `I` according to versioned policies.
 - External financial-event recording, confirmation/dispute, refund/compensation decision tracking, and external-execution confirmation.
 - Verified reviews, complaints, disputes, protection claims, appeals, work queues, permissions, audit, and operational reporting.
 - Arabic-first, RTL, accessibility, weak-connectivity resilience, policy versioning, and launch governance.
@@ -92,6 +93,8 @@ Canonical `FR-*` and `NFR-*` IDs are defined in `docs/README.md`. Existing dotte
 | BP-12 | A case should have a unified timeline spanning booking, agreement, external financial records, treatment, follow-up, review, and issues. |
 | BP-13 | Operations are managed through responsibility/priority/deadline queues and exceptions. |
 | BP-14 | Future payment integration may be architecturally possible only without changing the meaning of historical V1 record-only events; it is not V1 scope. |
+| BP-15 | Behavior expected to change operationally is governed data or versioned policy, not a code constant; safety and integrity invariants are not Admin toggles. |
+| BP-16 | No hidden, off-plan, duplicated, or uncategorized charge can become an accepted commercial term. |
 
 ## 6. Named Product Journeys
 
@@ -213,6 +216,8 @@ The engineering PRD names journeys but does not define navigation or screen flow
 **Acceptance Criteria:**
 - Given a price fact, then it retains service, source, branch, currency, amount, effective period, and provenance.
 - Given `P` is computed, then it references the exact policy/source fact; patient-facing output presents expected price/range rather than `P` as a quality grade.
+- Given a price fact, then it also records its governed display mode per `FR-ELIG-018` and may legitimately assert a zero amount; no rule requires a positive amount for the fact to be valid.
+- Given a later price change, then it supersedes the prior fact prospectively and never rewrites a price already captured in an accepted snapshot.
 
 ### FR-ELIG-010 — Automatic Protection Selection
 **Source:** `.spec/functional-requirements/FR.02.2.3-automatic-protection-selection.md` · aliases `FR.02.2.3`, SRS `FR-014`  
@@ -268,6 +273,8 @@ The engineering PRD names journeys but does not define navigation or screen flow
 **Acceptance Criteria:**
 - Given price bands, then service, market/locality scope, currency, effective period, provenance, and version are defined.
 - Given a currency/scope mismatch, then calculation is prevented with an explicit reason; successful calculation snapshots preserve price, comparison value if any, band, result, and policy version.
+- Given the comparison basis, then it comes from the calibrated market policy of `FR-ELIG-019`; no fixed ratio of a comparison value — including a doubling, a one-and-a-half multiple, or a halving — is a production constant.
+- Given the effective policy reports insufficient calibration, then `P` is recorded in the policy's non-final calibration state, patient discovery still shows the provider's own price, and no classification is fabricated.
 
 ### FR-ELIG-015 — Automatic H and I
 **Source:** `.spec/functional-requirements/FR.02.2.8-automatic-h-and-i.md` · aliases `FR.02.2.8`, SRS `FR-042`  
@@ -301,6 +308,36 @@ The engineering PRD names journeys but does not define navigation or screen flow
 **Acceptance Criteria:**
 - Given an explanation, then it identifies exact service/branch, effective assessment date, and practical reasons without confidential evidence/raw `I`.
 - Given `PENDING_EVALUATION`, then the explanation describes insufficient evidence and never presents it as `F`.
+
+### FR-ELIG-018 — Governed Provider Price Presentation Modes
+**Source:** decision `PO-2026-08-25-syria-catalog-pricing-governance` `PO-SYRIA-05`, `PO-SYRIA-08`  
+**Status:** Confirmed.  
+**Description:** Present a provider's price for a catalog item using a governed display mode drawn from Admin-approved data instead of assuming every service carries one positive fixed amount.  
+**Actors:** Authorized clinic/provider actor; system; patient as consumer.  
+**Preconditions / Inputs:** Approved price-display-mode configuration; provider price fact scoped to provider, branch, and catalog item.  
+**Screens:** Deferred to UX pipeline.  
+**Business Principles:** BP-01, BP-11, BP-15.  
+**Acceptance Criteria:**
+- Given the approved configuration, then supported meanings include an explicitly zero-cost mode, a single stated amount, a lower-bound estimate, an approved expected range, and a mode stating that the final price requires clinical examination and a treatment plan.
+- Given a service whose provider or effective policy explicitly defines it as zero-cost, then it is a valid production-ready service; no rule requires a positive reference or fixed amount as a condition of production readiness.
+- Given a price fact, then it records the display mode, the amount or bounds that mode requires, currency, effective period, catalog scope, and provenance, and a replacement supersedes it rather than overwriting it.
+- Given a patient-facing projection, then the mode is communicated as understandable meaning and never as an enum name, an internal pricing class, or a quality grade.
+- Given a provider-facing interface, then it offers only Admin-approved modes and exposes no control that selects `P` or a scientific grade as a pricing menu.
+
+### FR-ELIG-019 — Market Price Observations and Calibrated Price Policy
+**Source:** decision `PO-2026-08-25-syria-catalog-pricing-governance` `PO-SYRIA-06`, `PO-SYRIA-07`  
+**Status:** Confirmed; production calibration values remain governed by `Q-ELIG-001`.  
+**Description:** Derive the internal price comparison basis from governed market-price observations and a versioned locality-scoped price policy, and hold a non-final calibration state when the evidence is insufficient.  
+**Actors:** Authorized commercial/policy admin; licensed reviewers where policy requires; system.  
+**Preconditions / Inputs:** Recorded market observations; effective versioned price policy.  
+**Screens:** Deferred to UX pipeline.  
+**Business Principles:** BP-01, BP-03, BP-08, BP-15.  
+**Acceptance Criteria:**
+- Given an observation, then it records catalog scope, locality, amount, currency, observation date, source type and reference, verification state, confidence, any material or laboratory distinction, and provenance.
+- Given a price policy version, then locality scope, catalog scope, observation window, minimum sample threshold, confidence rules, approved distribution boundaries, currency requirements, effective dates, and provenance are all policy data; no sample threshold, band boundary, or comparison multiplier is a code constant.
+- Given the effective policy's minimum sample or confidence rule is unmet, then the derived classification is retained in an explicit non-final calibration state and no market-average claim or false precision is produced.
+- Given a policy version is replaced, then the change applies prospectively and every earlier decision still resolves the version captured at decision time.
+- Given any workflow, then no actor selects the comparison basis or the resulting classification directly.
 
 ### 7.2 BOOKING — Booking Lifecycle
 
@@ -365,6 +402,7 @@ The engineering PRD names journeys but does not define navigation or screen flow
 - Given required service/stage/price/policy information is missing, then the plan cannot be accepted.
 - Given a proposed plan, then it carries a policy-governed `expires_at` whose V1 default is 7 calendar days after proposal, and that value is versioned policy data rather than a hard-coded constant.
 - Given a material governing fact changes before expiry — the relevant plan version, service, price or financial terms, eligibility state, or a required policy/snapshot input — then the proposal is no longer acceptable and the clinician must issue a new version; an already-accepted snapshot is never invalidated by a later expiry.
+- Given a plan, then its commercial content is expressed as the structured lines required by `FR-CLINICAL-006` rather than one undifferentiated total.
 
 ### FR-CLINICAL-002 — Accepted Terms Snapshot
 **Source:** `.spec/functional-requirements/FR.05.2.1-accepted-terms-snapshot.md` · aliases `FR.05.2.1`, SRS `FR-009`  
@@ -408,6 +446,36 @@ The engineering PRD names journeys but does not define navigation or screen flow
 **Acceptance Criteria:**
 - Given timeline events, then they are consistently ordered, source-attributed, and linked to governing snapshots/decisions where applicable.
 - Given corrections/reversals, then they appear as later events and never erase history; role-based field visibility is enforced.
+
+### FR-CLINICAL-006 — Structured Treatment Plan Lines and Commercial Integrity
+**Source:** decision `PO-2026-08-25-syria-catalog-pricing-governance` `PO-SYRIA-11`, `PO-SYRIA-12`  
+**Status:** Confirmed; procedure-specific inclusion content remains governed by `Q-CATALOG-001`.  
+**Description:** Express a treatment plan's commercial content as auditable lines carrying the detailed procedure item, quantity, unit, price, governing inclusions, and any approved additional-cost category, and reject charges that no governed category explains.  
+**Actors:** Authorized treating clinician as author; patient as recipient; system as validator.  
+**Preconditions / Inputs:** Effective procedure-item definition version; approved commercial-option configuration.  
+**Screens:** Deferred to UX pipeline.  
+**Business Principles:** BP-09, BP-16.  
+**Acceptance Criteria:**
+- Given a plan line, then it identifies the procedure-item definition version, quantity, billing unit, unit price, line total, currency, and the family or service context it was reached through.
+- Given an additional cost, then it is classified as exactly one approved governed category — an additional clinical service, an approved material or option upgrade, an attributable third-party cost, or an explicit quantity change — with its own reason and price difference.
+- Given a component the governing procedure definition marks as included, then billing it again as a separate charge is rejected unless a new governed change explains it.
+- Given a charge with no defined category, no reason, or only generic free-text justification, then it is rejected and cannot become an accepted commercial term.
+- Given the approved category and option configuration, then it is governed data an authorized admin maintains prospectively; adding an approved modifier or third-party-cost category requires no code change, and a clinical addition still requires clinical authorship and approval.
+
+### FR-CLINICAL-007 — Disclosed Treatment Amendment and Re-Acceptance
+**Source:** decision `PO-2026-08-25-syria-catalog-pricing-governance` `PO-SYRIA-10`, `PO-SYRIA-11`  
+**Status:** Confirmed.  
+**Description:** Require a material change to a proposed or accepted plan to travel through a new version or amendment that states what changed, why, the price difference, and the affected lines, and to obtain patient acceptance before it governs future treatment.  
+**Actors:** Authorized treating clinician; patient or authorized guardian; system.  
+**Preconditions / Inputs:** An existing proposed or accepted plan version; the proposed change.  
+**Screens:** Deferred to UX pipeline.  
+**Business Principles:** BP-08, BP-09, BP-16.  
+**Acceptance Criteria:**
+- Given a material change after proposal or acceptance, then the prior version is not edited; a new linked version or amendment is created instead.
+- Given an amendment presented for acceptance, then it states the changed lines, the reason for each change, the resulting price difference, and the version it supersedes, before any acceptance action is available.
+- Given the amendment is not yet accepted, then it does not govern future treatment and the previously accepted snapshot continues to govern events that occurred under it.
+- Given acceptance, then a new immutable accepted treatment and financial snapshot pair is created and linked to the superseded snapshot.
+- Given a later configuration, catalog, price-band, currency-policy, or policy change, then no accepted amount or term is recomputed, and a correction is recorded as a further version or event.
 
 ### 7.4 FINANCE — External Financial Records Only
 
@@ -487,6 +555,7 @@ The engineering PRD names journeys but does not define navigation or screen flow
 **Acceptance Criteria:**
 - Given any API/UI/job/integration, then it cannot initiate, authorize, capture, hold, transfer, or settle money.
 - Given an approved amount awaiting human action, then it remains explicitly pending external execution until reported and confirmed.
+- Given an external payment-method category maintained as admin data, then enabling a label never creates, implies, or activates a money-movement integration; the zero-money-movement boundary is code-and-domain enforced and is not a configuration toggle.
 
 ### 7.5 REVIEWS — Verified Experience Reviews
 
@@ -608,6 +677,7 @@ The engineering PRD names journeys but does not define navigation or screen flow
 **Acceptance Criteria:**
 - Given a launch scope, then every required gate has accountable role, evidence, decision, expiry where applicable, and current state.
 - Given a missing/expired/revoked/rejected mandatory approval, then public discoverability and new bookings for that scope are blocked; provisional evaluation data does not equal production medical approval.
+- Given a governed configuration change, then authority is separated: catalog and commercial admins maintain drafts and prospective policy inside their own domain, a clinically meaningful change additionally requires licensed clinical approval, and no generic administrator role substitutes for either.
 
 ### 7.8 IDENTITY — Accounts, Representation, Staff Authorization
 
@@ -688,6 +758,37 @@ The engineering PRD names journeys but does not define navigation or screen flow
 **Acceptance Criteria:**
 - Given an active service, then patient-facing Arabic name, description, owning group, and practical purpose are available.
 - Given catalog state/availability, then meaning is communicated through text/accessible semantics and does not require knowledge of S/P/H/I/K/EU/internal risk codes.
+- Given patient discovery, then it is entered through patient-facing service families per `FR-CATALOG-002`; a flat list of professional procedure codes is never the primary discovery experience.
+
+### FR-CATALOG-002 — Two-Layer Governed Catalog
+**Source:** decision `PO-2026-08-25-syria-catalog-pricing-governance` `PO-SYRIA-03`, `PO-SYRIA-04`  
+**Status:** Confirmed; production content remains governed by `Q-CATALOG-001`.  
+**Description:** Maintain broad service groups, patient-facing service families, and detailed procedure items as three related governed layers with versioned mapping, so ordinary catalog change is data rather than a code release.  
+**Actors:** Authorized catalog/product admin; licensed clinical reviewer where the change is clinically meaningful; patient and clinician as consumers.  
+**Preconditions / Inputs:** Existing group and family identities; candidate procedure content; effective mapping.  
+**Screens:** Deferred to UX pipeline.  
+**Business Principles:** BP-11, BP-15.  
+**Acceptance Criteria:**
+- Given the catalog, then families serve patient discovery, comparison, and booking entry, while detailed procedure items serve treatment planning, quantity, unit, price, evidence, follow-up, billing integrity, and reporting.
+- Given an authorized catalog admin, then creating, renaming, reordering, re-describing, hiding, mapping, retiring, superseding, and future-dating a family or a procedure item are governed data operations requiring no code change, and the number of seeded families or imported procedures is never a product constant.
+- Given a catalog identity already referenced by an accepted or historical record, then that identity is never silently repurposed; a changed meaning becomes a new version or a successor item.
+- Given a family-to-procedure mapping change, then it is effective-dated and superseding, and every historical record still resolves the mapping and definition version captured at its own time.
+- Given a retirement, then visibility ends prospectively and no history is deleted.
+
+### FR-CATALOG-003 — Clinically Governed Procedure Definitions
+**Source:** decision `PO-2026-08-25-syria-catalog-pricing-governance` `PO-SYRIA-02`, `PO-SYRIA-13`  
+**Status:** Confirmed; production activation remains governed by `Q-CATALOG-001` and `Q-ELIG-001`.  
+**Description:** Express a detailed procedure's clinical scope, service risk level, eligibility prerequisites, inclusions, exclusions, evidence, follow-up, and completion rules as versioned definition data whose production activation requires the applicable licensed clinical approval.  
+**Actors:** Authorized catalog admin as drafter; licensed clinical reviewer as approver; system.  
+**Preconditions / Inputs:** Draft procedure definition version; current verified clinical reviewer credential.  
+**Screens:** Deferred to UX pipeline.  
+**Business Principles:** BP-04, BP-09, BP-15.  
+**Acceptance Criteria:**
+- Given a procedure definition version, then service risk level, minimum and allowed scientific grades, required credentials, required branch or equipment capability, required evidence, inclusions, exclusions, follow-up rules, and completion rules are versioned definition data rather than code constants.
+- Given a draft change affecting clinical scope, risk, provider qualification, equipment, evidence, clinically meaningful inclusions or exclusions, follow-up, completion, escalation, or a patient-safety gate, then production activation is refused until a licensed clinical reviewer with a current credential approves that exact content.
+- Given the service risk level, then it is a distinct concept from the verified patient-experience rating `R`, and it never by itself decides whether a provider may perform a procedure.
+- Given eligibility evaluation, then the definition's stated prerequisites participate as gates alongside provider, branch, credential, evidence, facility, and effective policy inputs per `FR-ELIG-005`.
+- Given evaluation-audience content, then no visibility toggle, activation flag, or administrative convenience makes it production content without the required approval.
 
 ### 7.11 POLICY — Versioned Rules and Historical Reproduction
 
@@ -712,6 +813,21 @@ The engineering PRD names journeys but does not define navigation or screen flow
 **Acceptance Criteria:**
 - Given historical reproduction, then historical snapshots—not mutable current data—are used and the result matches stored history.
 - Given an integrity mismatch, then an auditable exception is raised; protected payload remains purpose/scope restricted.
+
+### FR-POLICY-003 — Currency Presentation and Normalization Provenance
+**Source:** decision `PO-2026-08-25-syria-catalog-pricing-governance` `PO-SYRIA-09`  
+**Status:** Confirmed.  
+**Description:** Denominate the patient-facing agreed amount in the applicable Syrian local currency by default, and record complete provenance whenever an amount is normalized into another currency for internal analysis.  
+**Actors:** System; authorized commercial/policy admin; patient and provider as parties to the amount.  
+**Preconditions / Inputs:** Effective currency policy; approved rate source where normalization is used.  
+**Screens:** Deferred to UX pipeline.  
+**Business Principles:** BP-08, BP-11, BP-15.  
+**Acceptance Criteria:**
+- Given a patient-facing price or agreed amount in the Syrian V1 scope, then it is denominated in the currently applicable Syrian local currency unless an approved future policy explicitly establishes another lawful mode; no foreign currency becomes the default patient obligation by reference convention.
+- Given a normalization, then source currency, target currency, rate, approved rate source, effective timestamp, rounding rule, and policy version are recorded.
+- Given the rate source, rate, rounding rule, or normalization behavior must change, then it changes through approved policy or configuration data rather than code, and no unofficial public index or fixed rate is embedded in domain behavior.
+- Given a later rate or policy change, then no accepted financial or treatment snapshot is recomputed and no historical agreed amount changes.
+- Given the currency policy, then it defines no universal fixed rate-lock period; any validity window is policy data.
 
 ### 7.12 PLATFORM — Patient Attention and Notification
 
@@ -842,7 +958,9 @@ The verified backend currently implements a narrow service-catalog/governance sl
 - `UberTip-Backend/routes/api.php` currently exposes `GET /api/v1/catalog/service-groups` as the verified public API surface.
 - The backend contains service groups, services, versioned service definitions, clinical reviewer credentials, service launch gates, and actions/tests for catalog publication/governance.
 - `FR-CATALOG-001`, `FR-POLICY-001`, and `FR-OPS-003` have partial implementation evidence in the current backend and tests.
-- The 26 seeded dental-service records are provisional evaluation records, not clinically approved production services.
+- The 26 currently seeded dental-service records are provisional evaluation records and candidate patient-facing service-family content, not clinically approved production services and not a product constant. Their count, names, grouping, and mapping may change through governed catalog decisions.
+- The current `ServiceDefinitionPayload` production-completeness check requires a positive reference-price amount, pins the currency literal, and pins the risk tier to a PHP-literal set. All three contradict `FR-ELIG-018`, `FR-POLICY-003`, and `FR-CATALOG-003` and are recorded here as implementation gaps to close, not as product rules.
+- No detailed procedure-item layer, family-to-procedure mapping, market-observation corpus, price-display mode, or commercial-option catalog is implemented yet.
 - Booking, complete S/P/H/I eligibility computation, treatment/case management, record-only finance lifecycle, reviews, claims, full permissions, and the remaining platform workflows are not evidenced as complete implementations.
 - Feature/OpenAPI documents remain contract/planning evidence and are not proof that unimplemented routes exist. Historical `CONFLICT-CATALOG-001` is resolved for the implemented `API-CATALOG-001` route/OpenAPI alignment.
 
@@ -853,8 +971,8 @@ No canonical `ASM-*` is allocated at this point. Do not convert open items below
 | ID | Severity | Impact / required decision |
 |---|---|---|
 | Q-PLATFORM-001 | Blocker | The authoritative SRS v1.1 must be available as readable text before complete SRS reconciliation can be certified. This blocks claims of complete source coverage, not the already approved derivative requirement identities preserved here. |
-| Q-CATALOG-001 | Major | The 26 provisional dental-service records require licensed clinical approval before production medical readiness. |
-| Q-ELIG-001 | Major | Production S/P/H/I formulas, weights, thresholds, deadlines, and defaults require licensed clinical approval; provisional values remain versioned/configurable evaluation policy. |
+| Q-CATALOG-001 | Major | Narrowed on 2026-08-25 by `PO-2026-08-25-syria-catalog-pricing-governance`. **Resolved sub-parts:** the catalog now has an approved two-layer shape (`FR-CATALOG-002`), the customer spreadsheet supplies a materially stronger candidate detailed-procedure dataset, and the governance model for changing catalog content is settled. **Still open:** licensed clinical approval of production service and procedure content, including inclusions, exclusions, service risk level, evidence, follow-up, and completion rules, before any of it becomes production medical content (`FR-CATALOG-003`). |
+| Q-ELIG-001 | Major | Narrowed on 2026-08-25 by `PO-2026-08-25-syria-catalog-pricing-governance`. **Resolved sub-part:** the internal `P` direction is settled as provider actual price compared against a market-calibrated versioned price policy (`FR-ELIG-019`), and the spreadsheet's fixed A/B/C/D/F multipliers are rejected as production logic. **Still open:** production S/H/I formulas, weights, thresholds, grade bands, deadlines, and clinical defaults require licensed clinical approval, as do the production calibration thresholds and any minimum/allowed scientific grade attached to a procedure definition. |
 | Q-PLATFORM-002 | Major | Final retention/deletion periods require applicable legal/compliance validation. |
 | Q-OPS-001 | Major | Production hosting/deployment topology/provider is not established. Infrastructure documentation must remain provider-neutral until resolved. |
 | Q-PLATFORM-003 | Resolved for interaction; provider selection open | Resolved 2026-08-25 by `PO-UX-17`: the evidence-transfer interaction contract is fixed and provider-neutral (`API-PLATFORM-001`, `STATE_MACHINES.md` section 21.1), and the patient notification surface is confirmed (`FR-PLATFORM-001`). Selecting the concrete OTP, malware-scanning, private-storage, and notification-delivery vendors remains an infrastructure decision tracked by `Q-OPS-001`; provider contracts must still not be invented. |
@@ -870,7 +988,13 @@ No canonical `ASM-*` is allocated at this point. Do not convert open items below
 - Do not treat `PENDING_EVALUATION` as `F`.
 - Do not use patient review rating `R` as scientific eligibility/classification.
 - Do not present raw internal `I` to patients as a rating, accusation, or quality score.
-- Do not present the 26 evaluation catalog records as clinically production-approved.
+- Do not present the current evaluation catalog records as clinically production-approved, and do not treat their count, names, or grouping as fixed product truth.
+- Do not hard-code catalog content, family or procedure identities, service risk levels, price bands, market-sample thresholds, price-display logic, inclusion or exclusion rules, additional-cost categories, exchange rates or rate sources, rounding rules, or proposal-validity periods into controllers, actions, panel resources, mobile code, seeders-as-production-truth, `.env`, static arrays, or condition chains. Represent them as governed data or versioned policy per `BP-15`.
+- Do not adopt a fixed ratio of a market comparison value as a pricing class rule, and do not describe reference prices as a market average without sufficient evidenced calibration.
+- Do not require a positive price for a service to be production-ready; a governed zero-cost service is valid.
+- Do not let a service risk level alone decide provider eligibility, and do not name it `R`, which belongs to the verified patient-experience rating.
+- Do not accept a charge that no governed category, reason, and patient-visible meaning explains.
+- Do not build a general rule-scripting engine, dynamic code execution, database-stored code, or a generic workflow or state-machine designer in pursuit of configurability; a genuinely new capability may still require development.
 - Do not activate production medical behavior without required licensed clinical and launch-gate approval.
 - Do not allow current policy/configuration changes to rewrite accepted historical snapshots or prior decision/event history.
 - Do not automate final sensitive medical or high-impact decisions that the confirmed requirements reserve for authorized human review.

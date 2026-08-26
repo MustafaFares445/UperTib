@@ -4,7 +4,7 @@
 **Baseline:** 2026-08-25
 **Input mode:** Docs-Partial — no screen inventory existed to inherit; every `SCR-*` here is derived
 **Platform profiles:** Patient = C · Clinic/Doctor = A · Admin = A
-**Screens defined:** 162 — Patient 47 · Clinic 56 · Admin 59
+**Screens defined:** 165 — Patient 47 · Clinic 56 · Admin 62
 **Registry:** `docs/README.md` — `SCR-*` allocations appended by this phase
 
 ## 1. Purpose and Authority
@@ -43,7 +43,7 @@ Modals, drawers, sheets and wizard steps are screens when they own state or acti
 
 | Value | Meaning here |
 |---|---|
-| **New** | No implementation exists. Applies to all 162 screens. |
+| **New** | No implementation exists. Applies to all 165 screens. |
 | **Existing** | Implemented business UI. Zero screens qualify. |
 | **Change required** | Existing UI needing modification. Zero screens qualify. |
 
@@ -86,15 +86,15 @@ Where the same domain appears on more than one platform, the screens are differe
 | Domain | Patient owns | Clinic owns | Admin owns |
 |---|---|---|---|
 | IDENTITY | own identity, representation grants | onboarding application, staff invitations, context | onboarding review, staff grants, provider registry, guardian oversight |
-| CATALOG | browse and understand services | — | definition versions, gates, publication |
-| ELIG | discovery, decision card, explanation, comparison | activation, prices, own status and blockers | verification, decision inspection, policy inputs, suspension ops |
+| CATALOG | browse and understand service families | — | groups, families, procedure items and mapping, definition versions, commercial options, gates, publication |
+| ELIG | discovery, decision card, explanation, comparison | activation, own prices and display modes, own status and blockers | verification, decision inspection, policy inputs, market observations and calibration, suspension ops |
 | BOOKING | request, respond to alternative, cancel | availability, response, schedule, no-show | exception oversight |
-| CLINICAL | read plan, accept, follow case | author plan, stages, evidence, follow-up | purpose-scoped oversight only |
+| CLINICAL | read plan lines and amendment deltas, accept, follow case | author plan lines and modifiers, stages, evidence, follow-up | purpose-scoped oversight only |
 | FINANCE | own terms, own assertions and responses | clinic assertions and responses | dispute review, execution tracking |
 | REVIEWS | submit review, appeal where policy permits | see reviews, appeal | integrity and appeal decisions |
 | CLAIMS | submit, supply evidence, appeal | respond, supply evidence, appeal | intake, deadlines, sensitive decisions, appeals |
 | OPS | — | own work feed | queues, reports, launch readiness |
-| POLICY | — | — | version lifecycle, historical reproduction |
+| POLICY | — | — | version lifecycle, currency and normalization policy, historical reproduction |
 | AUDIT | — | — | audit explorer, integrity exceptions |
 | PLATFORM | home, pending submissions | dashboard | dashboard, privileged auth, evidence access, retention, health |
 
@@ -207,8 +207,8 @@ Panel id `admin`, path `/admin` — both verified in `app/Providers/Filament/Adm
 | Financial records | `SCR-FINANCE-010` through `SCR-FINANCE-012` | `JTBD-FINANCE-005` is daily |
 | Bookings and cases | `SCR-BOOKING-014`, `SCR-BOOKING-015`, `SCR-CLINICAL-018`, `SCR-CLINICAL-019` | Daily to weekly oversight |
 | Reviews | `SCR-REVIEWS-007` through `SCR-REVIEWS-009` | Weekly |
-| Catalog and launch | `SCR-CATALOG-003` through `SCR-CATALOG-009`, `SCR-OPS-006` | Rare, and rare-and-blocking — needs to be discoverable, not memorised |
-| Policy | `SCR-POLICY-001` through `SCR-POLICY-004` | Rare |
+| Catalog and launch | `SCR-CATALOG-003` through `SCR-CATALOG-011`, `SCR-OPS-006` | Rare, and rare-and-blocking — needs to be discoverable, not memorised. `SCR-CATALOG-010` and `SCR-CATALOG-011` are the newly governed procedure and commercial layers and belong here rather than under Policy, because their actor is the catalog administrator |
+| Policy | `SCR-POLICY-001` through `SCR-POLICY-004`, `SCR-ELIG-023` | Rare. `SCR-ELIG-023` market calibration keeps its `ELIG` domain because it feeds the eligibility decision, but its actor is the commercial administrator, which is why it navigates from Policy rather than from Verification |
 | Audit and integrity | `SCR-AUDIT-001` through `SCR-AUDIT-004` | Rare, urgent when used |
 | Access and staff | `SCR-IDENTITY-033` through `SCR-IDENTITY-035`, `SCR-IDENTITY-038` | Weekly. `SCR-IDENTITY-038` legal-representation verification is rare and reached primarily from the work queue |
 | Reporting | `SCR-OPS-004`, `SCR-OPS-005` | Weekly |
@@ -227,7 +227,7 @@ All eleven Admin roles land on `SCR-PLATFORM-004`. What that dashboard contains 
 | Review integrity reviewer | `SCR-REVIEWS-007` |
 | Claim / dispute reviewer | `SCR-CLAIMS-009` |
 | Finance reviewer | `SCR-FINANCE-010` |
-| Policy owner / reviewer | `SCR-POLICY-001`, `SCR-CATALOG-004` |
+| Policy owner / reviewer | `SCR-POLICY-001`, `SCR-CATALOG-004`, `SCR-ELIG-023` |
 | Product / operations owner | `SCR-OPS-004`, `SCR-OPS-006` |
 | Legal accountable owner | `SCR-CATALOG-006` |
 | Technical accountable owner | `SCR-CATALOG-006`, `SCR-PLATFORM-008` |
@@ -242,6 +242,10 @@ Twelve rows for eleven roles: the authorized auditor is listed separately becaus
 Derived from `ADMIN_IMPLEMENTATION_PLAN.md` section 10 and `PERMISSIONS_MATRIX` sections 5, 8, 9, 10, 11:
 
 - any control that sets final `S`, `P`, `H`, `I` or eligibility;
+- any control that activates a clinically meaningful procedure-definition change without the licensed clinical reviewer's approval, or that lets a drafter approve their own draft;
+- any control that promotes evaluation-audience catalog content to production by toggling visibility, activation, or an effective date;
+- any in-place edit of a recorded market observation, a clinic's historical price assertion, or an accepted plan line;
+- any surface labelling a price a market or city average while calibration is non-final;
 - any clinical authoring surface — Admin oversight never authors a diagnosis or treatment plan;
 - any generic hard-delete on an immutable or append-only record;
 - any pay, wallet, balance, transfer, settle or platform-refund affordance;
@@ -588,6 +592,9 @@ flowchart TD
         SCR_CATALOG_007["SCR-CATALOG-007 Record gate decision"]
         SCR_CATALOG_008["SCR-CATALOG-008 Publish definition"]
         SCR_CATALOG_009["SCR-CATALOG-009 Reviewer credentials"]
+        SCR_CATALOG_010["SCR-CATALOG-010 Procedure catalog and family mapping"]
+        SCR_CATALOG_011["SCR-CATALOG-011 Commercial rules and modifiers"]
+        SCR_ELIG_023["SCR-ELIG-023 Market observations and calibration"]
         SCR_OPS_006["SCR-OPS-006 Launch readiness overview"]
     end
     subgraph APOL["Policy"]
@@ -665,6 +672,14 @@ flowchart TD
     SCR_CATALOG_006 --> SCR_CATALOG_007
     SCR_CATALOG_006 --> SCR_CATALOG_009
     SCR_CATALOG_006 --> SCR_CATALOG_008
+    SCR_CATALOG_003 --> SCR_CATALOG_010
+    SCR_CATALOG_010 --> SCR_CATALOG_005
+    SCR_CATALOG_010 --> SCR_CATALOG_004
+    SCR_PLATFORM_004 --> SCR_CATALOG_011
+    SCR_CATALOG_011 --> SCR_ELIG_023
+    SCR_POLICY_001 --> SCR_ELIG_023
+    SCR_ELIG_023 --> SCR_POLICY_002
+    SCR_ELIG_018 --> SCR_ELIG_023
     SCR_OPS_006 --> SCR_CATALOG_006
     SCR_PLATFORM_004 --> SCR_OPS_006
     SCR_PLATFORM_004 --> SCR_POLICY_001
@@ -785,8 +800,8 @@ The last row is the public onboarding portal and the invitation-acceptance surfa
 | Depth | Screens | Count |
 |---:|---|---:|
 | 0 | `SCR-PLATFORM-004` | 1 |
-| 1 | `SCR-OPS-002`, `SCR-OPS-004`, `SCR-OPS-006`, `SCR-IDENTITY-027`, `SCR-IDENTITY-033`, `SCR-IDENTITY-035`, `SCR-ELIG-014`, `SCR-CLAIMS-009`, `SCR-FINANCE-010`, `SCR-BOOKING-014`, `SCR-CLINICAL-018`, `SCR-REVIEWS-007`, `SCR-CATALOG-003`, `SCR-POLICY-001`, `SCR-AUDIT-001`, `SCR-PLATFORM-006`, `SCR-PLATFORM-007`, `SCR-PLATFORM-008` | 18 |
-| 2 | `SCR-OPS-003`, `SCR-OPS-005`, `SCR-IDENTITY-028`, `SCR-IDENTITY-034`, `SCR-ELIG-015`, `SCR-CLAIMS-010`, `SCR-FINANCE-011`, `SCR-FINANCE-012`, `SCR-BOOKING-015`, `SCR-CLINICAL-019`, `SCR-REVIEWS-008`, `SCR-CATALOG-004`, `SCR-CATALOG-006`, `SCR-POLICY-002`, `SCR-POLICY-004`, `SCR-AUDIT-002`, `SCR-AUDIT-003` | 17 |
+| 1 | `SCR-OPS-002`, `SCR-OPS-004`, `SCR-OPS-006`, `SCR-IDENTITY-027`, `SCR-IDENTITY-033`, `SCR-IDENTITY-035`, `SCR-ELIG-014`, `SCR-CLAIMS-009`, `SCR-FINANCE-010`, `SCR-BOOKING-014`, `SCR-CLINICAL-018`, `SCR-REVIEWS-007`, `SCR-CATALOG-003`, `SCR-CATALOG-011`, `SCR-POLICY-001`, `SCR-AUDIT-001`, `SCR-PLATFORM-006`, `SCR-PLATFORM-007`, `SCR-PLATFORM-008` | 19 |
+| 2 | `SCR-OPS-003`, `SCR-OPS-005`, `SCR-IDENTITY-028`, `SCR-IDENTITY-034`, `SCR-ELIG-015`, `SCR-CLAIMS-010`, `SCR-FINANCE-011`, `SCR-FINANCE-012`, `SCR-BOOKING-015`, `SCR-CLINICAL-019`, `SCR-REVIEWS-008`, `SCR-CATALOG-004`, `SCR-CATALOG-006`, `SCR-CATALOG-010`, `SCR-ELIG-023`, `SCR-POLICY-002`, `SCR-POLICY-004`, `SCR-AUDIT-002`, `SCR-AUDIT-003` | 19 |
 | 3 | `SCR-IDENTITY-029`, `SCR-IDENTITY-030`, `SCR-IDENTITY-031`, `SCR-IDENTITY-032`, `SCR-ELIG-016`, `SCR-ELIG-017`, `SCR-ELIG-018`, `SCR-ELIG-020`, `SCR-CLAIMS-011`, `SCR-CLAIMS-012`, `SCR-REVIEWS-009`, `SCR-CATALOG-005`, `SCR-CATALOG-007`, `SCR-CATALOG-008`, `SCR-CATALOG-009`, `SCR-POLICY-003`, `SCR-AUDIT-004` | 17 |
 | 4 | `SCR-IDENTITY-036`, `SCR-ELIG-019`, `SCR-CLAIMS-013` | 3 |
 | — | `SCR-PLATFORM-005` | 1 |
@@ -822,7 +837,7 @@ Shortest authenticated path to submit a booking: `SCR-PLATFORM-001` → `SCR-ELI
 
 **Finding 4 — `SCR-CLINICAL-012` at depth 5 is the deepest Clinic screen and it is a commit step, not browsing.** Author → stages and pricing → propose is an intentional sequence with an irreversible outcome at the end: proposing a plan makes it visible to the patient for acceptance. Depth here is a deliberate friction that the frequency-by-criticality plot supports, since the job is daily but the individual proposal is a considered act.
 
-**Finding 5 — Admin depth is flat by design.** 18 of 59 screens sit at depth 1 and 35 at depth 1 or 2. Eleven roles land on the same dashboard and each needs its own working surface within one or two hops. The alternative — a role-specific landing screen per role — was rejected because navigation visibility already follows active grants, so a shared dashboard with grant-filtered content achieves the same result without eleven near-duplicate screens.
+**Finding 5 — Admin depth is flat by design.** 19 of 62 screens sit at depth 1 and 38 at depth 1 or 2. Eleven roles land on the same dashboard and each needs its own working surface within one or two hops. The alternative — a role-specific landing screen per role — was rejected because navigation visibility already follows active grants, so a shared dashboard with grant-filtered content achieves the same result without eleven near-duplicate screens.
 
 ## 8. Labelling and Taxonomy
 
@@ -833,10 +848,16 @@ Navigation labels are drawn from the canonical glossary in `docs/README.md`. Whe
 | Canonical term (`docs/README.md`) | Admin and Clinic label | Patient label | Basis for translation |
 |---|---|---|---|
 | Evaluation Catalog | Evaluation catalog | not shown to patients | `Q-CATALOG-001` — provisional records must never appear as production content |
+| Service Family | Service family | the service itself, in plain language | `FR-CATALOG-002` — the family is the patient's unit of discovery, so it needs no qualifier |
+| Procedure Item | Procedure item | the specific treatment on a plan line | `FR-CATALOG-002` — the patient meets procedure detail inside a clinician's plan, never as a browsable code list |
+| Price Display Mode | Display mode | free, the price, from that price, that range, or after examination | `FR-ELIG-018` — the mode is a governance concept; the patient reads only its consequence |
+| Market Observation | Market observation | never shown in any form | `FR-ELIG-019` — internal evidence, and calling it an average would assert more than the sample supports |
+| Calibration State | Calibration state | never shown | `FR-ELIG-019` — a non-final state suppresses `P` and changes nothing the patient sees |
+| Service Risk Level | `service_risk_level` | practical eligibility and preparation meaning only | `FR-CATALOG-003` — never abbreviated to `R`, which already means the verified patient review rating |
 | Production Ready | Production ready | not shown | Internal governance concept |
 | Scientific Grade / `S` | Scientific grade | practical eligibility meaning only | `BP-11`, `FR-ELIG-016` — no universal doctor score to the patient |
 | `PENDING_EVALUATION` | Pending evaluation | still being assessed | `BP-05`, `FR-ELIG-008` — must be visibly distinct from grade `F` |
-| Pricing Class / `P` | Pricing class | expected price or price range | `FR-ELIG-009` — `P` is never presented as a quality grade |
+| Pricing Class / `P` | Pricing class | the provider's own price in its display mode | `FR-ELIG-009`, `FR-ELIG-018` — `P` is never presented as a quality grade, never offered as a choice, and never labelled a market average |
 | Protection Level / `H` | Protection level | what is and is not covered | `FR-ELIG-010` — never insurance, reimbursement or a guaranteed result |
 | Risk Profile / `I` | restricted; authorized internal roles only | never shown in any form | `PERMISSIONS_MATRIX` section 5 — raw `I` denied to patient, public and ordinary provider actors |
 | Confidence `K` / `EU` | authorized internal roles only | never shown | `PO-UX-04` prohibition |
@@ -856,6 +877,9 @@ Patient-facing labels above state *required meaning*, not final strings. Final A
 | Application | `SCR-IDENTITY-009` through `SCR-IDENTITY-018` | Confirmed by `PO-UX-02` and `SDC-IDENTITY-001`, which name the states directly. |
 | Onboarding checklist | `SCR-IDENTITY-021` | Named by `PO-UX-02` approval effect 6 and `SDC-IDENTITY-004` projection. |
 | Pending submissions | `SCR-PLATFORM-002` | The user-visible face of `NFR-PLATFORM-006` pending, failed, retrying and completed states plus `idempotency_records`. |
+| Family mapping | `SCR-CATALOG-010` | The effective-dated relation between the two catalog layers named by `FR-CATALOG-002`, not a third catalog concept. |
+| Commercial option | `SCR-CATALOG-011` | The governed selectable named by `FR-CLINICAL-006` and `FR-ELIG-018`, covering all four modifier categories and the price display modes. It is not a price and not a tariff. |
+| Amendment summary | `SCR-CLINICAL-003`, `SCR-CLINICAL-012` | The required disclosure attached to a superseding plan version by `FR-CLINICAL-007`, not a separate record the patient must track. |
 
 ### 8.3 Terminology conflict — resolved
 
@@ -869,6 +893,9 @@ Patient-facing labels above state *required meaning*, not final strings. Final A
 - Never encode eligibility, protection, urgency, status or error meaning in colour alone (`NFR-PLATFORM-005`).
 - One action role keeps one label across all three platforms. A destructive action reads as destructive everywhere it appears, including in its own confirmation.
 - Never name an action in a way that implies UberTib moved money.
+- Never label a price a market average, a city average, a tariff or a recommended price. The provider's own price is the only price the product asserts (`FR-ELIG-018`, `FR-ELIG-019`).
+- Never abbreviate a clinical risk level to `R` on any surface, in any export or in any label, because `R` already means the verified patient review rating. The full `service_risk_level` is the only permitted internal name (`FR-CATALOG-003`).
+- Never name a charge generically. Every amount a patient reads names its category, its reason and what it covers; there is no surcharge, extra, adjustment or other (`FR-CLINICAL-006`).
 
 ## 9. Role Sweep
 
@@ -902,6 +929,8 @@ Authorization rules are not restated — `PERMISSIONS_MATRIX.md` owns them. This
 
 **19 of 19 roles have a landing screen. Zero missing.**
 
+The catalog/product administrator and the commercial/pricing administrator introduced by the 2026-08-25 catalog and pricing decision **add no row here.** `PERMISSIONS_MATRIX.md` section 5 records them as authority scopes rather than job titles: they land on `SCR-PLATFORM-004` like every other Admin actor, and their navigation is grant-filtered as usual. Whether one person may hold both, and what neither may ever do, is an authorization rule that document owns — the IA consequence is only that `SCR-CATALOG-010`, `SCR-CATALOG-011` and `SCR-ELIG-023` are reachable from that landing within two hops, and that none of them exposes a clinical activation control.
+
 System automation is excluded — it is depicted in flows and owns no screen. External regulators, external auditors, developers, testers and infrastructure administrators are excluded because `PERMISSIONS_MATRIX` section 22 establishes no standing production access for them; designing a screen for them would be inventing product behavior.
 
 ### 9.2 Permitted actions with no screen
@@ -919,6 +948,18 @@ Every `Allow` and `Conditional` row in `PERMISSIONS_MATRIX.md` sections 6 throug
 | Manage coarse staff roles | `SCR-IDENTITY-033` | Reachable |
 | Create or change scoped staff grant | `SCR-IDENTITY-034`, and `SCR-IDENTITY-023` for clinic-delegated scope | Reachable |
 | View visible service catalog | `SCR-CATALOG-001`, `SCR-CATALOG-002`, `SCR-CATALOG-003` | Reachable |
+| Create, rename, regroup or retire catalog content | `SCR-CATALOG-003`, `SCR-CATALOG-010` | Reachable |
+| Map or remap a procedure item to a service family | `SCR-CATALOG-010` | Reachable |
+| Author a clinically governed procedure definition | `SCR-CATALOG-005` | Reachable |
+| Approve a clinically meaningful procedure change | `SCR-CATALOG-006`, `SCR-CATALOG-007` | Reachable — the licensed clinical gate, and the drafter cannot be the approver |
+| Maintain approved commercial options and price display modes | `SCR-CATALOG-011` | Reachable |
+| Record or supersede a market price observation | `SCR-ELIG-023` | Reachable |
+| Read calibration state for a locality and scope | `SCR-ELIG-023`, `SCR-ELIG-018` | Reachable |
+| Set a provider price and its governed display mode | `SCR-ELIG-010` | Reachable |
+| Author plan lines and categorized modifiers | `SCR-CLINICAL-011` | Reachable |
+| Compose and propose a disclosed amendment | `SCR-CLINICAL-011`, `SCR-CLINICAL-012` | Reachable |
+| Read an amendment delta and re-accept | `SCR-CLINICAL-003`, `SCR-CLINICAL-004` | Reachable |
+| Maintain currency presentation and normalization policy | `SCR-POLICY-002` | Reachable |
 | Edit draft policy or service-definition content | `SCR-CATALOG-005`, `SCR-POLICY-002` | Reachable |
 | Review policy or definition version | `SCR-CATALOG-004`, `SCR-POLICY-003` | Reachable |
 | Schedule policy or definition version | `SCR-POLICY-003` | Reachable |
@@ -999,7 +1040,12 @@ Checked against every `Deny` row in `PERMISSIONS_MATRIX.md`.
 
 | Denied action | Where it could have leaked | Structural guarantee |
 |---|---|---|
-| Directly set final `S`, `P`, `H`, `I` or eligibility | `SCR-ELIG-008`, `SCR-ELIG-016`, `SCR-ELIG-018`, `SCR-ELIG-019` | No screen in the model carries such a control. `SCR-ELIG-018` is an inspector; `SCR-ELIG-019` edits versioned policy inputs, which is a governed policy change, not an outcome override. |
+| Directly set final `S`, `P`, `H`, `I` or eligibility | `SCR-ELIG-008`, `SCR-ELIG-010`, `SCR-ELIG-016`, `SCR-ELIG-018`, `SCR-ELIG-019`, `SCR-ELIG-023` | No screen in the model carries such a control. `SCR-ELIG-018` is an inspector; `SCR-ELIG-019` and `SCR-ELIG-023` edit versioned policy inputs and evidence, which is a governed policy change, not an outcome override; `SCR-ELIG-010` records a price and never a class. |
+| Activate a clinically meaningful procedure change without licensed clinical approval | `SCR-CATALOG-005`, `SCR-CATALOG-010`, `SCR-CATALOG-011` | Activation lives only behind the gates of `SCR-CATALOG-006` and `SCR-CATALOG-008`. Neither catalog screen carries a visibility, activation or effective-date control that reaches production, and `SCR-CATALOG-007` is gate-type and credential scoped so a drafter cannot approve their own draft. |
+| Promote evaluation content to production by toggling visibility | `SCR-CATALOG-003`, `SCR-CATALOG-004`, `SCR-CATALOG-010` | Audience is a property of the version, not a switch on the screen. Production requires the launch gates, so no toggle exists to find. |
+| Add an uncategorized or unexplained charge | `SCR-CATALOG-011`, `SCR-CLINICAL-011` | Structural: there is no free-text charge field and no other category to select. `ERR-CLINICAL-002` covers only a retired or out-of-scope option. |
+| Edit a recorded market observation, a historical price fact or an accepted plan line in place | `SCR-ELIG-023`, `SCR-ELIG-010`, `SCR-CLINICAL-003` | All three are append-only or superseding by construction; no screen offers an edit affordance on an accepted or historical record. |
+| Label a price a market or city average | `SCR-ELIG-002`, `SCR-ELIG-003`, `SCR-ELIG-005`, `SCR-ELIG-010` | Section 8.4 forbids the label outright, and no patient or Clinic projection carries the corpus, the sample or the calibration state that would be needed to compute one. |
 | Patient or provider sees raw internal `I` | `SCR-ELIG-002`, `SCR-ELIG-003`, `SCR-ELIG-004`, `SCR-ELIG-005`, `SCR-ELIG-011` | Field filtering at the projection, not at the screen. `SCR-ELIG-005` comparison explicitly excludes it per `PO-UX-04`. |
 | Composite best-doctor score | `SCR-ELIG-002`, `SCR-ELIG-005` | No screen computes or displays one. `PO-UX-04` prohibition recorded on both. |
 | Execute, capture, hold, transfer, settle or refund money | every FINANCE screen | No pay, wallet, balance, top-up, withdraw or platform-refund affordance exists anywhere in the model. |
@@ -1029,7 +1075,12 @@ The brief requires an explicit check that internal classification mechanics have
 | Internal concept | Patient exposure in this model | Verdict |
 |---|---|---|
 | `S` scientific grade | None as a symbol. Practical eligibility meaning only, on `SCR-ELIG-003`, `SCR-ELIG-004`, `SCR-ELIG-005`. | Pass |
-| `P` pricing class | None. Expected or actual price only. | Pass |
+| `P` pricing class | None. The provider's own price in its governed display mode only, and never as a menu the patient or provider selects from. | Pass |
+| `pricing_class_state` calibration qualifier | None. A non-final state suppresses `P` internally and leaves the displayed price and its mode untouched, so the patient cannot detect it. | Pass |
+| Market observation corpus, window, sample and confidence rules | None on any patient surface, and none on any Clinic surface either — a provider is never shown where their price sits in the distribution. | Pass |
+| Procedure item codes, billing units and family mapping | None as a browsable or selectable structure. A procedure appears only as a plain-language line inside a clinician-authored plan, with its quantity and unit stated in ordinary words. | Pass |
+| `service_risk_level` | None in any form. Its consequences may surface as practical eligibility or preparation meaning; the level itself does not. | Pass |
+| Currency normalization rate, source and rounding policy | None as policy. The agreed amount and its currency are shown; any converted figure is labelled an indication and never replaces the agreed amount. | Pass |
 | `H` protection level | None as a symbol. Practical protection meaning, explicitly not insurance or a funded guarantee. | Pass |
 | `I` internal risk | None in any form on any patient surface. | Pass |
 | `K`, `EU` confidence | None. | Pass |
@@ -1041,7 +1092,9 @@ The brief requires an explicit check that internal classification mechanics have
 
 **Zero patient screens require the patient to understand or manipulate an internal classification concept. Zero patient screens contain a control that selects one.**
 
-The same check applied to the Clinic panel, because `FR-ELIG-007` extends the prohibition there: `SCR-ELIG-008` captures questionnaire answers and facts only, and `SCR-ELIG-011` and `SCR-ELIG-012` present computed status and actionable blockers with no override control. `SCR-ELIG-011` may show safe scientific-grade meaning where authorized per `SDC-ELIG-003`, and excludes raw `I`.
+The same check applied to the Clinic panel, because `FR-ELIG-007` extends the prohibition there: `SCR-ELIG-008` captures questionnaire answers and facts only, and `SCR-ELIG-011` and `SCR-ELIG-012` present computed status and actionable blockers with no override control. `SCR-ELIG-011` may show safe scientific-grade meaning where authorized per `SDC-ELIG-003`, and excludes raw `I`. `SCR-ELIG-010` extends the same rule to pricing: the provider records a price and picks a governed display mode, and cannot select, propose or negotiate `P`, a grade or a calibration input. The whole market-calibration surface is a single Admin screen, `SCR-ELIG-023`, which is why no Clinic screen needs to hide it.
+
+**A fourth prohibition is structural rather than presentational.** `SCR-CATALOG-011` exists so that a clinic composing a plan selects from approved commercial options instead of typing an amount with a label of its own invention. There is no free-text charge field on `SCR-CLINICAL-011` and no uncategorized option to select on `SCR-CATALOG-011`, so a hidden or unexplained charge has no surface to originate from. That is the enforcement; `ERR-CLINICAL-002` is only the message for an option that has since been retired or is out of scope.
 
 ## 10. Lifecycle Sweep
 
@@ -1211,6 +1264,8 @@ No status in this machine may be presented as funds held, captured, settled, a w
 | `retired` | Policy owner; Admin | `SCR-CATALOG-004` | none | Any lifecycle change; editing | Retired; historical cases keep their captured version | terminal | New version only | Work where dependent scopes need review |
 | `superseded` | Policy owner; Admin | `SCR-CATALOG-004` | none | Any lifecycle change; editing | Replaced by a newer version, with history intact | terminal | n/a | — |
 
+**Detailed procedure definitions reuse this machine unchanged.** `STATE_MACHINES` section 3 states that `procedure_item_versions` has the same six states, transitions, immutability rule and draft-only deletion rule, so no machine and no status is added to this sweep. `SCR-CATALOG-010` displays those states and `SCR-CATALOG-005` authors them. The only difference is the approval content: a clinically meaningful procedure change additionally requires a licensed clinical reviewer holding a current credential before `active`, and no visibility or activation flag substitutes for it.
+
 ### 10.11 Service launch gate effective state — `STATE_MACHINES` section 4
 
 | Status | Visible to | Screens | Permitted actions | Disabled | Must be communicated | Next | Recovery | Work / notification |
@@ -1301,6 +1356,14 @@ Three distinctions here are interaction requirements rather than labels. `UPLOAD
 
 **Lifecycle statuses never displayed: none. 82 of 82 statuses have a screen and every action valid from them is reachable.**
 
+**The 2026-08-25 Syria catalog and pricing reconciliation added no machine and no status, deliberately.** Three candidates were considered and each resolved into an existing mechanism rather than a new one:
+
+1. **Detailed procedure versions** reuse the service definition machine exactly (section 10.10), so one governance mechanism covers both catalog layers.
+2. **`pricing_class_state`** — `FINAL`, `CALIBRATING`, `PROVISIONAL`, `NOT_APPLICABLE` — is a qualifier on an eligibility decision, not a lifecycle, following the same precedent as escalated and overdue in section 10.14. It adds no transition, is null-guarded so `pricing_class` is absent whenever the state is not `FINAL`, and appears only on `SCR-ELIG-018` and `SCR-ELIG-023`.
+3. **Commercial options and price facts** are versioned governed data whose lifecycle is the policy version machine of section 10.13; a change supersedes prospectively and accepted plans keep what they referenced.
+
+This is a design choice, not an omission: a status the actor must learn is a real cost, and none of these three earns one.
+
 **No bounded branches remain.** The two that Phase 1 originally reported were resolved on 2026-08-25:
 
 1. `ALTERNATIVE_PROPOSED` on decline or expiry now closes as `CANCELLED` with reason `ALTERNATIVE_DECLINED` or `ALTERNATIVE_EXPIRED` — `PO-UX-12`, section 10.4.
@@ -1315,7 +1378,7 @@ Three distinctions here are interaction requirements rather than labels. `UPLOAD
 
 ## 11. Screen Catalog
 
-162 screens. Every one is `New` — no business UI exists to inherit. Every route or resource path is `(Proposed)`; paths are allocated in UX Phase 5, not here.
+165 screens. Every one is `New` — no business UI exists to inherit. Every route or resource path is `(Proposed)`; paths are allocated in UX Phase 5, not here.
 
 `Roles` references `docs/domain/PERMISSIONS_MATRIX.md` rather than restating any rule. `Contract` names the `API-*` or `SDC-*` owner per `PO-UX-05`.
 
@@ -1391,7 +1454,7 @@ Three distinctions here are interaction requirements rather than labels. `UPLOAD
 **Entry points:** `SCR-IDENTITY-001`; Discover navigation
 **Exits:** `SCR-CATALOG-002`; direct search affordance to `SCR-ELIG-001`
 **Lifecycle statuses shown:** production-visible definitions only
-**Notes:** Four groups G01 to G04. Never requires knowledge of `S`, `P`, `H`, `I`, `K`, `EU` or any internal code. Evaluation-mode content must never render as production content (`Q-CATALOG-001`). Empty production catalog is a real state and means services are not available yet, never that no dentistry exists in Aleppo.
+**Notes:** Four groups G01 to G04 leading to patient-facing service families. The number of families is governed catalog data, not a fixed design constant, so the layout must survive families being added, renamed, merged or retired. **Detailed professional procedure items are never listed here** — the patient chooses a family and meets procedure detail only inside a clinician-authored plan after examination (`FR-CATALOG-002`). Never requires knowledge of `S`, `P`, `H`, `I`, `K`, `EU`, a procedure code or any internal code. Evaluation-mode content must never render as production content (`Q-CATALOG-001`). Empty production catalog is a real state and means services are not available yet, never that no dentistry exists in Aleppo.
 
 ### SCR-CATALOG-002 — Service detail
 **Platform:** Patient (C) · **Classification:** New · **Derived:** pending confirmation
@@ -1403,7 +1466,7 @@ Three distinctions here are interaction requirements rather than labels. `UPLOAD
 **Entry points:** `SCR-CATALOG-001`
 **Exits:** `SCR-ELIG-001` with the service context carried
 **Lifecycle statuses shown:** clinical review state where it affects availability meaning
-**Notes:** Non-diagnostic purpose text only. Must not recommend treatment or imply a clinical opinion. Carries `service_code` forward, which `API-ELIG-001` requires.
+**Notes:** Non-diagnostic purpose text only. Must not recommend treatment or imply a clinical opinion. Carries `service_code` forward, which `API-ELIG-001` requires. Describes one service family, so it may name what the family typically covers in plain language but must not present the family's mapped procedure items as a selectable or priced list, since only a clinician decides which procedure applies.
 
 ### SCR-ELIG-001 — Provider search
 **Platform:** Patient (C) · **Classification:** New · **Derived:** pending confirmation
@@ -1427,7 +1490,7 @@ Three distinctions here are interaction requirements rather than labels. `UPLOAD
 **Entry points:** `SCR-ELIG-001`
 **Exits:** `SCR-ELIG-003`; `SCR-ELIG-005` with two or three selections; `SCR-BOOKING-001` directly from a row
 **Lifecycle statuses shown:** `ELIGIBLE` only — failing and pending scopes are absent from bookable results
-**Notes:** Every row is a full decision card scoped to one doctor, service and branch. No universal doctor score, no composite ranking, no raw `I`. Owns the comparison selection region, capped at three per `PO-UX-04`; the tray is a region here, not a separate screen. Empty-filtered and empty-no-data are distinct states with different recovery.
+**Notes:** Every row is a full decision card scoped to one doctor, service and branch. No universal doctor score, no composite ranking, no raw `I`. Each row's price obeys the provider's governed display mode — free, a fixed amount, a from-amount, a range, or requires-a-plan — and a from-amount or range must read as a starting point or span rather than as a quoted total (`FR-ELIG-018`). **No row may label a price a market or city average**, because the calibration behind the internal comparison is neither patient-facing nor necessarily final. Owns the comparison selection region, capped at three per `PO-UX-04`; the tray is a region here, not a separate screen. Empty-filtered and empty-no-data are distinct states with different recovery.
 
 ### SCR-ELIG-003 — Provider decision card
 **Platform:** Patient (C) · **Classification:** New · **Derived:** pending confirmation
@@ -1439,7 +1502,7 @@ Three distinctions here are interaction requirements rather than labels. `UPLOAD
 **Entry points:** `SCR-ELIG-002`; `SCR-ELIG-005`
 **Exits:** `SCR-ELIG-004`; `SCR-BOOKING-001`
 **Lifecycle statuses shown:** practical eligibility meaning; assessment time
-**Notes:** Scoped to one doctor, service and branch — never a provider profile spanning services, because eligibility is contextual per `BP-02`. Price is expected or actual, never `P` as a quality grade. Protection is presented as its meaning with funded protection disabled, never as insurance or a guarantee. Optional in the booking path: a result row already carries this data, so this screen deepens rather than gates.
+**Notes:** Scoped to one doctor, service and branch — never a provider profile spanning services, because eligibility is contextual per `BP-02`. Price is the provider's own recorded price rendered in its governed display mode, never `P` as a quality grade and never a claimed market average; a legitimately free service reads as free rather than as missing data, and requires-a-plan reads as a price that only an examination can settle (`FR-ELIG-018`). Protection is presented as its meaning with funded protection disabled, never as insurance or a guarantee. Optional in the booking path: a result row already carries this data, so this screen deepens rather than gates.
 
 ### SCR-ELIG-004 — Eligibility explanation
 **Platform:** Patient (C) · **Classification:** New · **Derived:** pending confirmation
@@ -1463,7 +1526,7 @@ Three distinctions here are interaction requirements rather than labels. `UPLOAD
 **Entry points:** `SCR-ELIG-002` with two or three selections
 **Exits:** `SCR-ELIG-003` for one option; `SCR-ELIG-004`; `SCR-BOOKING-001` for the chosen option
 **Lifecycle statuses shown:** practical eligibility and availability meaning per option; assessment time per option
-**Notes:** Confirmed V1 behavior. Two or three options, same requested service context — a cross-service comparison is not allowed. Transient session state; no saved or favourited comparison exists in V1. Compares provider identity, exact branch and area, selected service, practical eligibility and availability meaning, last assessment where applicable, actual or expected price, patient-safe protection meaning, verified review rating and count where available, and nearest appointment where available. Must not compute or display a composite best-doctor score, expose raw `I`, `K`, `EU` or any formula, or imply price or reviews change scientific eligibility. An option that stops being eligible is marked unavailable and loses its booking action rather than silently remaining bookable. Booking enters the ordinary path and performs the normal booking-time revalidation — comparison never bypasses it.
+**Notes:** Confirmed V1 behavior. Two or three options, same requested service context — a cross-service comparison is not allowed. Transient session state; no saved or favourited comparison exists in V1. Compares provider identity, exact branch and area, selected service, practical eligibility and availability meaning, last assessment where applicable, the provider's own price in its governed display mode, patient-safe protection meaning, verified review rating and count where available, and nearest appointment where available. Must not compute or display a composite best-doctor score, expose raw `I`, `K`, `EU` or any formula, or imply price or reviews change scientific eligibility. An option that stops being eligible is marked unavailable and loses its booking action rather than silently remaining bookable. Booking enters the ordinary path and performs the normal booking-time revalidation — comparison never bypasses it.
 
 ### SCR-BOOKING-001 — Slot selection
 **Platform:** Patient (C) · **Classification:** New · **Derived:** pending confirmation
@@ -1571,7 +1634,7 @@ Three distinctions here are interaction requirements rather than labels. `UPLOAD
 **Entry points:** `SCR-CLINICAL-002`; `SCR-PLATFORM-001`; deep link
 **Exits:** `SCR-CLINICAL-004` when proposed; `SCR-FINANCE-001` when accepted
 **Lifecycle statuses shown:** `PROPOSED`, `ACCEPTED`
-**Notes:** Serves both lifecycle states because the content and contract are identical and only the available action differs — a state variant, not two screens. Must identify the treating dentist as author and must never imply platform diagnosis. An accepted version carries no edit affordance of any kind.
+**Notes:** Serves both lifecycle states because the content and contract are identical and only the available action differs — a state variant, not two screens. Must identify the treating dentist as author and must never imply platform diagnosis. An accepted version carries no edit affordance of any kind. The plan is read as structured lines — what the procedure is in plain language, quantity and unit, unit and line amount, what the line includes and excludes, and any material upgrade, third-party cost or quantity change stated as its own identified item with a reason (`FR-CLINICAL-006`). **No line may be an unexplained surcharge and no included component may appear twice**, so a line the patient cannot read a meaning for is a defect rather than a display choice. When this version supersedes an earlier one, the delta — what changed, why, which lines, and the price difference — is part of the reading, not a footnote (`FR-CLINICAL-007`).
 
 ### SCR-CLINICAL-004 — Plan acceptance
 **Platform:** Patient (C) · **Classification:** New · **Derived:** pending confirmation
@@ -1583,7 +1646,7 @@ Three distinctions here are interaction requirements rather than labels. `UPLOAD
 **Entry points:** `SCR-CLINICAL-003`
 **Exits:** `SCR-CLINICAL-003` with `ACCEPTED`; `SCR-FINANCE-001`
 **Lifecycle statuses shown:** `ACCEPTED`
-**Notes:** The highest-consequence patient action in the product. Idempotency key required; concurrent acceptance cannot produce two accepted outcomes. Acceptance atomically creates the accepted clinical and financial snapshots. `ERR-CLINICAL-001` covers a stale or incomplete version and must present as the plan needing updating, not as patient error. A failed acceptance creates no partial snapshot. The permanence of what is being accepted must be evident before the action, not explained after it.
+**Notes:** The highest-consequence patient action in the product. Idempotency key required; concurrent acceptance cannot produce two accepted outcomes. Acceptance atomically creates the accepted clinical and financial snapshots. `ERR-CLINICAL-001` covers a stale or incomplete version and must present as the plan needing updating, not as patient error. A failed acceptance creates no partial snapshot. The permanence of what is being accepted must be evident before the action, not explained after it. `ERR-CLINICAL-002` covers a line whose commercial option is uncategorized, retired or not selectable and must likewise present as the plan needing correction by the clinic. Accepting an amendment is the same action against the superseding version: the patient must be able to see the stated delta and the price difference before accepting, and an unaccepted amendment governs nothing (`FR-CLINICAL-007`).
 
 ### SCR-CLINICAL-005 — Case timeline
 **Platform:** Patient (C) · **Classification:** New · **Derived:** pending confirmation
@@ -1631,7 +1694,7 @@ Three distinctions here are interaction requirements rather than labels. `UPLOAD
 **Entry points:** `SCR-CLINICAL-002`; `SCR-CLINICAL-003` when accepted
 **Exits:** `SCR-FINANCE-002`
 **Lifecycle statuses shown:** snapshot version; protection state
-**Notes:** Immutable. Shows service, stages, amounts, currency, due structure, cancellation and refund terms, protection terms and governing policy versions. When an amendment exists, the historical snapshot remains reachable because it governs earlier events. No edit affordance. No language implying UberTib collects or holds the money.
+**Notes:** Immutable. Shows service, stages, accepted lines and their amounts, currency, due structure, cancellation and refund terms, protection terms and governing policy versions. The amount is shown in the currency that was agreed, and a later exchange-rate, rounding or currency-policy change never recomputes it (`FR-POLICY-003`) — a converted figure, where one is shown at all, is labelled as an indication alongside the agreed amount rather than replacing it. When an amendment exists, the historical snapshot remains reachable because it governs earlier events. No edit affordance. No language implying UberTib collects or holds the money.
 
 ### SCR-FINANCE-002 — Financial timeline
 **Platform:** Patient (C) · **Classification:** New · **Derived:** pending confirmation
@@ -1823,7 +1886,7 @@ Three distinctions here are interaction requirements rather than labels. `UPLOAD
 **Entry points:** `SCR-IDENTITY-005`
 **Exits:** `SCR-IDENTITY-007`
 **Lifecycle statuses shown:** grant effective status on creation
-**Notes:** Captures subject patient, grantee, actions, data scope, purpose, effective period and legal or grant basis. Idempotency required to prevent duplicate equivalent grants. `PERMISSIONS_MATRIX` permits creation by "patient or authorized legal-basis workflow" but that second path has no defined actor or surface — recorded as `Q-IDENTITY-001`, which affects a dependent who cannot self-grant.
+**Notes:** Captures subject patient, grantee, actions, data scope, purpose, effective period and legal or grant basis. Idempotency required to prevent duplicate equivalent grants. `PERMISSIONS_MATRIX` permits creation by "patient or authorized legal-basis workflow" but that second path has no defined actor or surface — resolved by `PO-UX-14`, which routes the legal-basis path through Admin Verification approval on `API-IDENTITY-006` and `SDC-IDENTITY-005` so a guardian can never self-authorize a dependent's grant.
 
 ### SCR-IDENTITY-007 — Grant detail
 **Platform:** Patient (C) · **Classification:** New · **Derived:** pending confirmation
@@ -2129,7 +2192,7 @@ Panel id `clinic`, path `/clinic` — both `(Proposed)`. All 56 are `New`; no Cl
 **Entry points:** `SCR-PLATFORM-003`; Clinic navigation
 **Exits:** `SCR-BOOKING-009`, `SCR-ELIG-012`, `SCR-CLAIMS-007`, `SCR-CLINICAL-017`, `SCR-CLINICAL-014`
 **Lifecycle statuses shown:** work item type, linked resource, priority, due time, blocking reason
-**Notes:** The depth-reduction mechanism for the panel — it brings three otherwise depth-3 daily-blocking jobs to depth 2. Filtered to the actor's active grants. Completing a work item never changes the source record; only an authorized domain action does. **The work-item state vocabulary is not finalized upstream (`Q-OPS-002`)**, so this screen is defined structurally and its state labels and filters are deferred.
+**Notes:** The depth-reduction mechanism for the panel — it brings three otherwise depth-3 daily-blocking jobs to depth 2. Filtered to the actor's active grants. Completing a work item never changes the source record; only an authorized domain action does. The work-item state vocabulary is `OPEN`, `ASSIGNED`, `IN_PROGRESS`, `WAITING` and `COMPLETED` per `PO-UX-08`, with escalated and overdue as independent flags this screen must render separately rather than collapse into one status column.
 
 ### SCR-ELIG-006 — Provider and branch facts
 **Platform:** Clinic (A) · **Build type:** Extended · **Classification:** New · **Derived:** pending confirmation
@@ -2189,7 +2252,7 @@ Panel id `clinic`, path `/clinic` — both `(Proposed)`. All 56 are `New`; no Cl
 **Entry points:** `SCR-ELIG-008`; `SCR-ELIG-011`
 **Exits:** `SCR-ELIG-011`
 **Lifecycle statuses shown:** effective price period; derived pricing meaning where authorized
-**Notes:** Price is a source fact. `P` is computed from it against versioned bands and is never editable here and never shown as a quality grade. A currency or scope mismatch prevents calculation with an explicit reason. Changes apply prospectively and never alter an accepted historical snapshot.
+**Notes:** Price is a source fact recorded with its catalog scope, branch, currency, effective period and governed display mode — free, fixed, from, range, or requires-a-plan — selected from the approved options rather than typed (`FR-ELIG-018`). A zero amount is a valid free service, not an incomplete record. `P` is computed from the price against the versioned market-calibrated policy, is never editable here, is never offered as a menu of grades, and is never shown as a quality grade. A currency or scope mismatch prevents calculation with an explicit reason, and so does a scope whose calibration is not final — the provider's own price is unaffected either way. A replacement supersedes the previous fact rather than overwriting it: changes apply prospectively and never alter an accepted historical snapshot.
 
 ### SCR-ELIG-011 — Eligibility status
 **Platform:** Clinic (A) · **Build type:** Custom · **Classification:** New · **Derived:** pending confirmation
@@ -2225,7 +2288,7 @@ Panel id `clinic`, path `/clinic` — both `(Proposed)`. All 56 are `New`; no Cl
 **Entry points:** `SCR-ELIG-011`; `SCR-PLATFORM-003`; notification intent
 **Exits:** `SCR-ELIG-012`
 **Lifecycle statuses shown:** `SUSPENDED`; affected provider, service and branch scope; controlling dependency
-**Notes:** Only dependent scopes are suspended, so the screen must be precise about which combinations are affected and which are unaffected. New bookings in the affected scope stop immediately. **Existing bookings enter a review workflow whose actor, state effect, deadline and outcome are unresolved under `Q-BOOKING-002`** — this screen states that existing bookings are under review and does not assert an outcome.
+**Notes:** Only dependent scopes are suspended, so the screen must be precise about which combinations are affected and which are unaffected. New bookings in the affected scope stop immediately. Existing bookings enter `ELIGIBILITY_REVIEW` per `PO-UX-13` and are worked on `SCR-ELIG-022` to either `CONFIRMED` or `CANCELLED` with reason `PROVIDER_ELIGIBILITY_SUSPENDED`; this screen states which bookings are held and links to that review rather than asserting an outcome itself.
 
 ### SCR-BOOKING-007 — Availability and slots
 **Platform:** Clinic (A) · **Build type:** Custom · **Classification:** New · **Derived:** pending confirmation
@@ -2357,7 +2420,7 @@ Panel id `clinic`, path `/clinic` — both `(Proposed)`. All 56 are `New`; no Cl
 **Entry points:** `SCR-CLINICAL-010`
 **Exits:** `SCR-CLINICAL-012`
 **Lifecycle statuses shown:** `DRAFT`; per-section completeness
-**Notes:** Missing required service, stage, price, terms or policy information blocks proposal and later acceptance (`ERR-CLINICAL-001`), so completeness must be visible while authoring rather than discovered at acceptance. What the patient will see should be evident to the author.
+**Notes:** Missing required service, stage, price, terms or policy information blocks proposal and later acceptance (`ERR-CLINICAL-001`), so completeness must be visible while authoring rather than discovered at acceptance. Commercial content is authored as structured lines — procedure item and its active definition version, quantity and unit, unit and line amount, inclusions and exclusions — and any material upgrade, third-party cost or quantity change is attached to its line as a categorized modifier chosen from the approved commercial options with a reason (`FR-CLINICAL-006`). **There is no free-text surcharge field**; an uncategorized, retired or unselectable option fails as `ERR-CLINICAL-002` here rather than reaching the patient. Charging a component already inside a line's inclusions is a duplicate and is refused. What the patient will see should be evident to the author.
 
 ### SCR-CLINICAL-012 — Propose plan
 **Platform:** Clinic (A) · **Build type:** Custom · **Classification:** New · **Derived:** pending confirmation
@@ -2369,7 +2432,7 @@ Panel id `clinic`, path `/clinic` — both `(Proposed)`. All 56 are `New`; no Cl
 **Entry points:** `SCR-CLINICAL-011`
 **Exits:** `SCR-CLINICAL-009`
 **Lifecycle statuses shown:** `DRAFT` before, `PROPOSED` after
-**Notes:** The deepest Clinic screen and deliberately so — proposing makes the plan patient-visible and starts the acceptance path. Unavailable while required information is absent. A proposed version the patient has viewed must not be silently replaced; a change is a new version.
+**Notes:** The deepest Clinic screen and deliberately so — proposing makes the plan patient-visible and starts the acceptance path. Unavailable while required information is absent. A proposed version the patient has viewed must not be silently replaced; a change is a new version. When the version supersedes an accepted one, an amendment summary stating what changed, why, which lines and the price difference is required before proposal, and the patient must re-accept before any of it governs anything (`FR-CLINICAL-007`) — so the author must see that they are composing a disclosure, not editing a plan.
 
 ### SCR-CLINICAL-013 — Plan version history
 **Platform:** Clinic (A) · **Build type:** Extended · **Classification:** New · **Derived:** pending confirmation
@@ -2563,9 +2626,9 @@ Panel id `clinic`, path `/clinic` — both `(Proposed)`. All 56 are `New`; no Cl
 **Lifecycle statuses shown:** booking `ELIGIBILITY_REVIEW`; the owning eligibility scope's `SUSPENDED` state
 **Notes:** Start and complete are **absent, not merely disabled with an error on submit** — the appointment is not attendable while the suspension stands. The screen names the controlling dependency and the review due time so the clinic can act on the cause rather than the symptom. It offers no override, because none exists at any role.
 
-### 11.3 Admin panel — 59 screens
+### 11.3 Admin panel — 62 screens
 
-Panel id `admin`, path `/admin` — both verified in `app/Providers/Filament/AdminPanelProvider.php`. The shell exists; all 59 domain screens are `New`.
+Panel id `admin`, path `/admin` — both verified in `app/Providers/Filament/AdminPanelProvider.php`. The shell exists; all 62 domain screens are `New`.
 
 ### SCR-PLATFORM-005 — Privileged sign-in
 **Platform:** Admin (A) · **Build type:** Extended · **Classification:** New · **Derived:** pending confirmation
@@ -2721,7 +2784,7 @@ Panel id `admin`, path `/admin` — both verified in `app/Providers/Filament/Adm
 **Entry points:** `SCR-PLATFORM-004`; Catalog navigation
 **Exits:** `SCR-CATALOG-004`
 **Lifecycle statuses shown:** service existence; active definition presence
-**Notes:** Four groups G01 to G04 and 26 provisional service records. **These are provisional evaluation records, not clinically approved production content (`Q-CATALOG-001`)** — the screen must say so, because a catalog naturally reads as approved.
+**Notes:** Presents the three governed layers — service groups, the patient-facing service families beneath them, and the count of detailed procedure items mapped into each family — because an administrator cannot reason about a change without seeing which layer it lands on. The current record count is governed data and is never stated as a design constant; the screen must read correctly whether a group holds one family or thirty. **The seeded records are provisional evaluation content, not clinically approved production content (`Q-CATALOG-001`)** — the screen must say so, because a catalog naturally reads as approved. Renaming, regrouping and retiring are ordinary governed actions here; a referenced identity is superseded rather than repurposed, so history keeps resolving what it was planned against (`FR-CATALOG-002`).
 
 ### SCR-CATALOG-004 — Definition versions
 **Platform:** Admin (A) · **Build type:** Extended · **Classification:** New · **Derived:** pending confirmation
@@ -2745,7 +2808,7 @@ Panel id `admin`, path `/admin` — both verified in `app/Providers/Filament/Adm
 **Entry points:** `SCR-CATALOG-004`
 **Exits:** `SCR-CATALOG-004`
 **Lifecycle statuses shown:** `draft`; required-card completeness
-**Notes:** Draft only. Publication requires a complete production card, so completeness must be visible while editing. Patient-facing content must be understandable without any internal classification symbol per `FR-CATALOG-001`.
+**Notes:** Draft only. Publication requires a complete production card, so completeness must be visible while editing. Patient-facing content must be understandable without any internal classification symbol per `FR-CATALOG-001`. The clinically governed fields — clinical scope, `service_risk_level`, minimum practitioner qualification, required equipment, evidence expectations, inclusions and exclusions, follow-up, completion and escalation rules — are authored here but **a clinically meaningful change cannot activate on the drafter's authority alone**: it needs the licensed clinical reviewer's approval, and the drafter cannot approve their own draft (`FR-CATALOG-003`). The internal risk field is named `service_risk_level` and never `R`, which already means the verified patient review rating, and it never reaches a patient surface.
 
 ### SCR-CATALOG-006 — Launch gates
 **Platform:** Admin (A) · **Build type:** Custom · **Classification:** New · **Derived:** pending confirmation
@@ -2794,6 +2857,30 @@ Panel id `admin`, path `/admin` — both verified in `app/Providers/Filament/Adm
 **Exits:** `SCR-CATALOG-006`
 **Lifecycle statuses shown:** `verified`, `revoked`, `expired`
 **Notes:** Immutable snapshots; renewal or correction creates a new snapshot rather than editing. An approaching expiry is operationally important because medical readiness fails closed when it lapses, so upcoming expiry must be visible before it happens.
+### SCR-CATALOG-010 — Procedure catalog and family mapping
+**Platform:** Admin (A) · **Build type:** Custom · **Classification:** New · **Derived:** pending confirmation
+**Purpose:** Let the catalog administrator maintain detailed procedure items, their billing units and their effective-dated mapping to patient-facing service families.
+**Serves:** JTBD-CATALOG-004
+**Requirements:** FR-CATALOG-002, FR-CATALOG-003
+**Contract:** SDC-CATALOG-002
+**Roles:** Catalog / product administrator within owned catalog scope; licensed clinical reviewer for clinical content; authorized governance staff read-only
+**Entry points:** `SCR-CATALOG-003`
+**Exits:** `SCR-CATALOG-004`, `SCR-CATALOG-005`
+**Lifecycle statuses shown:** procedure-version `draft`, `reviewed`, `scheduled`, `active`, `retired`, `superseded`; evaluation or production audience; mapping effective period
+**Notes:** The professional layer the patient never browses. A procedure item carries its own billing unit, so the screen must make the unit explicit before anyone prices or maps it — a per-tooth item and a per-session item priced identically is the failure this layer exists to prevent. Mapping is effective-dated and many-to-many: one procedure may serve several families and a family draws on many procedures, and a remapping applies from its effective date forward while every historical plan line keeps resolving the procedure version and mapping it was authored against (`FR-CATALOG-002`). Imported candidate content arrives on the evaluation audience and **cannot become production by toggling visibility, activation or an effective date** — it needs the licensed clinical activation of `SCR-CATALOG-005` and the launch gates of `SCR-CATALOG-006`, so the audience boundary must be unmistakable here. Retirement is prospective: a retired procedure leaves new authoring while accepted plans keep it. The candidate dataset's size is import data, not a product constant, so no count on this screen may be presented as fixed.
+
+### SCR-CATALOG-011 — Commercial rules and modifiers
+**Platform:** Admin (A) · **Build type:** Custom · **Classification:** New · **Derived:** pending confirmation
+**Purpose:** Let the commercial administrator maintain the approved price display modes, material upgrades, third-party cost categories and quantity rules a clinic may select from.
+**Serves:** JTBD-CATALOG-005
+**Requirements:** FR-ELIG-018, FR-CLINICAL-006
+**Contract:** SDC-POLICY-002
+**Roles:** Commercial / pricing administrator within owned scope; authorized governance staff read-only
+**Entry points:** `SCR-PLATFORM-004`; Catalog navigation
+**Exits:** `SCR-ELIG-023`, `SCR-POLICY-001`
+**Lifecycle statuses shown:** option `draft`, `active`, `retired`; effective period; category; whether the option is currently selectable by a clinic
+**Notes:** This screen is the reason a clinic cannot invent a charge. Every option belongs to exactly one of four governed categories — an additional clinical service, a material or option upgrade, an identifiable third-party cost, or a quantity change — and each carries the patient-visible meaning that will be shown on a plan line, because an option whose meaning an administrator cannot write is an option a patient cannot understand. **There is no uncategorized or other-surcharge category and adding one is not an available action**; that absence is the enforcement, not a validation message. A clinical service is not configured here: adding treatment means adding a catalog procedure on `SCR-CATALOG-010` under clinical review, and the screen must not read as a shortcut around that. Retirement is prospective — a retired option disappears from new authoring while accepted plans keep the option they referenced. Nothing here moves money, sets a tariff, or fixes a price; it defines what kinds of amounts may legitimately appear and how they must be explained. This is commercial authority and it is separate from clinical authority by design, so the screen must never present a clinical field as editable.
+
 
 ### SCR-ELIG-014 — Verification workbench
 **Platform:** Admin (A) · **Build type:** Extended · **Classification:** New · **Derived:** pending confirmation
@@ -2865,7 +2952,7 @@ Panel id `admin`, path `/admin` — both verified in `app/Providers/Filament/Adm
 **Entry points:** `SCR-ELIG-018`; `SCR-POLICY-001`
 **Exits:** `SCR-POLICY-003`
 **Lifecycle statuses shown:** policy version lifecycle state; effective period
-**Notes:** Editing versioned policy is a governed policy change, not an outcome override — the distinction must be explicit here because this is the screen closest to looking like a score editor. Changes apply prospectively; historical decisions keep their captured version. **Production formulas, weights, thresholds and bands require licensed clinical approval (`Q-ELIG-001`)**, so current values are provisional evaluation configuration and the screen must say so.
+**Notes:** Editing versioned policy is a governed policy change, not an outcome override — the distinction must be explicit here because this is the screen closest to looking like a score editor. Changes apply prospectively; historical decisions keep their captured version. The price-band inputs are the window, locality scope, minimum sample size and confidence rules that the market calibration of `FR-ELIG-019` consumes, plus the band boundaries themselves; a fixed ratio of a comparison value is not among them. **Production formulas, weights, thresholds, bands and calibration minimums require licensed clinical approval (`Q-ELIG-001`)**, so current values are provisional evaluation configuration and the screen must say so.
 
 ### SCR-ELIG-020 — Suspension operations
 **Platform:** Admin (A) · **Build type:** Custom · **Classification:** New · **Derived:** pending confirmation
@@ -2877,7 +2964,7 @@ Panel id `admin`, path `/admin` — both verified in `app/Providers/Filament/Adm
 **Entry points:** `SCR-ELIG-018`; `SCR-OPS-003`
 **Exits:** `SCR-ELIG-015`, `SCR-BOOKING-014`
 **Lifecycle statuses shown:** `SUSPENDED` scopes; controlling dependency; recalculation retry and exception state
-**Notes:** Shows the exact affected provider, service and branch scopes and the invalid dependency. A failed or delayed background reevaluation is an observable exception, never treated as success. **Existing bookings in a suspended scope are visible here as authoritative state only — the review workflow's actor, deadline, state effect and outcome are unresolved under `Q-BOOKING-002`, so no screen offers an outcome for them.** No override of a computed decision exists.
+**Notes:** Shows the exact affected provider, service and branch scopes and the invalid dependency. A failed or delayed background reevaluation is an observable exception, never treated as success. **Existing bookings in a suspended scope are visible here as authoritative state only; their outcome is decided on `SCR-ELIG-022` under `PO-UX-13`, never here.** No override of a computed decision exists.
 
 ### SCR-BOOKING-014 — Booking operations
 **Platform:** Admin (A) · **Build type:** Extended · **Classification:** New · **Derived:** pending confirmation
@@ -3069,7 +3156,7 @@ Panel id `admin`, path `/admin` — both verified in `app/Providers/Filament/Adm
 **Entry points:** `SCR-PLATFORM-004`
 **Exits:** `SCR-OPS-003`
 **Lifecycle statuses shown:** work item type, linked resource, priority, due time, responsibility scope, blocking reason
-**Notes:** The home screen for six staff roles and the depth-reduction mechanism for the panel's highest-frequency work. Filtered to the actor's role, organization, branch, subject-matter and workflow scope. **The work-item state vocabulary is not finalized upstream (`Q-OPS-002`)**, so state labels and filters are deferred; the structure, scope, due time, blocking reason and commands are defined. Work assignment never grants source-data access.
+**Notes:** The home screen for six staff roles and the depth-reduction mechanism for the panel's highest-frequency work. Filtered to the actor's role, organization, branch, subject-matter and workflow scope. The work-item state vocabulary is fixed by `PO-UX-08` and escalated and overdue are independent flags, so state, escalation and deadline breach must be filterable separately; the structure, scope, due time, blocking reason and commands are defined. Work assignment never grants source-data access.
 
 ### SCR-OPS-003 — Work item detail
 **Platform:** Admin (A) · **Build type:** Custom · **Classification:** New · **Derived:** pending confirmation
@@ -3276,3 +3363,15 @@ Panel id `admin`, path `/admin` — both verified in `app/Providers/Filament/Adm
 **Exits:** `SCR-BOOKING-014`; `SCR-ELIG-020`
 **Lifecycle statuses shown:** booking `ELIGIBILITY_REVIEW`, then `CONFIRMED` or `CANCELLED` reason `PROVIDER_ELIGIBILITY_SUSPENDED`; work item lifecycle state with escalated and overdue as separate flags
 **Notes:** The screen sorts by review due time because that time is never later than two hours before the appointment and may be immediately due. Whether a licensed clinical reviewer is required is a property of the suspension reason, so the screen states it rather than leaving it to the reviewer's judgment. **It offers exactly two outcomes and no attendance override** — the fail-closed rule is structural here, not a validation message.
+### SCR-ELIG-023 — Market observations and calibration
+**Platform:** Admin (A) · **Build type:** Custom · **Classification:** New · **Derived:** pending confirmation
+**Purpose:** Let the commercial administrator record market price observations and read the calibration state of the effective price policy per locality and catalog scope.
+**Serves:** JTBD-ELIG-009
+**Requirements:** FR-ELIG-019, FR-ELIG-014
+**Contract:** SDC-POLICY-002
+**Roles:** Commercial / pricing administrator within owned scope; authorized policy and audit staff read-only
+**Entry points:** `SCR-CATALOG-011`; `SCR-POLICY-001`; `SCR-ELIG-018`
+**Exits:** `SCR-ELIG-019`, `SCR-POLICY-002`
+**Lifecycle statuses shown:** observation verification state and confidence; calibration state `FINAL`, `CALIBRATING`, `PROVISIONAL` or `NOT_APPLICABLE` per locality and scope; policy version and effective period
+**Notes:** Internal only, on every surface and in every export — no patient or clinic screen reads anything defined here, and a provider is never shown where their price sits relative to the corpus. An observation carries the catalog scope it prices, its locality, amount and currency, the date observed, the source type and reference, whether material or laboratory cost is included, its verification state and its confidence, because an unattributed number cannot be judged later. **Observations are append-only**: a correction is a new observation superseding the earlier one with a reason, never an in-place edit, since a silently edited basis rewrites past classifications. The screen shows the effective policy's window, locality scope, minimum sample and confidence rules against the actual sample, so a scope below the minimum reads honestly as still calibrating and produces no class rather than producing a weak one. **A calibration state that is not `FINAL` suppresses `P` and never suppresses or alters the provider's own price**, which the patient continues to see in its governed display mode. Nothing here may be labelled a market average, a city average or a tariff — it is evidence of a distribution, and the honest label is what the sample supports. A threshold or window change is a versioned policy change on `SCR-POLICY-002` applying prospectively; historical decisions keep the policy version they were computed under. Production calibration minimums still require licensed clinical approval (`Q-ELIG-001`), so current values are provisional and the screen must say so.
+

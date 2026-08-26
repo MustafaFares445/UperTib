@@ -94,10 +94,32 @@ The UX pipeline must reference these IDs in Phase 4 screen/widget specs under `D
 ## SDC-CATALOG-001 — Admin Catalog Governance Workspace
 
 **Actors:** authorized policy/catalog owner and reviewers.  
-**Requirements:** FR-CATALOG-001, FR-POLICY-001, FR-OPS-003.  
-**Projection:** service groups/services, definition versions, audience/publication state, required launch gates, review status, effective dates.  
-**Commands:** edit permitted draft content; submit/review/schedule/retire according to policy; invoke governed publication action after gates pass.  
-**Scope:** owned catalog/policy domain only.
+**Requirements:** FR-CATALOG-001, FR-CATALOG-002, FR-POLICY-001, FR-OPS-003.  
+**Projection:** service groups, patient-facing service families, definition versions, audience/publication state, required launch gates, review status, effective dates, and per-family counts of mapped procedure items and their review state.  
+**Commands:** create a family; edit permitted draft content, labels, description, order and visibility; retire or supersede a family prospectively; submit/review/schedule/retire according to policy; invoke governed publication action after gates pass.  
+**Scope:** owned catalog/policy domain only.  
+**Rules:** a family already referenced by accepted or historical records is retired or superseded, never repurposed. Creating, renaming, reordering, or retiring a family is a data operation and requires no deployment. Evaluation-audience content is never promoted by a visibility change.
+
+## SDC-CATALOG-002 — Admin Procedure Catalog and Family Mapping Workspace
+
+**Actors:** authorized catalog/product administrator; authorized staff read-only.  
+**Requirements:** FR-CATALOG-002, FR-CLINICAL-006.  
+**Projection:** detailed procedure items with code, Arabic and English label, description, billing unit and quantity semantics, active and retired state, current definition version and its review state, the families each procedure is mapped to with display order and effective period, both generations of a superseded mapping, import provenance for candidate content, and which procedures are referenced by accepted plan lines.  
+**Commands:** create a procedure item; edit permitted draft label, description, billing unit and order; map a procedure to one or more families with an effective date; supersede an existing mapping; retire a procedure prospectively; supersede a procedure with a successor; import candidate procedure content as evaluation-audience data with provenance.  
+**Scope:** owned catalog domain only.  
+**Rules:** the projection must show that this layer is **not** patient discovery — no command publishes a procedure list to the Patient app. A procedure identity referenced by history is immutable; a changed meaning creates a successor. Import never sets a clinical value as approved and never publishes. The number of imported rows is data, not a limit.  
+**Prohibited:** no command sets a clinical field's approval, activates a clinically meaningful definition version, or edits an accepted plan line.
+
+## SDC-CATALOG-003 — Admin Clinical Service Definition Review Workspace
+
+**Actors:** authorized catalog/product administrator as drafter; licensed clinical reviewer as approver; authorized staff read-only.  
+**Requirements:** FR-CATALOG-003, FR-OPS-003, FR-ELIG-005.  
+**Projection:** draft and active procedure definition versions; service risk level; minimum and allowed scientific grades; required credentials, branch and equipment capability; required evidence; inclusions and exclusions; follow-up, completion and escalation rules; treatment restrictions; clinical review state; the approving reviewer credential and its expiry; content hash; effective period; a diff against the currently active version; and which eligibility gates the version's prerequisites feed.  
+**Commands:** **drafter** — edit draft clinical fields, submit for clinical review, withdraw a draft. **Licensed clinical reviewer** — request changes with reasons, approve the exact content hash, reject with a required reason, revoke a prior approval.  
+**Scope:** the drafter's owned catalog scope; the reviewer's credentialed practice scope.  
+**Rules:** the two command sets are held by **different authorities**. Activation fails closed without a current credentialed approval bound to the exact content hash, and the drafter cannot approve their own draft. The workspace must make the difference between a draft value and an approved production value unmistakable, because this is the screen closest to looking like a clinical decision tool while being a governance surface.  
+**Prohibited:** no override activates a clinically meaningful change without the clinical gate; risk level alone never grants or denies provider eligibility.  
+**Errors/states:** definition lifecycle owned by `STATE_MACHINES.md` section 3; gates by section 4.
 
 ## SDC-ELIG-001 — Clinic Service Activation Workspace
 
@@ -123,6 +145,17 @@ The UX pipeline must reference these IDs in Phase 4 screen/widget specs under `D
 **Commands:** navigate to source-fact/evidence correction actions only; no outcome override.
 
 ---
+
+## SDC-ELIG-005 — Clinic Provider Price and Display-Mode Workspace
+
+**Actors:** authorized clinic/provider representative; treating dentist within scope.  
+**Requirements:** FR-ELIG-009, FR-ELIG-014, FR-ELIG-018.  
+**Projection:** the provider's own price facts for their authorized branch and catalog scope, each with its display mode, amount or bounds, currency, effective period, provenance and superseded predecessor; the active approved price-display modes selectable for that scope; which catalog items still have no price; the patient-safe meaning the current configuration produces; and whether an accepted snapshot depends on a given historical fact.  
+**Commands:** record a new price fact with its mode, amount or bounds, currency and effective date; supersede an existing fact prospectively; withdraw a future-dated fact that has not taken effect.  
+**Scope:** exact authorized provider, branch and catalog scope only.  
+**Rules:** the price is a source fact. A zero-cost price is valid, and no control requires a positive amount. Modes are offered only from the active approved commercial options — the clinic cannot invent a mode. A new fact supersedes prospectively and never rewrites an amount captured in an accepted snapshot; the projection must make that visible rather than implying a historical edit.  
+**Prohibited:** no control sets or displays internal `P` as an editable or selectable value, offers A/B/C/D/F as a pricing menu, exposes the market comparison basis, sample count or confidence figure, or edits a market band.  
+**Errors/states:** `ERR-PLATFORM-001` for an amount or period the chosen mode does not permit; `ERR-IDENTITY-002` outside scope.
 
 ## SDC-ELIG-004 — Admin Booking Eligibility-Review Workspace
 
@@ -159,8 +192,14 @@ The UX pipeline must reference these IDs in Phase 4 screen/widget specs under `D
 **Actors:** treating dentist and authorized clinic staff according to exact action.  
 **Requirements:** FR-CLINICAL-001–005.  
 **Projection:** authorized case summary/timeline, treating relationship, plan versions, accepted snapshot, stages, required evidence/acknowledgements, follow-up state.  
-**Commands:** dentist creates/revises/proposes plan; authorized clinician records stage progress/evidence/completion; create amendment proposal; permitted staff record non-clinical case facts.  
-**Prohibited:** non-treating staff cannot author diagnosis/treatment plan; accepted historical versions cannot be edited.
+**Commands:** dentist creates/revises/proposes plan; authorized clinician records stage progress/evidence/completion; create amendment proposal; permitted staff record non-clinical case facts.
+
+**Plan-line commands and projection (`FR-CLINICAL-006`, `FR-CLINICAL-007`).** The projection additionally exposes, per plan version: its lines with procedure definition version, patient-readable procedure name, quantity, billing unit, unit price, line total, currency, the inclusion set captured from the governing definition, and the family and mapping generation the line was reached through; each line's typed modifiers with governed category, reason and price difference; the derived version total; the active approved commercial options applicable to each line; and, on a superseding version, the disclosed change summary against the version it supersedes.
+
+Commands are: add, edit and remove a line while the version is a draft; set quantity against the procedure's billing unit; attach a typed modifier chosen from the active approved options; record a third-party cost with its attributable party or reference and reason; and compose the amendment summary a superseding version requires before it can be proposed.
+
+**Rules:** the total is derived from lines and is never independently editable. A charge for a component the governing definition marks as included, a modifier with no governed category, and a charge justified only by free text are all rejected by `ERR-CLINICAL-002` at authoring time, so they never reach the patient. An added clinical service is authored as its own procedure line, not as a fee. Proposing a superseding version without its change summary is refused.  
+**Prohibited:** non-treating staff cannot author diagnosis/treatment plan; accepted historical versions and their lines cannot be edited; no command bills against an amendment the patient has not accepted.
 
 ---
 
@@ -219,6 +258,17 @@ The UX pipeline must reference these IDs in Phase 4 screen/widget specs under `D
 **Commands:** edit draft; submit for review; approve/reject; schedule; retire/supersede; reproduce historical result through authorized action.  
 **Rules:** active/historical versions remain immutable; prospective changes do not rewrite accepted snapshots.
 
+## SDC-POLICY-002 — Admin Market Calibration and Commercial Policy Workspace
+
+**Actors:** authorized commercial/pricing administrator; authorized staff read-only; independent approver where separation of duties requires one.  
+**Requirements:** FR-ELIG-019, FR-ELIG-018, FR-POLICY-001–003, FR-CLINICAL-006.  
+**Projection:** market observations by locality and catalog scope with amount, currency, observation date, source type and reference, material or laboratory variant, verification state, confidence and provenance; the effective price policy's observation window, minimum sample threshold, confidence rules and approved distribution boundaries; the current sample size and resulting calibration state per scope, including which scopes are non-final and why; draft, scheduled and active price-policy versions with effective periods; the commercial-option catalog by category with lifecycle and approvals; and the currency policy's approved rate source, rounding rule and effective period.  
+**Commands:** record an observation; verify or reject an observation with a reason; supersede an observation to correct it; draft a price-policy version and its thresholds; submit for the required independent approval; schedule and activate prospectively; retire a version; manage price-display modes, material and option upgrades, third-party-cost categories, quantity rules and external financial method labels; draft and activate currency presentation, approved rate source and rounding policy.  
+**Scope:** owned commercial and locality scope only.  
+**Rules:** every threshold is policy data with an effective date — nothing here is a code constant, and the workspace exists precisely so that changing a band, a sample threshold, an approved modifier, a third-party category, or a rate source needs no deployment. Observations are corrected by supersession so a prior calibration result stays reproducible. Activation is prospective: the projection must state plainly that earlier eligibility decisions keep their captured policy version and that accepted snapshots are never recomputed. A scope whose sample or confidence rule is unmet shows its non-final calibration state honestly rather than a computed class, and no label may claim a market or city average for such a scope.  
+**Prohibited:** no command sets `P`, a scientific grade, a protection level or an internal risk value for any provider; no command edits a clinic's historical price assertion; no command activates a clinical value or substitutes for clinical approval; enabling an external financial method label never activates a money-movement integration.  
+**Errors/states:** policy lifecycle owned by `STATE_MACHINES.md` section 6; the calibration qualifier by section 7.1.
+
 ## SDC-AUDIT-001 — Audit Explorer and Historical Reproduction
 
 **Actors:** authorized auditor/reviewer.  
@@ -246,15 +296,15 @@ This namespace is append-only. Highest allocated values in this file:
 | Domain | Highest SDC |
 |---|---:|
 | IDENTITY | 005 |
-| CATALOG | 001 |
-| ELIG | 004 |
+| CATALOG | 003 |
+| ELIG | 005 |
 | BOOKING | 002 |
 | CLINICAL | 001 |
 | FINANCE | 001 |
 | REVIEWS | 001 |
 | CLAIMS | 001 |
 | OPS | 002 |
-| POLICY | 001 |
+| POLICY | 002 |
 | AUDIT | 001 |
 
 Do not renumber or repurpose these IDs. New staff contracts allocate `max + 1` inside the owning domain.

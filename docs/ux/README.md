@@ -1,13 +1,13 @@
 # UberTib UX Documentation — Start Here
 
 **Chain phase:** 1 of 5 complete — Discovery, Information Architecture and User Flows
-**Baseline:** 2026-08-25, reconciled 2026-08-25 against `PO-2026-08-25-ux-phase1-reconciliation`
+**Baseline:** 2026-08-25, reconciled 2026-08-25 against `PO-2026-08-25-ux-phase1-reconciliation`, then against `PO-2026-08-25-syria-catalog-pricing-governance`
 **Validator:** `python docs/ux/scripts/validate_ux_docs.py --phase 1` → 0 failures, 0 warnings
 
 ## Authority Chain
 
 1. **Engineering docs** — canonical for behavior, data, permissions, lifecycle, errors. `docs/PRD.md`, `docs/SDD.md`, `docs/domain/*`, `docs/api/*`, `docs/database/*`.
-2. **Product Owner decisions** — `.spec/decisions/`. `PO-2026-08-25-ux-gap-resolution.md` (`PO-UX-01`–`06`) governs clinic onboarding, doctor comparison, staff contracts and run scope. `PO-2026-08-25-ux-phase1-reconciliation.md` (`PO-UX-07`–`18`) governs actor context, work-item states, patient notifications, review appeals, guardian revocation, alternative closure, eligibility review, legal-basis representation, reschedule, plan validity, evidence transfer and the research limitation.
+2. **Product Owner decisions** — `.spec/decisions/`. `PO-2026-08-25-ux-gap-resolution.md` (`PO-UX-01`–`06`) governs clinic onboarding, doctor comparison, staff contracts and run scope. `PO-2026-08-25-ux-phase1-reconciliation.md` (`PO-UX-07`–`18`) governs actor context, work-item states, patient notifications, review appeals, guardian revocation, alternative closure, eligibility review, legal-basis representation, reschedule, plan validity, evidence transfer and the research limitation. `PO-2026-08-25-syria-catalog-pricing-governance.md` (`PO-SYRIA-01`–`14`) governs the two-layer catalog, clinically governed procedure definitions, provider price facts and their display modes, market observations and calibrated price policy, structured plan lines and commercial integrity, disclosed amendments, currency presentation, and the separation of catalog, clinical and commercial authority. Its owner map is `docs/domain/CATALOG_PRICING_GOVERNANCE.md` section 13.
 3. **This chain's outputs** — canonical for structure, presentation and interaction.
 4. **Tokens** — canonical for style, from UX Phase 3 onward. Not yet produced.
 5. **Figma** — derived, authoritative over nothing. Not yet produced.
@@ -34,9 +34,9 @@ Declared here and never re-litigated downstream.
 |---|---|---|---:|
 | Patient app | React Native, consumes `/api/v1` | **C** — native | 47 |
 | Clinic / Doctor | Filament 5, panel `clinic` at `/clinic` (Proposed) | **A** — admin panel | 56 |
-| Admin | Filament 5, panel `admin` at `/admin` | **A** — admin panel | 59 |
+| Admin | Filament 5, panel `admin` at `/admin` | **A** — admin panel | 62 |
 
-**Input mode:** Docs-Partial. No screen inventory existed to inherit; all 162 screens are derived and `New`. Verified directly: `app/Filament/` does not exist, one API route is implemented, no React Native repository is verified.
+**Input mode:** Docs-Partial. No screen inventory existed to inherit; all 165 screens are derived and `New`. Verified directly: `app/Filament/` does not exist, one API route is implemented, no React Native repository is verified.
 
 **Accessibility target:** WCAG 2.2 AA, from `NFR-PLATFORM-005`. This chain specifies obligations and never claims conformance.
 
@@ -67,11 +67,11 @@ Profile C emits no hover state. Profile A specifies framework configuration and 
 | Artifact | Count |
 |---|---:|
 | Actors with evidence-based personas | 19 UI-bearing, plus system automation and 2 explicit non-roles |
-| Jobs to be done | 66 |
-| Screens | 162 — Patient 47, Clinic 56, Admin 59 |
-| Flows | 100, including 9 cross-platform lifecycle flows |
+| Jobs to be done | 69 |
+| Screens | 165 — Patient 47, Clinic 56, Admin 62 |
+| Flows | 103, including 9 cross-platform lifecycle flows |
 | Lifecycle statuses mapped to screens | 82 of 82 across 18 machines |
-| Gaps recorded | 17, of which 12 are resolved |
+| Gaps recorded | 17, of which 12 are resolved and 1 narrowed |
 
 ## ID Conventions
 
@@ -88,15 +88,19 @@ Introduced by this chain: `SCR-*` and `FLOW-*` in Phase 1; `WF-*` in Phase 2; `C
 | Domain | SCR | Domain | SCR |
 |---|---:|---|---:|
 | IDENTITY | 038 | FINANCE | 012 |
-| ELIG | 022 | REVIEWS | 009 |
-| CLINICAL | 019 | CATALOG | 009 |
+| ELIG | 023 | REVIEWS | 009 |
+| CLINICAL | 019 | CATALOG | 011 |
 | BOOKING | 017 | PLATFORM | 009 |
 | CLAIMS | 013 | OPS | 006 |
 | POLICY | 004 | AUDIT | 004 |
 
-`FLOW-*` highest allocated per domain: IDENTITY 021 · ELIG 015 · BOOKING 014 · CLINICAL 010 · CLAIMS 009 · FINANCE 008 · REVIEWS 006 · CATALOG 005 · OPS 004 · PLATFORM 004 · POLICY 002 · AUDIT 002.
+`FLOW-*` highest allocated per domain: IDENTITY 021 · ELIG 016 · BOOKING 014 · CLINICAL 010 · CLAIMS 009 · FINANCE 008 · REVIEWS 006 · CATALOG 007 · OPS 004 · PLATFORM 004 · POLICY 002 · AUDIT 002.
 
-`JTBD-*` highest allocated per domain: IDENTITY 012 · ELIG 008 · BOOKING 008 · CLINICAL 007 · CLAIMS 007 · FINANCE 006 · REVIEWS 004 · PLATFORM 004 · CATALOG 003 · OPS 003 · POLICY 002 · AUDIT 002.
+`JTBD-*` highest allocated per domain: IDENTITY 012 · ELIG 009 · BOOKING 008 · CLINICAL 007 · CLAIMS 007 · FINANCE 006 · REVIEWS 004 · PLATFORM 004 · CATALOG 005 · OPS 003 · POLICY 002 · AUDIT 002.
+
+### Registry additions from the 2026-08-25 Syria catalog and pricing reconciliation
+
+Three screens — `SCR-CATALOG-010`, `SCR-CATALOG-011`, `SCR-ELIG-023`, all Admin. Three flows — `FLOW-CATALOG-006`, `FLOW-CATALOG-007`, `FLOW-ELIG-016`. Three jobs — `JTBD-CATALOG-004`, `JTBD-CATALOG-005`, `JTBD-ELIG-009`. Canonically, seven `FR-*`, one `ERR-*` and four `SDC-*`; **no `API-*`**, because four existing patient contracts were extended additively and every new workflow is a staff surface under `PO-UX-05`. No lifecycle machine and no status was added; `01-foundation/INFORMATION_ARCHITECTURE.md` section 10.16 records the three candidates and why each resolved into an existing mechanism.
 
 ## Open Items
 
@@ -119,6 +123,8 @@ Nothing raised by this phase is still open. Twelve of the seventeen gaps, plus o
 | `ASM-PLATFORM-001` attention surface | Confirmed as requirement, no longer an assumption |
 
 Still carried from canonical documentation, none of which constrains Phase 2 structure: `Q-PLATFORM-001` Blocker for the completeness claim only; `Q-CATALOG-001`, `Q-ELIG-001`, `Q-PLATFORM-002` and `Q-OPS-001` Major — the last now also carries the storage, scanner, OTP and notification vendor selection deferred from `Q-PLATFORM-003`; `Q-PLATFORM-004` Minor.
+
+**`Q-CATALOG-001` and `Q-ELIG-001` were narrowed on 2026-08-25, not resolved.** The catalog's two-layer shape, its governance model, the authority split between catalog, clinical and commercial administration, and the internal `P` direction are all settled. What remains in both is licensed clinical approval — of production service and procedure content including `service_risk_level`, and of production formulas, weights, thresholds, grade bands and market-calibration minimums. That residue is not narrowable by design work and is not claimed closed anywhere in this chain.
 
 Two assumptions remain in force: `ASM-IDENTITY-001` and `ASM-ELIG-001`. Both are recorded with what breaks if wrong in `01-foundation/UPSTREAM_GAPS.md` section 5.
 

@@ -88,7 +88,7 @@ sequenceDiagram
 
 ## 4. Provider Eligibility Evaluation and Recalculation — Required / Governed
 
-**Requirements:** FR-ELIG-002–006, FR-ELIG-008–017, FR-POLICY-002, NFR-AUDIT-003.  
+**Requirements:** FR-ELIG-002–006, FR-ELIG-008–019, FR-POLICY-002, NFR-AUDIT-003.  
 **Status:** Proposed V1. Final production formulas/weights/thresholds remain governed by `Q-ELIG-001`.
 
 ```mermaid
@@ -99,6 +99,7 @@ sequenceDiagram
     participant Resolver as Dependency Resolver
     participant Facts as Approved Facts / Evidence
     participant Policy as Versioned Policy Resolver
+    participant Market as Market Calibration Component
     participant Eval as Eligibility Evaluator
     participant DB as Database
     participant Search as Eligible Provider Projection
@@ -111,9 +112,21 @@ sequenceDiagram
     loop Each affected scope
         Coord->>Facts: Load effective approved facts/evidence
         Coord->>Policy: Resolve exact effective policy versions
-        Policy-->>Coord: Versioned rules
-        Facts-->>Coord: Inputs + provenance
-        Coord->>Eval: Evaluate S/P/H/I + mandatory gates
+        Policy-->>Coord: Versioned rules including the effective price policy
+        Facts-->>Coord: Inputs + provenance including the provider price fact and its display mode
+
+        Coord->>Market: Resolve comparison basis for locality and catalog scope
+        alt Price mode makes classification meaningless
+            Market-->>Coord: NOT_APPLICABLE
+        else Sample or confidence rule unmet
+            Market-->>Coord: CALIBRATING with observed sample size
+        else Policy is provisional evaluation configuration
+            Market-->>Coord: PROVISIONAL
+        else Rules satisfied
+            Market-->>Coord: Comparison basis + FINAL
+        end
+
+        Coord->>Eval: Evaluate S/P/H/I + mandatory gates with calibration state
 
         alt Required input insufficient
             Eval-->>Coord: PENDING_EVALUATION + blockers
@@ -137,8 +150,10 @@ sequenceDiagram
 
 - A missing required fact or expired evidence produces `PENDING_EVALUATION`; it is never converted to scientific grade `F`.
 - A previously eligible scope whose required condition becomes invalid is removed from new-booking eligibility immediately through a new decision; the earlier decision remains historical truth.
-- No human actor may directly submit final S/P/H/I or the final eligibility result.
-- Recalculation affects only dependency-related scopes; it does not globally rewrite all providers.
+- No human actor may directly submit final S/P/H/I or the final eligibility result. The provider supplies an actual price and its approved display mode and nothing else about pricing.
+- A non-final calibration state suppresses `pricing_class` on the decision but never suppresses the provider's own price in patient discovery, and never blocks eligibility on its own.
+- The comparison basis comes from the market corpus under the effective price policy. No step applies a fixed ratio of a comparison value, and step ordering matters: calibration resolves **before** evaluation so the decision snapshot records the basis, the sample size, the policy version, and the calibration state that produced it.
+- Recalculation affects only dependency-related scopes; it does not globally rewrite all providers. Activating a new price policy is an influential change that triggers this sequence prospectively and leaves every earlier decision intact.
 - Booking-time safety does not trust the search projection; booking revalidates the current authoritative eligibility context again.
 
 ## 5. Booking Request, Provider Response, and Confirmation — Required
@@ -226,7 +241,7 @@ For 100 concurrent attempts against limited capacity, committed confirmations mu
 
 ## 6. Treatment Plan Acceptance and Immutable Terms — Required
 
-**Requirements:** FR-CLINICAL-001–002, FR-FINANCE-001, NFR-AUDIT-003.  
+**Requirements:** FR-CLINICAL-001–002, FR-CLINICAL-006–007, FR-FINANCE-001, NFR-AUDIT-003.  
 **API:** API-CLINICAL-003.
 
 ```mermaid
@@ -254,8 +269,14 @@ sequenceDiagram
             API->>Accept: Accept exact plan version
             Accept->>DB: BEGIN TRANSACTION
             Accept->>DB: Lock case + plan version/current acceptance context
-            Accept->>Plan: Validate clinician authorship + required service/stages/prices/terms
-            alt Missing, stale, or invalid plan data
+            Accept->>Plan: Validate clinician authorship + required service/stages/lines/prices/terms
+            Accept->>Plan: Validate commercial integrity of lines and modifiers
+            Accept->>Plan: Require amendment summary when the version supersedes another
+            alt Line or modifier breaks a governed integrity rule
+                Plan-->>Accept: Integrity violation
+                Accept->>DB: ROLLBACK
+                Accept-->>API: ERR-CLINICAL-002
+            else Missing, stale, or invalid plan data
                 Plan-->>Accept: Invalid
                 Accept->>DB: ROLLBACK
                 Accept-->>API: ERR-CLINICAL-001
@@ -277,6 +298,9 @@ sequenceDiagram
 
 - Clinical content is authored by an authorized treating clinician, not generated as an autonomous platform diagnosis/treatment decision.
 - Acceptance creates immutable snapshots; later amendments create new versions/snapshots.
+- Commercial integrity is validated inside the same transaction as authorship and completeness, so a duplicate charge for an included component or an uncategorized surcharge can never be captured into an accepted snapshot.
+- Accepting a superseding version is amendment acceptance: the change summary must exist on the version, and the superseded snapshot continues to govern events that occurred under it.
+- The accepted snapshot captures the amount and the currency agreed at acceptance. No later price fact, price band, catalog change, exchange rate, or rounding rule re-enters this sequence.
 - Treatment and financial snapshots commit atomically so the accepted clinical plan cannot diverge from the accepted commercial terms.
 - Current policy changes never rewrite an already accepted snapshot.
 
@@ -583,9 +607,9 @@ No UX navigation or screen sequence is defined here. User-flow and interface seq
 | Sequence | Primary Requirements | Implementation State |
 |---|---|---|
 | Service definition publication | FR-CATALOG-001, FR-POLICY-001, FR-OPS-003 | Existing |
-| Eligibility evaluation/recalculation | FR-ELIG-002–006, FR-ELIG-008–017 | Proposed / governed |
+| Eligibility evaluation/recalculation | FR-ELIG-002–006, FR-ELIG-008–019 | Proposed / governed |
 | Booking request/response/confirmation | FR-BOOKING-001–003 | Proposed |
-| Treatment-plan acceptance | FR-CLINICAL-001–002, FR-FINANCE-001 | Proposed |
+| Treatment-plan acceptance | FR-CLINICAL-001–002, FR-CLINICAL-006–007, FR-FINANCE-001 | Proposed |
 | External financial record confirmation | FR-FINANCE-002–007 | Proposed, record-only |
 | Claim/refund review and appeal | FR-CLAIMS-001–005 | Proposed |
 | Treatment-stage completion | FR-CLINICAL-003 | Proposed |
@@ -596,8 +620,8 @@ No UX navigation or screen sequence is defined here. User-flow and interface seq
 ## 16. Open Governance Dependencies
 
 - `Q-PLATFORM-001` — readable SRS v1.1 is still required before claiming complete source reconciliation.
-- `Q-CATALOG-001` — provisional catalog records require licensed clinical production approval.
-- `Q-ELIG-001` — production S/P/H/I formulas, weights, thresholds, and defaults require licensed clinical approval.
+- `Q-CATALOG-001` — provisional and imported candidate catalog records require licensed clinical production approval.
+- `Q-ELIG-001` — production S/H/I formulas, weights, thresholds, grade bands, and market-calibration thresholds require licensed clinical approval; the sequence ordering above is settled.
 - `Q-PLATFORM-002` — retention/deletion periods require legal/compliance validation.
 - `Q-PLATFORM-003` — concrete OTP/MFA, malware scanning, private-evidence, and related providers remain unresolved.
 - `Q-OPS-001` — production hosting/deployment topology/provider remains unresolved.

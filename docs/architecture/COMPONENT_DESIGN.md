@@ -159,7 +159,7 @@ Spatie Permission may answer whether an actor has a capability; it does not by i
 
 ## 6. Catalog Components
 
-**Requirements:** FR-CATALOG-001, FR-POLICY-001, FR-OPS-003.
+**Requirements:** FR-CATALOG-001, FR-CATALOG-002, FR-CATALOG-003, FR-POLICY-001, FR-OPS-003.
 
 ### 6.1 Service Group Component — Existing
 
@@ -167,7 +167,7 @@ Owns stable dental grouping identity and ordering used by the public catalog.
 
 ### 6.2 Service Component — Existing
 
-Owns stable service identity independent of versioned service-definition content.
+Owns stable **patient-facing service family** identity independent of versioned definition content. This is the layer patient discovery, comparison, and booking entry consume. Its labels, description, ordering, and visibility are governed data an authorized catalog admin maintains; its stable identity columns stay immutable once history references them.
 
 ### 6.3 Service Definition Component — Existing / Extend
 
@@ -202,7 +202,60 @@ Current evidence: `PublishServiceDefinition` plus launch-gate actions.
 
 **Governance**
 
-The current 26 service records remain provisional evaluation data. Production activation remains governed by `Q-CATALOG-001`.
+The current 26 service records remain provisional evaluation data and candidate family content; their count is not a component constant. Production activation remains governed by `Q-CATALOG-001`.
+
+### 6.6 Procedure Item Component — New
+
+**Responsibility**
+
+- Own stable detailed procedure identity, billing unit, and quantity semantics.
+- Stay independent of the versioned definition content that describes it.
+
+**Rule**
+
+A procedure item is a clinician-facing and billing-facing identity. It is never the primary patient discovery surface, and its identity is never repurposed once accepted or historical records reference it.
+
+### 6.7 Procedure Definition Version Component — New / Governed
+
+**Responsibility**
+
+- Maintain the versioned clinical and commercial definition of one procedure item: service risk level, minimum and allowed scientific grades, credential, branch and equipment prerequisites, required evidence, inclusions, exclusions, follow-up and completion rules.
+- Preserve version identity, audience, content hash, provenance, effective interval, and immutability after activation.
+
+**Rule**
+
+Activation of a clinically meaningful change requires the licensed clinical approval gate. None of these values is a PHP enum, seeder literal, or panel-resource constant.
+
+### 6.8 Family-to-Procedure Mapping Component — New
+
+**Responsibility**
+
+- Maintain the effective-dated mapping between a patient-facing family and the procedure items reachable through it, including display order.
+- Supersede rather than overwrite when the mapping changes.
+
+**Rule**
+
+Every historical record resolves the mapping version captured at its own time; a current remap never changes what an earlier case was planned against.
+
+### 6.9 Commercial Option Catalog Component — New / Governed
+
+**Responsibility**
+
+- Maintain the approved catalog of price-display modes, material and option upgrades, third-party-cost categories, and quantity-change rules, with applicability scope and effective period.
+
+**Rule**
+
+A clinic may select only from this catalog. Adding an approved option is governed data, not a code change; a clinical addition still requires clinical authorship and approval.
+
+### 6.10 Catalog Candidate Import Component — New
+
+**Responsibility**
+
+- Import externally supplied candidate catalog content — including the customer services and pricing spreadsheet — as reviewable evaluation-audience data with provenance.
+
+**Rule**
+
+Import never publishes, never sets a clinical value as approved, and never compiles source content into application logic.
 
 ## 7. Launch Readiness Components
 
@@ -293,14 +346,36 @@ Production formulas, weights, thresholds, and defaults remain governed by `Q-ELI
 
 **Responsibility**
 
-- Accept actual price as a governed source fact.
-- Resolve the exact service/locality/currency/effective price-band policy.
-- Compute internal `P` automatically.
-- Preserve the calculation snapshot.
+- Accept actual price as a governed source fact carrying its approved display mode.
+- Resolve the exact catalog/locality/currency/effective price-band policy.
+- Resolve the comparison basis from the market-calibration component rather than any fixed ratio.
+- Compute internal `P` automatically, or record the policy's non-final calibration state when the sample or confidence rule is unmet.
+- Preserve the calculation snapshot including the observations window, sample size, policy version, and calibration state.
 
 **Rule**
 
-`P` is not a patient-facing scientific quality score and does not move money.
+`P` is not a patient-facing scientific quality score and does not move money. No fixed multiple of a comparison value is a code constant, and no actor selects `P`.
+
+### 8.6.1 Provider Price Fact Component — New
+
+**Responsibility**
+
+- Record and supersede provider price facts scoped to provider, branch, and catalog item, with display mode, amount or bounds, currency, effective period, and provenance.
+
+**Rule**
+
+A zero-cost price is valid. Nothing requires a positive amount for production readiness. A later fact supersedes prospectively and never rewrites an amount already captured in an accepted snapshot.
+
+### 8.6.2 Market Calibration Component — New / Governed
+
+**Responsibility**
+
+- Maintain the market-observation corpus with locality, catalog scope, amount, currency, observation date, source type and reference, verification state, confidence, and any material or laboratory distinction.
+- Evaluate the effective price policy's window, minimum sample, confidence, and distribution rules over that corpus to produce the comparison basis and its calibration state.
+
+**Rule**
+
+All thresholds are policy data. Insufficient evidence yields an explicit non-final calibration state, never a fabricated class and never a market-average claim.
 
 ### 8.7 Protection Classification Component — New / Governed
 
@@ -431,6 +506,18 @@ Cancellation/no-show never directly rewrites prior financial or clinical history
 
 **Requirements:** FR-CLINICAL-001–005.
 
+### 10.0 Treatment Plan Line and Modifier Component — New
+
+**Responsibility**
+
+- Own the structured commercial content of a plan version: lines binding a procedure definition version, quantity, billing unit, unit price, line total, currency, and originating family context.
+- Own typed line modifiers drawn from the commercial option catalog — additional clinical service, material or option upgrade, third-party cost, quantity change — each with its own reason and price difference.
+- Reject a repeat charge for a component the governing definition marks as included, and reject any charge lacking a governed category and reason.
+
+**Rule**
+
+A plan total is derived from its lines. There is no free-text surcharge path, and an added clinical procedure is an actual procedure line rather than a fee.
+
 ### 10.1 Treatment Plan Component — New
 
 **Responsibility**
@@ -448,6 +535,16 @@ UberTib may validate workflow completeness but must not generate or present an a
 
 - Preserve draft/proposed plan versions before acceptance.
 - Allow later amendments without rewriting an earlier accepted version.
+
+### 10.2.1 Amendment Summary Component — New
+
+**Responsibility**
+
+- Compute and persist, for a version that supersedes a proposed or accepted version, the machine-readable summary of changed lines, per-change reason, resulting price difference, and superseded version reference.
+
+**Rule**
+
+The summary is presented before any acceptance action is available. Until the amendment is accepted it governs nothing, and the prior accepted snapshot continues to govern events that occurred under it.
 
 ### 10.3 Accepted Treatment Terms Snapshot — New
 
@@ -956,7 +1053,7 @@ Protected payloads, OTP values, credential secrets, signed evidence links, and p
 1. Adapters depend on application actions/queries; actions do not depend on controllers or Filament components.
 2. Client-facing resources do not determine business eligibility or permissions.
 3. Domain modules may consume explicit cross-domain application/query interfaces but must not copy another domain's rules.
-4. Policy components provide immutable/effective rule versions; presentation code does not hard-code policy thresholds.
+4. Policy components provide immutable/effective rule versions; presentation code does not hard-code policy thresholds. This extends to catalog content and mapping, service risk level, clinical prerequisites, inclusions and exclusions, price-display modes, price bands, market-calibration thresholds, commercial options, third-party-cost categories, proposal validity, exchange-rate source, and rounding rules.
 5. Audit/provenance records observe or accompany sensitive actions; they do not become editable operational records.
 6. Financial components may reference clinical/case snapshots but may not initiate money movement.
 7. Eligibility may depend on catalog/readiness/policy facts; catalog presentation must not independently recreate eligibility rules.
@@ -966,15 +1063,20 @@ Protected payloads, OTP values, credential secrets, signed evidence links, and p
 
 | Capability | Status |
 |---|---|
-| Catalog identity and service definitions | Existing |
+| Catalog family identity and service definitions | Existing |
+| Detailed procedure items, versioned procedure definitions, family mapping | New / governed |
+| Commercial option catalog and candidate-content import | New / governed |
 | Visible catalog query/API slice | Existing / partial |
 | Clinical reviewer credential snapshots | Existing |
 | Service launch-gate decisions/publication core | Existing / partial |
 | Identity verification/MFA/guardian grants | New |
 | Scoped authorization beyond framework baseline | New / extend |
 | Full eligibility/classification engine | New / governed |
+| Provider price facts with governed display modes | New |
+| Market-observation corpus and calibrated price policy | New / governed |
 | Booking lifecycle | New |
 | Clinical case/treatment workflow | New |
+| Structured plan lines, typed modifiers, amendment summaries | New |
 | External financial-event ledger | New |
 | Reviews and appeals | New |
 | Claims/disputes and appeals | New |
@@ -989,7 +1091,7 @@ Protected payloads, OTP values, credential secrets, signed evidence links, and p
 | ID | Severity | Component impact |
 |---|---|---|
 | Q-PLATFORM-001 | Blocker | Full SRS-to-component reconciliation cannot yet be certified. |
-| Q-CATALOG-001 | Major | Catalog production publication cannot treat the 26 provisional records as clinically approved. |
+| Q-CATALOG-001 | Major | Catalog production publication cannot treat provisional family records or imported candidate procedure content as clinically approved. |
 | Q-ELIG-001 | Major | Production S/P/H/I/confidence formulas and thresholds require licensed clinical approval. |
 | Q-PLATFORM-002 | Major | Retention/deletion policy values require final legal/compliance validation. |
 | Q-OPS-001 | Major | Hosting/provider/topology remains unresolved, including managed-versus-self-hosted MySQL deployment, HA/PITR implementation, object storage, queue, and related operational infrastructure; the production database engine itself is MySQL. |

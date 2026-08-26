@@ -53,13 +53,14 @@ The following error IDs are referenced by contracts below and are defined canoni
 - `ERR-CLAIMS-001` — claim/refund request is not eligible or is outside its policy window.
 - `ERR-CLAIMS-002` — required claim evidence is incomplete or invalid.
 - `ERR-PLATFORM-005` — evidence rejected or failed validation.
+- `ERR-CLINICAL-002` — treatment line or commercial term violates a governed integrity rule.
 
 ## 4. Implemented Contract
 
 ### API-CATALOG-001 — List Visible Service Groups
 
-**Requirements:** FR-CATALOG-001, FR-OPS-003, NFR-PLATFORM-005  
-**Status:** **Implemented**  
+**Requirements:** FR-CATALOG-001, FR-CATALOG-002, FR-OPS-003, NFR-PLATFORM-005  
+**Status:** **Implemented** for the family layer; the family price-mode and procedure-count projection below is **Proposed**  
 **Method / Path:** `GET /api/v1/catalog/service-groups`  
 **Actor / Auth:** Public; no authentication.  
 **Request:** No body. Catalog mode is server configuration, not a client-selectable query parameter.  
@@ -95,6 +96,13 @@ The following error IDs are referenced by contracts below and are defined canoni
 **Source Evidence:** `routes/api.php`, catalog resources, current OpenAPI contract, feature tests.
 
 Current route and current OpenAPI evidence align on this single public route. `CONFLICT-CATALOG-001` is retained only as a permanently allocated **Resolved (2026-08-24)** historical ID. Broader feature-spec behavior remains Planned and is not evidence that additional routes are currently implemented.
+
+**Two-layer catalog reconciliation (`FR-CATALOG-002`).** The `Service` objects this contract already returns **are** the patient-facing service family layer; no rename and no second public catalog route is introduced. Detailed procedure items are deliberately **not** exposed here, because a flat list of professional procedure codes is prohibited as the primary discovery experience. Two additive, backward-compatible fields become required when the owning tasks land:
+
+- `Service.price_summary: { mode, amount?, amount_min?, amount_max?, currency }` — the governed presentation of what the family costs across eligible providers, using the modes of `FR-ELIG-018`. `mode` is a stable machine value; the patient-facing wording is UX copy, never the raw value. A free family is expressed as the zero-cost mode, not as a zero amount with a fixed mode.
+- `Service.requires_examination: boolean` — true when the effective configuration says the exact price needs clinical examination and a treatment plan.
+
+Neither field may carry `P`, a service risk level, a market comparison value, a sample count, a confidence figure, or any market-average claim. Adding, renaming, reordering, hiding, or retiring a family changes this response through data alone; no code change and no contract version bump is required for ordinary catalog change.
 
 ## 5. Identity and Patient Access
 
@@ -191,14 +199,14 @@ Current route and current OpenAPI evidence align on this single public route. `C
 
 ### API-ELIG-001 — Search Currently Eligible Providers
 
-**Requirements:** FR-ELIG-001, FR-ELIG-005, FR-ELIG-006, NFR-PLATFORM-001  
+**Requirements:** FR-ELIG-001, FR-ELIG-005, FR-ELIG-006, FR-ELIG-018, NFR-PLATFORM-001  
 **Status:** **Proposed**  
 **Method / Path:** `GET /api/v1/providers`  
 **Actor / Auth:** Public or authenticated patient; private fields never vary into public exposure.  
 **Query:** `service_code: string` required; `area: string|null`; appointment availability/date filters as supported by implemented booking availability.  
-**Response:** `200` collection of provider-service-branch decision cards with stable provider/branch IDs, practical eligibility state, expected/actual price presentation, funded-protection availability, verified-experience rating where available, branch/location summary, nearest available appointment where available, and assessment timestamp.  
+**Response:** `200` collection of provider-service-branch decision cards with stable provider/branch IDs, practical eligibility state, the provider's price presentation as `{ mode, amount?, amount_min?, amount_max?, currency }` per `FR-ELIG-018`, an optional patient-safe summary of what the price includes and what may cost extra, funded-protection availability, verified-experience rating where available, branch/location summary, nearest available appointment where available, and assessment timestamp.  
 **Errors:** `ERR-PLATFORM-001`, `ERR-PLATFORM-003`, `ERR-PLATFORM-004`.  
-**Business Rules:** Return only currently passing provider-service-branch combinations. Do not expose raw `I`; do not present `P` as a scientific grade.  
+**Business Rules:** Return only currently passing provider-service-branch combinations. Do not expose raw `I`; do not present `P` as a scientific grade. The price presentation is the provider's own price fact and is returned whatever the internal classification state is — a non-final calibration state suppresses `P` internally and changes nothing the patient sees. The response carries no `P`, no service risk level, no comparison value, no sample count, no confidence figure, and no market-average label.  
 **Side Effects:** None.  
 **Idempotency / Concurrency:** Read-only; booking must revalidate rather than trust this result.  
 **Data Touched:** Catalog, provider/branch facts, current eligibility decision, price, verified-review aggregate, appointment availability.  
@@ -369,16 +377,20 @@ Booking read contracts must expose `ELIGIBILITY_REVIEW` as the current authorita
 
 ### API-CLINICAL-002 — Get Proposed/Accepted Treatment Plan
 
-**Requirements:** FR-CLINICAL-001, FR-CLINICAL-002, FR-FINANCE-001  
+**Requirements:** FR-CLINICAL-001, FR-CLINICAL-002, FR-CLINICAL-006, FR-CLINICAL-007, FR-FINANCE-001  
 **Status:** **Proposed**  
 **Method / Path:** `GET /api/v1/cases/{case}/treatment-plan`  
 **Actor / Auth:** Authenticated authorized case party.  
-**Response:** `200` with clinician-authored plan version, service, stages, stage prices, currency, inclusions/exclusions, applicable terms, protection state, and whether the version is proposed or accepted. It must identify the clinician as author and must not imply platform diagnosis.  
+**Response:** `200` with clinician-authored plan version, service family, stages, currency, total, inclusions/exclusions, applicable terms, protection state, `expires_at` where the version is proposed, and whether the version is proposed or accepted. It must identify the clinician as author and must not imply platform diagnosis.
+
+Each stage carries its `lines[]`. A line exposes the patient-readable procedure name, quantity, billing unit, unit price, line total, currency, what the governing definition includes, and its `modifiers[]`. A modifier exposes its governed category — additional clinical service, material or option upgrade, third-party cost, or quantity change — its patient-readable reason, and its price difference. A line never carries a procedure code as its primary label, and no modifier may appear without a category and a reason.
+
+When the version supersedes an earlier proposed or accepted version, the response also carries `amendment: { supersedes_version_id, changed_lines[], reason_per_change, price_difference, currency }` per `FR-CLINICAL-007`, so the patient reads the delta rather than re-reading a whole document.  
 **Errors:** `ERR-IDENTITY-001`, `ERR-IDENTITY-002`, `ERR-PLATFORM-002`.  
 **Side Effects:** None.  
 **Idempotency / Concurrency:** Read-only.  
-**Data Touched:** Treatment plan/version and linked financial-term proposal/snapshot.  
-**Tests:** Required authorship, immutable accepted-version projection, and scope coverage.
+**Data Touched:** Treatment plan/version, lines, modifiers, mapping and procedure definition references, linked financial-term proposal/snapshot.  
+**Tests:** Required authorship, line and modifier projection, amendment-summary presence on a superseding version, immutable accepted-version projection, and scope coverage.
 
 ### API-CLINICAL-003 — Accept Treatment Plan
 
@@ -388,8 +400,8 @@ Booking read contracts must expose `ELIGIBILITY_REVIEW` as the current authorita
 **Actor / Auth:** Authenticated patient/authorized guardian with acceptance authority.  
 **Request:** `plan_version_id: string`; explicit acceptance acknowledgment/version if required by policy; idempotency key required.  
 **Response:** `200` with immutable accepted plan/financial snapshot IDs and acceptance timestamp.  
-**Errors:** `ERR-IDENTITY-001`, `ERR-IDENTITY-002`, `ERR-PLATFORM-002`, `ERR-CLINICAL-001`, `ERR-AUDIT-001`.  
-**Business Rules:** Missing required service/stage/price/policy information blocks acceptance. Future changes create new versions and do not mutate the accepted snapshot.  
+**Errors:** `ERR-IDENTITY-001`, `ERR-IDENTITY-002`, `ERR-PLATFORM-002`, `ERR-CLINICAL-001`, `ERR-CLINICAL-002`, `ERR-AUDIT-001`.  
+**Business Rules:** Missing required service/stage/line/price/policy information blocks acceptance. Future changes create new versions and do not mutate the accepted snapshot. Accepting a superseding version is the amendment acceptance of `FR-CLINICAL-007`: the amendment summary must have been available on the read contract, and the previously accepted snapshot continues to govern events that occurred under it. A line or modifier that violates a governed commercial-integrity rule is rejected with `ERR-CLINICAL-002` and never reaches an acceptable proposal.  
 **Side Effects:** Creates immutable accepted treatment and financial terms snapshots atomically and audits acceptance.  
 **Idempotency / Concurrency:** Mandatory; concurrent acceptance cannot create multiple accepted outcomes for the same plan version.  
 **Data Touched:** Treatment plan version, accepted clinical snapshot, FinancialTermsSnapshot, audit/idempotency.  
@@ -416,11 +428,11 @@ All contracts in this section are record-only. No request or response represents
 
 ### API-FINANCE-001 — Get Accepted Financial Terms
 
-**Requirements:** FR-FINANCE-001, FR-CLINICAL-002, NFR-AUDIT-003  
+**Requirements:** FR-FINANCE-001, FR-CLINICAL-002, FR-POLICY-003, NFR-AUDIT-003  
 **Status:** **Proposed**  
 **Method / Path:** `GET /api/v1/cases/{case}/financial-terms`  
 **Actor / Auth:** Authenticated authorized case party.  
-**Response:** `200` with immutable accepted snapshot version, service/stages, amounts/currency, due structure, cancellation/refund terms, protection terms/state, and governing policy versions.  
+**Response:** `200` with immutable accepted snapshot version, service/stages, the accepted lines and their modifiers, amounts, the currency the amount was agreed in, due structure, cancellation/refund terms, protection terms/state, superseded-snapshot reference where an amendment exists, and governing policy versions. The agreed currency is the one captured at acceptance; the response never re-expresses a historical amount at a later exchange rate.  
 **Errors:** `ERR-IDENTITY-001`, `ERR-IDENTITY-002`, `ERR-PLATFORM-002`.  
 **Side Effects:** None.  
 **Idempotency / Concurrency:** Read-only.  
@@ -625,6 +637,8 @@ Confirmed staff workflows under OPS, POLICY, AUDIT, provider booking response, c
 
 No internal REST endpoints are created merely to make Filament behave like an external client. If a future external staff/doctor client is approved, its routes must receive new `API-*` IDs and explicit auth/contract documentation rather than reusing hidden/internal endpoints.
 
+The catalog and pricing governance workflows introduced by `PO-2026-08-25-syria-catalog-pricing-governance` follow the same rule and allocate **no** new `API-*`. Patient-family and procedure catalog management, family-to-procedure mapping, procedure definition versioning and clinical approval, market-observation recording and verification, price-band policy drafting, price-display and commercial-option configuration, provider price entry, and treatment-line and amendment authoring are all staff surfaces. They are owned by `SDC-CATALOG-001`–`003`, `SDC-ELIG-005`, `SDC-POLICY-002`, and `SDC-CLINICAL-001` in `docs/domain/STAFF_INTERACTION_CONTRACTS.md`. The only patient-facing effects of that decision are additive projections on `API-CATALOG-001`, `API-ELIG-001`, `API-CLINICAL-002`, and `API-FINANCE-001` above.
+
 ## 14. Versioning and Compatibility
 
 - `/api/v1` is the verified current version prefix.
@@ -655,17 +669,17 @@ The exact HTTP header name is intentionally not fixed by current source material
 
 | Domain | Implemented | Proposed | Main requirement coverage |
 |---|---:|---:|---|
-| CATALOG | 1 | 0 | FR-CATALOG-001, FR-OPS-003 |
+| CATALOG | 1 | 0 | FR-CATALOG-001–002, FR-OPS-003 |
 | IDENTITY | 0 | 6 | FR-IDENTITY-002–003, NFR-IDENTITY-001–002 |
-| ELIG | 0 | 4 | FR-ELIG-001, 007–008, 016–017 and dependent eligibility rules |
+| ELIG | 0 | 4 | FR-ELIG-001, 007–008, 016–018 and dependent eligibility rules |
 | BOOKING | 0 | 7 | FR-BOOKING-001–004 |
-| CLINICAL | 0 | 4 | FR-CLINICAL-001–005 |
-| FINANCE | 0 | 5 | FR-FINANCE-001–007 |
+| CLINICAL | 0 | 4 | FR-CLINICAL-001–007 |
+| FINANCE | 0 | 5 | FR-FINANCE-001–007, FR-POLICY-003 |
 | REVIEWS | 0 | 2 | FR-REVIEWS-001–002 |
 | CLAIMS | 0 | 5 | FR-CLAIMS-001–005 |
 | PLATFORM | 0 | 2 | FR-PLATFORM-001, NFR-PLATFORM-003, NFR-PLATFORM-006 |
 
-Total defined contracts: **36** (`1 Implemented`, `35 Proposed`). Staff-only/in-process Filament use cases are intentionally not counted as REST contracts.
+Total defined contracts: **36** (`1 Implemented`, `35 Proposed`). Staff-only/in-process Filament use cases are intentionally not counted as REST contracts. The 2026-08-25 catalog and pricing reconciliation allocated no new `API-*`: it extended four existing contracts additively and placed every new workflow on an `SDC-*` staff contract.
 
 ## 18. Registry Allocation Status
 

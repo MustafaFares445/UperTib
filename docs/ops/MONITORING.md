@@ -247,7 +247,13 @@ Monitor:
 - evaluation-only definition exposure attempts in production mode;
 - scopes suspended because a credential/evidence/policy dependency expired or was revoked;
 - any attempted write violating append-only/immutable constraints;
-- any detected configuration value violating the V1 record-only/non-funded financial boundary.
+- any detected configuration value violating the V1 record-only/non-funded financial boundary;
+- procedure-definition activation attempts blocked for missing, expired, or revoked clinical approval;
+- attempts to promote evaluation-audience catalog content by visibility change rather than the governed gates;
+- treatment lines rejected for commercial-integrity violation, split by reason category — duplicate included component, missing governed category, free-text-only justification;
+- superseding plan versions rejected for a missing amendment summary;
+- catalog identities retired or superseded while still referenced by active cases;
+- any detected attempt to modify an accepted snapshot amount, currency, or captured policy reference after a catalog, price, band, or currency change.
 
 ## 8. Tracing / Execution Spans
 
@@ -396,6 +402,19 @@ Monitor:
 - number of booking attempts rejected because eligibility changed between discovery and booking/confirmation;
 - dependency-change events with no corresponding reevaluation completion within the operational threshold;
 - integrity/reproduction mismatch for stored decision snapshots.
+
+### 12.1 Price calibration monitoring
+
+Market calibration needs its own signals because a quiet calibration failure looks identical to a healthy classification unless it is measured:
+
+- count and proportion of in-scope combinations whose `pricing_class_state` is `CALIBRATING`, `PROVISIONAL`, or `NOT_APPLICABLE` rather than `FINAL`;
+- observed sample size per locality and catalog scope against the effective policy's minimum threshold, with the scopes furthest below it named;
+- age of the newest verified observation per scope, since a stale corpus silently degrades calibration;
+- observations awaiting verification, and observations rejected by reason category;
+- price-policy activations and the number of decisions recalculated per activation;
+- provider price facts whose display mode has no active approved option, which indicates a retired option still referenced.
+
+A rising `CALIBRATING` proportion is an operational signal, not a defect: it means evidence is thin for those scopes. What must never happen is a `FINAL` classification produced while the effective policy's sample or confidence rule is unmet, so that combination is monitored as an integrity violation rather than a metric.
 
 If recalculation is delayed after a revocation/expiry that should make a scope unsafe, the system must fail closed for new bookings rather than continue relying on known-stale eligibility.
 

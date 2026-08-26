@@ -128,20 +128,20 @@ These are functional implementation sections, not final navigation design.
 | Provider & Branch Facts | maintain submitted provider/branch facts that require later verification | FR-ELIG-007–008 |
 | Service Activation | request service activation, answer required questions, submit evidence | FR-ELIG-007–008 |
 | Evidence | upload/view own authorized evidence and verification status | FR-ELIG-007, FR-CLINICAL-003, NFR-PLATFORM-003 |
-| Pricing | submit actual provider/service/branch price inputs | FR-ELIG-009, FR-ELIG-014, FR-FINANCE-001 |
+| Pricing | submit actual price inputs for an authorized family or procedure scope and select an approved display mode; effective dates and supersession | FR-ELIG-009, FR-ELIG-014, FR-ELIG-018, FR-FINANCE-001 |
 | Eligibility Status | read computed status, blockers, safe explanations, reevaluation status | FR-ELIG-002–017 |
 | Availability | manage appointment slots/capacity for authorized branches/services | FR-BOOKING-001 |
 | Booking Requests | respond accept/reject/alternative within policy deadline | FR-BOOKING-001–003 |
 | Cancellation / No-show | provider-side lifecycle actions allowed by policy | FR-BOOKING-002 |
 | Cases | access assigned/authorized patient cases | FR-CLINICAL-001–005 |
-| Treatment Plans | dentist-authored plan versions and proposal lifecycle | FR-CLINICAL-001–002 |
+| Treatment Plans | dentist-authored plan versions, structured procedure lines with quantities, typed commercial modifiers and third-party costs, disclosed amendments, and the proposal lifecycle | FR-CLINICAL-001–002, FR-CLINICAL-006–007 |
 | Treatment Stages | stage execution, evidence, completion, follow-up | FR-CLINICAL-003–005 |
 | Financial Records | clinic-side external payment/refund assertions and confirmations/disputes | FR-FINANCE-001–007 |
 | Reviews | view eligible published reviews and submit policy-grounded appeals | FR-REVIEWS-001–002 |
 | Claims / Disputes | view/respond to relevant claims, submit evidence, participate in appeals | FR-CLAIMS-001–005 |
 | Work Feed | actionable bookings, evidence requests, claim requests, follow-up and exceptions | FR-OPS-001 |
 
-The Clinic panel must not expose policy editing, launch-gate approval, raw internal risk `I`, unrelated clinics, global operational reporting, staff-governance administration, or sensitive final claim-decision actions.
+The Clinic panel must not expose policy editing, launch-gate approval, raw internal risk `I`, internal pricing class `P` or its calibration state, the market comparison basis, sample counts or confidence figures, market band editing, raw `service_risk_level` codes, an uncategorized surcharge field, unrelated clinics, global operational reporting, staff-governance administration, or sensitive final claim-decision actions.
 
 ## 7. End-to-End Clinic Flow
 
@@ -168,13 +168,13 @@ The Clinic UI must never ask the dentist to select `A/B/C/D/F`, `P`, `H`, `I`, o
 
 ### 7.3 Price and eligibility flow
 
-1. Clinic records the actual price for the exact service/provider/branch context.
-2. Price is stored as a source input with effective period/provenance where required.
-3. System resolves the active price-band policy and computes `P`.
+1. Clinic records the actual price for the exact service or detailed procedure at the authorized provider/branch context, and selects its display mode from the Admin-approved options — explicitly zero-cost, single fixed amount, lower-bound estimate, approved range, or requires-examination.
+2. Price is stored as a source input with display mode, effective period, and provenance; a replacement supersedes the prior fact rather than overwriting it. A zero-cost price is valid and nothing requires a positive amount.
+3. System resolves the active price-band policy, resolves the market comparison basis, and computes `P` — or records the policy's non-final calibration state when the sample or confidence rule is unmet. Either way the patient sees the clinic's own price.
 4. Other approved facts/policies feed S/H/I and final eligibility automatically.
 5. Clinic sees patient/provider-safe meaning and actionable blockers.
 6. If an influential fact expires or is revoked, the system creates a new evaluation/suspension; Clinic cannot override it.
-7. New affected bookings are blocked, while any already-existing booking follows the still-unresolved review workflow under `Q-BOOKING-002`; Clinic must not infer automatic cancellation, confirmation, or another terminal outcome.
+7. New affected bookings are blocked, and each already-existing `CONFIRMED` booking moves to `ELIGIBILITY_REVIEW` per `PO-UX-13`: the slot is preserved, the visit is not attendable and cannot be started or completed while the suspension remains, and the outcome is decided by the governed review, not by the Clinic.
 
 ### 7.4 Availability and booking flow
 
@@ -183,7 +183,7 @@ The Clinic UI must never ask the dentist to select `A/B/C/D/F`, `P`, `H`, `I`, o
 3. Clinic receives a scoped actionable request.
 4. Provider may accept, reject with reason, or propose an alternative appointment within the response deadline.
 5. Accept/alternative confirmation revalidates current eligibility, branch readiness, publication and capacity.
-6. An alternative is actionable only while current and unexpired. If it expires or the patient explicitly declines it, the proposal becomes non-actionable, but the canonical resulting booking state remains unresolved under `Q-BOOKING-001`; Clinic must not infer `REJECTED`, `CANCELLED`, or return-to-`REQUESTED`.
+6. An alternative is actionable only while current and unexpired. If it expires or the patient explicitly declines it, the booking closes as `CANCELLED` with reason `ALTERNATIVE_EXPIRED` or `ALTERNATIVE_DECLINED` per `PO-UX-12`, with no patient penalty and full proposal history preserved; a late acceptance is rejected.
 7. Capacity is committed transactionally and cannot overbook under concurrent requests.
 8. Clinic sees the canonical booking state; it does not maintain a second Filament-only status.
 
@@ -363,7 +363,7 @@ flowchart TD
 **Goal:** Let the provider maintain the actual quoted/service price input for an authorized provider/service/branch context.  
 **Dependencies:** TASK-ELIG-008, TASK-ELIG-003  
 **Expected Files / Areas:** Clinic price resource/action (Proposed); `provider_service_prices`; policy/effective-date resolver; tests  
-**Implementation Notes:** Clinic submits actual price only. Pricing class `P` remains computed from effective price bands. Historical accepted prices are never rewritten by later price updates.  
+**Implementation Notes:** Clinic submits the actual price and its approved display mode only. Pricing class `P` remains computed from the effective market-calibrated price bands and is never selectable, displayed as a grade, or offered as an A/B/C/D/F menu. Historical accepted prices are never rewritten by later price updates. `TASK-FINANCE-012` adds the governed display modes on top of this task.  
 **Data / Migration Impact:** Reuse `provider_service_prices` from the canonical ERD.  
 **API Impact:** Patient-safe prices later exposed through approved patient APIs, not through Filament.  
 **Tests Required:** branch/service authorization; effective-date behavior; price validation; P is not writable; later price does not alter historical snapshots.  
@@ -373,6 +373,22 @@ flowchart TD
 - [ ] P remains system-computed
 - [ ] Historical agreements remain immutable
 - [ ] Relevant tests pass
+
+## TASK-FINANCE-012 — Implement Governed Price Display Modes on Provider Price Facts
+**Implements:** FR-ELIG-018, FR-ELIG-009, FR-POLICY-003  
+**Goal:** Let an authorized clinic actor express what a service or procedure actually costs using the Admin-approved display modes, including a legitimately free service.  
+**Dependencies:** TASK-FINANCE-004, TASK-POLICY-002, TASK-CATALOG-003  
+**Expected Files / Areas:** provider price action and Clinic resource (Proposed); `provider_service_prices` extension; commercial-option resolver; tests  
+**Implementation Notes:** The mode comes from active `commercial_options` rows of the price-mode category, never a PHP enum, so a newly approved mode needs no release. Validate that the amount or bounds each mode requires are present and that no mode demands a positive amount as a readiness condition. Scope a fact to a family **or** a procedure, never ambiguously to both. A new fact supersedes prospectively; never rewrite an amount captured in an accepted snapshot. The currency is the applicable Syrian local currency per `FR-POLICY-003` and is not a code literal.  
+**Data / Migration Impact:** Extend `provider_service_prices` with `procedure_item_id`, `price_display_mode`, `amount_min`, `amount_max` per `ERD.md` section 6.4 before any price fact exists.  
+**API Impact:** `API-ELIG-001` and `API-CATALOG-001` gain the additive price presentation; no internal classification is exposed.  
+**Tests Required:** each mode end to end; zero-cost service is production-ready; missing required amount or bounds rejected; retired mode not selectable; family-or-procedure exclusivity; supersession leaving accepted snapshots untouched; no control offering `P` or a grade as a price menu.  
+**Verification:** `php artisan test --compact tests/Feature/Clinic/ProviderPriceDisplayModeTest.php`; `composer test:mysql`; `composer test`  
+**Definition of Done:**
+- [ ] Modes are governed data and a new approved mode needs no code change
+- [ ] A free service is valid and production-ready
+- [ ] Superseding never rewrites an accepted amount
+- [ ] No pricing-class or grade selection is reachable from the Clinic panel
 
 # Wave 2 — Eligibility Visibility and Availability
 
@@ -415,7 +431,7 @@ flowchart TD
 **Goal:** Surface only actionable provider-side booking requests, response deadlines, and alternatives for authorized branches.  
 **Dependencies:** TASK-BOOKING-003, TASK-OPS-002, patient booking creation action when available  
 **Expected Files / Areas:** Clinic booking resource/page; shared booking query; work-item projection; tests  
-**Implementation Notes:** Read canonical booking states/deadlines. Worklist is a projection; booking aggregate remains authoritative. Expired/non-actionable requests must not expose active response actions. Alternative expiry/decline must not be translated into an invented booking terminal/rollback state while `Q-BOOKING-001` is open.  
+**Implementation Notes:** Read canonical booking states/deadlines. Worklist is a projection; booking aggregate remains authoritative. Expired/non-actionable requests must not expose active response actions. Alternative expiry or decline closes the booking as `CANCELLED` with the reason code defined by `PO-UX-12` and applies no patient penalty.  
 **Data / Migration Impact:** Reuse `bookings`, `booking_events`, `booking_alternatives`, `work_items`.  
 **API Impact:** None.  
 **Tests Required:** branch scoping; deadline ordering; actionable vs terminal states; expired alternative non-actionability without invented outcome; no access to unrelated patient bookings.  
@@ -431,7 +447,7 @@ flowchart TD
 **Goal:** Implement provider-side response actions with transaction-safe revalidation and deadline enforcement.  
 **Dependencies:** TASK-BOOKING-004, TASK-ELIG-005, TASK-AUDIT-002  
 **Expected Files / Areas:** shared booking response actions; Clinic Filament actions; booking events/alternatives; tests  
-**Implementation Notes:** Accept revalidates publication/readiness/eligibility/capacity. Reject requires reason. Alternative stores proposed appointment context and awaits patient acceptance. Deadline is 12 hours or two hours before appointment, whichever occurs first. If the alternative expires or is declined, preserve history and disable acceptance but do not infer the resulting booking state until `Q-BOOKING-001` is resolved.  
+**Implementation Notes:** Accept revalidates publication/readiness/eligibility/capacity. Reject requires reason. Alternative stores proposed appointment context and awaits patient acceptance. Deadline is 12 hours or two hours before appointment, whichever occurs first. If the alternative expires or is declined, preserve history, reject a late acceptance, and close the booking as `CANCELLED` with the reason code defined by `PO-UX-12` and no patient penalty.  
 **Data / Migration Impact:** Reuse booking/alternative/event structures.  
 **API Impact:** Shared actions must also support patient alternative acceptance API.  
 **Tests Required:** valid accept/reject/alternative; expired deadline; expired/declined alternative non-actionability without invented terminal state; failed eligibility/capacity; duplicate command idempotency; 100-way capacity test remains required globally.  
@@ -508,6 +524,38 @@ flowchart TD
 - [ ] Clinical + financial terms are snapshotted immutably
 - [ ] Clinic cannot fake patient acceptance
 - [ ] Relevant tests pass
+
+## TASK-CLINICAL-010 — Implement Structured Treatment Plan Lines and Commercial Integrity
+**Implements:** FR-CLINICAL-006, FR-CLINICAL-001, FR-FINANCE-001  
+**Goal:** Let the treating clinician express a plan's commercial content as auditable lines with typed modifiers, and refuse any charge no governed category and reason explains.  
+**Dependencies:** TASK-CLINICAL-003, TASK-CATALOG-004, TASK-POLICY-002  
+**Expected Files / Areas:** `app/Models/TreatmentPlanLine.php`, `TreatmentLineModifier.php` (Proposed); plan-line authoring action and validator; Clinic plan-authoring resource (Proposed); migrations; tests  
+**Implementation Notes:** A line binds the exact `procedure_item_versions` row plus the mapping generation it was reached through, and captures that version's inclusion set so a later duplicate charge is detectable. Quantity is expressed against the procedure's billing unit. Modifiers reference an active `commercial_options` row — the schema has no free-text surcharge column, and that absence is the enforcement. The version total is derived from lines and is never independently writable. An added clinical service is authored as its own line, not as a fee. Raise `ERR-CLINICAL-002` for a duplicate included component, a missing or mismatched category, a free-text-only justification, a quantity change with no delta, or a retired option.  
+**Data / Migration Impact:** Add `treatment_plan_lines` and `treatment_line_modifiers` per `ERD.md` sections 8.7–8.8; add `currency`, `total_amount` to `treatment_plan_versions`.  
+**API Impact:** `API-CLINICAL-002` exposes lines and modifiers as patient-readable content; `API-CLINICAL-003` rejects a violating version.  
+**Tests Required:** line binding and derived total; each modifier category; every `ERR-CLINICAL-002` rejection reason; added clinical service authored as a line; a newly approved modifier or third-party category usable with no code change.  
+**Verification:** `php artisan test --compact tests/Feature/Clinic/TreatmentPlanLineIntegrityTest.php`; `composer test:mysql`; `composer test`  
+**Definition of Done:**
+- [ ] Lines bind a definition version and mapping generation
+- [ ] Every additional cost carries a governed category and a reason
+- [ ] No schema or code path records an uncategorized surcharge
+- [ ] A duplicate charge for an included component is refused
+
+## TASK-CLINICAL-011 — Implement Disclosed Treatment Amendments
+**Implements:** FR-CLINICAL-007, FR-CLINICAL-002, FR-FINANCE-001  
+**Goal:** Make a material change after proposal or acceptance travel through a superseding version that states what changed, why, and the price difference, and that governs nothing until the patient accepts it.  
+**Dependencies:** TASK-CLINICAL-010, TASK-CLINICAL-004  
+**Expected Files / Areas:** amendment-summary component and action (Proposed); `treatment_plan_versions` extension; Clinic amendment surface (Proposed); tests  
+**Implementation Notes:** Compute the summary from the line and modifier diff against the superseded version and persist it on the new version; refuse to propose a superseding version without it. Never edit the prior version. Until acceptance the previously accepted snapshot still governs, so no clinic surface may bill or complete against a pending amendment. Acceptance creates a new linked accepted treatment and financial snapshot pair atomically.  
+**Data / Migration Impact:** Add `supersedes_version_id` and `amendment_summary_json` to `treatment_plan_versions` per `ERD.md` section 8.2. No separate amendment table.  
+**API Impact:** `API-CLINICAL-002` returns the amendment summary; `API-CLINICAL-003` accepts the superseding version.  
+**Tests Required:** propose refused without summary; summary content correctness against the diff; unaccepted amendment governs nothing on any platform; acceptance creates a linked snapshot pair; superseded snapshot remains byte-identical and queryable.  
+**Verification:** `php artisan test --compact tests/Feature/Clinic/TreatmentAmendmentTest.php`; `composer test:mysql`; `composer test`  
+**Definition of Done:**
+- [ ] A superseding version cannot be proposed without its disclosed summary
+- [ ] An unaccepted amendment governs no treatment and no billing
+- [ ] Acceptance links the new snapshot pair to the superseded one
+- [ ] No accepted historical version is ever edited
 
 ## TASK-FINANCE-005 — Implement Clinic Financial Terms Preparation
 **Implements:** FR-FINANCE-001, FR-CLINICAL-001–002  
@@ -745,10 +793,8 @@ These items do not prevent building the structural Clinic panel but prevent cert
 | Item | Impact on Clinic implementation |
 |---|---|
 | `Q-PLATFORM-001` — readable SRS v1.1 | Cannot claim full source reconciliation |
-| `Q-CATALOG-001` — clinical approval of provisional services | Clinic can use evaluation fixtures; production service activation/publication remains gated |
-| `Q-ELIG-001` — approved production S/P/H/I formulas | Build engine/input/versioning/readiness behavior; do not label provisional formulas clinically approved |
-| `Q-BOOKING-001` — alternative expiry/decline outcome | Make the proposal non-actionable and preserve history, but do not infer the resulting booking terminal/rollback state |
-| `Q-BOOKING-002` — existing-booking review after eligibility suspension | Block new affected bookings, but do not invent review authority, deadline, state effect, cancellation/confirmation, or other outcome |
+| `Q-CATALOG-001` — clinical approval of provisional and imported candidate content | Clinic can use evaluation fixtures; production service and procedure activation remains gated. The two-layer catalog the Clinic panel reads is settled |
+| `Q-ELIG-001` — approved production S/H/I formulas and calibration thresholds | Build engine/input/versioning/readiness behavior; do not label provisional formulas or calibration thresholds clinically approved |
 | `Q-PLATFORM-003` — concrete OTP/MFA/malware/storage/notification providers | Use provider-neutral interfaces/fakes; do not invent vendor contracts |
 | `Q-OPS-001` — production infrastructure | MySQL is the required production relational engine; hosting/provider/topology, managed-vs-self-hosted deployment, HA/PITR implementation, cache/queue/storage/logging and release infrastructure remain unresolved |
 | `Q-PLATFORM-002` — retention legal validation | Clinic uses shared retention mechanism; final legal periods remain governed |
@@ -762,8 +808,8 @@ Allocated here:
 - `TASK-IDENTITY-004`;
 - `TASK-ELIG-007` through `TASK-ELIG-009`;
 - `TASK-BOOKING-003` through `TASK-BOOKING-006`;
-- `TASK-CLINICAL-002` through `TASK-CLINICAL-006`;
-- `TASK-FINANCE-004` through `TASK-FINANCE-007`;
+- `TASK-CLINICAL-002` through `TASK-CLINICAL-006`, `TASK-CLINICAL-010` through `TASK-CLINICAL-011`;
+- `TASK-FINANCE-004` through `TASK-FINANCE-007`, `TASK-FINANCE-012`;
 - `TASK-REVIEWS-002`;
 - `TASK-CLAIMS-005` through `TASK-CLAIMS-006`;
 - `TASK-OPS-004`;
@@ -776,11 +822,11 @@ These IDs are synchronized in `docs/README.md`. The Patient plan continues from 
 Implementation should proceed in this order:
 
 1. separate Clinic Filament panel + provider/branch authorization;
-2. provider facts/service activation/evidence/pricing;
+2. provider facts/service activation/evidence/pricing, including governed price display modes;
 3. computed eligibility/readiness projection;
 4. availability and booking provider actions;
 5. case access and treatment-plan versioning;
-6. patient-acceptance handshake and accepted snapshots;
+6. structured plan lines with commercial integrity, disclosed amendments, patient-acceptance handshake and accepted snapshots;
 7. stage execution/evidence/follow-up;
 8. external financial records;
 9. review/claim participation;

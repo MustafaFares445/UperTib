@@ -47,8 +47,10 @@ State-machine principles:
 
 ## 3. Service Definition Lifecycle — Existing
 
-**Requirements:** FR-POLICY-001, FR-CATALOG-001, FR-OPS-003.  
+**Requirements:** FR-POLICY-001, FR-CATALOG-001, FR-CATALOG-002, FR-CATALOG-003, FR-OPS-003.  
 **Existing enum:** `ServiceDefinitionStatus`.
+
+**Detailed procedure definitions reuse this exact machine.** `procedure_item_versions` has the same states, the same transitions, the same immutability-after-activation rule, and the same draft-only deletion rule. No new machine is introduced, deliberately: one governance mechanism covers both catalog layers, and a reviewer learning one learns both. The only difference is the approval gate content — a clinically meaningful procedure change additionally requires a licensed clinical reviewer holding a current credential before `active`, and a visibility or activation flag can never substitute for it.
 
 Canonical states:
 
@@ -168,6 +170,12 @@ Canonical states explicitly approved by FR-POLICY-001:
 
 The transition structure follows the Service Definition machine, but each policy domain may impose additional required reviewers/approvals. At most one version may be effective for the same policy key, scope, and instant unless an explicit precedence rule resolves overlap.
 
+Price-band, market-calibration, commercial-option, proposal-validity, and currency-normalization policies are policy versions in this machine rather than bespoke lifecycles. That is what makes changing a price band, a market sample threshold, an approved modifier, a third-party-cost category, a proposal-validity period, or an approved exchange-rate source a governed data change with an effective date, and it is why none of those values may be a code constant.
+
+### 6.1 Governed-data verification vocabulary — not a lifecycle machine
+
+Some governed rows carry a verification vocabulary rather than a lifecycle. `approved_facts.verification_state` and `market_price_observations.verification_state` both work this way: a row is recorded, then verified or rejected by an authorized actor, and a correction inserts a **superseding** row rather than transitioning the original. This is deliberately not modelled as a state machine, because the original assertion must stay readable exactly as it was made for a calibration result or an eligibility decision to remain reproducible. Do not add transitions to these fields; add rows.
+
 Historical decisions always use the captured historical version and are not recalculated against the current active policy unless a separate reevaluation requirement creates a new decision.
 
 ## 7. Eligibility Outcome Machine — Required, Immutable Decisions
@@ -184,6 +192,17 @@ Canonical outcomes required by the approved behavior:
 - `NOT_ELIGIBLE` — evaluation completes and at least one mandatory gate fails. This is an eligibility outcome, not scientific grade `F`.
 
 `F` remains a scientific grade and must not be used as an alias for `PENDING_EVALUATION` or a general eligibility state.
+
+### 7.1 Pricing classification state — a qualifier, not a lifecycle state
+
+A decision also records `pricing_class_state`, which qualifies whether the price policy could classify at all:
+
+- `FINAL` — the effective price policy's window, sample, and confidence rules were satisfied and `pricing_class` carries the derived internal `P`.
+- `CALIBRATING` — market evidence in scope exists but does not yet meet the effective policy's minimum sample or confidence rule.
+- `PROVISIONAL` — the policy itself is provisional evaluation configuration rather than approved production calibration.
+- `NOT_APPLICABLE` — the governing price mode makes classification meaningless, for example an explicitly zero-cost service.
+
+This follows the same pattern as `ESCALATED` and `OVERDUE` in section 20: it is a **qualifier on the decision, not a lifecycle state**, so it adds no transition and no machine. `pricing_class` is null whenever the state is not `FINAL`, which is how the model refuses to fabricate a classification. None of these values reaches a patient surface, and in every one of them patient discovery still shows the provider's own price unchanged (`FR-ELIG-019`).
 
 | Current Effective Outcome | Event | Actor/System | Conditions | Next Effective Outcome | Side Effects | Requirement |
 |---|---|---|---|---|---|---|
@@ -368,6 +387,8 @@ Canonical plan states:
 
 An amendment after acceptance creates another plan version and, after acceptance, a new immutable accepted treatment/financial snapshot. It does not return the historical accepted version to draft.
 
+A version's frozen content includes its structured lines and line modifiers, not only a total. A version that supersedes a proposed or accepted version additionally carries the disclosed amendment summary — changed lines, reason per change, price difference, superseded version — and cannot be proposed without it. Until that amendment is accepted it governs nothing, and the previously accepted snapshot continues to govern events that occurred under it (`FR-CLINICAL-007`).
+
 A `PROPOSED` plan carries an `expires_at` governed by a versioned policy. The **V1 default is 7 calendar days after proposal**. This value is policy data and must not be hard-coded in presentation or business logic.
 
 A proposal also becomes non-acceptable **before** `expires_at` when a material governing fact changes. The governing facts are the relevant plan version, service, price or financial terms, eligibility state, and any required policy or snapshot input. A stale proposal is not silently repriced or auto-updated; the clinician must issue a new plan version.
@@ -375,7 +396,7 @@ A proposal also becomes non-acceptable **before** `expires_at` when a material g
 | Current State | Action/Event | Actor/System | Conditions | Next State / Record | Side Effects | Requirement |
 |---|---|---|---|---|---|---|
 | none | Create plan | Authorized treating clinician | Clinician owns authorized case context | DRAFT | Store clinician authorship | FR-CLINICAL-001 |
-| DRAFT | Propose plan | Authorized treating clinician | Required service, stages, prices, inclusions/exclusions and policy information complete | PROPOSED | Freeze content/version as proposal candidate | FR-CLINICAL-001 |
+| DRAFT | Propose plan | Authorized treating clinician | Required service, stages, lines, prices, inclusions/exclusions and policy information complete; every additional cost carries an approved category and reason; amendment summary present when superseding | PROPOSED | Freeze content, lines, modifiers and version as proposal candidate | FR-CLINICAL-001, FR-CLINICAL-006, FR-CLINICAL-007 |
 | PROPOSED | Accept plan | Patient / authorized guardian | Exact version current and complete | ACCEPTED + immutable snapshots | Atomically create accepted treatment and financial terms snapshots | FR-CLINICAL-002, FR-FINANCE-001 |
 | PROPOSED | Policy validity period elapses | System | `expires_at` reached without acceptance | EXPIRED | Acceptance is refused; clinician must issue a new version | FR-CLINICAL-001 |
 | PROPOSED | Material governing fact changes | System | Relevant plan version, service, price/financial terms, eligibility state, or policy/snapshot input changed | EXPIRED | Acceptance is refused as stale; reason is recorded | FR-CLINICAL-001, FR-CLINICAL-002 |
@@ -391,7 +412,7 @@ stateDiagram-v2
     ACCEPTED --> DRAFT: create new amendment version
 ```
 
-Acceptance is rejected when mandatory service, stage, price, or policy information is missing, and when the proposal has expired or become stale (`ERR-CLINICAL-001`). An accepted snapshot is never invalidated by a later expiry: expiry applies only to a proposal that was never accepted. UberTib does not generate an autonomous diagnosis or treatment plan.
+Acceptance is rejected when mandatory service, stage, line, price, or policy information is missing, and when the proposal has expired or become stale (`ERR-CLINICAL-001`). A line or modifier that breaks a governed commercial-integrity rule is rejected by `ERR-CLINICAL-002` at authoring time and cannot reach `PROPOSED`. An accepted snapshot is never invalidated by a later expiry: expiry applies only to a proposal that was never accepted. UberTib does not generate an autonomous diagnosis or treatment plan.
 
 ## 10. Treatment Stage Lifecycle — Required
 
@@ -571,6 +592,14 @@ The following are not ordinary in-place transitions:
 | Eligibility recalculated | Create a new immutable eligibility decision. |
 | Source fact corrected | Create/supersede governed fact; do not rewrite decision snapshots that used old fact. |
 | Service/policy version changes | Create/activate new version; historical cases keep captured version. |
+| Procedure definition changes | Create/activate a new procedure-item version; plan lines keep the definition version they bound. |
+| Family-to-procedure mapping changes | Insert a superseding map row and close the prior effective period; plan lines keep the map generation they were reached through. |
+| Catalog item meaning changes after use | Create a successor item and retire the predecessor prospectively; never repurpose a referenced identity. |
+| Provider price changes | Insert a superseding price fact; accepted snapshots keep the amount and currency captured at acceptance. |
+| Market observation corrected | Insert a superseding observation; a prior calibration result stays reproducible. |
+| Price band or calibration threshold changes | Activate a new price-policy version; prior eligibility decisions keep their captured policy version and result. |
+| Approved modifier or third-party category changes | Activate a new commercial-option version prospectively; accepted plan lines keep the option they referenced. |
+| Exchange-rate source or rounding rule changes | Activate a new currency policy; no accepted amount is recomputed. |
 | Launch-gate decision changes | Append a higher-sequence decision. |
 | Reviewer credential renewed/corrected | Create a new immutable credential snapshot. |
 | Accepted treatment amended | Create a new treatment-plan version and new accepted snapshot after acceptance. |

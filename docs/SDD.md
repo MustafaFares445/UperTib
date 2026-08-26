@@ -120,19 +120,27 @@ Authorization is deny-by-default. Controllers, Filament actions, queued jobs, fi
 
 ## 9. Catalog Design
 
-**Implements:** FR-CATALOG-001, partial FR-POLICY-001, partial FR-OPS-003.
+**Implements:** FR-CATALOG-001, FR-CATALOG-002, FR-CATALOG-003, partial FR-POLICY-001, partial FR-OPS-003.
+
+The catalog is two layers under the existing broad groups. The current `services` table is the **patient-facing service family** layer and keeps its stable identities; a new detailed **procedure item** layer carries clinical and commercial detail, and a versioned effective-dated mapping joins the two. Patient discovery consumes families; clinician treatment planning consumes procedure items.
+
+Every catalog attribute a business change would touch — Arabic and English labels, descriptions, ordering, visibility, mapping, billing unit, quantity semantics, service risk level, minimum and allowed scientific grades, credential and equipment prerequisites, required evidence, inclusions, exclusions, follow-up and completion rules — is versioned definition data. None of it is a PHP enum, seeder constant, controller condition, panel-resource literal, or mobile constant. Seeders load candidate baseline data; they are not production truth.
+
+Procedure-item definitions reuse the `ServiceDefinition` pattern: stable identity, monotonic version, draft/active/retired/superseded lifecycle, explicit evaluation-versus-production audience, content hash, provenance, and effective interval. Activation of a clinically meaningful change requires the licensed clinical approval gate; a visibility flag alone can never promote evaluation content.
+
+Candidate content from an external source — the customer services and pricing spreadsheet — is imported as reviewable data through a seeder or import path, never compiled into application logic. Import records provenance and lands in the evaluation audience.
 
 The existing catalog slice should remain the basis for the full catalog domain. Stable service-group and service identities are separated from versioned `ServiceDefinition` content so patient-readable service identity can survive prospective policy/content revisions.
 
 Evaluation and production visibility must remain explicit server-side modes. Production mode must fail closed: incomplete, pending, stale, or unapproved service definitions are not publicly visible. A newer unready production version must not silently fall back to an older version if the governing publication rules prohibit that fallback.
 
-The current 26 records remain evaluation data. Production publication requires the governed launch gate, including current medical approval by an independently verified licensed dental reviewer plus other mandatory readiness approvals.
+The current 26 records remain evaluation data and candidate family content. Their count, naming, and grouping are not design constants; governed catalog decisions may merge, rename, split, retire, or remap them. Production publication requires the governed launch gate, including current medical approval by an independently verified licensed dental reviewer plus other mandatory readiness approvals.
 
 Public API resources should expose only practical localized catalog information and the minimum safe readiness metadata required by clients.
 
 ## 10. Eligibility and Classification Design
 
-**Implements:** FR-ELIG-001–017, FR-POLICY-001–002, NFR-AUDIT-003.
+**Implements:** FR-ELIG-001–019, FR-POLICY-001–002, NFR-AUDIT-003.
 
 Eligibility is a contextual decision keyed by provider, service, branch, applicable facts/evidence, and effective policy period. There is no universal provider grade.
 
@@ -148,6 +156,10 @@ The implementation should separate:
 No actor may directly enter or override final `S/P/H/I` outcomes. Corrections occur by changing governed source facts or policy through authorized workflows, then creating a new decision.
 
 `PENDING_EVALUATION` is a first-class non-grade state and must never collapse into grade `F`. `I` remains internal. Patient-visible outputs expose practical meaning rather than raw internal symbols.
+
+Pricing has three separate concerns and the design must not fuse them. A **provider price fact** is a source assertion scoped to provider, branch, and catalog item, carrying a governed display mode, its required amount or bounds, currency, effective period, provenance, and a superseding link. A **market-observation corpus** is independent evidence about the locality's prices, each row carrying source type, reference, observation date, verification state, confidence, and any material or laboratory distinction. A **versioned price policy** joins them: locality and catalog scope, observation window, minimum sample threshold, confidence rules, approved distribution boundaries, currency requirements, effective dates, and provenance. Internal `P` is the output of that policy over those inputs and is never selected by anyone.
+
+No sample threshold, band boundary, or ratio of a comparison value is a code constant. When the effective policy's sample or confidence rule is unmet, the decision records `P` in the policy's non-final calibration state rather than fabricating a class, and patient discovery continues to show the provider's own price unchanged.
 
 Production S/P/H/I formulas, weights, thresholds, and clinical defaults remain governed by `Q-ELIG-001`; provisional configuration may be versioned for evaluation but must not be represented as licensed production medical truth.
 
@@ -173,11 +185,15 @@ Cancellation/no-show behavior creates auditable state transitions and derives do
 
 ## 13. Clinical Case Design
 
-**Implements:** FR-CLINICAL-001–005.
+**Implements:** FR-CLINICAL-001–007.
 
 Treatment plans are clinician-authored domain records. UberTib may validate completeness and manage workflow but must never generate or represent an autonomous diagnosis or treatment plan.
 
 A plan should be versioned before acceptance. Patient acceptance creates an immutable accepted snapshot capturing the clinical and linked financial terms required by the PRD. Later amendments create linked new versions; they do not edit the accepted historical record.
+
+A plan version's commercial content is structured lines, not one total. Each line binds a procedure-item definition version, quantity, billing unit, unit price, line total, currency, and the family context it was reached through. Additional cost is a typed modifier on a line — an additional clinical service, an approved material or option upgrade, an attributable third-party cost, or an explicit quantity change — drawn from an Admin-governed option catalog with its own reason and price difference. Validation rejects a second charge for a component the governing definition marks as included, and rejects any charge with no category, no reason, or only generic free-text justification.
+
+An amendment version carries a machine-readable summary of what changed, why, the price difference, and the affected lines, so the patient sees the delta before acceptance rather than a replacement document. Until accepted, the amendment governs nothing and the previously accepted snapshot continues to govern events that occurred under it.
 
 Treatment-stage completion resolves requirements from the accepted service/policy snapshot rather than mutable current defaults. Required evidence and acknowledgments must be complete and valid before completion.
 
@@ -235,7 +251,7 @@ Launch readiness is a governed approval workflow. The implemented service-defini
 
 ## 18. Policy Design
 
-**Implements:** FR-POLICY-001–002.
+**Implements:** FR-POLICY-001–003.
 
 Policies that influence business outcomes must be versioned, effective-dated, and immutable after activation where historical reproduction depends on them. This includes classification, eligibility, evidence, deadlines, financial rules, launch gates, retention, and relevant operational policies.
 
@@ -243,7 +259,9 @@ A policy version should identify a stable policy key, scope, version, lifecycle 
 
 Historical reproduction loads the captured snapshot/version used at the time of the original decision, not the current active configuration. Reproduction mismatches create auditable integrity exceptions.
 
-The existing `ServiceDefinition` lifecycle is implementation evidence for this pattern, but it must not force every policy domain into the same table/schema.
+The existing `ServiceDefinition` lifecycle is implementation evidence for this pattern, but it must not force every policy domain into the same table/schema. Price-band, market-calibration, commercial-option, treatment-proposal-validity, and currency policies are policy-version rows with domain-specific rule payloads rather than new bespoke lifecycles.
+
+Currency handling is policy, not code. The patient-facing agreed amount is denominated in the applicable Syrian local currency by default. If an amount is normalized for internal analysis, the normalization record stores source and target currency, rate, approved rate source, effective timestamp, rounding rule, and policy version. No exchange-rate provider, rate value, rounding rule, or rate-lock period is embedded in domain behavior, and no rate or policy change ever recomputes an accepted snapshot.
 
 ## 19. Audit and Provenance Design
 
@@ -404,6 +422,8 @@ Runtime/product configuration should remain separated into:
 
 Business policy values that must reproduce historical decisions must not live only in `.env` or mutable config files. They require versioned persisted policy records/snapshots.
 
+The same rule covers everything the Syria catalog and pricing decision made governed data: catalog content and mapping, service risk level, minimum and allowed scientific grades, inclusions and exclusions, evidence, follow-up and completion rules, price-display modes, price bands, market-sample and confidence thresholds, additional-cost categories and approved modifiers, treatment-proposal validity, exchange-rate source and rate, and rounding rules. None of these may be an environment variable, a static array, or a code constant.
+
 Existing `config/ubertib.php` currently exposes catalog mode and `record_only_non_funded` financial mode. Those values are application safety configuration; the record-only financial boundary also remains a product requirement and must be enforced by architecture/tests, not only by a mutable environment flag.
 
 Detailed configuration ownership is defined in `docs/ops/CONFIGURATION.md`.
@@ -423,13 +443,17 @@ Detailed configuration ownership is defined in `docs/ops/CONFIGURATION.md`.
 
 ### Partially implemented
 
-- FR-CATALOG-001.
+- FR-CATALOG-001 for the family layer only.
 - FR-POLICY-001 for service definitions only.
 - FR-OPS-003 for service-scope launch gates only.
+
+Three implemented details now contradict confirmed requirements and must be corrected when the owning tasks land: the production-completeness check in `app/Domain/Catalog/ServiceDefinitionPayload.php` requires a positive reference-price amount, which `FR-ELIG-018` forbids as a readiness condition; it pins the currency to a literal, which `FR-POLICY-003` makes policy data; and it pins the risk tier to a PHP-literal set, which `FR-CATALOG-003` makes versioned definition data.
 
 ### Required new behavior
 
 All remaining identity, eligibility, provider/branch, booking, treatment-case, financial-record, review, claims, operational, policy-generalization, audit, retention, evidence, notification, reporting, and production operations behavior described in the PRD.
+
+The catalog and pricing reconciliation adds specifically: the detailed procedure-item layer and its versioned definitions, the effective-dated family-to-procedure mapping, governed price-display modes on provider price facts, the market-observation corpus and calibrated price policy with a non-final calibration state, structured treatment-plan lines with typed modifiers and third-party costs, the governed commercial-option catalog, disclosed amendment summaries with re-acceptance, and currency-normalization provenance.
 
 Implementation status is tracked in the current `docs/TRACEABILITY_MATRIX.md` and must never be inferred from design documentation alone.
 
@@ -448,8 +472,8 @@ Implementation status is tracked in the current `docs/TRACEABILITY_MATRIX.md` an
 | ID | Severity | Technical impact |
 |---|---|---|
 | Q-PLATFORM-001 | Blocker | Full SRS reconciliation cannot be certified until readable authoritative v1.1 text is available. Do not claim lower-priority material supersedes it. |
-| Q-CATALOG-001 | Major | 26 evaluation records cannot be treated as clinically approved production service definitions. |
-| Q-ELIG-001 | Major | Production S/P/H/I formulas, thresholds, weights, and defaults require licensed clinical approval. |
+| Q-CATALOG-001 | Major | Catalog shape and governance are settled; evaluation records and imported candidate procedures still cannot be treated as clinically approved production definitions. |
+| Q-ELIG-001 | Major | The `P` derivation direction is settled; production S/H/I formulas, thresholds, weights, grade bands, and the production calibration thresholds still require licensed clinical approval. |
 | Q-PLATFORM-002 | Major | Final legal retention/deletion values may change policy/schema/scheduled processing. |
 | Q-OPS-001 | Major | Hosting/provider/topology remains unresolved, including managed-versus-self-hosted MySQL deployment, HA/PITR implementation, object storage, queue, and recovery infrastructure; the production database engine remains MySQL. |
 | Q-PLATFORM-003 | Major | OTP, malware scanning/private evidence, and other external providers are unresolved; no provider-specific integration contract is authoritative. |

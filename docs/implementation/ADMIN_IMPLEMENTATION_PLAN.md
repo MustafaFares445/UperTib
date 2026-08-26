@@ -77,7 +77,9 @@ These are **functional sections**, not a visual-navigation specification.
 | Section | Primary responsibilities | Canonical requirements |
 |---|---|---|
 | Access & Staff Scope | roles, permissions, scoped grants, privileged access | FR-IDENTITY-001, NFR-IDENTITY-001–002 |
-| Catalog Governance | service groups/services, service-definition versions, evaluation/production status | FR-CATALOG-001, FR-POLICY-001–002 |
+| Catalog Governance | service groups, patient-facing families, detailed procedure items, family mapping, definition versions, evaluation/production status | FR-CATALOG-001–002, FR-POLICY-001–002 |
+| Clinical Service Governance | service risk level, minimum/allowed grade, credential/equipment/evidence prerequisites, inclusions, exclusions, follow-up, completion, clinical approval | FR-CATALOG-003, FR-OPS-003 |
+| Commercial & Pricing Governance | market observations, calibration and confidence, price bands, price-display modes, modifiers, third-party-cost categories, currency and rounding policy | FR-ELIG-018–019, FR-POLICY-003 |
 | Launch Readiness | medical/legal/operational/technical gates, evidence, expiry, publication | FR-OPS-003 |
 | Provider Verification | provider/branch facts, licenses, equipment/evidence verification | FR-ELIG-007–008 |
 | Eligibility Operations | S/P/H/I computation status, blocking facts, recalculation/suspension, explanations | FR-ELIG-002–017 |
@@ -112,7 +114,17 @@ These are **functional sections**, not a visual-navigation specification.
 4. Gate records remain append-only and are bound to the definition content hash.
 5. Publication revalidates every current gate, version ordering, complete card, effective time, and non-funded financial boundary.
 6. Publication atomically supersedes the previous production version where applicable.
-7. Evaluation content never becomes production-visible merely because it exists in the database.
+7. Evaluation content never becomes production-visible merely because it exists in the database, and no visibility, activation, or effective-date control promotes it.
+
+### 6.2.1 Catalog, clinical, and commercial authority split
+
+Three authorities operate on the same governed data and must not collapse into one administrator:
+
+1. **Catalog/product administrator** creates and maintains families, detailed procedures, mapping, labels, ordering, and visibility, and drafts clinical fields.
+2. **Licensed clinical reviewer** is the only authority that can activate a clinically meaningful procedure-definition change, bound to the exact content hash, and cannot be the drafter.
+3. **Commercial/pricing administrator** maintains market observations, price bands, calibration thresholds, price-display modes, approved modifiers, third-party-cost categories, and currency policy, subject to separation of duties where the policy requires an independent approver.
+
+The implementation consequence is that Filament resource visibility is never the control: each command resolves its own authority server-side per `PERMISSIONS_MATRIX.md` sections 7 and 17.
 
 ### 6.3 Provider activation and verification workflow
 
@@ -130,7 +142,7 @@ These are **functional sections**, not a visual-navigation specification.
 3. Staff cannot directly change S, P, H, I, scientific grade, or final eligibility.
 4. A correction changes the governed source fact/policy and triggers a new decision.
 5. Expiry/revocation/unavailability of an influential input suspends affected scopes and blocks new bookings.
-6. Existing bookings enter a review workflow, but its decision authority, deadlines, state effects, and allowed outcomes remain unresolved under `Q-BOOKING-002`; Admin must not infer automatic cancellation, confirmation, or another terminal outcome.
+6. Each affected `CONFIRMED` booking moves to the non-terminal `ELIGIBILITY_REVIEW` state per `PO-UX-13`, keeps its reserved slot, is not attendable at any role, and raises an urgent work item; the only outcomes are a return to `CONFIRMED` on a new `ELIGIBLE` evaluation or `CANCELLED` with reason `PROVIDER_ELIGIBILITY_SUSPENDED` at deadline expiry.
 
 ### 6.5 Booking operations workflow
 
@@ -139,7 +151,7 @@ These are **functional sections**, not a visual-navigation specification.
 3. Admin cannot force confirmation around failed eligibility/readiness/capacity checks.
 4. Cancellation/no-show events expose actor, reason, policy snapshot, prior state, resulting state, and downstream operational effects.
 5. Exceptions become work items/audited events, not hidden state edits.
-6. Expiry or explicit decline of an alternative makes that proposal non-actionable, but the resulting booking state is not to be invented while `Q-BOOKING-001` is unresolved.
+6. Expiry or explicit decline of an alternative closes the booking as `CANCELLED` with reason `ALTERNATIVE_EXPIRED` or `ALTERNATIVE_DECLINED` per `PO-UX-12`, with no patient penalty and full history preserved.
 
 ### 6.6 Financial operations workflow
 
@@ -294,12 +306,28 @@ Do not start a downstream wave by duplicating missing upstream logic in Filament
 - [ ] Scope/effective overlap is deterministic
 - [ ] Relevant tests pass
 
+## TASK-POLICY-002 — Implement Commercial, Calibration, and Currency Policy Domains
+**Implements:** FR-POLICY-001, FR-POLICY-003, FR-ELIG-018–019, FR-CLINICAL-006  
+**Goal:** Carry price bands, market-calibration thresholds, commercial options, proposal validity, and currency policy as governed policy versions and option rows rather than constants.  
+**Dependencies:** TASK-POLICY-001, TASK-IDENTITY-002, TASK-AUDIT-001  
+**Expected Files / Areas:** price-band and calibration policy payload contracts (Proposed); `app/Models/CommercialOption.php`, `CurrencyNormalization.php` (Proposed); policy resolvers; Filament commercial-policy pages (Proposed); migrations; tests  
+**Implementation Notes:** Every threshold, boundary, window, mode, category, validity period, rate source, and rounding rule is a policy-version value or a `commercial_options` row with an effective date. Reject the spreadsheet's fixed A/B/C/D/F multipliers and the fixed thirty-clinic sample rule as code defaults; an initial default may exist only as documented policy data. No concrete exchange-rate provider is named in domain code, and no universal rate-lock period exists. Enabling an external financial method label must create no money-movement path.  
+**Data / Migration Impact:** Add `commercial_options` and `currency_normalizations` per `ERD.md` sections 6.13 and 9.3; price and calibration policy live in `policy_versions` rows.  
+**API Impact:** None directly; results surface through catalog, discovery, and plan projections.  
+**Tests Required:** threshold and boundary resolution from policy only; prospective activation leaving prior decisions and accepted snapshots untouched; option lifecycle and applicability; currency provenance recorded; accepted amounts never recomputed; method label enabling no money movement.  
+**Verification:** `php artisan test --compact tests/Feature/Policy/CommercialPolicyTest.php`; `composer test:mysql`; `composer test`  
+**Definition of Done:**
+- [ ] No band, threshold, mode, category, validity period, rate, or rounding rule is a code or environment constant
+- [ ] Activation is prospective and historical results are reproducible
+- [ ] Accepted snapshots are never recomputed by a policy change
+- [ ] No money-movement capability is reachable through configuration
+
 ## TASK-CATALOG-001 — Build Admin Catalog and Service-Definition Governance
 **Implements:** FR-CATALOG-001, FR-POLICY-001–002  
 **Goal:** Expose the existing service groups/services/definitions to authorized staff through governed Admin actions while preserving current lifecycle invariants.  
 **Dependencies:** TASK-POLICY-001, TASK-IDENTITY-002  
 **Expected Files / Areas:** existing catalog models/actions; `app/Filament/Resources/*Service*` (Proposed); catalog authorization policies; existing catalog tests  
-**Implementation Notes:** Reuse existing `ServiceDefinition` model lifecycle and publication action. Draft editing must not permit editing activated historical definitions. Evaluation/production audience is explicit. The 26 seeded records remain evaluation-only.  
+**Implementation Notes:** Reuse existing `ServiceDefinition` model lifecycle and publication action. Draft editing must not permit editing activated historical definitions. Evaluation/production audience is explicit. The seeded records remain evaluation-only, and their count is not a constant the resource may assume.  
 **Data / Migration Impact:** No redesign of existing catalog schema unless a verified requirement forces it.  
 **API Impact:** Preserve `API-CATALOG-001`; Admin implementation must not change patient/public contract accidentally.  
 **Tests Required:** Admin authorization; lifecycle action guards; evaluation/production separation; no edit of immutable versions; regression of existing catalog tests.  
@@ -309,6 +337,39 @@ Do not start a downstream wave by duplicating missing upstream logic in Filament
 - [ ] Evaluation data cannot be published by ordinary editing
 - [ ] Public catalog regression remains green
 - [ ] Relevant tests pass
+
+## TASK-CATALOG-003 — Build the Two-Layer Catalog and Mapping Governance
+**Implements:** FR-CATALOG-002, FR-POLICY-001  
+**Goal:** Let an authorized catalog administrator maintain families, detailed procedure items, and their versioned mapping entirely as governed data, so ordinary catalog change never needs a deployment.  
+**Dependencies:** TASK-CATALOG-001, TASK-POLICY-001, TASK-IDENTITY-002  
+**Expected Files / Areas:** `app/Models/ProcedureItem.php`, `ProcedureItemVersion.php`, `ServiceFamilyProcedureMap.php` (Proposed); catalog actions and query services; migrations; `app/Filament/Resources/*Procedure*`, `*ServiceFamily*` (Proposed); candidate-import command; policies; tests  
+**Implementation Notes:** Treat the existing `services` table as the family layer — do not build a parallel catalog. Reuse the `ServiceDefinition` lifecycle shape for `procedure_item_versions`. Mapping changes insert a superseding effective-dated row. Identity columns become immutable once accepted or historical records reference them; a changed meaning creates a successor. The candidate import is a console/seeder path landing in the evaluation audience with provenance, never compiled content and never approved clinical values. No count of families or procedures appears as a constant anywhere.  
+**Data / Migration Impact:** Add `procedure_items`, `procedure_item_versions`, `service_family_procedure_maps` per `ERD.md` sections 6.9–6.11; follow the additive transition strategy in section 15.1 and keep existing `services` primary keys.  
+**API Impact:** `API-CATALOG-001` gains the additive family fields only; the procedure layer is never published to the Patient app.  
+**Tests Required:** add/rename/reorder/hide/retire a family and a procedure with no code change; mapping supersession; historical plan lines resolving their captured mapping generation; identity immutability after reference; import provenance and evaluation audience; existing catalog regression.  
+**Verification:** `php artisan test --compact tests/Feature/Catalog/ProcedureCatalogGovernanceTest.php`; `php artisan test --compact tests/Feature/Api/V1/Catalog/ListServiceGroupsTest.php`; `composer test:mysql`; `composer test`  
+**Definition of Done:**
+- [ ] Every ordinary catalog change is achievable through governed data alone
+- [ ] Referenced identities cannot be repurposed and retirement deletes nothing
+- [ ] Mapping is effective-dated and historical resolution is preserved
+- [ ] Import cannot publish or approve
+- [ ] Public catalog regression remains green
+
+## TASK-CATALOG-004 — Build Clinical Service-Definition Governance and Its Approval Gate
+**Implements:** FR-CATALOG-003, FR-OPS-003, FR-ELIG-005  
+**Goal:** Make procedure clinical content — risk level, grade prerequisites, credential, equipment, evidence, inclusions, exclusions, follow-up, completion — versioned governed data whose production activation requires licensed clinical approval.  
+**Dependencies:** TASK-CATALOG-003, TASK-OPS-001, TASK-IDENTITY-002  
+**Expected Files / Areas:** procedure-definition payload validation (Proposed); clinical-review actions; `ClinicalReviewerCredential` reuse; Filament draft editor and reviewer pages (Proposed); eligibility prerequisite resolver; policies; tests  
+**Implementation Notes:** `service_risk_level` is the required name — never `R`. Risk never decides eligibility alone; the definition's stated prerequisites become gate inputs alongside provider, branch, credential, evidence, and facility inputs. The drafter and the approver are different authorities and the same actor cannot be both. Approval binds the exact content hash; an expired or revoked credential fails closed. Do not port the rejected spreadsheet rule that a risk tier alone permits or forbids a grade.  
+**Data / Migration Impact:** Relational `service_risk_level`, `minimum_scientific_grade`, `clinical_review_state`; structured content in the definition payload per `ERD.md` section 6.10.  
+**API Impact:** None patient-facing; prerequisites reach patients only as practical eligibility meaning.  
+**Tests Required:** activation refused without current credentialed approval on the exact hash; drafter cannot self-approve; expired/revoked credential fails closed; visibility toggle does not promote audience; risk level alone changes no eligibility outcome; prerequisites participate as gates.  
+**Verification:** `php artisan test --compact tests/Feature/Catalog/ClinicalServiceDefinitionGovernanceTest.php`; `composer test:mysql`; `composer test`  
+**Definition of Done:**
+- [ ] Clinical fields are versioned data, not code constants
+- [ ] Activation fails closed without licensed clinical approval
+- [ ] Drafting and approving authorities are separated in enforcement, not only in UI
+- [ ] Risk level never independently determines eligibility
 
 ## TASK-OPS-001 — Complete Launch-Gate Review and Publication Operations
 **Implements:** FR-OPS-003, FR-CATALOG-001, FR-POLICY-001  
@@ -394,6 +455,22 @@ Do not start a downstream wave by duplicating missing upstream logic in Filament
 - [ ] Production policy can fail closed pending clinical approval
 - [ ] Relevant tests pass
 
+## TASK-ELIG-012 — Implement Market Observations and Calibrated Price Classification
+**Implements:** FR-ELIG-019, FR-ELIG-014, FR-POLICY-002  
+**Goal:** Derive the internal price comparison basis from a governed market-observation corpus under the effective price policy, and record an explicit non-final calibration state when the evidence is insufficient.  
+**Dependencies:** TASK-POLICY-002, TASK-ELIG-003, TASK-AUDIT-001  
+**Expected Files / Areas:** `app/Models/MarketPriceObservation.php` (Proposed); market calibration component; pricing classification component; Filament calibration workspace (Proposed); migrations; tests  
+**Implementation Notes:** Calibration resolves **before** evaluation so the decision snapshot records the basis, sample size, policy version, and calibration state that produced it. Below the effective minimum sample or confidence rule, write the non-final state and leave `pricing_class` null — never fabricate a class and never emit a market-average label. Observations are corrected by inserting a superseding row, never edited in place. Patient discovery is unaffected by the calibration state: the provider's own price is shown either way.  
+**Data / Migration Impact:** Add `market_price_observations` per `ERD.md` section 6.12 and the `pricing_class_state` plus `price_policy_version_id` columns on `eligibility_decisions`.  
+**API Impact:** No observation, sample count, confidence figure, comparison basis, or calibration state is ever exposed to Patient or Clinic.  
+**Tests Required:** boundary behavior at and below the minimum sample; non-final state with null class; supersession preserving reproducibility; threshold change effective tomorrow leaving today's decisions intact; no fixed multiplier path; patient projection unchanged across calibration states.  
+**Verification:** `php artisan test --compact tests/Feature/Eligibility/MarketCalibrationTest.php`; `composer test:mysql`; `composer test`  
+**Definition of Done:**
+- [ ] Comparison basis comes from governed observations under the effective policy
+- [ ] Insufficient evidence produces an explicit non-final state, never a fabricated class
+- [ ] Observation corrections supersede and stay reproducible
+- [ ] No calibration internal reaches a Patient or Clinic surface
+
 ## TASK-ELIG-004 — Implement Immutable Eligibility Evaluation Engine
 **Implements:** FR-ELIG-002, FR-ELIG-005, FR-ELIG-008–015, FR-POLICY-002, NFR-AUDIT-003  
 **Goal:** Compute and persist one reproducible eligibility decision for an exact provider/service/branch/policy context.  
@@ -415,14 +492,14 @@ Do not start a downstream wave by duplicating missing upstream logic in Filament
 **Goal:** Reevaluate only affected scopes when an influential fact/evidence/policy/credential changes and block unsafe new bookings promptly.  
 **Dependencies:** TASK-ELIG-004  
 **Expected Files / Areas:** dependency resolver (Proposed); reevaluation jobs; scheduler hooks; suspension action; queue monitoring; tests  
-**Implementation Notes:** Determine affected provider/service/branch scopes from source ownership metadata. Each reevaluation creates a new decision. Background lag is observable; booking confirmation still revalidates synchronously/currently rather than trusting stale projection. Existing bookings use the unresolved review workflow under `Q-BOOKING-002`; do not encode an automatic terminal outcome in this task.  
+**Implementation Notes:** Determine affected provider/service/branch scopes from source ownership metadata. Each reevaluation creates a new decision. Background lag is observable; booking confirmation still revalidates synchronously/currently rather than trusting stale projection. Existing affected bookings enter `ELIGIBILITY_REVIEW` per `STATE_MACHINES.md` section 8.2; this task creates that transition and the urgent work item but no automatic terminal outcome and no attendance override.  
 **Data / Migration Impact:** Reuse decision history; add only necessary dependency/index metadata justified by queries.  
 **API Impact:** Later discovery/booking contracts consume latest safe state.  
 **Tests Required:** credential/evidence expiry; targeted suspension; unaffected scopes unchanged; new bookings blocked; existing bookings not silently cancelled/confirmed; job retry/idempotency; delay/failed-job visibility.  
 **Verification:** `php artisan test --compact tests/Feature/Eligibility/EligibilityRecalculationTest.php`; `composer test:mysql`; `composer test`  
 **Definition of Done:**
 - [ ] Influential invalidation blocks affected new bookings
-- [ ] Existing booking state is not invented while `Q-BOOKING-002` is open
+- [ ] Existing affected bookings enter `ELIGIBILITY_REVIEW` with no attendance override at any role
 - [ ] Recalculation does not rewrite history
 - [ ] Unaffected scopes remain unchanged
 - [ ] Failures are observable/retryable
@@ -450,7 +527,7 @@ Do not start a downstream wave by duplicating missing upstream logic in Filament
 **Goal:** Provide scoped operational visibility into booking lifecycle, provider deadlines, alternatives, capacity conflicts, and blocked cases without giving Admin a safety override.  
 **Dependencies:** TASK-ELIG-005, TASK-OPS-002  
 **Expected Files / Areas:** booking models/actions created by shared/Clinic/Patient work as applicable; Admin booking query/resource (Proposed); work-item integration; tests  
-**Implementation Notes:** Read canonical states from `STATE_MACHINES.md`. Admin may inspect/escalate work; provider accept/reject/alternative remains provider-scoped. Never implement “force confirmed” when revalidation fails. Alternative expiry/decline becomes non-actionable but does not acquire an invented terminal/rollback state while `Q-BOOKING-001` is open.  
+**Implementation Notes:** Read canonical states from `STATE_MACHINES.md`. Admin may inspect/escalate work; provider accept/reject/alternative remains provider-scoped. Never implement “force confirmed” when revalidation fails. Alternative expiry or decline closes the booking as `CANCELLED` with the reason code defined by `PO-UX-12` and applies no patient penalty.  
 **Data / Migration Impact:** Booking tables/events follow `ERD.md`; this task primarily adds Admin read/projection integration.  
 **API Impact:** None from Admin surface.  
 **Tests Required:** scoped access; deadline visibility; terminal-state immutability; expired alternative remains non-actionable without an invented terminal state; no force-confirm action; work-item creation on exception.  
@@ -738,7 +815,12 @@ Do not implement any of the following while working this plan:
 - editing accepted historical terms/decisions/events in place;
 - public storage/URLs for private medical/identity/financial evidence;
 - automatic final medical/legal/punitive/high-impact financial claim decisions;
-- publication of the 26 evaluation services as clinically approved merely to populate production;
+- publication of evaluation services or imported candidate procedures as clinically approved merely to populate production;
+- hard-coding a catalog identity list, a `service_risk_level` set, a price band, a market-sample threshold, a fixed comparison multiplier, an exchange rate or rate source, a rounding rule, an approved modifier list, a third-party-cost category list, or a proposal-validity period in code, `config/`, `.env`, a seeder treated as production truth, or a Filament resource;
+- a general rule-scripting engine, dynamic code execution, database-stored code, or a generic workflow or state-machine designer built to avoid future development;
+- an uncategorized or free-text surcharge path on a treatment line;
+- treating an unaccepted treatment amendment as agreed;
+- activating a clinically meaningful procedure change through catalog or commercial administration alone;
 - provider-specific OTP/MFA/malware/storage contracts before an actual provider is selected;
 - UX layout/design work inside this engineering plan.
 
@@ -749,10 +831,8 @@ These items must remain visible during implementation:
 | ID | Severity | Admin impact |
 |---|---|---|
 | `Q-PLATFORM-001` | Blocker | Cannot claim full SRS-v1.1 reconciliation until readable authoritative text is available. Work continues only under the approved `.spec` baseline. |
-| `Q-CATALOG-001` | Major | 26 provisional catalog records cannot be declared production medically ready without licensed clinical approval. |
-| `Q-ELIG-001` | Major | Eligibility framework may be built, but production S/P/H/I formulas/weights/thresholds/defaults require licensed clinical approval. |
-| `Q-BOOKING-001` | Major | Alternative expiry/decline can make the proposal non-actionable, but the resulting booking state is unresolved; Admin must not infer a terminal or rollback state. |
-| `Q-BOOKING-002` | Major | Existing-booking review after eligibility suspension lacks approved decision authority, deadline, state-effect, and outcome semantics; Admin must not auto-cancel/confirm. |
+| `Q-CATALOG-001` | Major | Provisional family records and imported candidate procedure content cannot be declared production medically ready without licensed clinical approval. The two-layer model, its governance, and the authority split are settled and are not waiting on this item. |
+| `Q-ELIG-001` | Major | Eligibility framework may be built, but production S/H/I formulas, weights, grade bands, and market-calibration thresholds require licensed clinical approval. The `P` derivation direction and the rule that no actor selects it are settled. |
 | `Q-PLATFORM-002` | Major | Retention/deletion policy values require legal/compliance validation; mechanism can be implemented without falsely finalizing values. |
 | `Q-OPS-001` | Major | MySQL is the required production relational engine; hosting/provider/topology, managed-vs-self-hosted deployment, HA/PITR implementation, cache/queue/storage/logging and release infrastructure remain unresolved. |
 | `Q-PLATFORM-003` | Major | OTP/MFA, malware scan, private storage, and notification providers are unresolved; use interfaces/fakes only. |
@@ -782,8 +862,10 @@ The Admin plan is implementation-complete only when all applicable gates below a
 ### Gate C — Governance
 
 - policy/service definitions are versioned/effective-dated;
+- catalog content, mapping, clinical prerequisites, price bands, calibration thresholds, commercial options, and currency policy are governed data with effective dates and no code constants;
+- the catalog, clinical, and commercial authorities are separately enforced server-side and the drafter of a clinically meaningful change cannot approve it;
 - launch gates are accountable and fail closed;
-- evaluation catalog remains separate from production readiness;
+- evaluation catalog remains separate from production readiness, and no visibility or activation control promotes it;
 - sensitive claim decisions are human and separation-of-duties controlled.
 
 ### Gate D — Operations
@@ -803,7 +885,7 @@ The Admin plan is implementation-complete only when all applicable gates below a
 
 ## 13. Test-ID Status
 
-`docs/TESTING_STRATEGY.md` owns the current append-only registry of **82 concrete `TC-*` IDs**. `docs/TRACEABILITY_MATRIX.md` maps the 65 registered requirements to implementation tasks and test cases, and `docs/README.md` is synchronized with the current TASK/TC maxima.
+`docs/TESTING_STRATEGY.md` owns the current append-only registry of **91 concrete `TC-*` IDs**. `docs/TRACEABILITY_MATRIX.md` maps the 74 registered requirements to implementation tasks and test cases, and `docs/README.md` is synchronized with the current TASK/TC maxima.
 
 The `Tests Required` and `Verification` fields in this plan remain task-level implementation guidance; canonical test IDs and cross-requirement coverage stay owned by `docs/TESTING_STRATEGY.md` and `docs/TRACEABILITY_MATRIX.md`. Future test allocations must update `docs/README.md` without renumbering existing IDs. `docs/scripts/validate_docs.py` and the documentation CI validate the mechanical registry/coverage constraints.
 
@@ -814,10 +896,10 @@ This file owns the following append-only `TASK-*` identifiers:
 - `TASK-PLATFORM-001` through `TASK-PLATFORM-004`;
 - `TASK-IDENTITY-001` through `TASK-IDENTITY-003`;
 - `TASK-AUDIT-001` through `TASK-AUDIT-002`;
-- `TASK-POLICY-001`;
-- `TASK-CATALOG-001`;
+- `TASK-POLICY-001` through `TASK-POLICY-002`;
+- `TASK-CATALOG-001`, `TASK-CATALOG-003` through `TASK-CATALOG-004`;
 - `TASK-OPS-001` through `TASK-OPS-003`;
-- `TASK-ELIG-001` through `TASK-ELIG-006`;
+- `TASK-ELIG-001` through `TASK-ELIG-006`, `TASK-ELIG-012`;
 - `TASK-BOOKING-001` through `TASK-BOOKING-002`;
 - `TASK-CLINICAL-001`;
 - `TASK-FINANCE-001` through `TASK-FINANCE-003`;

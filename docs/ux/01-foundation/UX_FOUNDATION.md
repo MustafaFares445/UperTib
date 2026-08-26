@@ -275,7 +275,7 @@ Two facts from that decision shape more design than the rest combined. The patie
 
 ## 3. Jobs To Be Done
 
-66 jobs, phrased in the actor's terms, each traced to requirements. `Current pain` has no research behind it for any job — no interviews, analytics or support tickets exist for this product. `PO-UX-18` accepted that as a research limitation rather than an open question, so the field is recorded honestly as an absence rather than filled with a fabricated insight per job. Usability testing stays a recommended validation activity for later phases.
+69 jobs, phrased in the actor's terms, each traced to requirements. `Current pain` has no research behind it for any job — no interviews, analytics or support tickets exist for this product. `PO-UX-18` accepted that as a research limitation rather than an open question, so the field is recorded honestly as an absence rather than filled with a fabricated insight per job. Usability testing stays a recommended validation activity for later phases.
 
 ### 3.1 IDENTITY
 
@@ -401,6 +401,22 @@ Two facts from that decision shape more design than the rest combined. The patie
 **Current pain:** no research (`Q-PLATFORM-007`)
 **Success looks like:** an append-only decision bound to the exact content, with reason, evidence and expiry where applicable, and a clinical credential usable only on the medical gate
 
+### JTBD-CATALOG-004 — When the service catalog has to change operationally, I want to add, rename, regroup, map or retire catalog content as governed data, so ordinary catalog change never waits for a code release
+**Actors:** Catalog / product administrator; Licensed clinical reviewer for clinically meaningful content
+**Requirements:** FR-CATALOG-002, FR-CATALOG-003; SDC-CATALOG-002, SDC-CATALOG-003
+**Frequency:** weekly during launch, monthly afterwards
+**Criticality:** blocking for operating the catalog at all — today every one of these changes is a deployment
+**Current pain:** no research (`Q-PLATFORM-007`)
+**Success looks like:** a family or detailed procedure is created, relabelled, reordered, mapped, remapped or retired entirely through governed data; a referenced identity is superseded rather than repurposed; every historical case still resolves the version and mapping it was planned against; and a clinically meaningful change still cannot activate without the licensed reviewer
+
+### JTBD-CATALOG-005 — When commercial options change, I want to govern which price modes, upgrades, third-party costs and quantity rules are allowed, so no clinic can invent an unexplained charge
+**Actors:** Commercial / pricing administrator
+**Requirements:** FR-ELIG-018, FR-CLINICAL-006; SDC-POLICY-002
+**Frequency:** monthly to rarely
+**Criticality:** important — it is the boundary that makes billing integrity enforceable rather than advisory
+**Current pain:** no research (`Q-PLATFORM-007`)
+**Success looks like:** the approved catalog of price modes, material upgrades, third-party-cost categories and quantity rules is maintained prospectively; a clinic can select only from it; a retired option disappears from new selection while accepted plans keep the option they referenced; and nothing enables money movement
+
 ### 3.3 ELIG
 
 ### JTBD-ELIG-001 — When I know what treatment I need, I want to see dentists who can actually do it now, so I do not waste time on someone unavailable
@@ -445,11 +461,19 @@ Two facts from that decision shape more design than the rest combined. The patie
 
 ### JTBD-ELIG-006 — When my price for a service changes, I want to record it as a fact, so patients see accurate cost and the system derives whatever it derives
 **Actors:** Treating dentist; Clinic / provider representative
-**Requirements:** FR-ELIG-009, FR-ELIG-014; SDC-ELIG-001
+**Requirements:** FR-ELIG-009, FR-ELIG-014, FR-ELIG-018; SDC-ELIG-005
 **Frequency:** monthly to rarely
 **Criticality:** important
 **Current pain:** no research (`Q-PLATFORM-007`)
-**Success looks like:** the price is stored with service, branch, currency, amount, effective period and provenance, and `P` is never presented to the provider as a quality grade
+**Success looks like:** the price is stored with catalog scope, branch, governed display mode, currency, amount or bounds, effective period and provenance; a legitimately free service is expressible; a replacement supersedes rather than overwrites; and `P` is never presented to the provider as a quality grade or offered as a pricing menu
+
+### JTBD-ELIG-009 — When I must judge whether a provider's price is high or low, I want to maintain market observations and their confidence, so the internal price classification rests on evidence instead of a guess
+**Actors:** Commercial / pricing administrator
+**Requirements:** FR-ELIG-019, FR-ELIG-014; SDC-POLICY-002
+**Frequency:** weekly during calibration, monthly afterwards
+**Criticality:** important — a wrong basis silently mislabels every provider in scope
+**Current pain:** no research (`Q-PLATFORM-007`)
+**Success looks like:** observations carry locality, source, date, verification state and confidence; the effective policy's window, sample and confidence rules are visible against the actual sample; a scope below threshold reads honestly as still calibrating rather than producing a class; a threshold change applies prospectively; and no patient or clinic surface ever sees any of it
 
 ### JTBD-ELIG-007 — When facts and evidence arrive for assessment, I want to verify or reject each one with a reason, so the computed outcome rests on approved truth
 **Actors:** Verification staff; Licensed clinical reviewer
@@ -831,7 +855,7 @@ Two facts from that decision shape more design than the rest combined. The patie
 
 ## 4. Task Frequency by Criticality Matrix
 
-Every one of the 66 jobs is plotted. This is the artifact that decides prominence in UX Phase 2, so it is placed here rather than being rediscovered later.
+Every one of the 69 jobs is plotted. This is the artifact that decides prominence in UX Phase 2, so it is placed here rather than being rediscovered later.
 
 Placement rule used, from `ux_01`:
 
@@ -878,7 +902,15 @@ Volume figures are scaled to the established operating envelope: Aleppo only, lo
 | Entity | Schema status | Encountered by | Volume per parent | Volatility | Identifying field |
 |---|---|---|---|---|---|
 | `service_groups` | Existing | All | 4 (G01–G04) | very low | `code` |
-| `services` | Existing | All | 26 provisional across 4 groups | very low | `code`, `slug` |
+| `services` | Existing | All | currently 26 provisional across 4 groups; count is not fixed | very low | `code`, `slug` |
+| `procedure_items` | Proposed | Clinic; Admin | roughly 100 candidate rows on import; not patient-facing | very low | `code`, `slug` |
+| `procedure_item_versions` | Proposed / governed | Admin; Clinic | many versions per procedure, one active | low, clinical-review driven | `version` + audience |
+| `service_family_procedure_maps` | Proposed | Clinic; Admin | many procedures per family, effective-dated | low | family + procedure + effective period |
+| `commercial_options` | Proposed / governed | Clinic; Admin | few per category | low | category + option key |
+| `market_price_observations` | Proposed / governed | Admin only | tens to low hundreds per locality and scope | medium | locality + scope + observed date |
+| `treatment_plan_lines` | Proposed | All, role-filtered | a few to a few dozen per plan version | medium while drafting, frozen on acceptance | procedure version + sequence |
+| `treatment_line_modifiers` | Proposed | All, role-filtered | 0–few per line | medium while drafting | category + option |
+| `currency_normalizations` | Proposed, append-only | Admin only | append-only per rate change | medium | source/target + effective time |
 | `service_definitions` | Existing | Admin; Clinic | many versions per service, one active | low | `version` + audience |
 | `service_launch_gates` | Existing | Admin | 4 gate types, append-only decisions per definition | low, expiry-driven | gate type + sequence |
 | `clinical_reviewer_credentials` | Existing | Admin | 1 current per reviewer, immutable snapshots | low, expiry-driven | reviewer + snapshot |
@@ -1025,7 +1057,9 @@ This is a design constraint, not only an engineering one. No screen may contain 
 
 ### 7.7 Medical and clinical boundary
 
-The 26 dental service records are provisional evaluation records, not clinically approved production content (`Q-CATALOG-001`). Production `S`, `P`, `H` and `I` values await licensed clinical approval (`Q-ELIG-001`). No interface may present provisional catalog data as clinically production-approved, and no interface may imply UberTib diagnoses, treats, insures or guarantees an outcome.
+The seeded dental service records are provisional evaluation records and candidate patient-facing family content, not clinically approved production content (`Q-CATALOG-001`), and their count is not a design constant. Imported candidate procedure content is in the same position. Production `S`, `H` and `I` values and the market-calibration thresholds await licensed clinical approval (`Q-ELIG-001`). No interface may present provisional catalog data as clinically production-approved, and no interface may imply UberTib diagnoses, treats, insures or guarantees an outcome.
+
+Two further presentation constraints follow from the Syria catalog and pricing decision. **Patient discovery is entered through service families, never a flat list of professional procedure codes** — detailed procedures appear only inside a clinician-authored plan the patient reads after examination. And **no surface may label a price a market or city average** while the effective price policy reports a non-final calibration state; the patient sees the provider's own price and its governed mode, which is true regardless of what the internal classification could compute.
 
 Protection must be presented as its documented meaning with funded monetary protection disabled — never as insurance, reimbursement or a guaranteed result (`FR-ELIG-010`).
 

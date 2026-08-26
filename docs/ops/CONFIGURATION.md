@@ -170,22 +170,41 @@ Local/test: SQLite may be used where appropriate, with MySQL verification for en
 - Before deployment, all database-specific trigger/constraint behavior must be exercised against MySQL, not only SQLite test runs.
 - Database credentials must use least privilege appropriate to runtime versus migration/deployment operations where the hosting setup supports separate principals.
 
-### 6.3 Business Policy Must Not Live in DB Environment Variables
+### 6.3 Business Policy Must Not Live in Environment Variables
+
+**Environment variables configure deployment and infrastructure. They never carry business policy.** This is not a style preference: a value in `.env` has no version, no effective date, no provenance, no approval trail, and no way to reproduce a historical decision, so putting policy there silently breaks `FR-POLICY-002` and `NFR-AUDIT-003`.
 
 Do not create `.env` variables for:
 
 - scientific grade bands;
 - S weights;
 - K/EU confidence thresholds;
-- P price bands;
+- P price bands and band boundaries;
 - H rules;
 - I rules;
 - booking/cancellation deadlines;
 - claim/refund windows;
 - evidence requirements;
-- retention periods.
+- retention periods;
+- service, family, or procedure lists, labels, descriptions, ordering, or visibility;
+- family-to-procedure mapping;
+- `service_risk_level` values or their meaning;
+- minimum or allowed scientific grade for a service or procedure;
+- inclusions, exclusions, follow-up, completion, or escalation rules;
+- required credentials, equipment, or branch capability;
+- price-display modes or the logic deciding which mode a patient sees;
+- market-observation sample thresholds, observation windows, or confidence rules;
+- any fixed ratio of a market comparison value, including the rejected A/B/C/D/F spreadsheet multipliers;
+- exchange rates, exchange-rate source identity, rate-lock periods, or rounding rules;
+- approved modifiers, material-upgrade options, third-party-cost categories, or quantity rules;
+- treatment-proposal validity periods;
+- external financial method categories.
 
-Those values require versioning, provenance, historical reproducibility, and in some cases clinical/legal approval. They belong in the policy/service-definition models described by `ERD.md`.
+Those values require versioning, provenance, historical reproducibility, and in some cases clinical or commercial approval. They belong in the policy, service-definition, procedure-definition, mapping, commercial-option, and market-observation models described by `ERD.md`.
+
+**The same prohibition applies to code.** None of the values above may be a PHP enum used as a business vocabulary, a `config/` array treated as policy, a seeder value treated as production truth, a controller or action condition, a Filament resource literal, or a React Native constant. `ServiceDefinitionPayload`'s current positive-reference-price check, hard-coded `SYP` currency literal, and hard-coded risk-tier set are the three known live violations and are recorded as implementation gaps in `SDD.md` section 32.
+
+**What does belong in configuration** is the deployment-shaped switch: which database, queue, cache, storage, mail, or log driver is in use; the application URL and environment; credentials for an external provider; and the two existing UberTib safety switches in section 5. `UBERTIB_CATALOG_MODE` selects which audience the catalog serves — it is not a promotion mechanism, and it can never turn evaluation content into approved production content.
 
 ## 7. Cache Configuration
 
@@ -606,8 +625,17 @@ Where possible, production credentials should be injected from the hosting platf
 | Catalog evaluation vs production mode | Yes | `config/ubertib.php`, release environment |
 | V1 record-only financial mode | Yes, invariant switch | `config/ubertib.php` + domain enforcement |
 | Service definitions | No | Versioned service-definition records |
+| Service families, procedure items, labels, order, visibility, retirement | No | Governed catalog rows (`FR-CATALOG-002`) |
+| Family-to-procedure mapping | No | Effective-dated mapping rows (`FR-CATALOG-002`) |
+| `service_risk_level`, minimum/allowed grade, credential, equipment, evidence, inclusions, exclusions, follow-up, completion | No | Versioned procedure-definition records requiring clinical approval (`FR-CATALOG-003`) |
 | S formula/weights/grade bands | No | Versioned clinically approved policy |
-| P price bands | No | Versioned policy + source price facts |
+| P price bands and band boundaries | No | Versioned price policy + source price facts |
+| Market observations, observation window, sample threshold, confidence rules | No | Market-observation rows + versioned price policy (`FR-ELIG-019`) |
+| Price-display modes and patient-visible price-mode logic | No | Governed commercial-option rows (`FR-ELIG-018`) |
+| Approved modifiers, material upgrades, third-party-cost categories, quantity rules | No | Governed commercial-option rows (`FR-CLINICAL-006`) |
+| Exchange rate, approved rate source, rate-lock window, rounding rule | No | Versioned currency policy + normalization records (`FR-POLICY-003`) |
+| Treatment-proposal validity period | No | Versioned policy; V1 default 7 calendar days is policy data, not a constant |
+| External financial method categories | No | Governed commercial-option rows; a label never enables money movement |
 | H protection rules | No | Versioned policy/accepted snapshots |
 | I internal-risk rules | No | Versioned governed policy |
 | Booking/provider-response/cancellation deadlines | No | Versioned policy/snapshot |
@@ -623,6 +651,7 @@ Where possible, production credentials should be injected from the hosting platf
 - `Q-PLATFORM-003` — OTP/MFA, malware scanning, private-evidence transfer/storage, and related provider selections remain unresolved.
 - `Q-OPS-001` — production hosting/deployment topology and the concrete managed/self-hosted MySQL service, HA/PITR implementation, cache, queue, storage, and log-aggregation providers remain unresolved; **the production database engine itself is MySQL and is not open under this question**.
 - Current `.env.example` is development-oriented and must not be deployed unchanged to production.
+- Three live code-level policy hard-codings remain in `app/Domain/Catalog/ServiceDefinitionPayload.php` — the positive reference-price requirement, the `SYP` currency literal, and the risk-tier literal set. They contradict `FR-ELIG-018`, `FR-POLICY-003`, and `FR-CATALOG-003` and must move to governed data when the owning tasks land.
 - Current queue connections use `after_commit=false`; domain implementation must explicitly guarantee post-commit dispatch for relevant side effects.
 - The current mobile API authentication transport is not established and must not be inferred from Laravel's browser session configuration.
 

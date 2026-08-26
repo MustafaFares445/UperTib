@@ -153,13 +153,16 @@ This remains partial V1 implementation coverage. Identity/OTP, scoped authorizat
 
 | ID | Status | Requirements | Layer / platforms | Concrete acceptance scenario |
 |---|---|---|---|---|
-| `TC-CATALOG-001` | Existing | FR-CATALOG-001, NFR-PLATFORM-005 | API · Patient/public | `API-CATALOG-001` returns four evaluation groups / 26 provisional records with documented resource shape in evaluation mode. Existing evidence: `ListServiceGroupsTest.php`. |
+| `TC-CATALOG-001` | Existing | FR-CATALOG-001, NFR-PLATFORM-005 | API · Patient/public | `API-CATALOG-001` returns the four evaluation groups and their currently seeded family records with the documented resource shape in evaluation mode. The assertion is against the seeded fixture, not against a fixed count, so adding or retiring a family does not break the test. Existing evidence: `ListServiceGroupsTest.php`. |
 | `TC-CATALOG-002` | Existing | FR-CATALOG-001, FR-OPS-003 | API + model | Production mode never exposes evaluation-only/unready definition and does not silently fall back to older ready version when highest applicable current version is unready. Existing evidence: `ListServiceGroupsTest.php`. |
 | `TC-CATALOG-003` | Existing | FR-CATALOG-001, FR-POLICY-001 | Model + persistence | Stable catalog identity and governed definition version integrity cannot be silently rewritten. Existing evidence: `CatalogIdentityIntegrityTest.php`, `ServiceDefinitionTest.php`. |
 | `TC-CATALOG-004` | Partial | FR-OPS-003, FR-POLICY-001 | Model + governance · Admin | Production publication fails without all current gates; medical gate requires current verified dental credential; stale content hash/expired/revoked approval fails closed. Current clinical approval tests cover part; full staff/action authorization remains Planned. |
 | `TC-CATALOG-005` | Partial | FR-POLICY-001, FR-OPS-003 | Transaction + cross-platform | Publishing higher production version atomically supersedes prior active version; fresh Patient/Clinic/Admin projections use new current version while historical cases retain captured version. Lifecycle transaction is partly Existing; cross-platform projection verification Planned. |
 
-**Governed acceptance:** Passing `TC-CATALOG-*` does not resolve `Q-CATALOG-001`; licensed clinical approval is still required for production medical readiness of the 26 provisional records.
+| `TC-CATALOG-006` | Planned | FR-CATALOG-002, FR-POLICY-001 | Data-driven catalog · Admin + API | Every ordinary catalog change is data with **zero code change and zero deployment**: add a family, rename and re-describe one, reorder within a group, hide one, add a detailed procedure with its billing unit, map it to a family with an effective date, supersede that mapping, and retire a procedure prospectively. After each step the patient projection and the clinician planning surface reflect it on a fresh read. Retiring a family or procedure that accepted plan lines reference leaves those lines resolving their captured definition and mapping generation unchanged, and deletes nothing. A candidate import lands in the evaluation audience with provenance and sets no clinical value as approved. |
+| `TC-CATALOG-007` | Planned | FR-CATALOG-003, FR-OPS-003, NFR-IDENTITY-001 | Governance/authorization · Admin | A clinically meaningful procedure-definition change — risk level, minimum or allowed grade, credential, equipment, evidence, clinically meaningful inclusion or exclusion, follow-up, completion, escalation — cannot reach production activation without a licensed clinical reviewer approval bound to the exact content hash. The catalog administrator who drafted it cannot approve it. An expired or revoked credential fails closed. Toggling visibility, activation, or an effective date does **not** promote evaluation-audience content. Retiring a procedure prospectively leaves historical cases resolving their old version. |
+
+**Governed acceptance:** Passing `TC-CATALOG-*` does not resolve `Q-CATALOG-001`; licensed clinical approval is still required for production medical readiness of the provisional family records and any imported candidate procedure content. `TC-CATALOG-006` and `TC-CATALOG-007` prove the mechanism and the gate, never the clinical correctness of the content passing through them.
 
 # 10. Eligibility and S/P/H/I Test Cases
 
@@ -167,12 +170,14 @@ This remains partial V1 implementation coverage. Identity/OTP, scoped authorizat
 |---|---|---|---|---|
 | `TC-ELIG-001` | Planned | FR-ELIG-007–008 | Feature + evidence · Clinic/Admin | Clinic submits factual provider/service/branch activation inputs/evidence; Admin verifies source facts; neither adapter can submit final S/P/H/I/eligibility. |
 | `TC-ELIG-002` | Planned | FR-ELIG-002, FR-ELIG-008 | Domain + DB | Missing/expired mandatory fact or evidence produces immutable `PENDING_EVALUATION`; it is never scientific grade `F`. |
-| `TC-ELIG-003` | Planned | FR-ELIG-009, FR-ELIG-014 | Domain | Actual provider price + exact effective price-band policy computes `P`; no request/form/action can persist a manually selected P outcome. |
+| `TC-ELIG-003` | Planned | FR-ELIG-009, FR-ELIG-014, FR-ELIG-019 | Domain | Actual provider price + exact effective price-band policy computes `P`; no request, form, or action can persist a manually selected `P`, comparison basis, sample threshold, or calibration state, and no code path applies a fixed ratio of a comparison value. |
 | `TC-ELIG-004` | Planned | FR-ELIG-010–013, FR-ELIG-015 | Domain/property | Approved versioned policy computes S/H/I/confidence/grade-cap/gates deterministically at approved boundary values. Numeric clinical assertions remain gated by `Q-ELIG-001`. |
 | `TC-ELIG-005` | Planned | FR-ELIG-002, FR-ELIG-005, FR-ELIG-011–015 | Domain + DB | Most restrictive mandatory gate determines final eligibility; decision captures exact provider/service/branch/input/policy snapshot and cannot be edited. |
-| `TC-ELIG-006` | Planned | FR-ELIG-003–004, FR-ELIG-006 | Queue + DB + cross-platform | Influential fact/evidence/policy expiry/revocation creates a new decision, immediately blocks affected new bookings, removes affected Patient discovery result, updates Clinic status, creates Admin operational visibility, and leaves any already-existing affected booking in its authoritative current state without auto-cancelling/confirming or inventing review outcomes while `Q-BOOKING-002` is unresolved; unaffected scopes remain unchanged. |
+| `TC-ELIG-006` | Planned | FR-ELIG-003–004, FR-ELIG-006 | Queue + DB + cross-platform | Influential fact/evidence/policy expiry/revocation creates a new decision, immediately blocks affected new bookings, removes affected Patient discovery result, updates Clinic status, and creates Admin operational visibility. Each affected `CONFIRMED` booking moves to the non-terminal `ELIGIBILITY_REVIEW` state per `PO-UX-13`, keeps its reserved slot, is not attendable at any role, and creates an urgent work item; unaffected scopes remain unchanged. |
 | `TC-ELIG-007` | Planned | FR-ELIG-001, FR-ELIG-005–006 | API · Patient | Provider search returns only currently passing provider/service/branch combinations and excludes pending/suspended/failing scopes. |
-| `TC-ELIG-008` | Planned | FR-ELIG-016–017 | API privacy · Patient/Clinic | Patient-safe explanation and Clinic projection expose actionable reasons/freshness but omit raw internal `I`, protected reviewer evidence, and manual override controls. |
+| `TC-ELIG-008` | Planned | FR-ELIG-016–017 | API privacy · Patient/Clinic | Patient-safe explanation and Clinic projection expose actionable reasons/freshness but omit raw internal `I`, internal `P` and its calibration state, the market comparison basis, sample counts, percentiles, confidence figures, raw `service_risk_level` codes, protected reviewer evidence, and manual override controls. No surface labels a price a market or city average while calibration is non-final. |
+| `TC-ELIG-011` | Planned | FR-ELIG-018, FR-ELIG-009 | Domain + API · Clinic/Patient | Each governed price mode works end to end and reaches the patient as understandable meaning rather than an enum: explicitly zero-cost, single fixed amount, lower-bound estimate, approved range, and requires-examination. **A zero-cost service is production-ready** — no readiness check requires a positive amount. A mode whose required amount or bounds are absent is rejected. A retired mode is not selectable. A superseding price fact applies prospectively while an accepted snapshot keeps its captured amount and currency. Adding a newly approved mode requires no code change. |
+| `TC-ELIG-012` | Planned | FR-ELIG-019, FR-ELIG-014, FR-POLICY-002 | Domain + policy · Admin | Calibration behaves honestly at its boundaries: below the effective policy's minimum sample the decision records the non-final calibration state with `pricing_class` null and patient discovery still shows the provider's own price; at and above it a `FINAL` class is produced. Changing the sample threshold or a band boundary through a new policy version effective tomorrow leaves today's decisions and yesterday's accepted treatment untouched and applies from its effective date. Correcting an observation inserts a superseding row and the prior calibration result stays reproducible. No threshold or boundary is read from code or environment. |
 | `TC-ELIG-009` | Planned | FR-POLICY-002, FR-ELIG-004 | Reproduction | Replaying captured inputs + historical policy reproduces the original decision; mismatch creates an integrity exception rather than rewriting original history. |
 | `TC-ELIG-010` | Planned | FR-ELIG-003, FR-BOOKING-001 | Integration | Search/cache says eligible, then influential state becomes invalid before booking: booking-time revalidation rejects the mutation and stale client data cannot bypass current eligibility. |
 
@@ -186,7 +191,7 @@ This remains partial V1 implementation coverage. Identity/OTP, scoped authorizat
 | `TC-BOOKING-002` | Planned | FR-BOOKING-001–003, FR-OPS-001 | Cross-platform | After `TC-BOOKING-001` commit, Patient sees pending, owning Clinic sees the **same booking** as actionable request, authorized Admin sees oversight projection; no second platform-specific booking record exists. |
 | `TC-BOOKING-003` | Planned | FR-BOOKING-003 | Feature + time · Clinic | Correct provider/branch may accept, reject-with-reason, or propose alternative before the earlier of 12 hours or 2 hours before appointment; wrong scope/expired response is rejected. |
 | `TC-BOOKING-004` | Planned | FR-BOOKING-001, FR-BOOKING-003 | Transaction + cross-platform | Clinic accept revalidates current eligibility/readiness/capacity and commits `CONFIRMED`; Patient/Clinic/Admin all read confirmed state from one authoritative booking. |
-| `TC-BOOKING-005` | Planned | FR-BOOKING-003 | API + transaction · Patient/Clinic | Alternative proposal is not confirmation; only patient/authorized guardian may accept a current unexpired proposal and capacity/eligibility are revalidated before confirmation. Expired or explicitly declined proposals become non-actionable and late acceptance fails, but this test must not assert `REJECTED`, `CANCELLED`, return-to-`REQUESTED`, or another resulting booking state until `Q-BOOKING-001` is resolved. |
+| `TC-BOOKING-005` | Planned | FR-BOOKING-003 | API + transaction · Patient/Clinic | Alternative proposal is not confirmation; only patient/authorized guardian may accept a current unexpired proposal and capacity/eligibility are revalidated before confirmation. An expired or explicitly declined proposal closes the booking as `CANCELLED` with reason `ALTERNATIVE_DECLINED` or `ALTERNATIVE_EXPIRED` per `PO-UX-12`, applies no patient penalty, preserves the full proposal history, and rejects a late acceptance. |
 | `TC-BOOKING-006` | Planned | FR-BOOKING-002 | State + policy · Patient/Clinic/Admin | Cancellation validates actor/current state/versioned policy; no-show fails before threshold; resulting history records actor/reason/prior/result/policy and propagates to all authorized projections. |
 | `TC-BOOKING-007` | Planned | FR-BOOKING-001, NFR-PLATFORM-001, NFR-AUDIT-002 | MySQL concurrency | 100 concurrent confirmations against finite capacity never exceed capacity; losers receive deterministic conflict and idempotent retries create no duplicate reservation/event. |
 | `TC-BOOKING-009` | Planned | FR-BOOKING-004, FR-BOOKING-001, NFR-AUDIT-002 | Cross-platform + transaction | While a reschedule proposal is `PENDING` the booking stays `CONFIRMED` on the original slot for Patient, Clinic and Admin. On acceptance by the counterparty, eligibility and new-slot capacity revalidate, the move and old-slot release commit atomically, and history is appended. Self-response, decline, expiry, withdrawal, revalidation failure and repeated response each leave the correct authoritative state. A proposal against an `ELIGIBILITY_REVIEW` booking is rejected. |
@@ -203,6 +208,8 @@ This remains partial V1 implementation coverage. Identity/OTP, scoped authorizat
 | `TC-CLINICAL-005` | Planned | FR-CLINICAL-002, NFR-AUDIT-003 | Versioning | Accepted plan cannot be edited; later amendment creates new proposed version and requires new patient acceptance while previous accepted snapshot remains queryable. |
 | `TC-CLINICAL-006` | Planned | FR-CLINICAL-003–004 | State + evidence · Clinic | Stage completion requires exact accepted-snapshot evidence/facts/acknowledgements and authorized clinician; completion records actor/time/evidence; reopening is a new event preserving prior completion. |
 | `TC-CLINICAL-007` | Planned | FR-CLINICAL-005, FR-AUDIT-002 | Cross-platform timeline | Stage/follow-up changes appear in Patient safe timeline, Clinic workflow, and authorized Admin case projection from the same source; delayed reminder/notification does not alter clinical due/completion state. |
+| `TC-CLINICAL-008` | Planned | FR-CLINICAL-006, FR-FINANCE-001 | Domain + authoring · Clinic | Structured lines work and the integrity rules bite. A line binds a procedure **definition version**, quantity against its billing unit, unit price, line total, and the mapping generation it was reached through; the version total is derived from lines and is not independently writable. Each of the four governed modifier categories attaches with its reason and price difference. Rejected with `ERR-CLINICAL-002`: a second charge for a component the governing definition includes; a modifier with no approved commercial option; a category that mismatches its option; a free-text-only justification; a quantity change with no delta; a retired or not-yet-effective option. An added clinical service is authored as its own line, not a fee. Adding a newly approved modifier or third-party category requires no code change. |
+| `TC-CLINICAL-009` | Planned | FR-CLINICAL-007, FR-CLINICAL-002, FR-FINANCE-001, NFR-AUDIT-003 | Cross-platform + transaction | A material change after proposal or acceptance creates a superseding version, never an edit. Proposing it without the change summary — changed lines, reason per change, price difference, superseded version — is refused. The patient reads that summary before any acceptance action exists. While unaccepted the amendment governs nothing and the prior accepted snapshot still governs events under it on all three platforms. Acceptance atomically creates a new linked accepted treatment and financial snapshot pair; the superseded snapshot stays queryable and byte-identical. |
 
 # 13. External Financial Record Test Cases
 
@@ -246,6 +253,7 @@ This remains partial V1 implementation coverage. Identity/OTP, scoped authorizat
 | `TC-POLICY-002` | Planned | FR-POLICY-001 | Effective-period integrity | Active/effective policy overlap or precedence ambiguity is rejected/deterministically resolved; activated historical content cannot be edited. |
 | `TC-POLICY-003` | Planned | FR-POLICY-002, NFR-AUDIT-003 | Historical reproduction | Booking/eligibility/claim/etc. can resolve exact captured governing policy version after newer policy becomes active. |
 | `TC-POLICY-004` | Planned | FR-POLICY-001–002 | Cross-platform | Prospective policy replacement affects new/currently governed decisions as specified while existing accepted snapshots/history on Patient/Clinic/Admin remain bound to original version. |
+| `TC-POLICY-005` | Planned | FR-POLICY-003, FR-FINANCE-001, NFR-AUDIT-003 | Policy + reproduction | The patient-facing agreed amount is denominated in the applicable Syrian local currency and no foreign currency becomes the default obligation. A normalization records source and target currency, rate, approved rate source, effective timestamp, rounding rule, and policy version. Replacing the approved rate source or rounding rule is a policy-version change requiring no code change, and no rate value, source identity, or rate-lock period is read from code or environment. After a later rate or policy change, every accepted treatment and financial snapshot returns its original amount and currency unchanged. |
 
 # 17. Operations Test Cases
 
@@ -281,7 +289,7 @@ This remains partial V1 implementation coverage. Identity/OTP, scoped authorizat
 | `TC-PLATFORM-008` | Planned | NFR-PLATFORM-008 | Observability | Correlation, queue age/retry/failure, scan backlog, notification failure, eligibility delay, deadline breach, backup status, and invariant breach are measurable and threshold breach creates operational signal. |
 | `TC-PLATFORM-009` | Planned | NFR-PLATFORM-006, NFR-AUDIT-002 | Network resilience · Patient | Simulate timeout after server commit, reconnect duplicate, stale state, 429/temp failure: same logical command does not duplicate; unknown outcome reconciles via authoritative read. |
 | `TC-PLATFORM-010` | Planned | NFR-PLATFORM-006, NFR-PLATFORM-008 | Cross-platform side effect | Out-of-order/delayed/failed notification or reminder never becomes business truth and never reverts committed state; refresh converges Patient/Clinic/Admin to backend state. |
-| `TC-PLATFORM-011` | Partial | NFR-PLATFORM-007 | Architecture/static | Pint/Rector/PHPStan/100% configured type+line coverage pass; API remains `/api/v1`; presentation contains no hard-coded medical/financial policy engine. Existing `ArchTest.php` proves part. |
+| `TC-PLATFORM-011` | Partial | NFR-PLATFORM-007 | Architecture/static | Pint/Rector/PHPStan/100% configured type+line coverage pass; API remains `/api/v1`; presentation contains no hard-coded medical/financial policy engine. The scan additionally fails on a business-policy constant in code or environment — catalog identity lists, `service_risk_level` literal sets, price-band or market-sample constants, a fixed comparison multiplier, a currency literal used as policy, a rounding constant, or a proposal-validity constant — per section 30.4. Existing `ArchTest.php` proves part. |
 | `TC-PLATFORM-013` | Planned | FR-PLATFORM-001, NFR-PLATFORM-006 | Cross-platform · Patient | A required patient notification intent creates a durable entry with safe summary, authoritative link, timestamp, read state, action-required flag and due time. Marking it read changes no business state. Suppress push/SMS/email delivery entirely: the deadline-bound obligation still appears in the attention area and the authoritative state is unchanged. A revoked guardian grant filters the guardian's view. |
 | `TC-PLATFORM-012` | Planned | NFR-PLATFORM-005 | API/client localization | Arabic text round-trips through DB/API; mixed Arabic/English identifiers/data are safe; React Native/Filament functional surfaces operate RTL with scalable text, semantic actions, logical order, and required accessible states after UI implementation. |
 
@@ -304,7 +312,7 @@ Mandatory cross-platform cases are currently represented by:
 
 - `TC-IDENTITY-007` — access revocation propagation;
 - `TC-CATALOG-005` — published version propagation;
-- `TC-ELIG-006` — eligibility suspension propagation, including no invented existing-booking outcome while `Q-BOOKING-002` is open;
+- `TC-ELIG-006` — eligibility suspension propagation, including the `ELIGIBILITY_REVIEW` transition, its non-attendability at every role, and its urgent work item;
 - `TC-BOOKING-002`, `004`, `006`, `008` — booking create/confirm/cancel/notification behavior;
 - `TC-CLINICAL-003`, `004`, `007` — plan proposal/acceptance/stage timeline;
 - `TC-FINANCE-003` — financial confirmation/dispute convergence;
@@ -451,13 +459,67 @@ Relevant concrete cases include `TC-CATALOG-003`–`005`, `TC-ELIG-005`/`009`, `
 
 - Automated suites use factories/fixtures and synthetic evidence only; never copy production patient/clinical evidence into developer/test environments.
 - Time-sensitive tests freeze/control time explicitly.
-- The 26 service records remain **evaluation fixtures** until clinical approval.
+- The currently seeded service records remain **evaluation fixtures** until clinical approval, and tests assert against the fixture they created rather than a hard-coded catalog count — a test that breaks when a family is added is testing the wrong thing.
+- Imported candidate procedure content is an evaluation-audience fixture with provenance and is never a fixture for approved clinical values.
 - Formula/threshold fixtures declare exact policy version and must not be mislabeled clinically approved.
+- Price, band, calibration, commercial-option, and currency fixtures are created as governed rows, never as inline constants, so a test cannot accidentally prove behavior that production reads from a different place.
 - Old policy fixtures remain for historical reproduction after prospective replacement.
 - Parallel tests isolate DB/file/idempotency/fake-notification/clock state.
 - Cross-platform tests query all adapters/projections from the same committed fixture rather than creating separate platform records.
 
-## 30. External Dependency Test Rules
+## 30. Configuration-Over-Code Verification
+
+`BP-15` promises that behavior expected to change operationally is governed data rather than a code constant. That promise is only real if it is tested, because the failure mode is silent: a value read from a PHP constant behaves identically to one read from a governed row until the day someone needs to change it.
+
+**The shape of every test in this section is the same.** Arrange the change **only** through the governed data path an authorized administrator would actually use. Do not edit code, do not edit `config/`, do not edit `.env`, do not add a migration, and do not restart with a different constant. Then assert the new behavior through the same read or command the real actor uses. A test that needs a code edit to make its arrangement work has found a hard-coding defect and must fail rather than be adapted.
+
+### 30.1 Ordinary changes that must need no code change
+
+| Configured change | Governed path | Proven by |
+|---|---|---|
+| Add a draft detailed procedure item | `SDC-CATALOG-002` | `TC-CATALOG-006` |
+| Clinical approval publishes a new procedure definition | `SDC-CATALOG-003` | `TC-CATALOG-007` |
+| Retire a procedure or family prospectively | `SDC-CATALOG-002`, `SDC-CATALOG-001` | `TC-CATALOG-006` |
+| Rename, re-describe, reorder, or hide a family | `SDC-CATALOG-001` | `TC-CATALOG-006` |
+| Map or remap a procedure to a family | `SDC-CATALOG-002` | `TC-CATALOG-006` |
+| Change a service risk level or an evidence, follow-up, or completion rule | `SDC-CATALOG-003` after clinical approval | `TC-CATALOG-007` |
+| Change a clinical eligibility prerequisite | `SDC-CATALOG-003` after clinical approval | `TC-CATALOG-007`, `TC-ELIG-005` |
+| Provider changes an actual price or its effective date | `SDC-ELIG-005` | `TC-ELIG-011` |
+| Change a price display mode | `SDC-ELIG-005` selecting an active option | `TC-ELIG-011` |
+| Add a market observation or change its verification state | `SDC-POLICY-002` | `TC-ELIG-012` |
+| Change a price band effective tomorrow | `SDC-POLICY-002` | `TC-ELIG-012` |
+| Change a market sample or confidence threshold | `SDC-POLICY-002` | `TC-ELIG-012` |
+| Configure a new modifier or third-party-cost category | `SDC-POLICY-002` | `TC-CLINICAL-008` |
+| Change the treatment-proposal validity period | `SDC-POLICY-001` | `TC-CLINICAL-009`, `TC-POLICY-004` |
+| Change the approved exchange-rate source or rounding rule | `SDC-POLICY-002` | `TC-POLICY-005` |
+
+### 30.2 Historical safety under every one of those changes
+
+Each test above must also assert, for the same scenario, that:
+
+- yesterday's accepted treatment and financial snapshots return their original lines, amounts, currency, and policy references byte-identically;
+- an earlier eligibility decision still resolves the catalog version, mapping generation, price policy version, comparison basis, and calibration state captured at its own evaluation time;
+- a historical provider price fact remains attributable to the provider and period that asserted it;
+- prior financial events remain append-only;
+- the change takes effect from its effective date and not before.
+
+### 30.3 What must still be refused
+
+Configurability is bounded. These are negative tests and they are as important as the positive ones:
+
+- a provider cannot select `P`, a scientific grade as a price menu, the comparison basis, a sample threshold, or a calibration state (`TC-ELIG-003`, `TC-ELIG-011`);
+- an administrator cannot set a final `S`, `P`, `H`, `I`, or eligibility outcome by any path (`TC-ELIG-001`, `TC-ELIG-003`);
+- a clinically sensitive configuration cannot publish without the required clinical review, and the drafter cannot be the approver (`TC-CATALOG-007`);
+- evaluation-audience content cannot become production content by toggling visibility, activation, or an effective date (`TC-CATALOG-002`, `TC-CATALOG-007`);
+- a charge with no governed category, no reason, or only free-text justification is rejected (`TC-CLINICAL-008`);
+- enabling an external financial method label creates no money-movement capability (`TC-FINANCE-002`, `TC-FINANCE-006`);
+- no governed row carries executable rules, scripts, or expressions — the anti-overengineering boundary is asserted, not assumed.
+
+### 30.4 Static assertion
+
+`TC-PLATFORM-011` extends its architecture scan to fail on a business-policy constant reintroduced into code or environment: a catalog identity list, a `service_risk_level` literal set, a price-band or sample-threshold constant, a fixed comparison multiplier, a currency literal used as policy, a rounding constant, or a proposal-validity constant. The three known live violations in `app/Domain/Catalog/ServiceDefinitionPayload.php` are the scan's first expected findings.
+
+## 31. External Dependency Test Rules
 
 For future OTP/MFA/malware/notification/private-storage adapters:
 
@@ -470,7 +532,7 @@ For future OTP/MFA/malware/notification/private-storage adapters:
 
 No V1 test suite may require a payment gateway.
 
-## 31. CI and Merge Gates
+## 32. CI and Merge Gates
 
 Backend verification baseline:
 
@@ -490,7 +552,7 @@ React Native commands are deliberately not invented here. `TASK-PLATFORM-008` mu
 
 Slower load/recovery/provider-contract suites may run in release pipelines, but safety-critical behavior cannot be left to undocumented manual checks.
 
-## 32. Release Verification Levels
+## 33. Release Verification Levels
 
 ### Pull request gate
 

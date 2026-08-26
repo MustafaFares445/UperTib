@@ -1,6 +1,7 @@
 # UberTib Catalog and Pricing Governance
 
 **Status:** Canonical domain guidance derived from `.spec/decisions/PO-2026-08-25-syria-catalog-pricing-governance.md`  
+**Reconciled:** 2026-08-25 into the canonical document set; the owner documents listed in section 13 now carry the detail  
 **Scope:** Aleppo/Syria V1 catalog, provider pricing, market calibration, treatment commercial terms, Admin governance  
 **Principle:** configurable/versioned where behavior is expected to evolve; hard invariants remain explicit and non-bypassable.
 
@@ -52,6 +53,13 @@ Drafts may be maintained through Admin, but production activation requires the c
 
 These values are not constants in PHP, mobile code, Filament resources, or seeders.
 
+### 2.2.1 Naming and terminology
+
+The reconciliation fixed two names that were ambiguous in this document's first draft:
+
+- **`service_risk_level`** is the clinical risk concept. Never `R`, which is the verified patient-experience rating. `PERMISSIONS_MATRIX.md` section 18 places raw risk codes in restricted-internal exposure.
+- **Patient-facing service family** is the existing `services` table, not a new concept. `ERD.md` section 4.3 states this explicitly so implementation does not build a parallel catalog.
+
 ### 2.3 Provider price facts
 
 A provider/clinic price fact is scoped at minimum to:
@@ -74,7 +82,7 @@ Supported product meaning includes:
 - `RANGE`;
 - `REQUIRES_PLAN`.
 
-Final enum/storage naming may be refined during implementation, but the meanings must remain data-driven.
+Final enum/storage naming may be refined during implementation, but the meanings must remain data-driven. Reconciliation resolved this into governed `commercial_options` rows of the price-mode category rather than a PHP enum (`ERD.md` section 6.13), with the behavior owned by `FR-ELIG-018`.
 
 ### 2.4 Market-price observations
 
@@ -95,7 +103,7 @@ The customer Excel prices may be loaded as candidate/pilot observations if usefu
 
 ### 2.5 Price-band policy
 
-Internal `P` is derived from a versioned price policy, never chosen manually by the provider.
+Internal `P` is derived from a versioned price policy, never chosen manually by the provider. Reconciliation added the explicit calibration qualifier `pricing_class_state` on the eligibility decision — `FINAL`, `CALIBRATING`, `PROVISIONAL`, `NOT_APPLICABLE` — so a non-final state is recorded honestly instead of a fabricated class (`STATE_MACHINES.md` section 7.1).
 
 The policy may contain approved values such as:
 
@@ -129,6 +137,8 @@ G01–G04 broad groups
     -> patient-facing service families
         -> detailed procedure items
 ```
+
+Reconciliation mapped these layers onto concrete owners: the family layer is the existing `services` table, the procedure layer is `procedure_items` plus `procedure_item_versions`, and the join is `service_family_procedure_maps` (`ERD.md` sections 4.3, 6.9–6.11). The behavior is owned by `FR-CATALOG-002` and `FR-CATALOG-003`.
 
 ### Patient-facing service family
 
@@ -179,6 +189,8 @@ Do not hard-code the ten Excel add-ons as one fixed list. Use governed categorie
 4. quantity change.
 
 Admin may maintain approved options/categories prospectively. Clinical additions still obey clinical review and clinician authorship boundaries.
+
+Reconciliation made this enforceable rather than advisory: `treatment_line_modifiers.commercial_option_id` is NOT NULL and `reason_text_ar` is required, so the schema has **no path** for an uncategorized or free-text surcharge (`ERD.md` section 8.8), and `ERR-CLINICAL-002` is the stable rejection for a line that breaks a governed integrity rule.
 
 ## 5. Commercial integrity
 
@@ -332,22 +344,25 @@ Before considering catalog/pricing implementation complete, verify that ordinary
 
 It is acceptable for genuinely new behavior/workflows to require code changes. Do not build a generic scripting/rules language solely to avoid every future development change.
 
-## 13. Required reconciliation
+## 13. Reconciliation status and owner map
 
-Until the lower-level documents are reconciled, the Product Owner decision remains the higher-priority source.
+The reconciliation completed on 2026-08-25. This document remains the readable overview of the decision; the canonical detail now lives with each owner, and where they differ the owner governs.
 
-Affected owners include:
+| Topic | Canonical owner |
+|---|---|
+| Requirement behavior and acceptance criteria | `docs/PRD.md` — `FR-CATALOG-002`, `FR-CATALOG-003`, `FR-ELIG-018`, `FR-ELIG-019`, `FR-CLINICAL-006`, `FR-CLINICAL-007`, `FR-POLICY-003` |
+| Design shape and the configuration-over-code rule | `docs/SDD.md` sections 9, 10, 13, 18, 31 |
+| Tables, columns, constraints, catalog transition strategy | `docs/database/ERD.md` sections 4.3, 6.4, 6.9–6.13, 8.2, 8.7–8.8, 9.3, 14, 15.1 |
+| Information movement and calibration flow | `docs/database/DFD.md` sections 4, 7, 9, 13 |
+| Catalog, clinical, and commercial authority split | `docs/domain/PERMISSIONS_MATRIX.md` sections 4, 7, 8, 10, 17, 18 |
+| Staff workspaces | `docs/domain/STAFF_INTERACTION_CONTRACTS.md` — `SDC-CATALOG-001`–`003`, `SDC-ELIG-005`, `SDC-POLICY-002`, `SDC-CLINICAL-001` |
+| Propagation and historical safety | `docs/domain/CROSS_PLATFORM_BEHAVIOR.md` sections 7, 7.1, 9.3, 11.2, 19, 28 |
+| Lifecycle and the calibration qualifier | `docs/domain/STATE_MACHINES.md` sections 3, 6, 6.1, 7.1, 9, 16 |
+| Patient projections | `docs/api/API_CONTRACTS.md` — `API-CATALOG-001`, `API-ELIG-001`, `API-CLINICAL-002`, `API-FINANCE-001` |
+| Commercial-integrity rejection | `docs/api/ERROR_CATALOG.md` — `ERR-CLINICAL-002` |
+| Configurability verification | `docs/TESTING_STRATEGY.md` section 30 |
+| Environment-versus-policy boundary | `docs/ops/CONFIGURATION.md` sections 6.3, 23 |
+| Coverage and status | `docs/TRACEABILITY_MATRIX.md`; the three platform implementation plans |
+| Screens, flows, and copy obligations | `docs/ux/01-foundation/*` and `docs/ux/PHASE_01_HANDOFF.md` |
 
-- `docs/PRD.md`;
-- `docs/SDD.md`;
-- `docs/database/ERD.md`;
-- `docs/database/DFD.md`;
-- `docs/domain/PERMISSIONS_MATRIX.md`;
-- `docs/domain/STAFF_INTERACTION_CONTRACTS.md`;
-- `docs/domain/CROSS_PLATFORM_BEHAVIOR.md`;
-- `docs/api/API_CONTRACTS.md`;
-- `docs/api/ERROR_CATALOG.md`;
-- `docs/TESTING_STRATEGY.md`;
-- `docs/TRACEABILITY_MATRIX.md`;
-- the three platform implementation plans;
-- `docs/ux/01-foundation/*` and Phase 1 handoff.
+What remains open is not documentation: licensed clinical approval of production catalog and procedure content (`Q-CATALOG-001`) and of production S/H/I and calibration thresholds (`Q-ELIG-001`).
