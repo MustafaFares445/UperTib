@@ -2,657 +2,244 @@
 
 **Phase:** 2 — Conditional Engineering Documentation  
 **Mode:** Existing Repository  
-**Baseline:** 2026-08-24  
+**Baseline:** 2026-08-26  
 **Product source:** `docs/PRD.md`  
 **Technical sources:** `docs/SDD.md`, `docs/architecture/SYSTEM_ARCHITECTURE.md`, `docs/architecture/COMPONENT_DESIGN.md`, `docs/api/API_CONTRACTS.md`, `docs/database/ERD.md`, `docs/domain/STATE_MACHINES.md`  
 **Repository source:** `UberTip-Backend/.env.example` and `UberTip-Backend/config/*.php`  
 **Registry:** `docs/README.md`
 
-## 1. Purpose
+## 1. Purpose and current dependency status
 
-This document owns runtime and environment configuration guidance for UberTib V1. It records what is verified in the current Laravel repository, what values are environment-specific, and which product/security boundaries must be enforced by configuration without turning business policy into environment variables.
+This document owns runtime and environment configuration guidance for UberTib V1. Environment variables configure deployment/infrastructure; historically reproducible clinical and commercial behavior belongs in governed domain data or versioned policy.
 
-Configuration must not become a second policy engine. Clinical formulas, S/P/H/I weights and thresholds, eligibility rules, evidence rules, deadlines, cancellation rules, financial rules, and other historically reproducible business behavior belong in versioned domain policy records, not `.env` values.
+`Q-PLATFORM-001` still blocks a claim of complete reconciliation with readable SRS v1.1. `Q-PLATFORM-003` is **Resolved** by `PO-UX-17` for the provider-neutral evidence-transfer interaction contract. Concrete OTP/MFA, malware-scanning, private-evidence storage/transfer, notification, hosting, monitoring and related vendor selection is an infrastructure concern tracked by `Q-OPS-001`. The production relational engine itself is not open: the current approved baseline requires MySQL and point-in-time recovery.
 
-`Q-PLATFORM-001` still blocks a claim of complete reconciliation with readable SRS v1.1. `Q-PLATFORM-003` and `Q-OPS-001` leave concrete production providers, hosting, and deployment topology unresolved. They do **not** leave the production database engine unresolved: the approved `NFR-PLATFORM-002` / `NFR.02` baseline requires MySQL point-in-time recovery, so MySQL is the production database engine for the current V1 baseline.
+## 2. Configuration principles
 
-## 2. Configuration Principles
+1. Secrets are injected at deployment/runtime and never committed.
+2. Production fails closed when safety-critical configuration is invalid or missing.
+3. Environment variables configure infrastructure/runtime, not versioned product policy.
+4. `APP_DEBUG` is disabled outside controlled development.
+5. V1 remains record-only for financial events and performs no money movement.
+6. Evaluation catalog data never becomes production-ready through a configuration toggle alone.
+7. Protected evidence uses private storage and never a public filesystem path.
+8. Queue-backed side effects do not run before the authoritative transaction commits.
+9. Logs exclude OTP values, credentials, signed evidence links and protected payloads.
+10. Configuration changes require deployment verification and rollback capability.
 
-1. Secrets are injected at deployment/runtime and never committed to Git.
-2. Production must fail closed when a safety-critical configuration is invalid or missing.
-3. Environment variables configure infrastructure and runtime behavior; versioned business policy remains in authoritative domain data.
-4. `APP_DEBUG` must be disabled outside controlled development environments.
-5. Production financial mode is permanently record-only for V1.
-6. Evaluation catalog data must never be exposed as production-ready content.
-7. Private evidence must use private storage and must not be exposed through public filesystem paths.
-8. Queue-backed side effects must not run before the authoritative transaction commits.
-9. Logs must not contain OTP codes, credentials, signed URLs, protected clinical payloads, private evidence content, or unnecessary identity/financial data.
-10. Configuration changes that affect production behavior are deployment changes and require verification and rollback capability.
+## 3. Verified environment surface
 
-## 3. Verified Current Environment Surface
+The current `.env.example` covers application identity/environment, UberTib safety modes, logging, database, sessions, broadcast, filesystem, queue, cache, mail, generic S3-compatible placeholders and frontend application name. It does not establish a production OTP/MFA, malware scanner, private-evidence, push-notification or payment vendor.
 
-The current `.env.example` contains these top-level runtime groups:
+## 4. Application configuration
 
-- application identity, environment, URL, locale, and maintenance;
-- UberTib catalog and financial modes;
-- password hashing;
-- logging;
-- database;
-- sessions;
-- broadcast, filesystem, queue, and cache;
-- Redis/Memcached examples;
-- mail;
-- AWS/S3-compatible storage placeholders;
-- frontend Vite application name.
+| Variable | Current example | Production rule |
+|---|---|---|
+| `APP_ENV` | `local` | Use an approved production environment value. |
+| `APP_KEY` | empty | Required secret; never commit. |
+| `APP_DEBUG` | `true` | Must be `false` in production. |
+| `APP_URL` | local URL | Approved HTTPS deployment URL. |
+| `APP_LOCALE` | `en` | Server fallback must not override Arabic-first product behavior. |
+| `APP_FALLBACK_LOCALE` | `en` | Explicit safe fallback. |
+| `BCRYPT_ROUNDS` | `12` | Security/performance tested value. |
 
-The current repository does **not** contain production credentials for SMS/OTP, MFA, malware scanning, private-evidence storage, push notification, payment, or other external providers. No such provider should be inferred from framework examples.
+Production client errors use the stable safe error contract; diagnostic detail belongs in protected operational logging.
 
-## 4. Application Configuration
+## 5. UberTib safety switches
 
-| Variable | Current example/default | Production rule | Notes |
-|---|---|---|---|
-| `APP_NAME` | `.env.example`: `Laravel` | Set to UberTib deployment name | User-facing sender/application name where applicable. |
-| `APP_ENV` | `local` | Production deployment must use a non-development environment value | Used by Laravel/environment-sensitive behavior. |
-| `APP_KEY` | empty | Required secret | Generate securely; do not commit. Rotation can invalidate encrypted application/session data and must be planned. |
-| `APP_DEBUG` | `true` | **Must be `false` in production** | Prevents sensitive stack/config leakage. |
-| `APP_URL` | `http://localhost:8000` | Canonical HTTPS deployment URL | Used by URL generation and mail/session-related defaults. |
-| `APP_LOCALE` | `en` | Arabic-first behavior must be preserved where server localization is used | Product requires Arabic-first/RTL; client UI localization remains separate. |
-| `APP_FALLBACK_LOCALE` | `en` | Keep an explicit safe fallback | Does not override Arabic-first product behavior. |
-| `APP_FAKER_LOCALE` | `en_US` | Development/test only | No production business effect. |
-| `APP_MAINTENANCE_DRIVER` | `file` | Deployment-specific | If multi-node deployment is selected, maintenance coordination must work consistently across nodes. |
-| `BCRYPT_ROUNDS` | `12` | Security/performance tested value | Do not lower merely for production performance. |
+Verified `config/ubertib.php` exposes the catalog audience and record-only financial mode.
 
-### 4.1 Production Debug Boundary
+### 5.1 Catalog mode
 
-A production deployment with `APP_DEBUG=true` is invalid. Error responses must use the stable safe error contract from `docs/api/ERROR_CATALOG.md`; diagnostic detail belongs in protected logs/monitoring, not client responses.
+`UBERTIB_CATALOG_MODE` supports the current evaluation/production audience boundary. Production must use production mode. If no clinically approved launch-ready definitions exist, production shows no ready catalog rather than exposing evaluation content.
 
-## 5. UberTib Product-Safety Configuration
+This is an audience safety switch, not a mechanism for publishing or clinically approving data.
 
-Verified `config/ubertib.php` currently defines only:
+### 5.2 Financial mode
 
-```php
-return [
-    'catalog_mode' => env('UBERTIB_CATALOG_MODE', 'production'),
-    'financial_mode' => env('UBERTIB_FINANCIAL_MODE', 'record_only_non_funded'),
-];
-```
+V1 requires `UBERTIB_FINANCIAL_MODE=record_only_non_funded`. Do not introduce feature flags that activate platform payments, wallet, escrow, settlement, payout, platform refunds or funded protection. Those are product-scope changes, not deployment configuration.
 
-### 5.1 `UBERTIB_CATALOG_MODE`
+## 6. Database configuration
 
-Supported current values:
+Local/test may use SQLite where appropriate. The current V1 production engine is MySQL because the approved availability/recovery baseline requires MySQL point-in-time recovery and current integrity behavior must also be verified against MySQL.
 
-- `evaluation`
-- `production`
+Relevant deployment variables include `DB_CONNECTION`, `DB_URL`, host/port/database/user/password/socket, charset/collation and TLS settings.
 
-The repository's `.env.example` sets `UBERTIB_CATALOG_MODE=evaluation`, while `config/ubertib.php` defaults to `production` if the variable is absent.
+Production requirements:
 
-This distinction is intentional from a safety perspective:
+- effective connection resolves to MySQL;
+- documented foreign keys, transactions, locking, uniqueness and append-only constraints are preserved;
+- Arabic data uses the approved Unicode-capable configuration;
+- engine-sensitive triggers/constraints/concurrency are tested against MySQL;
+- credentials use least privilege where the deployment supports separate runtime/migration principals;
+- the concrete managed/self-hosted product, network placement, HA and PITR implementation remain `Q-OPS-001`.
 
-- `evaluation` permits the provisional seeded catalog to be inspected in evaluation environments;
-- `production` must publish only definitions that satisfy production-readiness rules;
-- the current production-mode tests confirm evaluation-only definitions are excluded;
-- production must never switch to `evaluation` merely to make an empty catalog visible.
+## 7. Business policy must not live in `.env` or code constants
 
-**Production rule:** `UBERTIB_CATALOG_MODE=production`.
+Do not create environment variables, PHP literals, Filament literals, React Native constants or production-truth seeder values for operationally changeable policy such as:
 
-If production has no clinically approved/launch-ready definitions, the correct result is an empty/not-ready production catalog rather than exposing provisional content.
-
-### 5.2 `UBERTIB_FINANCIAL_MODE`
-
-Current and required V1 value:
-
-```text
-record_only_non_funded
-```
-
-The current `ServiceDefinition` model rejects a different financial mode and rejects funded protection.
-
-**Production and non-production rule:** V1 must remain `record_only_non_funded` for behavior that exercises business rules.
-
-Do not introduce environment values such as:
-
-- `payments_enabled`;
-- `wallet_enabled`;
-- `escrow_enabled`;
-- `settlement_enabled`;
-- `platform_refunds_enabled`;
-- `funded_protection_enabled`.
-
-Those capabilities are out of V1 scope and cannot be activated by configuration.
-
-## 6. Database Configuration
-
-The current **development example default** is SQLite:
-
-```text
-DB_CONNECTION=sqlite
-```
-
-Current Laravel configuration also includes MySQL, MariaDB, PostgreSQL, and SQL Server connection definitions. Framework availability does not make those engines interchangeable for UberTib production. The verified UberTib migrations contain SQLite/MySQL-specific integrity trigger implementations for current catalog/governance tables, and the approved `NFR-PLATFORM-002` / `NFR.02` recovery baseline explicitly requires **MySQL point-in-time recovery**.
-
-Therefore the current V1 environment rule is:
-
-```text
-Production: DB_CONNECTION=mysql
-Local/test: SQLite may be used where appropriate, with MySQL verification for engine-sensitive behavior
-```
-
-### 6.1 Relevant Variables
-
-| Variable | Purpose |
-|---|---|
-| `DB_CONNECTION` | Selected Laravel connection; must resolve to MySQL in production. |
-| `DB_URL` | Optional full MySQL connection URL in production. |
-| `DB_HOST` | Database host when applicable. |
-| `DB_PORT` | Database port. |
-| `DB_DATABASE` | Database/schema name or SQLite path in local/test. |
-| `DB_USERNAME` | Database principal. |
-| `DB_PASSWORD` | Database secret. |
-| `DB_SOCKET` | Optional MySQL socket. |
-| `DB_CHARSET` / `DB_COLLATION` | Character set/collation; current MySQL defaults are `utf8mb4` / `utf8mb4_unicode_ci`. |
-| `MYSQL_ATTR_SSL_CA` | Optional MySQL TLS CA. |
-| `DB_FOREIGN_KEYS` | SQLite foreign-key enforcement for local/test use. |
-
-### 6.2 Environment Rules
-
-**Local/test**
-
-- SQLite is supported by current migrations/tests and may remain the fast isolated test engine where behavior is engine-independent.
-- Foreign keys must stay enabled when tests rely on relational integrity.
-- MySQL-specific migrations, triggers, locking, constraints, concurrency, and recovery assumptions must also be exercised through the repository's MySQL verification path before release.
-
-**Production**
-
-- **MySQL is the required production relational engine for the current V1 baseline.**
-- The concrete managed/self-hosted MySQL product, hosting provider, HA arrangement, network placement, backup/PITR implementation, and operational topology remain part of `Q-OPS-001`.
-- Production MySQL must preserve all documented foreign keys, transactions, row locking, uniqueness rules, append-only constraints, Arabic `utf8mb4` data behavior, and recovery objectives.
-- Production recovery must support MySQL point-in-time recovery while satisfying the approved RPO/RTO targets.
-- Before deployment, all database-specific trigger/constraint behavior must be exercised against MySQL, not only SQLite test runs.
-- Database credentials must use least privilege appropriate to runtime versus migration/deployment operations where the hosting setup supports separate principals.
-
-### 6.3 Business Policy Must Not Live in Environment Variables
-
-**Environment variables configure deployment and infrastructure. They never carry business policy.** This is not a style preference: a value in `.env` has no version, no effective date, no provenance, no approval trail, and no way to reproduce a historical decision, so putting policy there silently breaks `FR-POLICY-002` and `NFR-AUDIT-003`.
-
-Do not create `.env` variables for:
-
-- scientific grade bands;
-- S weights;
-- K/EU confidence thresholds;
-- P price bands and band boundaries;
-- H rules;
-- I rules;
-- booking/cancellation deadlines;
-- claim/refund windows;
-- evidence requirements;
-- retention periods;
-- service, family, or procedure lists, labels, descriptions, ordering, or visibility;
-- family-to-procedure mapping;
-- `service_risk_level` values or their meaning;
-- minimum or allowed scientific grade for a service or procedure;
-- inclusions, exclusions, follow-up, completion, or escalation rules;
-- required credentials, equipment, or branch capability;
-- price-display modes or the logic deciding which mode a patient sees;
-- market-observation sample thresholds, observation windows, or confidence rules;
-- any fixed ratio of a market comparison value, including the rejected A/B/C/D/F spreadsheet multipliers;
-- exchange rates, exchange-rate source identity, rate-lock periods, or rounding rules;
-- approved modifiers, material-upgrade options, third-party-cost categories, or quantity rules;
+- service groups, patient-facing families or detailed procedures;
+- names, descriptions, order, visibility or family/procedure mapping;
+- `service_risk_level` or minimum/allowed scientific grade;
+- credential, equipment, evidence, inclusion, exclusion, follow-up, completion or escalation requirements;
+- provider actual price presentation modes;
+- market observations, observation windows, sample/confidence thresholds or price-band boundaries;
+- rejected spreadsheet A/B/C/D/F price multipliers;
+- currency-normalization rates, source identity, effective periods or rounding rules;
+- approved modifiers, material upgrades, third-party-cost categories or quantity rules;
 - treatment-proposal validity periods;
-- external financial method categories.
+- booking/cancellation/claim/refund/evidence deadlines;
+- external financial method categories;
+- S/P/H/I formulas or thresholds;
+- retention periods.
 
-Those values require versioning, provenance, historical reproducibility, and in some cases clinical or commercial approval. They belong in the policy, service-definition, procedure-definition, mapping, commercial-option, and market-observation models described by `ERD.md`.
+These values require provenance, effective versions and—where applicable—clinical/commercial approval. Their canonical domain design is described in `docs/domain/CATALOG_PRICING_GOVERNANCE.md`, `docs/database/ERD.md` and the relevant policy/service-definition documents.
 
-**The same prohibition applies to code.** None of the values above may be a PHP enum used as a business vocabulary, a `config/` array treated as policy, a seeder value treated as production truth, a controller or action condition, a Filament resource literal, or a React Native constant. `ServiceDefinitionPayload`'s current positive-reference-price check, hard-coded `SYP` currency literal, and hard-coded risk-tier set are the three known live violations and are recorded as implementation gaps in `SDD.md` section 32.
+Three live code-level gaps remain in `app/Domain/Catalog/ServiceDefinitionPayload.php`: a positive-reference-price requirement, a pinned `SYP` currency literal and a pinned risk-tier literal set. They contradict the new governed-data direction and remain implementation work; this documentation change does not modify production code.
 
-**What does belong in configuration** is the deployment-shaped switch: which database, queue, cache, storage, mail, or log driver is in use; the application URL and environment; credentials for an external provider; and the two existing UberTib safety switches in section 5. `UBERTIB_CATALOG_MODE` selects which audience the catalog serves — it is not a promotion mechanism, and it can never turn evaluation content into approved production content.
+## 8. Cache
 
-## 7. Cache Configuration
+Cache is never authoritative for eligibility, booking capacity, accepted terms, financial-event history, claims or permissions. Booking confirmation re-reads authoritative state transactionally. Cache failure or clearing cannot destroy business state. Current framework driver availability does not select a production provider; concrete provider choice remains `Q-OPS-001`.
 
-Current default:
+## 9. Queues
 
-```text
-CACHE_STORE=database
-```
+Queues may carry notification delivery, malware-scanning orchestration, scheduled eligibility reevaluation, retryable recalculation, claim/deadline checks, follow-up reminders, rebuildable projections and retention processing.
 
-Available framework stores include database, file, Redis, Memcached, DynamoDB, storage, and others. Availability in the framework does not mean a provider is approved for UberTib.
+Current queue definitions commonly use `after_commit=false`; implementation must explicitly dispatch relevant side effects after commit or adopt a reviewed connection strategy. Jobs reload authoritative state, are retry-safe, avoid duplicate irreversible records and are observable when failed/aged. Concrete production queue topology is `Q-OPS-001`.
 
-Relevant current variables include:
+## 10. Sessions and privileged access
 
-- `CACHE_STORE`
-- `CACHE_PREFIX`
-- `DB_CACHE_CONNECTION`
-- `DB_CACHE_TABLE`
-- `DB_CACHE_LOCK_CONNECTION`
-- `DB_CACHE_LOCK_TABLE`
-- Redis/Memcached variables when those stores are selected.
+Production browser/Filament sessions use HTTPS, secure cookies, HttpOnly, intentional SameSite/domain scope and privileged authentication that satisfies the non-SMS second-factor requirement. The mobile API authentication transport is owned by the API contract and is not inferred from browser sessions.
 
-### 7.1 Cache Safety Rules
+## 11. Filesystem and evidence
 
-- Cache is never the authoritative source for eligibility, booking capacity, accepted terms, financial-event history, claims, or permissions.
-- Booking confirmation must re-read/revalidate authoritative state and capacity transactionally.
-- Cached eligible-provider/search data may be stale and must not bypass confirmation-time checks.
-- Cache keys must not embed sensitive raw patient/evidence data.
-- Shared production cache deployments must use a collision-safe application prefix.
-- Clearing the cache must not destroy business state.
+Current development default is the private local disk. Protected evidence must:
 
-### 7.2 Current Public Catalog Cache
+- never use the public disk or `/storage` public links;
+- use opaque object identity and integrity metadata;
+- remain quarantined until required validation/scanning succeeds;
+- be reauthorized for every protected download;
+- use short-lived access when signed access is used;
+- audit sensitive downloads;
+- obey retention/legal-hold rules.
 
-The existing catalog route applies public caching with a maximum age of 60 seconds and ETag behavior.
+Generic S3-compatible environment variables in Laravel are framework capability only and do not select an UberTib vendor.
 
-This is acceptable only because the endpoint exposes public catalog data. Private patient/case/evidence/financial responses must not inherit public caching behavior.
+**Status:** `Q-PLATFORM-003` is Resolved for the provider-neutral interaction/session contract and its visible states. Concrete storage and malware-scanning vendor selection remains `Q-OPS-001`.
 
-## 8. Queue Configuration
+## 12. Mail, OTP, MFA and notifications
 
-Current default:
+No concrete production email/SMS/push provider contract is approved. `MAIL_MAILER=log` is development behavior and must not be treated as successful production delivery.
 
-```text
-QUEUE_CONNECTION=database
-```
+OTP/MFA application requirements remain provider-neutral and are enforced by the application/security policy, not vendor environment variables. Provider credentials/endpoints may become deployment secrets after approval. Do not invent vendor-specific settings before selection.
 
-Current configured drivers include sync, database, Beanstalkd, SQS, Redis, deferred, background, failover, and null/framework options.
+Concrete OTP/MFA and notification-delivery vendor selection is `Q-OPS-001`; it does not reopen resolved `Q-PLATFORM-003`. Notification delivery never becomes authoritative business state: a delivery failure creates retry/operational visibility rather than reverting a committed domain action.
 
-### 8.1 Important Current Detail: `after_commit=false`
+## 13. Evidence-transfer and scanning states
 
-The current database, Beanstalkd, SQS, and Redis queue connection definitions use:
+The provider-neutral evidence-transfer interaction contract is already fixed by `PO-UX-17` and is not blocked by vendor selection. The user-visible/session states are:
 
-```php
-'after_commit' => false
-```
+- `SELECTED`
+- `UPLOADING`
+- `PAUSED`
+- `FAILED_RETRYABLE`
+- `UPLOADED`
+- `VALIDATING_SCANNING`
+- `ACCEPTED`
+- `REJECTED`
 
-This does **not** satisfy the UberTib rule by itself that non-critical asynchronous side effects should be dispatched only after the authoritative business transaction commits.
+A missing scanner in production keeps affected evidence quarantined; it never converts failure into acceptance. Concrete scanner endpoint/credentials are configured only after a vendor is approved under `Q-OPS-001`.
 
-Implementation must therefore do one of the following deliberately:
+## 14. Logging and monitoring
 
-1. dispatch relevant domain jobs/notifications with Laravel's after-commit mechanism; or
-2. adopt a reviewed connection-level `after_commit=true` strategy where appropriate.
+Production logs must not contain OTP values, passwords, credentials, auth tokens, private signed links, evidence contents or unrestricted protected clinical/financial/identity payloads. Sensitive audit events belong in the governed audit model, not merely logs. Log aggregation and APM/monitoring vendor selection remain `Q-OPS-001`.
 
-Do not assume queue configuration automatically prevents pre-commit delivery.
+## 15. Broadcasting
 
-### 8.2 Queue Use Cases
+Current framework broadcasting support does not establish a production real-time provider requirement. Any future real-time delivery remains a delivery mechanism, never authoritative business state, and requires explicit architecture/infrastructure approval.
 
-Queues are appropriate for:
+## 16. Production profile
 
-- notification delivery;
-- malware scanning orchestration;
-- scheduled eligibility reevaluation;
-- retryable recalculation;
-- claim/deadline/escalation checks;
-- follow-up reminders;
-- rebuildable report/search projection refresh;
-- retention/deletion processing after legal-hold checks.
-
-### 8.3 Queue Safety Rules
-
-- Jobs reload authoritative state before acting.
-- Jobs are retry-safe/idempotent.
-- A retry must not create duplicate financial events, bookings, accepted snapshots, or decisions.
-- Failed/aged jobs must be observable under `NFR-PLATFORM-008`.
-- Job payloads should carry identifiers and safe correlation metadata rather than unnecessary sensitive payloads.
-- Queue failure cannot roll back a business transaction that already committed; it creates retry/operational work instead.
-
-### 8.4 Queue Variables
-
-Current relevant variables include:
-
-- `QUEUE_CONNECTION`
-- `QUEUE_FAILED_DRIVER`
-- `DB_QUEUE_CONNECTION`
-- `DB_QUEUE_TABLE`
-- `DB_QUEUE`
-- `DB_QUEUE_RETRY_AFTER`
-- `REDIS_QUEUE_CONNECTION`
-- `REDIS_QUEUE`
-- `REDIS_QUEUE_RETRY_AFTER`
-- SQS variables if that driver is explicitly selected later.
-
-Concrete production queue/provider topology remains under `Q-OPS-001`.
-
-## 9. Redis and Memcached Configuration
-
-The repository contains standard Laravel Redis/Memcached configuration examples.
-
-Current `.env.example` includes:
+A production deployment must establish these properties without committing credentials:
 
 ```text
-MEMCACHED_HOST=127.0.0.1
-REDIS_CLIENT=phpredis
-REDIS_HOST=127.0.0.1
-REDIS_PASSWORD=null
-REDIS_PORT=6379
-```
-
-Additional supported Redis variables in current `config/database.php` include username, database numbers, prefixes, cluster/persistence settings, and retry/backoff controls.
-
-**Rule:** presence of these configuration entries does not mean Redis or Memcached is required or selected for production. Selection belongs to infrastructure design after `Q-OPS-001` is resolved.
-
-## 10. Session Configuration
-
-Current defaults:
-
-```text
-SESSION_DRIVER=database
-SESSION_LIFETIME=120
-SESSION_ENCRYPT=false
-SESSION_PATH=/
-SESSION_DOMAIN=null
-```
-
-Current `config/session.php` additionally supports secure cookie, HttpOnly, SameSite, connection/table/store, expire-on-close, partitioning, and other Laravel session settings.
-
-### 10.1 Production Session Rules
-
-For browser/Filament sessions:
-
-- use HTTPS in production;
-- production cookies must be sent securely (`SESSION_SECURE_COOKIE=true` when served over HTTPS);
-- keep HttpOnly enabled;
-- select SameSite behavior intentionally based on the actual trusted deployment domains;
-- session scope/domain must not unintentionally grant cookies to unrelated subdomains;
-- privileged authentication must satisfy the non-SMS second-factor requirement from `NFR-IDENTITY-002` regardless of session driver.
-
-`SESSION_ENCRYPT=false` is the framework/example default. Changing it is an implementation/security decision, but sensitive business payloads should not be stored unnecessarily in session state either way.
-
-The exact mobile API authentication transport remains intentionally unresolved in `API_CONTRACTS.md`; do not infer that Laravel web sessions are the mobile API contract.
-
-## 11. Filesystem and Private Evidence Configuration
-
-Current default:
-
-```text
-FILESYSTEM_DISK=local
-```
-
-The current local disk points to:
-
-```text
-storage/app/private
-```
-
-The repository also defines a public local disk and an S3-compatible disk using AWS-style variables.
-
-### 11.1 Evidence Storage Rules
-
-Private UberTib evidence must:
-
-- never use the `public` disk;
-- remain inaccessible through `/storage` public links;
-- use opaque object identity;
-- be associated with SHA-256 and ownership/purpose metadata;
-- remain quarantined until required file validation/malware scanning succeeds;
-- be reauthorized for each download;
-- use access valid for no more than the approved short-lived limit where signed access is used;
-- have every sensitive download audited.
-
-### 11.2 S3-Compatible Variables
-
-Current framework configuration supports:
-
-- `AWS_ACCESS_KEY_ID`
-- `AWS_SECRET_ACCESS_KEY`
-- `AWS_DEFAULT_REGION`
-- `AWS_BUCKET`
-- `AWS_URL`
-- `AWS_ENDPOINT`
-- `AWS_USE_PATH_STYLE_ENDPOINT`
-
-These are generic framework/storage variables only. No AWS/S3 vendor is currently approved as the UberTib production evidence provider. `Q-PLATFORM-003` and `Q-OPS-001` remain unresolved.
-
-Do not commit storage credentials or return raw bucket/object paths to clients.
-
-## 12. Mail and Notification Configuration
-
-Current default:
-
-```text
-MAIL_MAILER=log
-```
-
-The current repository supports standard Laravel mail transports, but `.env.example` is explicitly local/log oriented.
-
-Relevant variables include:
-
-- `MAIL_MAILER`
-- `MAIL_SCHEME`
-- `MAIL_URL`
-- `MAIL_HOST`
-- `MAIL_PORT`
-- `MAIL_USERNAME`
-- `MAIL_PASSWORD`
-- `MAIL_FROM_ADDRESS`
-- `MAIL_FROM_NAME`
-- `MAIL_EHLO_DOMAIN`
-- `MAIL_LOG_CHANNEL`
-
-### 12.1 Current Boundary
-
-There is no approved concrete production email/SMS/push notification provider contract.
-
-- `MAIL_MAILER=log` must not be mistaken for delivered production notifications.
-- OTP delivery provider selection remains under `Q-PLATFORM-003`.
-- Notification delivery is not authoritative business state; failed delivery creates retry/operational visibility rather than reverting a committed domain action.
-
-## 13. OTP and Privileged MFA Configuration — Provider Blocked
-
-`NFR-IDENTITY-002` defines product/security behavior independent of provider choice:
-
-- OTP is six digits;
-- expires after five minutes;
-- stored hash-only;
-- single use;
-- maximum five verification attempts;
-- maximum three sends per 15 minutes per phone/account/IP combination;
-- resend invalidates the prior code without resetting accumulated failures;
-- privileged roles require a non-SMS second factor.
-
-These rules must **not** be hidden in provider-specific environment variables because they are security/business requirements that need tested application enforcement.
-
-Provider credentials/endpoints may become environment variables after a provider is approved. Until then, do not invent names such as `TWILIO_*`, `FIREBASE_*`, or other vendor-specific settings.
-
-## 14. Malware Scanning Configuration — Provider Blocked
-
-The evidence pipeline requires malware scanning before protected business use where scanning is required, but no scanner/provider is selected.
-
-Future runtime configuration may contain provider endpoint/credential/timeout values only after `Q-PLATFORM-003` is resolved. The application-level states and fail-closed behavior remain provider independent.
-
-If scanning is unavailable in production, affected evidence must remain quarantined/unusable rather than automatically accepted.
-
-## 15. Logging Configuration
-
-Current default/example:
-
-```text
-LOG_CHANNEL=stack
-LOG_STACK=single
-LOG_DEPRECATIONS_CHANNEL=null
-LOG_LEVEL=debug
-```
-
-Current configured Laravel channels include single, daily, monthly, Slack, Papertrail-style syslog, stderr, syslog, errorlog, null, and emergency options.
-
-### 15.1 Production Logging Rules
-
-- Do not run production at a verbosity that unnecessarily records sensitive request bodies.
-- Never log OTP values, passwords, credentials, authentication tokens, private signed links, evidence file contents, full protected clinical payloads, or unrestricted financial/identity payloads.
-- Sensitive audit events belong in the governed audit/provenance model, not merely application logs.
-- Application logs should include safe correlation identifiers so operational failures can be connected to audit/job/request context.
-- Log aggregation destination remains part of `Q-OPS-001`; framework channel availability is not an infrastructure decision.
-
-Relevant current variables include `LOG_CHANNEL`, `LOG_STACK`, `LOG_LEVEL`, deprecation options, and channel-specific provider variables only when those channels are intentionally selected.
-
-## 16. Broadcasting
-
-The current `.env.example` uses:
-
-```text
-BROADCAST_CONNECTION=log
-```
-
-No requirement currently establishes a production real-time broadcast provider. Do not select Pusher/WebSocket/vendor infrastructure merely because Laravel supports broadcasting.
-
-If future implementation requires real-time delivery, it must remain a delivery mechanism rather than authoritative state and must receive an explicit architecture/infrastructure decision.
-
-## 17. Production Configuration Profile
-
-The following describes required **properties**, not a complete credential file:
-
-```text
-APP_ENV=<production environment>
-APP_KEY=<secret injected by deployment>
+APP_ENV=<production>
+APP_KEY=<injected secret>
 APP_DEBUG=false
-APP_URL=https://<approved-host>
-
+APP_URL=https://<approved host>
 UBERTIB_CATALOG_MODE=production
 UBERTIB_FINANCIAL_MODE=record_only_non_funded
-
 DB_CONNECTION=mysql
-DB_HOST=<secret/config>
-DB_DATABASE=<secret/config>
-DB_USERNAME=<secret>
-DB_PASSWORD=<secret>
-
-SESSION_DRIVER=<approved shared/runtime-capable store>
 SESSION_SECURE_COOKIE=true
-
-FILESYSTEM_DISK=<approved private-capable default or explicit domain disk>
-QUEUE_CONNECTION=<approved production queue backend>
-CACHE_STORE=<approved production cache backend>
-
+FILESYSTEM_DISK=<approved private-capable implementation>
+QUEUE_CONNECTION=<approved production backend>
+CACHE_STORE=<approved production backend>
 MAIL_MAILER=<approved provider only when configured>
-LOG_CHANNEL=<approved operational logging channel>
+LOG_CHANNEL=<approved operational channel>
 ```
 
-The concrete MySQL host/service/topology remains unresolved under `Q-OPS-001`; the MySQL engine itself is not unresolved. This block intentionally omits vendor-specific OTP/MFA, malware-scanning, notification, storage, and hosting settings because those providers are not yet approved.
+The exact hosts, credentials and vendors remain `Q-OPS-001`.
 
-## 18. Local / Evaluation Configuration Profile
+## 17. Local/evaluation profile
 
-The current `.env.example` is suitable as a starting point for local evaluation, notably:
+Local evaluation may use the existing development-oriented defaults such as evaluation catalog mode, record-only financial mode, SQLite, database session/queue/cache, local private filesystem and log mailer. Local mode does not waive authorization, idempotency, immutability, evidence or zero-money-movement rules.
 
-```text
-APP_ENV=local
-APP_DEBUG=true
-UBERTIB_CATALOG_MODE=evaluation
-UBERTIB_FINANCIAL_MODE=record_only_non_funded
-DB_CONNECTION=sqlite
-SESSION_DRIVER=database
-QUEUE_CONNECTION=database
-CACHE_STORE=database
-FILESYSTEM_DISK=local
-MAIL_MAILER=log
-```
+## 18. Test expectations
 
-Local mode does not waive product invariants. In particular:
-
-- funded protection remains forbidden;
-- money movement remains forbidden;
-- tests should preserve authorization/idempotency/immutability rules;
-- provisional catalog content remains evaluation data.
-
-## 19. Test Configuration Expectations
-
-Automated tests may use isolated SQLite/database/cache/queue drivers for speed, but tests that verify engine-specific constraints or deployment behavior must also exercise **MySQL**, the required production database engine.
-
-Test environments should explicitly verify at least:
+Automated verification should cover:
 
 - evaluation versus production catalog visibility;
-- `record_only_non_funded` enforcement;
-- database constraint/trigger behavior on MySQL;
-- MySQL locking/concurrency behavior for booking and other contention-sensitive workflows;
-- queue-after-commit behavior for side effects;
-- cache staleness cannot bypass booking-time revalidation;
-- session/auth isolation for privileged and scoped users;
-- private evidence never lands on a public disk;
+- record-only financial mode;
+- MySQL-specific integrity and concurrency behavior;
+- queue-after-commit behavior;
+- cache staleness cannot bypass booking revalidation;
+- session/auth scope and privileged MFA behavior;
+- private evidence never uses a public disk;
+- provider-neutral evidence session transitions including retryable failure versus rejection;
 - logging/error output does not leak protected values.
 
-## 20. Configuration Validation at Startup/Deployment
+## 19. Deployment validation
 
-Before a production release is considered healthy, deployment verification should reject or alert on at least these conditions:
+A production release fails or remains not-ready when safety-critical conditions are violated, including missing `APP_KEY`, debug enabled, wrong financial/catalog mode, non-MySQL production connection, unavailable required MySQL recovery capability, public evidence fallback or mandatory malware scanning being bypassed.
 
-| Condition | Expected result |
-|---|---|
-| `APP_KEY` missing | Deployment fails. |
-| `APP_DEBUG=true` in production | Deployment fails. |
-| `UBERTIB_FINANCIAL_MODE != record_only_non_funded` | Application/business initialization fails closed. |
-| `UBERTIB_CATALOG_MODE=evaluation` in production | Deployment fails or is blocked by release validation. |
-| Effective production database connection is not MySQL | Deployment/release validation fails. |
-| MySQL unavailable | Health/readiness fails; do not accept business writes. |
-| Required MySQL PITR/recovery capability is not configured/verified | Production promotion is blocked. |
-| Queue unavailable | Business writes may continue only where post-commit delivery is safely recoverable; operations must see degraded state. |
-| Private evidence store unavailable | Evidence intake/download fails closed; no fallback to public storage. |
-| Malware scanner unavailable where scan is mandatory | Evidence remains quarantined; do not mark clean. |
-| Notification provider unavailable | Record delivery failure/retry; do not roll back committed business truth. |
-| Cache unavailable | Fall back only where correctness remains intact; never infer authoritative eligibility/capacity from stale cache. |
+Queue/notification/cache degradation is handled according to documented fail-safe behavior and observable retry; it must not silently rewrite authoritative business state.
 
-The exact health-check endpoints and infrastructure orchestration belong to `docs/ops/INFRASTRUCTURE.md` and `docs/ops/MONITORING.md`.
+## 20. Change management and secrets
 
-## 21. Configuration Change Management
+Production runtime changes are recorded, checked against product-policy ownership, applied through deployment secret/config management, smoke tested, monitored and rolled back when safety/correctness checks fail. Configuration caching must be rebuilt through the verified deployment process after environment changes.
 
-Production configuration changes should follow this sequence:
+Secrets include application/database credentials, cache/queue credentials when present, mail/OTP/MFA credentials, object-storage keys, malware-scanner credentials, signed/private evidence URLs and API/authentication tokens.
 
-1. record the intended change and affected runtime capability;
-2. verify it does not alter versioned business/clinical policy outside its governed workflow;
-3. update deployment secret/config management, not committed `.env` files;
-4. deploy using the documented environment profile;
-5. run configuration and application health checks;
-6. run targeted smoke tests for affected capability;
-7. monitor errors, queues, readiness, and audit-visible consequences;
-8. roll back configuration if safety/correctness checks fail.
+## 21. Runtime configuration vs versioned policy
 
-For Laravel deployments using configuration caching, runtime secrets/environment values must be available **before** building/caching configuration. After environment changes, rebuild the configuration cache using the verified deployment process rather than assuming the running process rereads `.env` dynamically.
-
-## 22. Secret Handling
-
-The following classes of values are secrets and must not appear in Git, documentation examples with real values, application error bodies, telemetry attributes, or screenshots/log dumps shared broadly:
-
-- `APP_KEY`;
-- database passwords;
-- Redis/Memcached credentials when configured;
-- mail-provider credentials;
-- object-storage access keys;
-- future OTP/MFA/provider credentials;
-- future malware-scanning credentials;
-- signed/private evidence URLs;
-- API/authentication tokens.
-
-Where possible, production credentials should be injected from the hosting platform's secret-management mechanism. The exact system remains unresolved under `Q-OPS-001`.
-
-## 23. Configuration vs Versioned Policy Ownership
-
-| Concern | Runtime configuration? | Canonical owner |
+| Concern | Runtime configuration? | Owner |
 |---|---|---|
-| Application URL/environment/debug | Yes | Deployment configuration |
-| Production database engine | Yes; fixed to MySQL for current V1 baseline | `NFR-PLATFORM-002` / `NFR.02` + deployment configuration |
-| MySQL hosting/product/topology and cache/queue/storage/log provider | Yes | Deployment/infrastructure configuration; provider choice remains `Q-OPS-001` |
-| Catalog evaluation vs production mode | Yes | `config/ubertib.php`, release environment |
-| V1 record-only financial mode | Yes, invariant switch | `config/ubertib.php` + domain enforcement |
-| Service definitions | No | Versioned service-definition records |
-| Service families, procedure items, labels, order, visibility, retirement | No | Governed catalog rows (`FR-CATALOG-002`) |
-| Family-to-procedure mapping | No | Effective-dated mapping rows (`FR-CATALOG-002`) |
-| `service_risk_level`, minimum/allowed grade, credential, equipment, evidence, inclusions, exclusions, follow-up, completion | No | Versioned procedure-definition records requiring clinical approval (`FR-CATALOG-003`) |
-| S formula/weights/grade bands | No | Versioned clinically approved policy |
-| P price bands and band boundaries | No | Versioned price policy + source price facts |
-| Market observations, observation window, sample threshold, confidence rules | No | Market-observation rows + versioned price policy (`FR-ELIG-019`) |
-| Price-display modes and patient-visible price-mode logic | No | Governed commercial-option rows (`FR-ELIG-018`) |
-| Approved modifiers, material upgrades, third-party-cost categories, quantity rules | No | Governed commercial-option rows (`FR-CLINICAL-006`) |
-| Exchange rate, approved rate source, rate-lock window, rounding rule | No | Versioned currency policy + normalization records (`FR-POLICY-003`) |
-| Treatment-proposal validity period | No | Versioned policy; V1 default 7 calendar days is policy data, not a constant |
-| External financial method categories | No | Governed commercial-option rows; a label never enables money movement |
-| H protection rules | No | Versioned policy/accepted snapshots |
-| I internal-risk rules | No | Versioned governed policy |
-| Booking/provider-response/cancellation deadlines | No | Versioned policy/snapshot |
-| Claim/refund/evidence/appeal windows | No | Versioned policy/snapshot |
-| Retention periods | No | Approved legal/compliance policy; currently `Q-PLATFORM-002` |
-| User/staff permissions | No static `.env` matrix | Role + scoped authorization records/policies |
-| Payment/escrow/wallet capability | **Forbidden in V1** | Product scope, not a feature flag |
+| App environment, URL, secrets, debug | Yes | Deployment |
+| Production database engine | Yes; MySQL in current baseline | NFR + deployment |
+| Hosting, MySQL product/topology, cache/queue/storage/log vendors | Yes | `Q-OPS-001` |
+| Catalog evaluation/production audience switch | Yes | release configuration |
+| V1 record-only financial mode | Yes; invariant switch | domain + release configuration |
+| Service families/procedures/mapping/visibility | No | governed catalog data |
+| Clinical procedure definitions and risk/grade/evidence requirements | No | versioned clinical data + clinical approval |
+| Provider actual prices and price display mode | No | effective price facts/commercial data |
+| Market observations and P price-band calibration | No | market observations + versioned policy |
+| Currency normalization and rounding | No | versioned currency policy |
+| Treatment proposal validity | No | versioned policy |
+| Modifiers/upgrades/third-party cost/quantity rules | No | governed commercial options |
+| S/P/H/I rules | No | versioned governed policy |
+| Booking/claims/refund deadlines | No | versioned policy/snapshot |
+| Retention periods | No | legal/compliance policy (`Q-PLATFORM-002`) |
+| Payment/wallet/escrow activation | Forbidden in V1 | product scope, not feature flag |
 
-## 24. Known Gaps / Open Dependencies
+## 22. Known gaps / open dependencies
 
-- `Q-PLATFORM-001` — authoritative SRS v1.1 text remains unreadable for complete reconciliation.
+- `Q-PLATFORM-001` — readable authoritative SRS v1.1 remains required for a claim of complete source reconciliation.
 - `Q-PLATFORM-002` — final retention/deletion periods require legal/compliance validation.
-- `Q-PLATFORM-003` — OTP/MFA, malware scanning, private-evidence transfer/storage, and related provider selections remain unresolved.
-- `Q-OPS-001` — production hosting/deployment topology and the concrete managed/self-hosted MySQL service, HA/PITR implementation, cache, queue, storage, and log-aggregation providers remain unresolved; **the production database engine itself is MySQL and is not open under this question**.
-- Current `.env.example` is development-oriented and must not be deployed unchanged to production.
-- Three live code-level policy hard-codings remain in `app/Domain/Catalog/ServiceDefinitionPayload.php` — the positive reference-price requirement, the `SYP` currency literal, and the risk-tier literal set. They contradict `FR-ELIG-018`, `FR-POLICY-003`, and `FR-CATALOG-003` and must move to governed data when the owning tasks land.
-- Current queue connections use `after_commit=false`; domain implementation must explicitly guarantee post-commit dispatch for relevant side effects.
-- The current mobile API authentication transport is not established and must not be inferred from Laravel's browser session configuration.
+- `Q-OPS-001` — production hosting/deployment topology and concrete MySQL service/HA/PITR, cache, queue, storage, malware-scanning, OTP/MFA, notification and monitoring vendors remain unresolved.
+- `Q-PLATFORM-003` — **Resolved** by `PO-UX-17`; the provider-neutral evidence-transfer interaction contract is fixed. It is not a current open dependency.
+- Current `.env.example` remains development-oriented and must not be deployed unchanged.
+- The three `ServiceDefinitionPayload.php` hard-codings listed in section 7 remain implementation gaps.
+- Current queue connection defaults require deliberate after-commit handling.
+- Mobile API authentication transport is not inferred from Laravel browser-session configuration.
 
 No new canonical IDs are allocated by this document.
