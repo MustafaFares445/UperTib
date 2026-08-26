@@ -178,7 +178,7 @@ Permanently allocated, never reused or renumbered. Thirteen were closed on 2026-
 | ID | Resolved | Resolution |
 |---|---|---|
 | `CONFLICT-CATALOG-001` | Resolved (2026-08-24) | The verified `GET /api/v1/catalog/service-groups` route and current OpenAPI contract align. Broader feature-spec aspirations remain Planned, not implemented route evidence. |
-| `Q-PLATFORM-003` | 2026-08-25 | `PO-UX-17`: evidence-transfer interaction is fixed and provider-neutral (`API-PLATFORM-001`, `STATE_MACHINES.md` section 21.1); notification surface confirmed as `FR-PLATFORM-001`. Vendor selection moved to `Q-OPS-001`. |
+| `Q-PLATFORM-003` | Resolved (2026-08-25) | `PO-UX-17`: evidence-transfer interaction is fixed and provider-neutral (`API-PLATFORM-001`, `STATE_MACHINES.md` section 21.1); notification surface confirmed as `FR-PLATFORM-001`. Vendor selection moved to `Q-OPS-001`. |
 | `Q-PLATFORM-005` | 2026-08-25 | `PO-UX-09`: patient notification/attention centre confirmed as `FR-PLATFORM-001` and `API-PLATFORM-002`; four primary tabs unchanged. |
 | `Q-PLATFORM-006` | 2026-08-25 | `PO-UX-07`: device, setting, interruption pattern and expertise confirmed for all six role classes. |
 | `Q-PLATFORM-007` | 2026-08-25 | `PO-UX-18`: accepted research limitation, not a blocker. Usability testing remains recommended, not prerequisite. |

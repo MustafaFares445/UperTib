@@ -26,7 +26,7 @@ UberTib V1 does **not** authorize, capture, hold, transfer, settle, or refund mo
 
 This plan does not define final visual layout, navigation hierarchy, component styling, brand tokens, wireframes, or microcopy. Those remain owned by the UX chain. Functional sections and mobile areas below describe implementation responsibility, not final screen design.
 
-`Q-PLATFORM-001` remains a Blocker for claiming complete reconciliation against readable SRS v1.1. `Q-CATALOG-001` and `Q-ELIG-001` continue to gate production clinical readiness. `Q-PLATFORM-003` leaves the concrete OTP/MFA, malware-scanning, notification-provider, private-evidence transfer/provider choices unresolved.
+`Q-PLATFORM-001` remains a Blocker for claiming complete reconciliation against readable SRS v1.1. `Q-CATALOG-001` and `Q-ELIG-001` continue to gate production clinical readiness. `Q-PLATFORM-003` is Resolved for the provider-neutral evidence-transfer interaction contract; concrete OTP/MFA, malware-scanning, notification, and private-evidence vendor selection remains `Q-OPS-001`.
 
 ## 2. Platform Ownership and Cross-Platform Contract
 
@@ -844,8 +844,8 @@ The following are not to be silently invented during implementation:
 | Clinical approval of the provisional seeded catalog and imported candidate procedures | `Q-CATALOG-001` — Major, narrowed 2026-08-25 | Production patient catalog/readiness remains gated; the catalog shape and its governance are settled and the record count is not a constant |
 | Production S/P/H/I formulas/thresholds/defaults | `Q-ELIG-001` — Major | Patient discovery can be engineered, but production medical outcome policy requires approval |
 | Production catalog and procedure content | `Q-CATALOG-001` — Major | The patient reads families, never procedure codes; production content remains clinically gated |
-| Concrete OTP delivery / privileged provider choices | `Q-PLATFORM-003` — Major | OTP application logic can be implemented behind adapter; real production delivery waits for provider configuration |
-| Patient private-evidence upload/download transport/provider | `Q-PLATFORM-003` — Major | Claims/evidence references can be modeled, but do not invent binary transfer endpoints/provider contract; production attachment flow remains incomplete until resolved |
+| Concrete OTP delivery / privileged provider choices | `Q-OPS-001` — Major | OTP application logic can be implemented behind adapter; real production delivery waits for provider configuration |
+| Patient private-evidence upload/download vendor selection | `Q-OPS-001` — Major | The provider-neutral `API-PLATFORM-001` interaction contract is fixed; production attachment delivery waits for vendor configuration |
 | Hosting/deployment topology | `Q-OPS-001` — Major | MySQL is the required production relational engine; mobile base URL and release environments depend on selected hosting/provider/topology and deployment configuration |
 | Legal validation of retention/deletion periods | `Q-PLATFORM-002` — Major | Mobile privacy behavior must follow final governed policy when approved |
 

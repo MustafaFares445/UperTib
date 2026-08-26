@@ -25,7 +25,7 @@ The monitoring system must make it possible to distinguish:
 
 Monitoring is not a replacement for authoritative business records. Logs, metrics, traces, dashboards, and alerting systems are operational views and must never become the source of truth for eligibility, bookings, treatment cases, accepted terms, external financial events, claims, reviews, or policy decisions.
 
-`Q-OPS-001` remains **Major** because the concrete production infrastructure and monitoring provider are not selected. `Q-PLATFORM-003` remains **Major** because external OTP/MFA, malware-scanning, private-evidence, and notification providers are not selected. This document therefore defines required signals and behavior without mandating a vendor.
+`Q-OPS-001` remains **Major** because the concrete production infrastructure, monitoring, OTP/MFA, malware-scanning, private-evidence, and notification vendors are not selected. `Q-PLATFORM-003` is **Resolved** for the provider-neutral evidence-transfer interaction contract. This document therefore defines required signals and behavior without mandating a vendor.
 
 `Q-PLATFORM-001` still blocks a claim of complete end-to-end reconciliation with readable SRS v1.1 text.
 
@@ -785,7 +785,7 @@ Before production launch, verify all of the following:
 | ID | Severity | Monitoring Impact |
 |---|---|---|
 | `Q-OPS-001` | Major | Monitoring/log/APM/alert infrastructure cannot be bound to a concrete topology/provider yet. |
-| `Q-PLATFORM-003` | Major | OTP/MFA, malware scan, evidence storage, and notification provider-specific health metrics remain undefined. |
+| `Q-PLATFORM-003` | Resolved | `PO-UX-17` fixes the provider-neutral evidence-transfer interaction contract. |
 | `Q-PLATFORM-002` | Major | Final observability retention/deletion requirements require legal/compliance validation. |
 | `Q-PLATFORM-001` | Blocker | Complete SRS v1.1 reconciliation cannot be claimed until readable authoritative content is available. |
 

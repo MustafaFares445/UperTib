@@ -14,7 +14,7 @@ This document owns the external/mobile REST contract for UberTib V1. Filament wo
 
 Only one API route is currently verified as implemented: `GET /api/v1/catalog/service-groups`. Every other route in this document is marked **Proposed** and represents the minimum contract needed by confirmed product requirements; proposed paths may change before implementation while preserving the owning requirement behavior.
 
-`Q-PLATFORM-001` still blocks a claim of complete SRS reconciliation. `Q-PLATFORM-003` also blocks final selection of OTP/MFA, notification, malware-scanning, and private-evidence transfer providers. Production medical behavior remains governed by `Q-CATALOG-001` and `Q-ELIG-001`.
+`Q-PLATFORM-001` still blocks a claim of complete SRS reconciliation. `Q-PLATFORM-003` is Resolved for the provider-neutral evidence-transfer contract. Final selection of OTP/MFA, notification, malware-scanning, and private-evidence vendors remains under `Q-OPS-001`. Production medical behavior remains governed by `Q-CATALOG-001` and `Q-ELIG-001`.
 
 ## 2. Contract Conventions
 

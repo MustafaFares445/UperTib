@@ -123,7 +123,7 @@ No asynchronous delivery or background job may be treated as completed business 
 
 **Boundary**
 
-The concrete OTP/SMS provider is not selected. Provider-specific delivery belongs behind an adapter and remains governed by `Q-PLATFORM-003`.
+The concrete OTP/SMS provider is not selected. Provider-specific delivery belongs behind an adapter and vendor selection remains governed by `Q-OPS-001`.
 
 ### 5.3 Privileged MFA Component — New
 
@@ -134,7 +134,7 @@ The concrete OTP/SMS provider is not selected. Provider-specific delivery belong
 
 **Boundary**
 
-Provider selection remains unresolved under `Q-PLATFORM-003`.
+Provider selection remains unresolved under `Q-OPS-001`.
 
 ### 5.4 Authorization Scope Component — New / Extend Spatie Permission
 
@@ -876,7 +876,7 @@ Activitylog may be used as an implementation tool only if the final record struc
 
 **Boundary**
 
-Concrete scanning/storage providers remain unresolved under `Q-PLATFORM-003` / `Q-OPS-001`.
+Concrete scanning/storage vendor selection remains unresolved under `Q-OPS-001`.
 
 ### 17.3 Authorized Evidence Download — New
 
@@ -1095,7 +1095,7 @@ Protected payloads, OTP values, credential secrets, signed evidence links, and p
 | Q-ELIG-001 | Major | Production S/P/H/I/confidence formulas and thresholds require licensed clinical approval. |
 | Q-PLATFORM-002 | Major | Retention/deletion policy values require final legal/compliance validation. |
 | Q-OPS-001 | Major | Hosting/provider/topology remains unresolved, including managed-versus-self-hosted MySQL deployment, HA/PITR implementation, object storage, queue, and related operational infrastructure; the production database engine itself is MySQL. |
-| Q-PLATFORM-003 | Major | OTP/MFA, malware scanning, evidence storage, and notification providers remain unresolved. |
+| Q-PLATFORM-003 | Resolved | `PO-UX-17` fixes the provider-neutral evidence-transfer interaction contract. |
 | Q-PLATFORM-004 | Minor | Low-thousands launch population remains distinct from the approved 10,000-identity engineering envelope. |
 | CONFLICT-PLATFORM-001 | Major | Historical stack assumptions must not override verified current Laravel/PHP/package constraints. |
 | CONFLICT-PLATFORM-002 | Major | Final NFR-vs-DR/TD classification awaits complete SRS reconciliation. |

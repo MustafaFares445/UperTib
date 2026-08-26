@@ -868,13 +868,13 @@ Every NFR below states an explicit metric, threshold, and verification method. W
 
 ### NFR-IDENTITY-002 — Authentication, MFA, and OTP Safety
 **Source:** `.spec/non-functional-requirements/NFR.04-authentication-mfa-and-otp.md` · alias `NFR.04`  
-**Status:** Confirmed; concrete providers remain `Q-PLATFORM-003`.  
+**Status:** Confirmed; concrete OTP/MFA vendor selection remains `Q-OPS-001`.  
 **Metric / Threshold:** Patient OTP = 6 digits, expires in 5 min, single-use, hash-only storage, ≤5 verification attempts, ≤3 sends/15 min per phone/account/IP combination; resend invalidates prior OTP without resetting failures; privileged roles require a non-SMS second factor for production access.  
 **Measurement Method:** Automated authentication/rate-limit/state tests and production configuration review.
 
 ### NFR-PLATFORM-003 — Private File and Evidence Security
 **Source:** `.spec/non-functional-requirements/NFR.05-private-file-and-evidence-security.md` · alias `NFR.05`  
-**Status:** Confirmed; malware/private-evidence provider selection remains `Q-PLATFORM-003`.  
+**Status:** Confirmed; malware/private-evidence vendor selection remains `Q-OPS-001`.  
 **Metric / Threshold:** Allowlist PDF/JPEG/PNG; ≤10 MB/image, ≤25 MB/PDF, ≤10 files/action; 100% uploads validate extension + magic bytes + MIME + decode, use opaque UUID names, store immutable SHA-256, and remain quarantined until malware scan succeeds; authorized download links ≤60 s and every download audited.  
 **Measurement Method:** Upload/download security tests, malware/quarantine integration tests, authorization tests, and audit-log assertions.
 
@@ -975,7 +975,7 @@ No canonical `ASM-*` is allocated at this point. Do not convert open items below
 | Q-ELIG-001 | Major | Narrowed on 2026-08-25 by `PO-2026-08-25-syria-catalog-pricing-governance`. **Resolved sub-part:** the internal `P` direction is settled as provider actual price compared against a market-calibrated versioned price policy (`FR-ELIG-019`), and the spreadsheet's fixed A/B/C/D/F multipliers are rejected as production logic. **Still open:** production S/H/I formulas, weights, thresholds, grade bands, deadlines, and clinical defaults require licensed clinical approval, as do the production calibration thresholds and any minimum/allowed scientific grade attached to a procedure definition. |
 | Q-PLATFORM-002 | Major | Final retention/deletion periods require applicable legal/compliance validation. |
 | Q-OPS-001 | Major | Production hosting/deployment topology/provider is not established. Infrastructure documentation must remain provider-neutral until resolved. |
-| Q-PLATFORM-003 | Resolved for interaction; provider selection open | Resolved 2026-08-25 by `PO-UX-17`: the evidence-transfer interaction contract is fixed and provider-neutral (`API-PLATFORM-001`, `STATE_MACHINES.md` section 21.1), and the patient notification surface is confirmed (`FR-PLATFORM-001`). Selecting the concrete OTP, malware-scanning, private-storage, and notification-delivery vendors remains an infrastructure decision tracked by `Q-OPS-001`; provider contracts must still not be invented. |
+| Q-PLATFORM-003 | Resolved | Resolved 2026-08-25 by `PO-UX-17`: the evidence-transfer interaction contract is fixed and provider-neutral (`API-PLATFORM-001`, `STATE_MACHINES.md` section 21.1), and the patient notification surface is confirmed (`FR-PLATFORM-001`). Selecting concrete OTP, malware-scanning, private-storage, and notification-delivery vendors remains an infrastructure decision tracked by `Q-OPS-001`; provider contracts must still not be invented. |
 | Q-PLATFORM-004 | Minor | Low-thousands expected Aleppo launch population and the 10,000-identity NFR envelope are treated as expected population versus engineering headroom unless superseded. |
 | CONFLICT-PLATFORM-001 | Major | Older feature-plan stack assumptions differ from the verified current backend package constraints; technical documentation must use verified repository facts and preserve older plans only as historical evidence. |
 | CONFLICT-CATALOG-001 | Resolved | Resolved 2026-08-24: the currently verified `GET /api/v1/catalog/service-groups` route and current OpenAPI contract align. Broader planned contracts still remain planning evidence and must not be treated as implemented behavior. |

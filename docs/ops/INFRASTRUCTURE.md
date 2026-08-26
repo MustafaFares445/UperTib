@@ -12,7 +12,7 @@
 
 This document defines the provider-neutral infrastructure required to operate UberTib V1 safely and reliably. It describes runtime responsibilities, deployment topology, isolation boundaries, backup/recovery expectations, scaling approach, security controls, and operational dependencies without selecting a cloud or hosting vendor that has not been approved.
 
-`Q-OPS-001` remains **Major** because the concrete hosting provider, deployment topology, managed-versus-self-hosted MySQL service, HA/PITR implementation, and production environment have not yet been selected. It does **not** leave the production database engine unresolved: the approved `NFR-PLATFORM-002` / `NFR.02` baseline requires MySQL point-in-time recovery, so MySQL is the required production relational engine for the current V1 baseline. `Q-PLATFORM-003` remains **Major** because concrete OTP/MFA, malware-scanning, private-evidence, and notification providers are not selected.
+`Q-OPS-001` remains **Major** because the concrete hosting provider, deployment topology, managed-versus-self-hosted MySQL service, HA/PITR implementation, production environment, and OTP/MFA, malware-scanning, private-evidence, and notification vendors have not yet been selected. It does **not** leave the production database engine unresolved: the approved `NFR-PLATFORM-002` / `NFR.02` baseline requires MySQL point-in-time recovery, so MySQL is the required production relational engine for the current V1 baseline. `Q-PLATFORM-003` is **Resolved** for the provider-neutral evidence-transfer interaction contract.
 
 Accordingly, this file specifies required infrastructure capabilities rather than AWS/Azure/GCP/DigitalOcean-specific products.
 
@@ -236,7 +236,7 @@ Required capabilities:
 - lifecycle deletion only after retention/legal-hold checks;
 - recovery/versioning strategy sufficient to prevent silent loss of required evidence.
 
-The current local private disk is appropriate for development. Production may use private local/network storage or S3-compatible object storage only after the storage/scanning approach is approved under `Q-PLATFORM-003` / `Q-OPS-001`.
+The current local private disk is appropriate for development. Production may use private local/network storage or S3-compatible object storage only after the storage/scanning vendor approach is approved under `Q-OPS-001`.
 
 The public Laravel disk and `/storage` symbolic link must never be used for protected evidence.
 
@@ -458,10 +458,10 @@ Exact CI platform for application deployment is not selected by current source m
 | Hosting/cloud/provider selection | `Q-OPS-001` Major | Blocks exact network, managed-service, deployment, and cost design. |
 | Production MySQL deployment/topology | Part of `Q-OPS-001` | Managed versus self-hosted product, provider, HA, network placement, PITR implementation, and operational topology remain to be selected; the engine remains MySQL. |
 | Production cache/queue technology | Part of `Q-OPS-001` | Database defaults are current baseline; dedicated technology remains optional. |
-| Private evidence storage provider | `Q-PLATFORM-003` Major | Blocks concrete upload/download/storage integration contract. |
-| Malware-scanning provider | `Q-PLATFORM-003` Major | Evidence must remain quarantined until resolved. |
-| OTP/MFA provider | `Q-PLATFORM-003` Major | Blocks production contact verification/privileged MFA integration detail. |
-| Notification provider | `Q-PLATFORM-003` Major | Business state remains independent of delivery provider. |
+| Private evidence storage provider | `Q-OPS-001` Major | Blocks concrete upload/download/storage integration configuration; the provider-neutral interaction contract is fixed. |
+| Malware-scanning provider | `Q-OPS-001` Major | Evidence must remain quarantined until resolved. |
+| OTP/MFA provider | `Q-OPS-001` Major | Blocks production contact verification/privileged MFA integration detail. |
+| Notification provider | `Q-OPS-001` Major | Business state remains independent of delivery provider. |
 | Final retention/deletion validation | `Q-PLATFORM-002` Major | Backup/object lifecycle must be reconciled before production. |
 
 ## 22. Explicitly Unnecessary / Forbidden V1 Infrastructure

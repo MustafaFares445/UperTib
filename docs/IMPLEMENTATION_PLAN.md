@@ -202,7 +202,7 @@ Create the cross-platform trust boundary before adding protected business data.
 
 ## Provider dependency
 
-OTP application logic can be implemented behind an adapter while `Q-PLATFORM-003` is open. Production OTP delivery is not release-ready until a real approved provider/configuration exists.
+OTP application logic can be implemented behind an adapter while concrete vendor selection remains open under `Q-OPS-001`. Production OTP delivery is not release-ready until a real approved provider/configuration exists.
 
 ## Exit gate
 
@@ -827,7 +827,7 @@ The current implemented public catalog route is production code evidence and mus
 | `Q-ELIG-001` | Major | Build the versioned eligibility engine and the market-calibration framework; production S/H/I formulas, weights, grade bands, and calibration thresholds wait for licensed approval. |
 | `Q-PLATFORM-002` | Major | Implement retention mechanism/policy versioning; do not label provisional retention periods legally final. |
 | `Q-OPS-001` | Major | Keep deployment provider-neutral until concrete production topology is selected. |
-| `Q-PLATFORM-003` | Major | Use provider-neutral OTP/MFA/malware/storage/notification boundaries; do not invent provider contracts or patient binary evidence transport. |
+| `Q-PLATFORM-003` | Resolved | `PO-UX-17` fixes the provider-neutral evidence-transfer interaction contract. Concrete OTP/MFA, malware, storage, and notification vendor selection remains `Q-OPS-001`. |
 | `Q-PLATFORM-004` | Minor | Treat low-thousands launch population as expected initial load and the 10,000-user target as engineering headroom unless a later approved source supersedes either value. |
 | `CONFLICT-PLATFORM-001` | Major | Implement against verified current Laravel/PHP/package stack rather than obsolete historical stack assumptions. |
 | `CONFLICT-PLATFORM-002` | Major | Keep disputed architecture-quality statements traceable and defer final NFR vs DR/TD classification until complete authoritative SRS reconciliation. |

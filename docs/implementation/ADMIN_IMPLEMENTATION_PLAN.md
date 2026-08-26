@@ -277,7 +277,7 @@ Do not start a downstream wave by duplicating missing upstream logic in Filament
 **Goal:** Prepare Admin authentication so privileged production roles cannot operate with SMS-only authentication.  
 **Dependencies:** TASK-IDENTITY-001  
 **Expected Files / Areas:** authentication guards/middleware (Proposed); privileged-role access policy; provider adapter interface (Proposed); Admin panel auth flow integration (Proposed)  
-**Implementation Notes:** Implement provider-neutral second-factor enforcement and test fakes. Do not invent a concrete vendor while `Q-PLATFORM-003` is open. Development bypasses must be explicit, environment-limited, and impossible in production.  
+**Implementation Notes:** Implement provider-neutral second-factor enforcement and test fakes. Do not invent a concrete vendor while `Q-OPS-001` is open. Development bypasses must be explicit, environment-limited, and impossible in production.  
 **Data / Migration Impact:** Only provider-neutral MFA state/challenge metadata if required by the approved implementation.  
 **API Impact:** None required for Admin panel in this task.  
 **Tests Required:** privileged role denied without approved second factor; ordinary test role behavior; production cannot enable insecure bypass.  
@@ -835,7 +835,8 @@ These items must remain visible during implementation:
 | `Q-ELIG-001` | Major | Eligibility framework may be built, but production S/H/I formulas, weights, grade bands, and market-calibration thresholds require licensed clinical approval. The `P` derivation direction and the rule that no actor selects it are settled. |
 | `Q-PLATFORM-002` | Major | Retention/deletion policy values require legal/compliance validation; mechanism can be implemented without falsely finalizing values. |
 | `Q-OPS-001` | Major | MySQL is the required production relational engine; hosting/provider/topology, managed-vs-self-hosted deployment, HA/PITR implementation, cache/queue/storage/logging and release infrastructure remain unresolved. |
-| `Q-PLATFORM-003` | Major | OTP/MFA, malware scan, private storage, and notification providers are unresolved; use interfaces/fakes only. |
+| `Q-PLATFORM-003` | Resolved | `PO-UX-17` fixes the provider-neutral evidence-transfer interaction contract. |
+| `Q-OPS-001` | Major | OTP/MFA, malware scan, private storage, and notification vendor selection remains unresolved; use interfaces/fakes only. |
 | `CONFLICT-PLATFORM-001` | Major | Use verified current Laravel/PHP/package stack, not historical stack assumptions. |
 
 `CONFLICT-CATALOG-001` remains permanently allocated and is **Resolved (2026-08-24)** because the currently verified catalog route and current OpenAPI contract align for the implemented endpoint.

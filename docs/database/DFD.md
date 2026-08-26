@@ -20,7 +20,7 @@ Two product boundaries apply to every flow:
 - production medical behavior requires licensed clinical approval and versioned governance;
 - UberTib V1 records externally performed financial activity but performs no electronic payment, wallet, escrow, settlement, payout, custody, or refund transfer.
 
-`Q-PLATFORM-001` remains a Blocker for claiming complete reconciliation against readable SRS v1.1 text. `Q-CATALOG-001`, `Q-ELIG-001`, `Q-PLATFORM-002`, `Q-PLATFORM-003`, and `Q-OPS-001` continue to govern production clinical, retention, provider, and infrastructure details.
+`Q-PLATFORM-001` remains a Blocker for claiming complete reconciliation against readable SRS v1.1 text. `Q-CATALOG-001`, `Q-ELIG-001`, `Q-PLATFORM-002`, and `Q-OPS-001` continue to govern production clinical, retention, provider-selection, and infrastructure details. `Q-PLATFORM-003` is Resolved for the provider-neutral evidence-transfer contract.
 
 The D1–D8 stores below are logical domain stores. Their relational tables persist in **MySQL in production** under the approved `NFR-PLATFORM-002` / `NFR.02` recovery baseline. `Q-OPS-001` leaves the concrete MySQL hosting/product/HA/PITR topology unresolved; it does not leave the production database engine unresolved.
 
@@ -518,7 +518,7 @@ flowchart TD
 ## 12. Level 1 — Private Evidence Intake and Access
 
 **Requirements:** NFR-PLATFORM-003, NFR-PLATFORM-004 and evidence-bearing FRs.  
-**Contract status:** detailed `API-PLATFORM-*` transfer contract remains intentionally unallocated pending `Q-PLATFORM-003` / `Q-OPS-001`.
+**Contract status:** `API-PLATFORM-001` defines the provider-neutral transfer contract under resolved `Q-PLATFORM-003`; only concrete vendor selection remains under `Q-OPS-001`.
 
 ```mermaid
 flowchart LR
@@ -696,7 +696,7 @@ Cross-scope requests may be returned as not found when existence itself is prote
 | Q-ELIG-001 | Major | Production S/H/I calculation inputs, grade bands, and market-calibration thresholds remain clinically governed; the price-calibration flow shape is settled. |
 | Q-PLATFORM-002 | Major | Retention/destruction flow needs final legal/compliance validation. |
 | Q-OPS-001 | Major | Concrete hosting/storage/queue topology and the managed/self-hosted MySQL product, HA, PITR implementation, and network placement remain unresolved; the production relational engine is MySQL. |
-| Q-PLATFORM-003 | Major | OTP/MFA, storage, malware-scan and notification provider contracts remain unresolved. |
+| Q-PLATFORM-003 | Resolved | `PO-UX-17` fixes the evidence-transfer interaction contract; concrete vendor selection is `Q-OPS-001`. |
 | CONFLICT-PLATFORM-001 | Major | Historical stack assumptions do not override the verified Laravel/PHP baseline. |
 | CONFLICT-PLATFORM-002 | Major | Final NFR vs DR/TD classification awaits complete SRS reconciliation. |
 

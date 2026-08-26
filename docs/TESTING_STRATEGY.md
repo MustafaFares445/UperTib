@@ -92,7 +92,7 @@ Before V1 release the project also requires:
 - backup/restore environment;
 - React Native test/build environment after `TASK-PLATFORM-008` verifies the actual patient-client repository and commands.
 
-`Q-OPS-001` and `Q-PLATFORM-003` still block final provider/topology-specific suites, but they do not reopen the MySQL production-engine requirement.
+`Q-OPS-001` still blocks final provider/topology-specific suites, but it does not reopen the MySQL production-engine requirement. `Q-PLATFORM-003` is Resolved for the provider-neutral evidence-transfer interaction contract.
 
 ## 5. Verified Existing Automated Coverage
 

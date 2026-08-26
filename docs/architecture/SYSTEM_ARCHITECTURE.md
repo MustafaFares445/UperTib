@@ -91,7 +91,7 @@ flowchart LR
     DOMAIN --> NOTIFY["Notification Adapter"]
 ```
 
-`NOTIFY` is an abstract provider boundary. Concrete OTP/SMS/notification providers remain unresolved under `Q-PLATFORM-003`.
+`NOTIFY` is an abstract provider boundary. Concrete OTP/SMS/notification vendor selection remains unresolved under `Q-OPS-001`.
 
 ## 6. Architecture Drivers
 
@@ -223,7 +223,7 @@ Sensitive evidence remains private by default.
 
 The architecture must support opaque object names, ownership metadata, type/content validation, SHA-256 integrity, quarantine until scanning succeeds, fresh authorization before download, short-lived access, audited downloads, retention rules, and legal holds.
 
-Concrete storage and malware-scanning providers remain unresolved under `Q-OPS-001` and `Q-PLATFORM-003`.
+Concrete storage and malware-scanning vendor selection remains unresolved under `Q-OPS-001`.
 
 ## 13. Background Processing
 
@@ -406,7 +406,7 @@ Future money-movement capability requires a new authoritative product decision a
 | Q-ELIG-001 | Major | Production S/P/H/I policies require licensed approval. |
 | Q-PLATFORM-002 | Major | Retention values need final legal/compliance validation. |
 | Q-OPS-001 | Major | Hosting/provider/topology remains unresolved, including managed-versus-self-hosted MySQL deployment, HA, backup implementation, cache/queue/storage, and release infrastructure; the production database engine remains MySQL. |
-| Q-PLATFORM-003 | Major | OTP/MFA, malware scanning, evidence-storage and notification providers remain unresolved. |
+| Q-PLATFORM-003 | Resolved | `PO-UX-17` fixes the provider-neutral evidence-transfer interaction contract. |
 | Q-PLATFORM-004 | Minor | Launch population and capacity headroom remain separately stated. |
 | CONFLICT-PLATFORM-001 | Major | Historical stack planning cannot override verified current package constraints. |
 | CONFLICT-PLATFORM-002 | Major | Some `.spec` architecture statements await final NFR vs DR/TD classification. |

@@ -795,7 +795,7 @@ These items do not prevent building the structural Clinic panel but prevent cert
 | `Q-PLATFORM-001` — readable SRS v1.1 | Cannot claim full source reconciliation |
 | `Q-CATALOG-001` — clinical approval of provisional and imported candidate content | Clinic can use evaluation fixtures; production service and procedure activation remains gated. The two-layer catalog the Clinic panel reads is settled |
 | `Q-ELIG-001` — approved production S/H/I formulas and calibration thresholds | Build engine/input/versioning/readiness behavior; do not label provisional formulas or calibration thresholds clinically approved |
-| `Q-PLATFORM-003` — concrete OTP/MFA/malware/storage/notification providers | Use provider-neutral interfaces/fakes; do not invent vendor contracts |
+| `Q-OPS-001` — concrete OTP/MFA/malware/storage/notification vendor selection | Use provider-neutral interfaces/fakes; do not invent vendor contracts |
 | `Q-OPS-001` — production infrastructure | MySQL is the required production relational engine; hosting/provider/topology, managed-vs-self-hosted deployment, HA/PITR implementation, cache/queue/storage/logging and release infrastructure remain unresolved |
 | `Q-PLATFORM-002` — retention legal validation | Clinic uses shared retention mechanism; final legal periods remain governed |
 

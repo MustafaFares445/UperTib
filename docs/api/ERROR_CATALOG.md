@@ -14,7 +14,7 @@ This document owns stable client/API error semantics for UberTib V1. It defines 
 
 Only `API-CATALOG-001` is currently verified as implemented. Its current route/OpenAPI expose `429` and generic `500` behavior, but the stable `ERR-*` machine-code envelope below is **not yet verified as implemented**. The remaining error definitions are required contracts for the proposed V1 APIs and must be implemented without weakening the higher-priority product requirements.
 
-`Q-PLATFORM-001` still blocks a claim of complete SRS reconciliation. `Q-PLATFORM-003` remains relevant to OTP and evidence-provider failure handling. No error wording may imply that UberTib diagnoses, insures, holds funds, or executes payments/refunds.
+`Q-PLATFORM-001` still blocks a claim of complete SRS reconciliation. `Q-PLATFORM-003` is Resolved for the provider-neutral evidence-transfer interaction contract; concrete OTP and evidence-provider vendor handling remains under `Q-OPS-001`. No error wording may imply that UberTib diagnoses, insures, holds funds, or executes payments/refunds.
 
 ## 2. Target Error Envelope
 

@@ -19,7 +19,7 @@ Two boundaries are non-negotiable:
 - operational catalog, pricing, commercial, and currency policy live in governed rows, not in application constants; the safety invariants in section 14 remain enforced in schema and code;
 - V1 records externally performed financial activity and must not contain payment capture, wallet, escrow, settlement, payout, or platform refund-execution data models.
 
-`Q-PLATFORM-001` still blocks a claim of complete end-to-end SRS reconciliation. `Q-CATALOG-001`, `Q-ELIG-001`, `Q-PLATFORM-002`, `Q-PLATFORM-003`, and `Q-OPS-001` continue to govern production medical, retention, evidence-provider, and infrastructure details.
+`Q-PLATFORM-001` still blocks a claim of complete end-to-end SRS reconciliation. `Q-CATALOG-001`, `Q-ELIG-001`, `Q-PLATFORM-002`, and `Q-OPS-001` continue to govern production medical, retention, provider-selection, and infrastructure details. `Q-PLATFORM-003` is Resolved for the provider-neutral evidence-transfer contract.
 
 ## 2. Schema Status Vocabulary
 
@@ -747,8 +747,8 @@ Implementation must verify index usefulness with real MySQL query plans and prod
 | Q-CATALOG-001 | Major | The two-layer schema and its governance are settled; production service and procedure data still cannot be treated as clinically approved, whether seeded or imported. |
 | Q-ELIG-001 | Major | Production S/H/I rule content, grade bands, and the price-policy calibration thresholds must be licensed/approved before production policy rows are activated; the `P` derivation shape itself is settled. |
 | Q-PLATFORM-002 | Major | Final retention/deletion policy values may change retention jobs and legal-hold handling prospectively. |
-| Q-PLATFORM-003 | Major | Concrete OTP/MFA, malware-scanning, evidence-storage, and notification providers may add provider metadata but must not redefine domain truth. |
-| Q-OPS-001 | Major | Hosting/database topology remains provider-neutral; logical schema is independent of the provider. |
+| Q-PLATFORM-003 | Resolved | `PO-UX-17` fixes the provider-neutral evidence-transfer contract; it is no longer an open dependency. |
+| Q-OPS-001 | Major | Hosting/database topology and concrete OTP/MFA, malware-scanning, evidence-storage, and notification vendor selection remain provider-neutral; logical schema is independent of the provider. |
 | CONFLICT-PLATFORM-001 | Major | Historical stack assumptions cannot override current Laravel/MySQL-oriented repository evidence. |
 | CONFLICT-PLATFORM-002 | Major | Final NFR vs DR/TD classification may refine documentation but does not justify silently changing product data semantics. |
 
