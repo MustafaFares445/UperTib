@@ -1,10 +1,10 @@
 # UberTib Interaction Patterns
 
 **Phase:** UX 3 — Design System, Session 3 of 7
-**Status:** Allocated. Sessions 5 to 7 bind copy and accessibility obligations to these identifiers.
+**Status:** Allocated. Session 4 binds copy; Sessions 5 to 7 bind accessibility, integration, and final-gate obligations to these identifiers.
 **Owns:** how a repeated interaction behaves, independent of which component renders it.
 **Does not own:** component anatomy (`COMPONENT_INVENTORY*.md`), token values
-(`DESIGN_TOKENS.md`), final copy (Session 5), per-screen behaviour (Phase 4).
+(`DESIGN_TOKENS.md`), final copy (Session 4), per-screen behaviour (Phase 4).
 
 **Blocks live in:**
 

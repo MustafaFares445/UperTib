@@ -14,7 +14,7 @@ when they were approved. **The Phase 2 wireframe files are untouched by this ses
 
 This file is a **binding**, not a specification. It says which components a wireframe resolves to.
 It does not say where they sit, how large they are, what data feeds them, or what they say. Region
-placement and widget composition are Phase 4; final copy is Session 5.
+placement and widget composition are Phase 4; final copy is Session 4.
 
 Three constraints the file is built to respect:
 

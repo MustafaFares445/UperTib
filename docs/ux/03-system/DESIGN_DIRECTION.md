@@ -35,7 +35,7 @@ in the Phase 3 plan. See `DESIGN_TOKENS.md` section 2 for the values and their m
 |---|---|
 | 15.1 colour palette | **Adopted, with two measured accessibility corrections.** It is the only documented UberTib visual decision that exists. |
 | 15.4 accessibility and weak connectivity | **Adopted in full.** Every item maps to `NFR-PLATFORM-005`, `NFR-PLATFORM-006` or WCAG 2.2 AA. Its touch-target figure exceeds the WCAG minimum, which is the recommended figure anyway. |
-| 15.3 writing rules | **Carried to Session 5**, minus the row that renders a server fault as a statement about a deduction. This product has no deduction model, so that string asserts something untrue. |
+| 15.3 writing rules | **Carried to Session 4**, minus the row that renders a server fault as a statement about a deduction. This product has no deduction model, so that string asserts something untrue. |
 | 15.2 component list | **Not usable as written.** The doctor card is specified as showing internal scientific, pricing, protection and risk symbols plus confidence to the patient, and the transaction detail as showing a commission breakdown. Both are prohibited by the algorithm-hiding boundary and the financial boundary. |
 | 16 analytics, 17 launch plan, 18 acceptance | **Superseded for anything financial.** `PO-2026-08-23` decision 9 removed all money movement from V1; the event list in 16.1 still names payment, settlement and refund execution events that have no V1 surface. |
 
@@ -225,7 +225,7 @@ with a framework this chain does not rewrite.
   table bodies.
 - Density compresses the space around content and never the content: a dense table has tighter
   rows and the **same** Arabic text size as everywhere else.
-- Dark mode is in scope here and only here. See `DESIGN_TOKENS.md` section 4.1.
+- V1 remains light-only on Clinic/Admin as well as Patient because no canonical UberTib requirement requests dark mode. The semantic dark map is retained and verified only as future compatibility; do not expose a dark-mode toggle until an explicit product decision approves it. See `DESIGN_TOKENS.md` section 4.1.
 - Tablet is a supported layout, not a degraded one, so the dense mode may not assume a mouse.
 
 ### 4.3 What the three share
@@ -265,8 +265,8 @@ score is claimed for it here.
 
 - Component anatomy, variants or states — Session 3.
 - Which components exist at all — Session 3.
-- Interaction behaviour — Session 4.
-- Any final string, in any language — Session 5. The state channel deliberately carries no
+- Interaction behaviour — Session 3.
+- Any final string, in any language — Session 4. The state channel deliberately carries no
   labels.
 - Screen composition and widget placement — Phase 4.
 - Framework code, an application theme file, or a Figma manifest — Phase 5.

@@ -1,12 +1,12 @@
 # UberTib Component Inventory
 
 **Phase:** UX 3 — Design System, Session 3 of 7
-**Status:** Allocated. Sessions 5 to 7 bind copy and accessibility obligations to these identifiers
+**Status:** Allocated. Session 4 binds copy; Sessions 5 to 7 bind accessibility, integration, and final-gate obligations to these identifiers
 and do not reopen the taxonomy.
 **Owns:** which components exist, their anatomy, variants, required states, token mapping,
 per-profile realization, and traceability.
 **Does not own:** token values (`DESIGN_TOKENS.md`), interaction behaviour
-(`INTERACTION_PATTERNS.md`), final copy (Session 5), screen composition and widget placement
+(`INTERACTION_PATTERNS.md`), final copy (Session 4), screen composition and widget placement
 (Phase 4).
 
 **Blocks live in:**
@@ -297,7 +297,7 @@ profile constraint that the framework supplies forms and notifications.
 | Navigation chrome, panel shell, global user menu, breadcrumb, tabs | Framework-owned on Profile A; fixed by Phase 1 on Profile C | Tokens and the focus-not-obscured obligation, which matters because both panels use a shell with sticky chrome |
 | Avatar, badge, tag | No product rule needs a home in them | Tokens. A lifecycle status uses `CMP-PLATFORM-001`, which is not a badge |
 | Card | The archetype distribution is dominated by detail (68) and form (58), not by card grids | Direction rule 3.5: a card is a container decision made per surface in Phase 4, justified only for a selectable or comparable unit |
-| Inline field error, action banner, unavailable state, full-page gate | `ERROR_CATALOG.md` section 3 already fixes the surface vocabulary | The panel-native extension and the routing from each `ERR-*` to a surface — content and behaviour, owned by Session 5 and by `INTERACTION_PATTERNS.md` |
+| Inline field error, action banner, unavailable state, full-page gate | `ERROR_CATALOG.md` section 3 already fixes the surface vocabulary | The panel-native extension and the routing from each `ERR-*` to a surface — content and behaviour, owned by Session 4 and by `INTERACTION_PATTERNS.md` |
 
 No component tokens exist for any row in this table. `design_tokens/component.json` records that
 exclusion as an enforced contract, not as a note.
@@ -311,7 +311,7 @@ real candidate — from the Phase 2 handoff, the Phase 3 plan, or this session's
 
 | Candidate | Disposition | Reason |
 |---|---|---|
-| **External money boundary notice** (`CMP-FINANCE-001`, the plan's open candidate) | **Not allocated.** Resolved as a content obligation on `CMP-ELIG-002`, `CMP-PLATFORM-002`, `CMP-PLATFORM-008` and `CMP-CLINICAL-001`, plus a Session 5 prohibition. | The obligation from `FR-FINANCE-007` and `NFR-FINANCE-001` is real and its measurement method explicitly includes copy verification. But a notice component is a text block, which is framework-owned, and it would be actively harmful: a standing disclaimer invites the rest of the surface to imply custody and rely on the banner to correct it. The obligation belongs **inside** every component that renders an amount, not beside them. The plan required resolving one way and not allocating both; this is that resolution. |
+| **External money boundary notice** (`CMP-FINANCE-001`, the plan's open candidate) | **Not allocated.** Resolved as a content obligation on `CMP-ELIG-002`, `CMP-PLATFORM-002`, `CMP-PLATFORM-008` and `CMP-CLINICAL-001`, plus a Session 4 prohibition. | The obligation from `FR-FINANCE-007` and `NFR-FINANCE-001` is real and its measurement method explicitly includes copy verification. But a notice component is a text block, which is framework-owned, and it would be actively harmful: a standing disclaimer invites the rest of the surface to imply custody and rely on the banner to correct it. The obligation belongs **inside** every component that renders an amount, not beside them. The plan required resolving one way and not allocating both; this is that resolution. |
 | Comparison view | **Phase 4 widget** | It is `CMP-ELIG-001` repeated in a column layout over transient state. Promoting it would create a component whose anatomy is another component. |
 | Dashboard composition | **Phase 4 template** | Five wireframes, three of them Admin. That is a template, not a component. |
 | Market-observation entry grid | **Phase 4 widget** | Exactly one wireframe, `WF-ELIG-023`. Its rows are `CMP-PLATFORM-006` in dense mode plus framework table editing, and its calibration state is `CMP-POLICY-001`. Criterion 1 fails outright. |
@@ -362,7 +362,7 @@ Every block names, at minimum:
 - its profile realizations;
 - its required states, with `n/a` reasoned where a state does not apply;
 - its token mapping, resolving to the semantic layer only;
-- its accessibility obligations, which Session 6 binds to `A11Y-*`.
+- its accessibility obligations, which Session 5 binds to `A11Y-*`.
 
 `design_tokens/component.json` carries one group per allocated identifier, added in the same
 change as this inventory so a component and its tokens are never allocated apart. Every component

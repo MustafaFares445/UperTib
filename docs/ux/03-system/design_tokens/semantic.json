@@ -1,6 +1,6 @@
 {
   "$schema": "https://design-tokens.github.io/community-group/format/",
-  "$description": "UberTib SEMANTIC layer. Purpose aliases over the primitive layer. This is the layer designs and general styling reference, and the only layer that changes when a theme changes. Every value here is an alias - a literal value in this file is a defect. The dark section overrides semantic.color for Profile A only; see DESIGN_TOKENS.md section on dark mode.",
+  "$description": "UberTib SEMANTIC layer. Purpose aliases over the primitive layer. This is the layer designs and general styling reference, and the only layer that changes when a theme changes. Every value here is an alias - a literal value in this file is a defect. The dark section is a future-compatibility override map; V1 remains light-only on every platform unless a later explicit product decision approves dark mode. See DESIGN_TOKENS.md section 4.1.",
 
   "semantic": {
     "color": {
@@ -227,7 +227,7 @@
   },
 
   "dark": {
-    "$description": "Dark overrides for semantic.color. Profile A only - the Filament panels ship a dark theme and a user toggle, so these values exist to make that theme verified rather than accidental. Profile C is light-only in V1. Any semantic.color token absent here inherits its light value, which is a defect for a colour token and is checked by the token gate.",
+    "$description": "Future-compatibility dark overrides for semantic.color. No platform ships user-facing dark mode in V1 without an explicit product decision. These values remain complete and verified so a later opt-in does not require re-tokenising the system. Any semantic.color token absent here inherits its light value, which is a defect for this compatibility map and is checked by the token gate.",
     "surface": {
       "canvas":   { "$type": "color", "$value": "{color.neutral.950}" },
       "default":  { "$type": "color", "$value": "{color.neutral.900}" },

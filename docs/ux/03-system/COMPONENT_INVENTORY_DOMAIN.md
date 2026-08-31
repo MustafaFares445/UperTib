@@ -110,7 +110,7 @@ or comparable unit. This is that case — and even here it does not lift, becaus
 - The verified review summary shows the rating and its count. It is never merged with, or presented
   as an input to, availability.
 - No superlative about a doctor. The v2.1 writing register and `NFR-PLATFORM-005` agree here.
-- Strings are Session 5 `TXT-*`.
+- Strings are Session 4 `TXT-*`.
 
 **Right-to-left:** identity at `start`; price and rating are bidirectionally isolated so the amount,
 its currency and the rating count do not reorder inside Arabic text.
@@ -237,7 +237,7 @@ The prohibitions here are the point of the component.
   charged now.
 - Where an amount was normalised from another currency, the normalisation provenance is reachable,
   because `currency_normalizations` is append-only and the record can be reproduced.
-- Strings are Session 5 `TXT-*`.
+- Strings are Session 4 `TXT-*`.
 
 **Right-to-left:** the amount and its currency are one bidirectionally isolated unit, so a Latin
 currency code inside Arabic text does not reorder and a thousands separator does not migrate.
@@ -357,7 +357,7 @@ failing the token gate.
 - The `suspension` variant states the affected scope and the controlling dependency. It removes
   attendance, start and completion actions structurally and designs **no** override.
 - No surface presents provisional catalog data as clinically production-approved.
-- Strings are Session 5 `TXT-*`.
+- Strings are Session 4 `TXT-*`.
 
 **Right-to-left:** the reason reads start to end; the assessment time, the policy version and any
 service code are bidirectionally isolated.
@@ -472,7 +472,7 @@ component.clinical-001.stack            {semantic.space.stack-xs}
 - The `snapshot` variant is presented as what was agreed at that time. No edit, delete or
   recalculate affordance exists in it.
 - No copy states or implies that the platform held, paid, insured or refunded money.
-- Strings, including category names, are Session 5 `TXT-*`; the governed category set itself is
+- Strings, including category names, are Session 4 `TXT-*`; the governed category set itself is
   product data.
 
 **Right-to-left:** treatment and category at `start`, amount at `end` with logical alignment. Tooth
@@ -599,7 +599,7 @@ as a fill; the change is never carried by colour alone.
 - The recorded reason is the reason as recorded. It is never reconstructed or summarised into
   something the record does not say.
 - No variant states or implies that money moved because terms changed.
-- Strings are Session 5 `TXT-*`.
+- Strings are Session 4 `TXT-*`.
 
 **Right-to-left:** prior at `start`, new at `end`, in both directions. In the stacked treatment
 prior comes first in reading order. Version identifiers, effective dates and amounts are
@@ -711,7 +711,7 @@ subtle surface** — the pairing that found the correction recorded in `DESIGN_T
 - The `calibration` variant shows the calibration **state**. Grade bands, price bands, risk
   thresholds, calibration minimums and market sample thresholds are governed product data and are
   never rendered as design values.
-- Strings are Session 5 `TXT-*`.
+- Strings are Session 4 `TXT-*`.
 
 **Right-to-left:** scope at `start`, version and effective period at `end`; version identifiers and
 dates are bidirectionally isolated. A version identifier is Latin-with-digits and must not render
@@ -828,7 +828,7 @@ they read from different token groups. `state-flag.escalated` and `state-flag.ov
   the item most likely to age silently.
 - The linked record is reachable in one step, and the row states what kind of record it is.
 - No internal queue key, worker identifier or job name is user-facing.
-- Strings, including work item type names, are Session 5 `TXT-*`.
+- Strings, including work item type names, are Session 4 `TXT-*`.
 
 **Right-to-left:** type and status at `start`, owner and due at `end`, with logical alignment. Due
 times use tabular lining figures so they align down the column and are bidirectionally isolated.

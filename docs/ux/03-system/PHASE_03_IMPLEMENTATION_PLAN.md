@@ -1,7 +1,7 @@
 # UberTib UX Phase 3 — Design System Implementation Plan
 
 **Phase:** UX 3 — Design System
-**Status:** Architecture and audit only. No Phase 3 artifact is produced by this plan and no production code is touched.
+**Status:** Session 1 architecture/audit complete; Sessions 2–4 implemented. Sessions 5–7 remain. No production code is touched by Phase 3.
 **Baseline:** Phase 1 complete, Phase 2 complete, 165/165 `SCR-*` covered by `WF-*` — Patient 47 · Clinic 56 · Admin 62
 **CI remains pinned at `--phase 2`.** This plan does not change it.
 
@@ -276,19 +276,23 @@ state.<name>.emphasis  weight or fill treatment
 
 A component consuming a status consumes the triple. It is then structurally impossible to render a status with only its tone, because the component's anatomy requires the icon and the label. This converts a rule that would otherwise be checked by a human 82 times into a rule checked once.
 
-### 5.4 Dark mode — decided on evidence, not on convention
+### 5.4 Dark mode — future-compatible, outside V1 until explicitly approved
 
-The question is not whether to add dark mode. It is that **one of the three platforms already has it and nobody has decided whether to keep it.**
+A canonical-source sweep of `docs/PRD.md`, `docs/SDD.md`, `docs/domain/*`,
+`.spec/decisions/*`, and the Phase 1/2 UX artifacts found **no explicit UberTib product requirement
+for dark mode**. Filament supporting a dark theme is framework capability, not authority to expand
+MVP scope.
 
-| Platform | Current position | Decision required |
+| Platform | Current capability | V1 decision |
 |---|---|---|
-| **Clinic (Profile A)** | Filament ships a light and a dark theme and a user-facing toggle. If nothing is decided, the panel ships a dark theme nobody verified against 82 statuses in a product where colour-alone is prohibited. | **In scope.** Either define dark semantic overrides and verify them, or disable the toggle deliberately. Not deciding means shipping an unverified theme. |
-| **Admin (Profile A)** | Same. | **In scope**, same reasoning. |
-| **Patient (Profile C)** | React Native does not theme automatically. Dark mode is opt-in engineering work. No requirement asks for it. | **Out of scope for V1.** |
+| **Clinic (Profile A)** | Filament can render a dark theme and can expose a user toggle. | **Light-only in V1.** The toggle must not be exposed unless a later explicit product decision approves dark mode. |
+| **Admin (Profile A)** | Same framework capability as Clinic. | **Light-only in V1**, same rule. |
+| **Patient (Profile C)** | React Native theming requires explicit engineering work. | **Light-only in V1.** |
 
-**Recommendation:** define and verify the dark semantic layer for Profile A; leave Profile C light-only for V1, with the token architecture built dark-capable so adding it later is a semantic-layer change rather than a re-tokenisation. Recommend against disabling the Filament toggle, because a trained operator working a long shift in a clinic is exactly the user who will look for it, and removing a framework affordance is a support cost.
-
-This is a decision, not a default. It is recorded here so Session 2 does not relitigate it and Session 7 does not discover an unverified theme.
+The semantic token architecture remains dark-capable and the existing dark override map stays
+verified as a future-compatibility asset. This avoids throwing away validated design-system work
+without turning that work into an MVP commitment. Enabling a user-facing dark mode later is a
+separate product decision and Phase 5 must not infer it from the presence of dark tokens.
 
 ### 5.5 Where the tokens live, and why it matters
 
@@ -462,7 +466,7 @@ Per-string allocation would produce well over a hundred and forty identifiers an
 | Structural state copy | Empty and recovery copy per archetype | about 10 |
 | Named copy obligations | The seven from Phase 1 and the four from Phase 2, cross-referenced rather than duplicated | absorbed |
 
-**Estimated 70 to 90 `TXT-*`. The exact count is fixed in Session 5, not here.**
+**Estimated 70 to 90 `TXT-*`. The exact count is fixed in Session 4, not here.**
 
 ### 8.3 The eleven named copy obligations
 
@@ -517,7 +521,7 @@ Each obligation carries: the WCAG criterion or product rule it comes from, the p
 
 ### 9.4 Honest scope
 
-Phase 3 can mechanically verify token contrast in every mode that ships, and that no colour-only status token exists. It cannot verify screen-reader announcement, focus order, keyboard completeness or forced-colours survival, because those need a rendered interface. Those obligations are specified in Phase 3 and verified in Phase 5. The handoff must say so rather than implying a green gate covers them.
+Phase 3 can mechanically verify token contrast in V1 light mode and every declared compatibility override map, and that no colour-only status token exists. It cannot verify screen-reader announcement, focus order, keyboard completeness or forced-colours survival, because those need a rendered interface. Those obligations are specified in Phase 3 and verified in Phase 5. The handoff must say so rather than implying a green gate covers them.
 
 ---
 
@@ -633,7 +637,7 @@ No existing rule is weakened, no threshold lowered, no check removed. Proposed f
 | Every `A11Y-*` names a criterion and a carrier | Prevents an obligation nobody owns |
 | Every one of the 18 lifecycle machines has a status copy family | The mechanical proxy for the 82-status obligation |
 | ~~Token JSON parses and every alias resolves, run against the UX token path~~ | **Delivered early in Session 2** — section 17.3. |
-| ~~Required contrast pairs pass in every mode that ships, run against the UX token path~~ | **Delivered early in Session 2** — section 17.3. |
+| ~~Required contrast pairs pass in V1 light mode and every declared compatibility override map, run against the UX token path~~ | **Delivered early in Session 2** — section 17.3. |
 | No emoji anywhere under `docs/ux/` | Currently clean across 20 files. Keeping it clean is cheaper than fixing it. |
 
 Two things stay manual and the handoff must say so: whether a status is genuinely distinguishable without colour, and whether the copy reads as accountable rather than merely correct.
@@ -654,7 +658,7 @@ CI runs both validators, with the UX one pinned at `--phase 2`. **It stays at `-
 | **`Q-PLATFORM-002`** | Final retention periods await legal validation. | Not blocking. Affects one screen's content. |
 | **`Q-PLATFORM-001`** | The authoritative SRS text layer is scrambled at the word level. Independently confirmed during this audit. | Not blocking. Limits what may be claimed, not what may be built. |
 | **`ASM-IDENTITY-001`, `ASM-ELIG-001`** | Both still in force. | Not blocking. Neither touches tokens, components or copy. |
-| **Filament dark theme** | Section 5.4. Not deciding means shipping an unverified theme on two of three platforms. | **Decision required in Session 2.** |
+| **Dark-mode shipping scope** | Section 5.4. No canonical product requirement requests dark mode; framework capability alone does not add MVP scope. | **Resolved in Session 2 / cleanup clarification:** light-only V1 on all three platforms; dark semantic overrides retained as future compatibility. |
 | **Arabic type family** | No source names one. The choice affects the type scale, line height and the mixed-direction behavior of every screen. | **Decision required in Session 2.** A real decision with licensing and rendering consequences, not a default. |
 | **Icon set** | No source names one. Every icon needs a label, and the state triple in 5.3 depends on a governed identifier space. | **Decision required in Session 2.** |
 | **`Q-PLATFORM-007`** | No research inputs exist for any actor. Accepted as a limitation rather than an open decision. | Not blocking. Five usability sessions with clinic staff would still validate the prominence decisions Phase 2 rests on, at low cost. |
@@ -674,7 +678,7 @@ Phase 3 does none of the following. Each is listed because it is a plausible thi
 7. **Invent clinical, financial, eligibility or business rules.** Where a rule is missing, Phase 3 records a question.
 8. **Claim WCAG conformance.** Phase 3 specifies obligations against a documented target.
 9. **Adopt a named design-system library wholesale.** Section 4.4.
-10. **Add dark mode to the Patient app** merely because the token architecture supports it. Section 5.4.
+10. **Enable a user-facing dark mode on any platform** merely because the token architecture supports it. Section 5.4.
 11. **Weaken any existing validation rule**, lower any threshold, or narrow any check to make a gate pass.
 12. **Restate the canonical Arabic error messages.** Reference them.
 13. **Modify production application code.** No session in Phase 3 touches `UberTip-Backend/`.
@@ -686,30 +690,42 @@ Phase 3 does none of the following. Each is listed because it is a plausible thi
 Ordered so each session's output is the next session's input, and so the two riskiest decisions happen first.
 
 ### Session 2 — Tokens and direction
-Emit the DTCG token set at `docs/ux/03-system/design_tokens/`, plus `DESIGN_TOKENS.md`. Decide and record the three open decisions from section 13: Filament dark theme, Arabic type family, icon set. Correct the warning role. Build the state triple for all 82 statuses. Raise the palette ratification question and register it.
-**Done when:** every token file parses, every alias resolves, every required contrast pair passes in every mode that ships, and no status resolves to a colour without an icon and an emphasis. Report the actual output of each check, not a summary of it.
 
-### Session 3 — Component taxonomy
-Allocate the `CMP-*` set. Resolve the `CMP-FINANCE-001` candidate one way or the other. Write each block to the full quality bar: anatomy, variants, sizes, required states, token mapping, accessibility, content obligations, profile realizations, traceability.
-**Done when:** every `CMP-*` has a complete block, and the taxonomy covers every region in the Phase 2 vocabulary across all five archetypes.
+Emit the DTCG token set at `docs/ux/03-system/design_tokens/`, plus `DESIGN_TOKENS.md`. Record the V1 theme scope from section 5.4, Arabic type family, and icon set. Correct the warning role. Build the state triple for all 82 statuses. Raise the palette ratification question and register it.
 
-### Session 4 — Binding map and interaction patterns
-Write `WIREFRAME_COMPONENT_MAP.md`, one row per `WF-*`, all 165. Write `INTERACTION_PATTERNS.md`. Bind every `IX-*` to at least one `CMP-*` and one `FLOW-*`.
-**Done when:** the two-way component closure holds, and the map's coverage table shows no archetype with an unmet structural region.
+**Done when:** every token file parses, every alias resolves, every required light-mode contrast pair passes, the retained dark compatibility map also passes its token checks, and no status resolves to a colour without an icon and an emphasis. Report actual gate output, not an inferred quality claim.
 
-### Session 5 — Content
-Write the content guide and its two companions. All 18 status families. All 21 error families with both surface columns, closing the panel-native gap. The audience translations, the action-role labels, the structural state copy, and the eleven obligations as enforceable rules.
-**Done when:** the Phase 3 error gate passes for a real reason, and every one of the 82 statuses has a label and a stated meaning per audience.
+### Session 3 — Component taxonomy, binding map, and interaction patterns
 
-### Session 6 — Accessibility
-Write `ACCESSIBILITY.md`. Bind every obligation to its carrier. Produce the component coverage table from the binding map rather than by hand. Separate mechanically verified obligations from those deferred to Phase 5, explicitly.
-**Done when:** no obligation lacks a carrier and no carrier lacks its obligations.
+Allocate the `CMP-*` set, resolve the `CMP-FINANCE-001` candidate, and write each block to the full quality bar. Write `WIREFRAME_COMPONENT_MAP.md`, one row per `WF-*`, all 165. Write the `IX-*` interaction patterns and bind every one to at least one `CMP-*` and one `FLOW-*`.
 
-### Session 7 — Gates and handoff
-Add the proposed validator extensions. Update the registry line in `docs/README.md` within its line budget, including the `WF-*` correction. Flip CI to `--phase 3`. Write `PHASE_03_HANDOFF.md` with measured results, the carry-forward obligations for Phase 4, and an honest statement of what the gate does and does not prove.
-**Done when:** both validators pass at `--phase 3` with zero failures, CI is green, and the handoff reports real numbers.
+**Done when:** every `CMP-*` has a complete block, the two-way component closure holds, all 165 wireframes are bound, and the interaction taxonomy has no unowned repeated behavior.
 
-**Suggested gate between Sessions 4 and 5.** The component taxonomy and its binding are the decisions expensive to reverse. Content and accessibility are additive over them.
+### Session 4 — Content
+
+Write the content guide and its two companions. Cover all 18 status families / 82 statuses and all 21 error families, plus audience translations, action-role labels, structural-state copy, and the carried copy obligations as enforceable rules.
+
+**Done when:** the Phase 3 error gate passes for a real reason and every lifecycle status has a label and stated meaning per audience.
+
+### Session 5 — Accessibility, RTL, status and data-state semantics
+
+Write the accessibility system and bind every `A11Y-*` obligation to its carrier. Cover keyboard, focus, screen-reader semantics, contrast obligations, target size, Arabic RTL / mixed-direction content, text scaling/reflow, reduced motion, and the shared status/data-state semantics without reopening the approved `CMP-*` or `IX-*` taxonomies.
+
+**Done when:** no accessibility obligation lacks a carrier, no carrier lacks required obligations, and Profile C versus Profile A responsibilities are explicit.
+
+### Session 6 — Integration, traceability, and mechanical validation
+
+Audit `CMP-* -> WF-*/SCR-*`, `IX-* -> FLOW-*/CMP-*`, `TXT-* -> ERR-*/behavior`, and `A11Y-* -> NFR-*/carrier`. Regenerate coverage from the binding map rather than maintaining a second hand-edited copy. Fix only mechanical/reference defects; escalate architectural contradictions.
+
+**Done when:** there are no orphan IDs, stale references, duplicate allocations, uncovered errors, raw token violations, or unresolved mechanical validator failures.
+
+### Session 7 — Final senior gate and handoff
+
+Perform the holistic Phase 3 audit, add only genuinely required validator extensions, update the registry line in `docs/README.md` within its line budget, flip CI to `--phase 3`, and write `PHASE_03_HANDOFF.md` with measured results and Phase 4 carry-forward obligations.
+
+**Done when:** both validators pass at `--phase 3`, applicable design-system gates are green, CI is green, and the handoff states what was measured versus what remains for rendered QA.
+
+**Suggested gate after Session 3.** The component taxonomy, binding map, and interaction architecture are the decisions expensive to reverse. Content and accessibility are additive over them.
 
 ---
 

@@ -43,6 +43,9 @@ Patient UX is Arabic-first/RTL, smartphone-first and resilient to weak connectiv
 13. `03-system/COMPONENT_INVENTORY.md`, then `_PLATFORM` and `_DOMAIN`
 14. `03-system/WIREFRAME_COMPONENT_MAP.md`
 15. `03-system/INTERACTION_PATTERNS.md`, then `_DOMAIN`
+16. `03-system/CONTENT_GUIDE.md`
+17. `03-system/CONTENT_GUIDE_STATES.md`
+18. `03-system/CONTENT_GUIDE_ERRORS.md`
 
 Coding agents must not treat Phase 2 as final UI styling or implementation contracts. Phase 5 remains the coding handoff owner.
 
@@ -52,7 +55,7 @@ Coding agents must not treat Phase 2 as final UI styling or implementation contr
 |---|---|---|
 | 1 — Discovery, IA, Flows | `01-foundation/*` | Complete |
 | 2 — Wireframes | `02-wireframes/*`, `PHASE_02_HANDOFF.md` | **Complete — awaiting gate approval** |
-| 3 — Design System | `03-system/*` | **In progress — Session 4 of 7 complete.** Direction, tokens, the 22 `CMP-*` and the 26 `IX-*` are fixed, and all 165 `WF-*` are bound to components. Content (`TXT-*`) and accessibility (`A11Y-*`) not started. |
+| 3 — Design System | `03-system/*` | **In progress — Session 4 of 7 complete.** Architecture, direction, tokens, the 22 `CMP-*`, the 26 `IX-*`, all 165 `WF-*` component bindings, the `TXT-*` content system, 18 lifecycle-status families / 82 statuses, and 21/21 `ERR-*` recovery families are implemented. Accessibility (`A11Y-*`) is next; Sessions 6–7 remain integration and final gate work. |
 | 4 — Widget and Screen Specs | `04-specs/*` | Not started |
 | 5 — Build and Handoff | `05-build/*` | Not started |
 

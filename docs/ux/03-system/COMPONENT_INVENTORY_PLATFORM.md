@@ -107,7 +107,7 @@ states.
 
 - One chip renders one status of one machine. A surface showing a booking status and its
   eligibility-review status shows two chips, never a merged one.
-- The label is a Session 5 `TXT-*` allocation. The state channel deliberately carries no label in
+- The label is a Session 4 `TXT-*` allocation. The state channel deliberately carries no label in
   any language, so this component has no default string.
 - **Prohibited:** a status label that is a bare enumeration value; a single letter that collides
   with the verified review rating; any internal classification, calibration or risk symbol; any
@@ -233,7 +233,7 @@ state summary does not float.
   Never insurance, never reimbursement, never a guaranteed result.
 - A pending reschedule proposal is summarised **alongside** the original confirmed appointment,
   never instead of it. See `IX-BOOKING-002`.
-- Strings are Session 5 `TXT-*`.
+- Strings are Session 4 `TXT-*`.
 
 **Right-to-left:** the block reads start to end; the assessed-at time and any version identifier
 are isolated so a Latin identifier inside Arabic text does not reorder.
@@ -330,7 +330,7 @@ component.platform-003.inline         {semantic.space.inline-sm}
 - Revocation of a representation grant is reachable from the `representation` variant regardless of
   booking state. `ERR-BOOKING-002` is booking-domain only and may not surface here.
 - No internal scope identifier, tenant key or grant primary key is user-facing.
-- Strings are Session 5 `TXT-*`.
+- Strings are Session 4 `TXT-*`.
 
 **Right-to-left:** subject at `start`, scope at `end`. Latin clinic legal names and branch names
 inside Arabic text are isolated.
@@ -437,7 +437,7 @@ dark text, so it cannot be given a coloured fill without editing the semantic la
 **Content rules**
 
 - **One action role keeps one label across all three platforms**, including inside its own
-  confirmation. Session 5 allocates one `TXT-*` per action role, not one per screen.
+  confirmation. Session 4 allocates one `TXT-*` per action role, not one per screen.
 - The absent-action explanation says what would make the action available, in the actor's terms. It
   never states or implies that an override exists, and it never names an internal permission key.
 - `ELIGIBILITY_REVIEW` removes attendance, start and completion actions **structurally**. There is
@@ -549,7 +549,7 @@ reduced motion the value changes without transition; the information is identica
 - A final lapse states what was lost and offers no retry. Offering one would be dishonest and,
   under `ERR-BOOKING-003` and `ERR-CLAIMS-001`, futile.
 - Neither the remaining time nor the absolute end time is ever truncated.
-- Strings are Session 5 `TXT-*`.
+- Strings are Session 4 `TXT-*`.
 
 **Right-to-left:** the remaining time and the absolute time are bidirectionally isolated. Western
 digits throughout, per `DESIGN_TOKENS.md` section 4.4, so a duration inside Arabic text does not
@@ -662,7 +662,7 @@ exactly this pairing, and a table header on a subtle surface is the pairing that
   alongside its understandable name, and never on a Patient surface as the primary identity.
 - Where a bound is applied — a page size, a top-N, a date window — the list states what is not
   shown. A silent cap reads as complete coverage.
-- Strings, including column labels, are Session 5 `TXT-*`.
+- Strings, including column labels, are Session 4 `TXT-*`.
 
 **Right-to-left:** column order mirrors; numeric columns keep their own internal direction and are
 bidirectionally isolated. A physically end-aligned amount column is defined as logical alignment,
@@ -765,7 +765,7 @@ token gate requires to pass the interface-element ratio.
 - Patient discovery is entered through **service families**, never a flat list of professional
   procedure codes. No filter on any Patient surface selects an internal classification, grade,
   confidence or risk value.
-- Strings are Session 5 `TXT-*`.
+- Strings are Session 4 `TXT-*`.
 
 **Right-to-left:** the input's own text direction follows its content, so a Latin code typed into an
 Arabic interface does not reverse. The clear control sits at the input's `end`.
@@ -874,7 +874,7 @@ date.
   exactly that.
 - A computed event is not attributed to a person; a human decision is. `CMP-PLATFORM-013` carries
   both directions of that rule.
-- Strings are Session 5 `TXT-*`.
+- Strings are Session 4 `TXT-*`.
 
 **Right-to-left:** time at `start`, event at `end`; timestamps and correlation identifiers are
 bidirectionally isolated so a Latin identifier inside Arabic text does not reorder.
@@ -963,7 +963,7 @@ component.platform-009.stack       {semantic.space.stack-sm}
   written as one string.
 - The statement explains the value and points to the first action; "No data" is not an empty state.
 - No emoji, in any variant, in any position.
-- Strings are Session 5 `TXT-*` per archetype.
+- Strings are Session 4 `TXT-*` per archetype.
 
 **Right-to-left:** the block is centred, so it mirrors without change; the action's own label
 follows the reading direction.
@@ -1057,7 +1057,7 @@ direction bug.
 
 - **The canonical Arabic message for each `ERR-*` is owned by `docs/api/ERROR_CATALOG.md` and is
   referenced, never restated.** This component renders that message and adds the recovery guidance,
-  which is what Session 5 owns.
+  which is what Session 4 owns.
 - **A retryable transfer or network failure must never read as an authoritative rejection.** This
   is copy obligation 3, the most likely evidence failure in this product's conditions, and it is
   enforced structurally by `CMP-PLATFORM-012` as well as here.
@@ -1065,7 +1065,7 @@ direction bug.
 - `ERR-BOOKING-002` is booking-domain only. Its guidance may not be written generically enough to
   be reused on an identity or representation surface.
 - No variant states or implies that money moved, was held, or was returned.
-- Strings are Session 5 `TXT-*`, one family per `ERR-*`, with a Profile C surface and a Profile A
+- Strings are Session 4 `TXT-*`, one family per `ERR-*`, with a Profile C surface and a Profile A
   surface for each of the 21.
 
 **Right-to-left:** the icon is at `start`; the block mirrors as a whole.
@@ -1156,7 +1156,7 @@ pending and retrying resolve to `tone.info`, failed to `tone.danger`, completed 
 - A failed submission states whether the actor's input survived, and it does survive.
 - An unknown outcome is `CMP-PLATFORM-010` `unknown-outcome`, not a failure, and no new command is
   offered until it is reconciled.
-- Strings are Session 5 `TXT-*`.
+- Strings are Session 4 `TXT-*`.
 
 **Right-to-left:** icon at `start`; the submitted-thing description and the timestamp are isolated.
 
@@ -1271,7 +1271,7 @@ component implementation without failing the token gate.
 - A rejection names a **specific correctable requirement**, not a generic refusal.
 - The file identity is what the actor recognises. The opaque storage identifier is never shown.
 - No count of attempts is presented as a penalty.
-- Strings are Session 5 `TXT-*`.
+- Strings are Session 4 `TXT-*`.
 
 **Right-to-left:** progress fills from `start` to `end` in both directions. A progress bar that
 fills left-to-right in a right-to-left interface is a directional defect.
@@ -1371,7 +1371,7 @@ the accountable owner read as an outcome.
 - A computed outcome is labelled as computed and names no person.
 - On Patient surfaces the named person is the clinician or reviewer whose decision it is. Internal
   staff identifiers, queue assignments and internal role keys are not patient-facing.
-- Strings, including role names, are Session 5 `TXT-*`.
+- Strings, including role names, are Session 4 `TXT-*`.
 
 **Right-to-left:** role and name at `start`, time at `end`; the timestamp is isolated.
 
@@ -1482,7 +1482,7 @@ is the mechanism that stops a red trigger from producing a blue confirm.
   part of an audit record and, in the `authoritative-decision` variant, the recorded basis of the
   decision.
 - No confirmation states or implies that money moved, was held, or was returned.
-- Strings are Session 5 `TXT-*`.
+- Strings are Session 4 `TXT-*`.
 
 **Right-to-left:** cancel at `start`, confirm at `end`, in both directions, so the destructive
 choice never sits where the eye lands first.
@@ -1585,7 +1585,7 @@ state and the no-colour-alone rule does not stop at lifecycle statuses.
   header, because an attention list is exactly where a guardian mixes up two dependents.
 - The empty attention surface says plainly that nothing needs the actor. It does not manufacture
   activity.
-- Strings are Session 5 `TXT-*`.
+- Strings are Session 4 `TXT-*`.
 
 **Right-to-left:** icon at `start`, chevron at `end` and mirrored.
 

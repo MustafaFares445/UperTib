@@ -28,7 +28,7 @@ primitive.*.json   ramps and scales. The only files carrying literal values.
                    Never referenced by a component.
 semantic.json      purpose aliases: surface, text, border, action, focus, tone, state,
                    plus type, space, size, radius, elevation and opacity roles.
-                   Plus the dark override map for Profile A.
+                   Plus the dark compatibility override map. It is retained for future compatibility and is not a V1 shipping-mode commitment.
 semantic.state.json  the state channel: every lifecycle status as a tone/icon/emphasis triple.
 component.json     component-scoped tokens. Deliberately empty until Session 3.
 ```
@@ -75,7 +75,7 @@ editing the JSON by hand puts the two out of step silently.
 
 It proves token-level correctness: the source parses, every alias resolves, the layering holds,
 every one of the 82 statuses carries a complete triple, and every required contrast pair meets
-WCAG 2.2 AA in both modes that ship.
+WCAG 2.2 AA in the V1 light mode and in the retained dark compatibility override map.
 
 It does **not** prove that a rendered screen is accessible. Screen-reader announcement, focus
 order, keyboard completeness, forced-colours survival and whether two statuses are genuinely

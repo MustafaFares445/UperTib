@@ -434,6 +434,6 @@ one of the 82 statuses in `CONTENT_GUIDE_STATES.md` and all 21 error families in
   registry check (`TXT` is not one of its tracked prefixes), so no registry gate depends on this edit
   happening now.
 - **No accessibility (`A11Y-*`) work beyond what the content rules above already require** — per the
-  session brief, this is Session 6.
+  session brief, accessibility is Session 5.
 - **No per-screen final copy.** Every string above is a family-level rule or table, not a placed string
   on a numbered screen — that binding is Phase 4's `WIDGET_SPECS`/`SCREEN_SPECS` work.

@@ -13,11 +13,11 @@ Checks:
   2. Every {alias} resolves to a defined token.
   3. Literal values appear only in primitive.* files.
   4. A component token resolves to the semantic layer, never straight to a primitive.
-  5. Every required contrast pair meets WCAG 2.2 AA, in EVERY mode that ships.
+  5. Every required contrast pair meets WCAG 2.2 AA in V1 light mode and every declared compatibility override map.
   6. Every lifecycle status carries a complete tone-icon-emphasis triple, with a defined tone,
      a governed emphasis and a governed icon. A status may not resolve to a colour alone.
   7. No machine reuses one icon for two of its own statuses.
-  8. Every semantic colour token has a dark override.
+  8. Every semantic colour token has a dark compatibility override.
   9. The state channel covers the documented 18 machines and 82 statuses.
  10. Every governed icon exists in the installed Heroicons package, when it is installed.
 
@@ -187,7 +187,7 @@ def check_dark_coverage(values: dict[str, object]) -> None:
             continue
         if "dark." + path[len("semantic.color."):] not in values:
             fail(f"{path} has no dark override; a semantic colour must be defined in every "
-                 "mode that ships")
+                 "declared dark compatibility mode")
 
 
 def pairs(values: dict[str, object]) -> list[tuple[str, str, str, float]]:
@@ -272,7 +272,7 @@ def check_contrast(values: dict[str, object], verbose: bool) -> None:
     modes: list[tuple[str, dict | None]] = [("LIGHT", None)]
     dark = {p: v for p, v in values.items() if p.startswith("dark.")}
     if dark:
-        modes.append(("DARK (Profile A only)", dark))
+        modes.append(("DARK COMPATIBILITY OVERRIDES", dark))
 
     for mode, overrides in modes:
         print(f"\n=== {mode} - required pairs ===")
@@ -409,7 +409,7 @@ def main(argv: list[str]) -> int:
         return 1
     print("\nOK: 0 failures. Token source parses, every alias resolves, the layering holds, "
           "every status is a complete triple, and every required contrast pair meets WCAG 2.2 "
-          "AA in every mode that ships.")
+          "AA in V1 light mode and every declared compatibility override map.")
     print("This gate proves token-level correctness only. It does not prove that a rendered "
           "screen is accessible, and no conformance claim follows from it.")
     return 0

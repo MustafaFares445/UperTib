@@ -192,25 +192,24 @@ brand.surface-tint  #E7F4F3   off-ramp, documented Primary Light, kept verbatim
 
 ## 4. The three decisions the plan required this session
 
-### 4.1 Dark mode — in scope for Profile A, out of scope for Profile C
+### 4.1 Dark-mode compatibility — retained, but not V1 shipping scope
 
-The question was never whether to add dark mode. It is that **one of the three platforms already
-has it and nobody had decided whether to keep it.**
+A canonical-source sweep of `docs/PRD.md`, `docs/SDD.md`, `docs/domain/*`,
+`.spec/decisions/*`, and the Phase 1/2 UX artifacts found **no product requirement for a
+user-facing dark mode**. Framework capability is not product scope.
 
-| Platform | Position | Decision |
+| Platform | Framework capability | V1 decision |
 |---|---|---|
-| Clinic, Admin (Profile A) | Filament ships a light and a dark theme and a user-facing toggle. Doing nothing means shipping a dark theme nobody verified against 82 statuses in a product where colour-alone is prohibited. | **In scope.** A full dark semantic override map is defined and verified. |
-| Patient (Profile C) | React Native does not theme automatically. Dark mode is opt-in engineering work and no requirement asks for it. | **Out of scope for V1**, architecture left dark-capable. |
+| Clinic, Admin (Profile A) | Filament can render a dark theme. | **Light-only in V1.** Do not expose the framework dark-mode toggle unless a later explicit product decision approves it. |
+| Patient (Profile C) | React Native can support theming with explicit engineering work. | **Light-only in V1.** |
 
-**Disabling the Filament toggle was considered and rejected.** A trained operator working a long
-shift in a clinic is exactly the user who will look for it, and removing a framework affordance is
-a permanent support cost to avoid a one-session verification cost.
+The already-authored dark semantic override map is deliberately retained as a **future-compatibility
+asset**, not as an MVP commitment. Keeping and validating it avoids semantic drift and preserves the
+option to enable dark mode later without re-tokenising the system. The token gate therefore
+continues to require a complete dark compatibility override for every semantic colour.
 
-Adding dark mode to the Patient app later is a semantic-layer change, not a re-tokenisation. The
-gate **requires** every semantic colour to have a dark override, so the map cannot silently rot:
-a new semantic colour added in Session 3 without its dark value fails the build.
-
-Measured: **114 of 114 required pairs pass in dark**, the same set as light.
+Measured compatibility result: **114 of 114 required pairs pass in the dark override map**, the
+same set as light. This measurement does not mean dark mode ships in V1.
 
 ### 4.2 Arabic type family — IBM Plex Sans Arabic
 
@@ -368,7 +367,7 @@ replaces or recolours the status chip.
 
 ### 5.5 What the channel deliberately does not carry
 
-**No labels, in any language.** Every user-facing string for these 82 statuses is a Session 5
+**No labels, in any language.** Every user-facing string for these 82 statuses is a Session 4
 `TXT-*` allocation against the content guide, and canonical Arabic error text already lives in
 `docs/api/ERROR_CATALOG.md`. Putting a label here would create a second source of truth for a
 string the content guide owns.
@@ -466,7 +465,7 @@ Explicitly **not** tokens, and never to become tokens:
 | Grade bands, price bands, risk thresholds, calibration minimums, market sample thresholds | Policy versions, pending licensed clinical approval |
 | Retention and deletion periods | Legal, `Q-PLATFORM-002` |
 | Slot capacity, throttle limits, attempt limits, code expiry | Configuration |
-| Any label, message or Arabic string | `TXT-*`, Session 5, and `ERROR_CATALOG.md` |
+| Any label, message or Arabic string | `TXT-*`, Session 4, and `ERROR_CATALOG.md` |
 
 The boundary cuts both ways, and the useful test is the **deadline indicator**: *how* an
 approaching deadline looks is `tone.warning` plus its icon and emphasis — tokens. *When* it
@@ -492,7 +491,7 @@ Files: 9   Tokens: 721
 
 === LIGHT - required pairs ===
   114/114 required pairs pass
-=== DARK (Profile A only) - required pairs ===
+=== DARK COMPATIBILITY OVERRIDES - required pairs ===
   114/114 required pairs pass
 
 note: icon existence verified against 36 names in the installed Heroicons package
