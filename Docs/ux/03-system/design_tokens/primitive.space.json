@@ -1,0 +1,98 @@
+{
+  "$schema": "https://design-tokens.github.io/community-group/format/",
+  "$description": "UberTib PRIMITIVE space, size, radius, border width, elevation and opacity. Literal values live only in this file. A component never references a primitive; it goes through the semantic layer.",
+
+  "space": {
+    "$description": "4px base unit. Every value is a multiple of 4 except the two 2px hairline steps.",
+    "0":  { "$type": "dimension", "$value": "0px" },
+    "1":  { "$type": "dimension", "$value": "2px" },
+    "2":  { "$type": "dimension", "$value": "4px" },
+    "3":  { "$type": "dimension", "$value": "6px" },
+    "4":  { "$type": "dimension", "$value": "8px" },
+    "5":  { "$type": "dimension", "$value": "12px" },
+    "6":  { "$type": "dimension", "$value": "16px" },
+    "7":  { "$type": "dimension", "$value": "20px" },
+    "8":  { "$type": "dimension", "$value": "24px" },
+    "9":  { "$type": "dimension", "$value": "32px" },
+    "10": { "$type": "dimension", "$value": "40px" },
+    "11": { "$type": "dimension", "$value": "48px" },
+    "12": { "$type": "dimension", "$value": "64px" },
+    "13": { "$type": "dimension", "$value": "80px" },
+    "14": { "$type": "dimension", "$value": "96px" }
+  },
+
+  "size": {
+    "$description": "Control heights, interactive target floors and icon sizes.",
+    "control-sm": { "$type": "dimension", "$value": "32px", "$description": "Dense-mode control. Requires an expanded hit area to reach the target floor." },
+    "control-md": { "$type": "dimension", "$value": "40px" },
+    "control-lg": { "$type": "dimension", "$value": "48px" },
+    "target-minimum":     { "$type": "dimension", "$value": "24px", "$description": "WCAG 2.2 SC 2.5.8 floor. No density mode may render an interactive target below this, hit area included." },
+    "target-comfortable": { "$type": "dimension", "$value": "44px", "$description": "v2.1 section 15.4 and the design-kit recommendation. Floor for every Patient primary action." },
+    "icon-sm": { "$type": "dimension", "$value": "16px", "$description": "Inline within dense operational text only." },
+    "icon-md": { "$type": "dimension", "$value": "20px", "$description": "Default. Status icons and control affordances." },
+    "icon-lg": { "$type": "dimension", "$value": "24px", "$description": "Patient primary actions and section headers." }
+  },
+
+  "radius": {
+    "$description": "Modest by direction. Nothing is fully rounded except a genuinely circular object.",
+    "none": { "$type": "dimension", "$value": "0px" },
+    "xs":   { "$type": "dimension", "$value": "2px" },
+    "sm":   { "$type": "dimension", "$value": "4px" },
+    "md":   { "$type": "dimension", "$value": "6px" },
+    "lg":   { "$type": "dimension", "$value": "8px" },
+    "xl":   { "$type": "dimension", "$value": "12px" },
+    "full": { "$type": "dimension", "$value": "9999px", "$description": "Circular objects only - avatar, dot. Never a pill-shaped status chip: a pill reads as a tag rather than as an authoritative state." }
+  },
+
+  "borderWidth": {
+    "hairline": { "$type": "dimension", "$value": "1px", "$description": "The default separator in this system. Separation is by hairline and surface, not by shadow." },
+    "thick":    { "$type": "dimension", "$value": "2px", "$description": "Selected, active and focus rings." },
+    "heavy":    { "$type": "dimension", "$value": "3px", "$description": "Focus ring outer band only." }
+  },
+
+  "elevation": {
+    "$description": "Deliberately shallow. Most surfaces are flat. Shadow is reserved for a surface that genuinely floats above the page; it never encodes importance, and it never encodes a lifecycle state.",
+    "0": { "$type": "shadow", "$value": "none", "$description": "Flat. The default for cards, rows, panels and sections." },
+    "1": {
+      "$type": "shadow",
+      "$value": [
+        { "offsetX": "0px", "offsetY": "1px", "blur": "2px", "spread": "0px", "color": "rgba(15, 23, 42, 0.06)" }
+      ],
+      "$description": "A surface that is draggable or genuinely detached. Not a resting card."
+    },
+    "2": {
+      "$type": "shadow",
+      "$value": [
+        { "offsetX": "0px", "offsetY": "2px", "blur": "6px", "spread": "-1px", "color": "rgba(15, 23, 42, 0.10)" },
+        { "offsetX": "0px", "offsetY": "1px", "blur": "2px", "spread": "-1px", "color": "rgba(15, 23, 42, 0.06)" }
+      ],
+      "$description": "Popover, dropdown, menu."
+    },
+    "3": {
+      "$type": "shadow",
+      "$value": [
+        { "offsetX": "0px", "offsetY": "8px", "blur": "24px", "spread": "-4px", "color": "rgba(15, 23, 42, 0.14)" },
+        { "offsetX": "0px", "offsetY": "2px", "blur": "6px", "spread": "-2px", "color": "rgba(15, 23, 42, 0.08)" }
+      ],
+      "$description": "Modal, drawer, sheet."
+    },
+    "4": {
+      "$type": "shadow",
+      "$value": [
+        { "offsetX": "0px", "offsetY": "12px", "blur": "32px", "spread": "-6px", "color": "rgba(15, 23, 42, 0.18)" }
+      ],
+      "$description": "Transient toast over any surface."
+    }
+  },
+
+  "opacity": {
+    "$description": "Opacity never encodes a lifecycle state and never dims read-only authoritative content. Read-only is a colour and affordance decision, not a transparency one.",
+    "0":        { "$type": "number", "$value": 0 },
+    "hover":    { "$type": "number", "$value": 0.04, "$description": "Neutral overlay for a hover wash on Profile A. Never emitted on Profile C." },
+    "pressed":  { "$type": "number", "$value": 0.08 },
+    "selected": { "$type": "number", "$value": 0.12 },
+    "disabled": { "$type": "number", "$value": 0.45, "$description": "Non-text affordances of a disabled control only. Disabled text uses its own colour token." },
+    "scrim":    { "$type": "number", "$value": 0.6, "$description": "Modal and drawer backdrop." },
+    "1":        { "$type": "number", "$value": 1 }
+  }
+}

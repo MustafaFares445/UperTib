@@ -1,0 +1,37 @@
+{
+  "$schema": "https://design-tokens.github.io/community-group/format/",
+  "$description": "UberTib COMPONENT layer. The third tier is established here and is DELIBERATELY UNPOPULATED at Session 2. A component token exists only where a CMP-* exists, and no CMP-* is allocated until Session 3, so populating this file now would mean inventing components the taxonomy has not yet earned. The contract below is what Session 3 writes against, and the token gate enforces it from now rather than from then.",
+
+  "contract": {
+    "$description": "Rules a component token group must satisfy. Enforced by docs/ux/scripts/validate_ux_tokens.py.",
+    "naming": {
+      "$type": "string",
+      "$value": "component.<cmp-id-slug>.<property>-<variant>-<state>",
+      "$description": "The group key is the lowercase CMP identifier with its domain, for example component.platform-001. The property, variant and state segments follow the semantic vocabulary already in use - bg, text, border, icon; primary, secondary, destructive; hover, focus, active, disabled."
+    },
+    "resolution": {
+      "$type": "string",
+      "$value": "component-resolves-to-semantic-only",
+      "$description": "A component token references the semantic layer and nothing else. A component token that reaches a primitive directly is a defect: it makes a theme change miss that component."
+    },
+    "allocation": {
+      "$type": "string",
+      "$value": "one-group-per-allocated-CMP",
+      "$description": "A group may exist only for an identifier the component inventory has allocated. There is no component token for an unallocated candidate and none for a pattern that never earned a CMP."
+    },
+    "excluded": {
+      "$type": "string",
+      "$value": "framework-owned-controls",
+      "$description": "No component tokens for button, input, select, checkbox, radio, date picker, modal shell, toast, banner, avatar, badge, tabs or navigation chrome. Profile A takes those from Filament as shipped and Profile C from React Native primitives; both are bound by the semantic layer, the required states and the accessibility obligations, and defining bespoke tokens for them would be phase bleed into implementation."
+    },
+    "required-groups": {
+      "$type": "string",
+      "$value": "surface,text,border,state-triple-binding",
+      "$description": "Every allocated component declares how it takes a surface, its text, its boundary, and - where it renders a lifecycle status - how it consumes the tone, icon and emphasis triple whole. A component that consumes a tone without the icon and the emphasis fails the gate."
+    }
+  },
+
+  "component": {
+    "$description": "Empty by design at Session 2. Session 3 adds one group per allocated CMP-* alongside its inventory block, so a component and its tokens are never allocated apart."
+  }
+}

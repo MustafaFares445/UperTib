@@ -37,6 +37,9 @@ Patient UX is Arabic-first/RTL, smartphone-first and resilient to weak connectiv
 7. platform wireframe files under `02-wireframes/`
 8. `02-wireframes/wireframe-manifest.json`
 9. `PHASE_02_HANDOFF.md`
+10. `03-system/PHASE_03_IMPLEMENTATION_PLAN.md`
+11. `03-system/DESIGN_DIRECTION.md`
+12. `03-system/DESIGN_TOKENS.md` and `03-system/design_tokens/`
 
 Coding agents must not treat Phase 2 as final UI styling or implementation contracts. Phase 5 remains the coding handoff owner.
 
@@ -46,7 +49,7 @@ Coding agents must not treat Phase 2 as final UI styling or implementation contr
 |---|---|---|
 | 1 — Discovery, IA, Flows | `01-foundation/*` | Complete |
 | 2 — Wireframes | `02-wireframes/*`, `PHASE_02_HANDOFF.md` | **Complete — awaiting gate approval** |
-| 3 — Design System | `03-system/*` | Not started |
+| 3 — Design System | `03-system/*` | **In progress — Session 2 of 7.** Direction and tokens fixed; components, patterns, content and accessibility not started. |
 | 4 — Widget and Screen Specs | `04-specs/*` | Not started |
 | 5 — Build and Handoff | `05-build/*` | Not started |
 
@@ -106,6 +109,14 @@ Run cumulative validation at the current gate:
 ```bash
 python docs/scripts/validate_docs.py
 python docs/ux/scripts/validate_ux_docs.py --phase 2
+python docs/ux/scripts/validate_ux_tokens.py
 ```
 
-Phase 3 must not begin until the Phase 2 gate is reviewed.
+The UX validator stays pinned at `--phase 2` until Phase 3 Session 7. Flipping it earlier would
+turn known, expected, not-yet-authored Phase 3 obligations into a red build on every unrelated
+documentation change.
+
+The token gate is additive and passes now. It runs against
+`docs/ux/03-system/design_tokens/`, **not** the repository-root `tokens/` directory: the design
+kit's own token and contrast scripts hardcode that root path and would report a green result for
+the kit's demonstration tokens rather than for this product.

@@ -1,0 +1,60 @@
+{
+  "$schema": "https://design-tokens.github.io/community-group/format/",
+  "$description": "UberTib density. Density is a property of the ARCHETYPE and the profile, not of the platform. The obvious split - patient spacious, panels compact - is wrong, and the confirmed usage contexts say why: PO-UX-07 records the clinic representative and invited staff as desktop and tablet users with a high interruption rate, and a person working while being interrupted wants targets they can hit without looking, not a maximally dense grid. The two genuinely dense surfaces in this product are the five Clinic workspace screens, where density is earned by repeated structured entry.",
+
+  "mode": {
+    "reading": {
+      "$description": "All 47 Patient screens, every archetype. An episodic actor who will never become fluent, on one reading column, on a phone, in a variable environment, at any supported text size.",
+      "applies-to":  { "$type": "string", "$value": "profile-c-all-archetypes" },
+      "space-scale": { "$type": "number", "$value": 1.0, "$description": "The baseline the semantic space tokens are authored at." },
+      "control":     { "$type": "dimension", "$value": "{size.control-lg}" },
+      "target-floor": { "$type": "dimension", "$value": "{size.target-comfortable}", "$description": "Patient primary actions never fall below this." },
+      "row-leading": { "$type": "number", "$value": "{lineHeight.normal}" }
+    },
+    "operational": {
+      "$description": "Profile A default - detail, form, list-and-detail and dashboard archetypes. Trained but interrupted: comfortable targets, stable positions, no ceremony on a frequent task and full ceremony on an irreversible one.",
+      "applies-to":  { "$type": "string", "$value": "profile-a-dashboard-detail-form-list-and-detail" },
+      "space-scale": { "$type": "number", "$value": 0.875 },
+      "control":     { "$type": "dimension", "$value": "{size.control-md}" },
+      "target-floor": { "$type": "dimension", "$value": "{size.target-comfortable}" },
+      "row-leading": { "$type": "number", "$value": "{lineHeight.snug}" }
+    },
+    "dense": {
+      "$description": "The Profile A workspace archetype - five screens - and table BODIES inside list-and-detail, nothing else. Density is earned by repeated structured entry; it is not granted by being a panel.",
+      "applies-to":  { "$type": "string", "$value": "profile-a-workspace-and-table-bodies" },
+      "space-scale": { "$type": "number", "$value": 0.75 },
+      "control":     { "$type": "dimension", "$value": "{size.control-sm}" },
+      "target-floor": { "$type": "dimension", "$value": "{size.target-minimum}", "$description": "A control may render at control-sm here, but its HIT AREA is expanded to reach this floor. A 32px control with a 32px hit area is a defect." },
+      "row-leading": { "$type": "number", "$value": "{lineHeight.snug}" }
+    }
+  },
+
+  "rule": {
+    "$description": "How a density mode resolves, and the two floors it may never cross.",
+    "applies-to": {
+      "$type": "string",
+      "$value": "semantic.space.*",
+      "$description": "The multiplier applies to layout spacing only - insets, stacks, inline gaps and gutters."
+    },
+    "never-applies-to": {
+      "$type": "string",
+      "$value": "fontSize, lineHeight, size.target-floor, size.target-primary, focus.*, borderWidth.*",
+      "$description": "Density compresses the space around content; it never shrinks the glyph, the focus ring or the touch target. A dense table has tighter rows and the same 14px Arabic text as everywhere else."
+    },
+    "rounding": {
+      "$type": "string",
+      "$value": "nearest-2px-then-floor-at-space.1",
+      "$description": "A multiplied value rounds to the nearest 2px and never resolves below the 2px hairline step, so density can never collapse a gap to zero."
+    },
+    "floor-target": {
+      "$type": "dimension",
+      "$value": "{size.target-minimum}",
+      "$description": "WCAG 2.2 SC 2.5.8. No mode, on any platform, renders an interactive target below this once the hit area is counted."
+    },
+    "floor-patient-primary": {
+      "$type": "dimension",
+      "$value": "{size.target-comfortable}",
+      "$description": "Every Patient primary action, and every deadline-bearing action on any platform, whatever the mode."
+    }
+  }
+}

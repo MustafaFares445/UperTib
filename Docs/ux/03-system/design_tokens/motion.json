@@ -1,0 +1,66 @@
+{
+  "$schema": "https://design-tokens.github.io/community-group/format/",
+  "$description": "UberTib motion. Subtle feedback only. Motion confirms that something committed or that a disclosure opened, and does nothing else. Three things argue against choreography here and all three are canonical: weak and intermittent connectivity, an interruption-prone panel, and a React Native runtime on modest devices. Every preset declares its reduced-motion equivalent, and that equivalent preserves the feedback while removing the travel. The literal scale lives under primitive; everything else composes from it.",
+
+  "primitive": {
+    "duration": {
+      "instant": { "$type": "duration", "$value": "0ms",   "$description": "No transition. What every preset collapses to under reduced motion unless it names a fade." },
+      "fast":    { "$type": "duration", "$value": "120ms", "$description": "Colour, opacity and border changes on a control the user is touching." },
+      "base":    { "$type": "duration", "$value": "180ms", "$description": "Default. Disclosure, chip change, inline validation." },
+      "slow":    { "$type": "duration", "$value": "240ms", "$description": "Overlay entrance." },
+      "deliberate": { "$type": "duration", "$value": "320ms", "$description": "The ceiling. Nothing in this product animates for longer, and nothing may be added that does." }
+    },
+    "easing": {
+      "standard": { "$type": "cubicBezier", "$value": [0.2, 0, 0, 1], "$description": "State changes on an element that stays in place." },
+      "entrance": { "$type": "cubicBezier", "$value": [0, 0, 0.2, 1], "$description": "Something arriving. Decelerates into rest." },
+      "exit":     { "$type": "cubicBezier", "$value": [0.4, 0, 1, 1], "$description": "Something leaving. Accelerates away." },
+      "linear":   { "$type": "cubicBezier", "$value": [0, 0, 1, 1],   "$description": "Determinate progress only, where non-linear motion would misreport how much is done." }
+    }
+  },
+
+  "transition": {
+    "$description": "The complete set. A surface composes from these; it does not invent a timing.",
+    "control-feedback": {
+      "$type": "transition",
+      "$value": { "duration": "{primitive.duration.fast}", "timingFunction": "{primitive.easing.standard}", "delay": "{primitive.duration.instant}" },
+      "$description": "Hover, focus, pressed and selected changes on a control. Reduced motion: instant, and the colour still changes."
+    },
+    "disclosure": {
+      "$type": "transition",
+      "$value": { "duration": "{primitive.duration.base}", "timingFunction": "{primitive.easing.standard}", "delay": "{primitive.duration.instant}" },
+      "$description": "Progressive disclosure opening or closing. Reduced motion: instant, and the disclosed region is still announced."
+    },
+    "state-change": {
+      "$type": "transition",
+      "$value": { "duration": "{primitive.duration.base}", "timingFunction": "{primitive.easing.standard}", "delay": "{primitive.duration.instant}" },
+      "$description": "A status chip changing after a committed mutation. Never runs optimistically: the chip changes when the server has committed, not when the user pressed. Reduced motion: instant, with a live announcement."
+    },
+    "overlay-enter": {
+      "$type": "transition",
+      "$value": { "duration": "{primitive.duration.slow}", "timingFunction": "{primitive.easing.entrance}", "delay": "{primitive.duration.instant}" },
+      "$description": "Modal, drawer, sheet and popover arriving. Reduced motion: fade only, at the fast duration, with no travel."
+    },
+    "overlay-exit": {
+      "$type": "transition",
+      "$value": { "duration": "{primitive.duration.fast}", "timingFunction": "{primitive.easing.exit}", "delay": "{primitive.duration.instant}" },
+      "$description": "The same surfaces leaving, deliberately faster than they arrived. Reduced motion: instant."
+    },
+    "progress": {
+      "$type": "transition",
+      "$value": { "duration": "{primitive.duration.slow}", "timingFunction": "{primitive.easing.linear}", "delay": "{primitive.duration.instant}" },
+      "$description": "Determinate progress advancing - evidence transfer, provider search. Reduced motion: the bar still updates, it just does not tween."
+    }
+  },
+
+  "reduced-motion": {
+    "$description": "Not an afterthought and not a global animation kill switch. Feedback that carries meaning must survive; only travel is removed. A user who cannot see a transition still has to know that a transfer resumed or that a plan was accepted.",
+    "strategy": { "$type": "string", "$value": "preserve-feedback-remove-travel" },
+    "duration": { "$type": "duration", "$value": "{primitive.duration.instant}", "$description": "Substituted for every duration except where a preset names a fade." },
+    "fade":     { "$type": "duration", "$value": "{primitive.duration.fast}", "$description": "The one motion kept under reduced motion, for overlay entrance, so a surface does not appear without warning." },
+    "prohibited": {
+      "$type": "string",
+      "$value": "indeterminate-spinner-as-only-feedback",
+      "$description": "An endless spinner is prohibited as the only feedback for a mutation on any platform, reduced motion or not. The honest states are pending, failed, retrying and completed, and an idempotent safe retry replaces a spinner that never ends."
+    }
+  }
+}

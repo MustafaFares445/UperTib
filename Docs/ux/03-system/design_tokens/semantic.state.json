@@ -1,0 +1,1450 @@
+{
+  "$schema": "https://design-tokens.github.io/community-group/format/",
+  "$description": "UberTib SEMANTIC state channel. Every lifecycle status in the product resolves to a TRIPLE - a tone, an icon and an emphasis - and never to a colour on its own. A component that renders a status consumes the whole triple, which is what makes a colour-only rendering structurally impossible rather than a rule somebody has to remember 82 times. tone, icon and emphasis are $type string, an UberTib extension over DTCG; the token gate checks that every tone names a defined tone group, every icon exists in the governed icon set with a documented meaning, and every emphasis is one of the four defined treatments. Arabic labels for these statuses are NOT here - they are Session 5 TXT-* allocations against the content guide.",
+  "icon-set": {
+    "$type": "string",
+    "$value": "heroicons-2-outline-24",
+    "$description": "The governed icon set. Chosen because it is what Filament ships on both panels, so two of the three platforms use it as delivered, and it has a maintained React Native port for the third. Every icon carries a text label; an icon is never the only carrier of meaning."
+  },
+  "emphasis-scale": {
+    "$description": "The four status treatments. Which one a status uses is a rule, not a preference.",
+    "muted": {
+      "$type": "string",
+      "$value": "muted",
+      "$description": "Neutral fill, neutral text, no tone colour. Inert or not yet started: nobody has acted and nothing is running."
+    },
+    "subtle": {
+      "$type": "string",
+      "$value": "subtle",
+      "$description": "Tone fill, tone border, tone text. The default treatment."
+    },
+    "outline": {
+      "$type": "string",
+      "$value": "outline",
+      "$description": "No fill, tone border, tone text. A closed or historical state that is settled and needs no attention."
+    },
+    "solid": {
+      "$type": "string",
+      "$value": "solid",
+      "$description": "Tone emphasis fill, on-emphasis text, emphasis border. Reserved for a status that both blocks the actor from proceeding and carries a deadline whose lapse cannot be undone. This is a rule, not a quota: a machine may have two of them, or none."
+    }
+  },
+  "icon-vocabulary": {
+    "$description": "Every icon identifier the state channel may use, and the single meaning it carries everywhere. An icon means the same thing in every machine, and no machine may use one icon for two of its own statuses.",
+    "archive-box": {
+      "$type": "string",
+      "$value": "archive-box",
+      "$description": "retired and kept as history"
+    },
+    "arrow-path": {
+      "$type": "string",
+      "$value": "arrow-path",
+      "$description": "a repeat of a prior attempt - resubmitted, retried or reopened"
+    },
+    "arrow-up-tray": {
+      "$type": "string",
+      "$value": "arrow-up-tray",
+      "$description": "transfer in progress"
+    },
+    "arrow-uturn-left": {
+      "$type": "string",
+      "$value": "arrow-uturn-left",
+      "$description": "returned to the actor for correction"
+    },
+    "arrows-right-left": {
+      "$type": "string",
+      "$value": "arrows-right-left",
+      "$description": "an alternative has been offered in place of what was asked for"
+    },
+    "banknotes": {
+      "$type": "string",
+      "$value": "banknotes",
+      "$description": "an external money fact was reported"
+    },
+    "bell-alert": {
+      "$type": "string",
+      "$value": "bell-alert",
+      "$description": "escalated for attention"
+    },
+    "calendar-days": {
+      "$type": "string",
+      "$value": "calendar-days",
+      "$description": "a confirmed appointment in the calendar"
+    },
+    "check-badge": {
+      "$type": "string",
+      "$value": "check-badge",
+      "$description": "approved or verified by an accountable person"
+    },
+    "check-circle": {
+      "$type": "string",
+      "$value": "check-circle",
+      "$description": "reached its intended outcome"
+    },
+    "clock": {
+      "$type": "string",
+      "$value": "clock",
+      "$description": "waiting on a running deadline"
+    },
+    "cloud-arrow-up": {
+      "$type": "string",
+      "$value": "cloud-arrow-up",
+      "$description": "transferred but not yet cleared for use"
+    },
+    "document-check": {
+      "$type": "string",
+      "$value": "document-check",
+      "$description": "accepted and recorded as binding terms"
+    },
+    "document-text": {
+      "$type": "string",
+      "$value": "document-text",
+      "$description": "chosen but not yet acted on"
+    },
+    "ellipsis-horizontal-circle": {
+      "$type": "string",
+      "$value": "ellipsis-horizontal-circle",
+      "$description": "open and unclaimed"
+    },
+    "exclamation-circle": {
+      "$type": "string",
+      "$value": "exclamation-circle",
+      "$description": "a required decision has not been made"
+    },
+    "exclamation-triangle": {
+      "$type": "string",
+      "$value": "exclamation-triangle",
+      "$description": "something is missing or failed and the actor must act now"
+    },
+    "eye": {
+      "$type": "string",
+      "$value": "eye",
+      "$description": "effective and visible to its audience"
+    },
+    "flag": {
+      "$type": "string",
+      "$value": "flag",
+      "$description": "scheduled to take effect at a stated time"
+    },
+    "hand-raised": {
+      "$type": "string",
+      "$value": "hand-raised",
+      "$description": "contested by a party"
+    },
+    "inbox-arrow-down": {
+      "$type": "string",
+      "$value": "inbox-arrow-down",
+      "$description": "submitted and received, awaiting pickup by a reviewer"
+    },
+    "lock-closed": {
+      "$type": "string",
+      "$value": "lock-closed",
+      "$description": "access or scope was withdrawn"
+    },
+    "magnifying-glass": {
+      "$type": "string",
+      "$value": "magnifying-glass",
+      "$description": "actively under review"
+    },
+    "minus-circle": {
+      "$type": "string",
+      "$value": "minus-circle",
+      "$description": "closed without fault and not proceeding"
+    },
+    "no-symbol": {
+      "$type": "string",
+      "$value": "no-symbol",
+      "$description": "not permitted under the current conditions"
+    },
+    "pause-circle": {
+      "$type": "string",
+      "$value": "pause-circle",
+      "$description": "held because something else must resolve first"
+    },
+    "pencil-square": {
+      "$type": "string",
+      "$value": "pencil-square",
+      "$description": "being authored by its owner and not yet submitted"
+    },
+    "play-circle": {
+      "$type": "string",
+      "$value": "play-circle",
+      "$description": "work has started"
+    },
+    "rectangle-stack": {
+      "$type": "string",
+      "$value": "rectangle-stack",
+      "$description": "replaced by a later version, which remains readable"
+    },
+    "scale": {
+      "$type": "string",
+      "$value": "scale",
+      "$description": "decided by an accountable reviewer"
+    },
+    "shield-check": {
+      "$type": "string",
+      "$value": "shield-check",
+      "$description": "undergoing a required safety check"
+    },
+    "shield-exclamation": {
+      "$type": "string",
+      "$value": "shield-exclamation",
+      "$description": "a safety condition is in question"
+    },
+    "stop-circle": {
+      "$type": "string",
+      "$value": "stop-circle",
+      "$description": "the window closed and can no longer be used"
+    },
+    "user-circle": {
+      "$type": "string",
+      "$value": "user-circle",
+      "$description": "assigned to a named person"
+    },
+    "user-minus": {
+      "$type": "string",
+      "$value": "user-minus",
+      "$description": "the person did not attend"
+    },
+    "x-circle": {
+      "$type": "string",
+      "$value": "x-circle",
+      "$description": "refused by a decision"
+    }
+  },
+  "state": {
+    "onboarding-application": {
+      "$description": "Provider onboarding application. The approval boundary is the most important thing this machine communicates. Owner: SDC-IDENTITY-001, PO-UX-02.",
+      "DRAFT": {
+        "tone": {
+          "$type": "string",
+          "$value": "neutral"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "pencil-square"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "muted"
+        }
+      },
+      "SUBMITTED": {
+        "tone": {
+          "$type": "string",
+          "$value": "info"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "inbox-arrow-down"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "subtle"
+        }
+      },
+      "CHANGES_REQUESTED": {
+        "tone": {
+          "$type": "string",
+          "$value": "warning"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "arrow-uturn-left"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "solid"
+        }
+      },
+      "RESUBMITTED": {
+        "tone": {
+          "$type": "string",
+          "$value": "info"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "arrow-path"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "subtle"
+        }
+      },
+      "APPROVED": {
+        "tone": {
+          "$type": "string",
+          "$value": "success"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "check-badge"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "subtle"
+        }
+      },
+      "REJECTED": {
+        "tone": {
+          "$type": "string",
+          "$value": "danger"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "x-circle"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "subtle"
+        }
+      }
+    },
+    "staff-invitation": {
+      "$description": "Staff invitation and scoped grant. Owner: SDC-IDENTITY-003, PO-UX-03.",
+      "PENDING": {
+        "tone": {
+          "$type": "string",
+          "$value": "warning"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "clock"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "solid"
+        }
+      },
+      "ACCEPTED": {
+        "tone": {
+          "$type": "string",
+          "$value": "success"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "check-circle"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "subtle"
+        }
+      },
+      "EXPIRED": {
+        "tone": {
+          "$type": "string",
+          "$value": "restricted"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "stop-circle"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "outline"
+        }
+      },
+      "REVOKED": {
+        "tone": {
+          "$type": "string",
+          "$value": "restricted"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "lock-closed"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "subtle"
+        }
+      }
+    },
+    "eligibility-outcome": {
+      "$description": "Immutable eligibility decisions. PENDING_EVALUATION and NOT_ELIGIBLE carry different tones and different icons because conflating them is a requirement violation, not a copy preference. Owner: STATE_MACHINES section 7.",
+      "PENDING_EVALUATION": {
+        "tone": {
+          "$type": "string",
+          "$value": "info"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "magnifying-glass"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "subtle"
+        }
+      },
+      "ELIGIBLE": {
+        "tone": {
+          "$type": "string",
+          "$value": "success"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "check-circle"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "subtle"
+        }
+      },
+      "SUSPENDED": {
+        "tone": {
+          "$type": "string",
+          "$value": "restricted"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "pause-circle"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "solid"
+        }
+      },
+      "NOT_ELIGIBLE": {
+        "tone": {
+          "$type": "string",
+          "$value": "restricted"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "no-symbol"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "subtle"
+        }
+      }
+    },
+    "booking": {
+      "$description": "Booking lifecycle. CANCELLED is restricted rather than danger: three of its reason codes carry no patient penalty at all, and the tone must not assert a punitive outcome that the reason may not support. Owner: STATE_MACHINES section 8.",
+      "REQUESTED": {
+        "tone": {
+          "$type": "string",
+          "$value": "warning"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "clock"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "subtle"
+        }
+      },
+      "ALTERNATIVE_PROPOSED": {
+        "tone": {
+          "$type": "string",
+          "$value": "warning"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "arrows-right-left"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "solid"
+        }
+      },
+      "CONFIRMED": {
+        "tone": {
+          "$type": "string",
+          "$value": "success"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "calendar-days"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "subtle"
+        }
+      },
+      "ELIGIBILITY_REVIEW": {
+        "tone": {
+          "$type": "string",
+          "$value": "warning"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "shield-exclamation"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "solid"
+        }
+      },
+      "REJECTED": {
+        "tone": {
+          "$type": "string",
+          "$value": "danger"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "x-circle"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "subtle"
+        }
+      },
+      "CANCELLED": {
+        "tone": {
+          "$type": "string",
+          "$value": "restricted"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "minus-circle"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "subtle"
+        }
+      },
+      "NO_SHOW": {
+        "tone": {
+          "$type": "string",
+          "$value": "danger"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "user-minus"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "subtle"
+        }
+      },
+      "COMPLETED": {
+        "tone": {
+          "$type": "string",
+          "$value": "success"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "check-circle"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "subtle"
+        }
+      }
+    },
+    "reschedule-proposal": {
+      "$description": "Governed reschedule proposal. Its state never substitutes for the booking state; while PENDING, the original confirmed appointment remains the authoritative one. Owner: STATE_MACHINES section 8.3.",
+      "PENDING": {
+        "tone": {
+          "$type": "string",
+          "$value": "warning"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "clock"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "solid"
+        }
+      },
+      "ACCEPTED": {
+        "tone": {
+          "$type": "string",
+          "$value": "success"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "check-circle"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "subtle"
+        }
+      },
+      "DECLINED": {
+        "tone": {
+          "$type": "string",
+          "$value": "restricted"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "x-circle"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "outline"
+        }
+      },
+      "EXPIRED": {
+        "tone": {
+          "$type": "string",
+          "$value": "restricted"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "stop-circle"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "outline"
+        }
+      },
+      "WITHDRAWN": {
+        "tone": {
+          "$type": "string",
+          "$value": "restricted"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "minus-circle"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "outline"
+        }
+      }
+    },
+    "treatment-plan": {
+      "$description": "Treatment plan and accepted terms. PROPOSED carries a policy-governed validity window and can go stale before it, so it is solid. Owner: STATE_MACHINES section 9.",
+      "DRAFT": {
+        "tone": {
+          "$type": "string",
+          "$value": "neutral"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "pencil-square"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "muted"
+        }
+      },
+      "PROPOSED": {
+        "tone": {
+          "$type": "string",
+          "$value": "warning"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "clock"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "solid"
+        }
+      },
+      "ACCEPTED": {
+        "tone": {
+          "$type": "string",
+          "$value": "success"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "document-check"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "subtle"
+        }
+      },
+      "EXPIRED": {
+        "tone": {
+          "$type": "string",
+          "$value": "restricted"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "stop-circle"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "outline"
+        }
+      }
+    },
+    "treatment-stage": {
+      "$description": "Treatment stage. Owner: STATE_MACHINES section 10.",
+      "INCOMPLETE": {
+        "tone": {
+          "$type": "string",
+          "$value": "neutral"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "ellipsis-horizontal-circle"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "muted"
+        }
+      },
+      "COMPLETED": {
+        "tone": {
+          "$type": "string",
+          "$value": "success"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "check-circle"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "subtle"
+        }
+      },
+      "REOPENED": {
+        "tone": {
+          "$type": "string",
+          "$value": "info"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "arrow-path"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "subtle"
+        }
+      }
+    },
+    "external-financial-event": {
+      "$description": "Append-only external financial events. No status here may be rendered in a way that implies UberTib held, captured, settled or refunded money. Owner: STATE_MACHINES section 11.",
+      "REPORTED_UNCONFIRMED": {
+        "tone": {
+          "$type": "string",
+          "$value": "warning"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "banknotes"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "subtle"
+        }
+      },
+      "CONFIRMED": {
+        "tone": {
+          "$type": "string",
+          "$value": "success"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "check-circle"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "subtle"
+        }
+      },
+      "DISPUTED": {
+        "tone": {
+          "$type": "string",
+          "$value": "danger"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "hand-raised"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "solid"
+        }
+      }
+    },
+    "review": {
+      "$description": "Verified review. Owner: STATE_MACHINES section 12.",
+      "ACTIVE": {
+        "tone": {
+          "$type": "string",
+          "$value": "success"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "eye"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "subtle"
+        }
+      },
+      "RETIRED": {
+        "tone": {
+          "$type": "string",
+          "$value": "restricted"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "archive-box"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "outline"
+        }
+      }
+    },
+    "review-appeal": {
+      "$description": "Review appeal. DECIDED is neutral because the status is not the outcome: the outcome lives in the reasoned decision the accountable reviewer recorded. Owner: STATE_MACHINES section 13.",
+      "SUBMITTED": {
+        "tone": {
+          "$type": "string",
+          "$value": "info"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "inbox-arrow-down"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "subtle"
+        }
+      },
+      "DECIDED": {
+        "tone": {
+          "$type": "string",
+          "$value": "neutral"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "scale"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "subtle"
+        }
+      }
+    },
+    "claim-request": {
+      "$description": "Refund request and protection claim. EVIDENCE_INCOMPLETE is solid: it is the one state where a claimant can lose the claim by doing nothing before a deadline. Owner: STATE_MACHINES section 14.",
+      "SUBMITTED": {
+        "tone": {
+          "$type": "string",
+          "$value": "info"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "inbox-arrow-down"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "subtle"
+        }
+      },
+      "EVIDENCE_INCOMPLETE": {
+        "tone": {
+          "$type": "string",
+          "$value": "warning"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "exclamation-triangle"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "solid"
+        }
+      },
+      "UNDER_REVIEW": {
+        "tone": {
+          "$type": "string",
+          "$value": "info"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "magnifying-glass"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "subtle"
+        }
+      },
+      "DECIDED": {
+        "tone": {
+          "$type": "string",
+          "$value": "neutral"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "scale"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "subtle"
+        }
+      },
+      "CLOSED": {
+        "tone": {
+          "$type": "string",
+          "$value": "restricted"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "archive-box"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "outline"
+        }
+      }
+    },
+    "claim-appeal": {
+      "$description": "Claim appeal, decided independently of the original decision. Owner: STATE_MACHINES section 15.",
+      "SUBMITTED": {
+        "tone": {
+          "$type": "string",
+          "$value": "info"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "inbox-arrow-down"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "subtle"
+        }
+      },
+      "UNDER_REVIEW": {
+        "tone": {
+          "$type": "string",
+          "$value": "info"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "magnifying-glass"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "subtle"
+        }
+      },
+      "DECIDED": {
+        "tone": {
+          "$type": "string",
+          "$value": "neutral"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "scale"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "subtle"
+        }
+      }
+    },
+    "service-definition": {
+      "$description": "Service definition governance. Detailed procedure item versions reuse this machine unchanged, so they reuse this triple set unchanged. Owner: STATE_MACHINES section 3.",
+      "draft": {
+        "tone": {
+          "$type": "string",
+          "$value": "neutral"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "pencil-square"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "muted"
+        }
+      },
+      "reviewed": {
+        "tone": {
+          "$type": "string",
+          "$value": "info"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "check-badge"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "subtle"
+        }
+      },
+      "scheduled": {
+        "tone": {
+          "$type": "string",
+          "$value": "info"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "flag"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "subtle"
+        }
+      },
+      "active": {
+        "tone": {
+          "$type": "string",
+          "$value": "success"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "eye"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "subtle"
+        }
+      },
+      "retired": {
+        "tone": {
+          "$type": "string",
+          "$value": "restricted"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "archive-box"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "outline"
+        }
+      },
+      "superseded": {
+        "tone": {
+          "$type": "string",
+          "$value": "restricted"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "rectangle-stack"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "outline"
+        }
+      }
+    },
+    "service-launch-gate": {
+      "$description": "Append-only launch gate decisions. expired is solid because it is the status most likely to be misread as still approved, and production readiness fails closed on it. Owner: STATE_MACHINES section 4.",
+      "pending": {
+        "tone": {
+          "$type": "string",
+          "$value": "warning"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "exclamation-circle"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "subtle"
+        }
+      },
+      "approved": {
+        "tone": {
+          "$type": "string",
+          "$value": "success"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "check-badge"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "subtle"
+        }
+      },
+      "rejected": {
+        "tone": {
+          "$type": "string",
+          "$value": "danger"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "x-circle"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "subtle"
+        }
+      },
+      "revoked": {
+        "tone": {
+          "$type": "string",
+          "$value": "restricted"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "lock-closed"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "subtle"
+        }
+      },
+      "expired": {
+        "tone": {
+          "$type": "string",
+          "$value": "restricted"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "stop-circle"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "solid"
+        }
+      }
+    },
+    "clinical-reviewer-credential": {
+      "$description": "Immutable clinical reviewer credential snapshots. Owner: STATE_MACHINES section 5.",
+      "verified": {
+        "tone": {
+          "$type": "string",
+          "$value": "success"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "check-badge"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "subtle"
+        }
+      },
+      "revoked": {
+        "tone": {
+          "$type": "string",
+          "$value": "restricted"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "lock-closed"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "subtle"
+        }
+      },
+      "expired": {
+        "tone": {
+          "$type": "string",
+          "$value": "restricted"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "stop-circle"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "subtle"
+        }
+      }
+    },
+    "policy-version": {
+      "$description": "Policy version governance. Price band, market calibration, commercial option, proposal validity and currency normalisation policies are all versions in this machine. Owner: STATE_MACHINES section 6.",
+      "draft": {
+        "tone": {
+          "$type": "string",
+          "$value": "neutral"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "pencil-square"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "muted"
+        }
+      },
+      "reviewed": {
+        "tone": {
+          "$type": "string",
+          "$value": "info"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "check-badge"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "subtle"
+        }
+      },
+      "scheduled": {
+        "tone": {
+          "$type": "string",
+          "$value": "info"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "flag"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "subtle"
+        }
+      },
+      "active": {
+        "tone": {
+          "$type": "string",
+          "$value": "success"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "eye"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "subtle"
+        }
+      },
+      "retired": {
+        "tone": {
+          "$type": "string",
+          "$value": "restricted"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "archive-box"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "outline"
+        }
+      },
+      "superseded": {
+        "tone": {
+          "$type": "string",
+          "$value": "restricted"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "rectangle-stack"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "outline"
+        }
+      }
+    },
+    "work-item": {
+      "$description": "Operational work item. ESCALATED and OVERDUE are flags, not states; they live in state-flag below and render in their own slot alongside the status, never collapsed into it. Owner: STATE_MACHINES section 20.",
+      "OPEN": {
+        "tone": {
+          "$type": "string",
+          "$value": "neutral"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "ellipsis-horizontal-circle"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "subtle"
+        }
+      },
+      "ASSIGNED": {
+        "tone": {
+          "$type": "string",
+          "$value": "info"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "user-circle"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "subtle"
+        }
+      },
+      "IN_PROGRESS": {
+        "tone": {
+          "$type": "string",
+          "$value": "info"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "play-circle"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "subtle"
+        }
+      },
+      "WAITING": {
+        "tone": {
+          "$type": "string",
+          "$value": "warning"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "pause-circle"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "subtle"
+        }
+      },
+      "COMPLETED": {
+        "tone": {
+          "$type": "string",
+          "$value": "success"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "check-circle"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "subtle"
+        }
+      }
+    },
+    "evidence-transfer-session": {
+      "$description": "Provider-neutral evidence transfer. FAILED_RETRYABLE and REJECTED carry different tones, different icons and different emphases, because a dropped connection must never be rendered as an authoritative refusal of the document. UPLOADED is not ACCEPTED: evidence stays quarantined until scanning and validation pass. Owner: STATE_MACHINES section 21.1, PO-UX-17.",
+      "SELECTED": {
+        "tone": {
+          "$type": "string",
+          "$value": "neutral"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "document-text"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "muted"
+        }
+      },
+      "UPLOADING": {
+        "tone": {
+          "$type": "string",
+          "$value": "info"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "arrow-up-tray"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "subtle"
+        }
+      },
+      "PAUSED": {
+        "tone": {
+          "$type": "string",
+          "$value": "neutral"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "pause-circle"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "subtle"
+        }
+      },
+      "FAILED_RETRYABLE": {
+        "tone": {
+          "$type": "string",
+          "$value": "warning"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "arrow-path"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "solid"
+        }
+      },
+      "UPLOADED": {
+        "tone": {
+          "$type": "string",
+          "$value": "info"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "cloud-arrow-up"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "subtle"
+        }
+      },
+      "VALIDATING_SCANNING": {
+        "tone": {
+          "$type": "string",
+          "$value": "info"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "shield-check"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "subtle"
+        }
+      },
+      "ACCEPTED": {
+        "tone": {
+          "$type": "string",
+          "$value": "success"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "check-circle"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "subtle"
+        }
+      },
+      "REJECTED": {
+        "tone": {
+          "$type": "string",
+          "$value": "danger"
+        },
+        "icon": {
+          "$type": "string",
+          "$value": "x-circle"
+        },
+        "emphasis": {
+          "$type": "string",
+          "$value": "solid"
+        }
+      }
+    }
+  },
+  "state-flag": {
+    "$description": "Flags are not statuses. A work item may be simultaneously IN_PROGRESS, escalated and overdue, so a flag renders in its own slot and never replaces or recolours the status chip. STATE_MACHINES section 20.1.",
+    "escalated": {
+      "tone": {
+        "$type": "string",
+        "$value": "danger"
+      },
+      "icon": {
+        "$type": "string",
+        "$value": "bell-alert"
+      },
+      "emphasis": {
+        "$type": "string",
+        "$value": "solid"
+      }
+    },
+    "overdue": {
+      "tone": {
+        "$type": "string",
+        "$value": "danger"
+      },
+      "icon": {
+        "$type": "string",
+        "$value": "clock"
+      },
+      "emphasis": {
+        "$type": "string",
+        "$value": "solid"
+      }
+    }
+  }
+}

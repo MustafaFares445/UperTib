@@ -97,7 +97,7 @@ Canonical forms are `FR-*`, `BR-*`, `NFR-*`, `DR-*`, `TD-*`, `ASM-*`, `Q-*`, `CO
 | OPS | 003 | 000 | 000 | 000 | 000 | 000 | 002 | 000 | 000 | 006 | 005 | 004 | 000 |
 | POLICY | 003 | 000 | 000 | 000 | 000 | 000 | 000 | 000 | 000 | 004 | 005 | 002 | 000 |
 | AUDIT | 003 | 000 | 003 | 000 | 000 | 000 | 000 | 000 | 000 | 004 | 005 | 003 | 001 |
-| PLATFORM | 001 | 000 | 008 | 000 | 000 | 001 | 007 | 002 | 002 | 009 | 013 | 013 | 005 |
+| PLATFORM | 001 | 000 | 008 | 000 | 000 | 001 | 008 | 002 | 002 | 009 | 013 | 013 | 005 |
 
 `SCR-*`, `ASM-*` and the `Q-*` / `CONFLICT-*` increments above were allocated by the UX chain on 2026-08-25; see `docs/ux/PHASE_01_HANDOFF.md`. `FLOW-*` and `JTBD-*` are introduced by the UX chain and are append-only on the same terms as every other prefix.
 
@@ -168,6 +168,7 @@ Three `ASM-*` are allocated, all by UX chain Phase 1. `ASM-IDENTITY-001` (applic
 | `Q-PLATFORM-002` | Major | Final retention/deletion periods require legal/compliance validation. |
 | `Q-OPS-001` | Major | Production hosting/deployment topology/provider remains unresolved, now including the concrete storage, malware-scanning, OTP and notification-delivery vendors deferred from `Q-PLATFORM-003`. |
 | `Q-PLATFORM-004` | Minor | Low-thousands launch expectation vs 10,000-user NFR is treated as expected load versus engineering headroom unless superseded. |
+| `Q-PLATFORM-008` | Minor | Ratify or decline section 15.1 of the v2.1 UX reference as the UberTib brand palette. Design Sources above states no brand-system source is authoritative, yet it is the only documented UberTib visual decision. UX Phase 3 proceeds on it with two measured WCAG corrections; if declined, only the primitive colour layer changes. See `docs/ux/03-system/DESIGN_DIRECTION.md`. |
 | `CONFLICT-PLATFORM-001` | Major | Historical stack assumptions differ from verified current Laravel/PHP/package stack; current repository facts govern implementation. |
 | `CONFLICT-PLATFORM-002` | Major | Some `.spec` architecture-quality statements require final NFR vs DR/TD classification after SRS reconciliation. |
 
@@ -196,5 +197,4 @@ Permanently allocated, never reused or renumbered. Thirteen were closed on 2026-
 
 - Engineering implementation: `Existing`, `Partial`, `Planned`, `Blocked`, or `Production Governance` as appropriate to the owning document.
 - Test cases: `Existing`, `Partial`, or `Planned`; allocation never implies executable implementation.
-- Traceability: `Covered` means design + implementation task + verification plan are present under the approved `.spec` baseline; implementation status is reported separately.
-- `Q-PLATFORM-001` blocks a claim of complete authoritative-SRS reconciliation, not continued engineering documentation against approved available sources.
+- Traceability: `Covered` means design + implementation task + verification plan are present under the approved `.spec` baseline; implementation status is reported separately. `Q-PLATFORM-001` blocks a claim of complete authoritative-SRS reconciliation, not continued engineering documentation against approved available sources.

@@ -1,0 +1,337 @@
+{
+  "$schema": "https://design-tokens.github.io/community-group/format/",
+  "$description": "UberTib SEMANTIC layer. Purpose aliases over the primitive layer. This is the layer designs and general styling reference, and the only layer that changes when a theme changes. Every value here is an alias - a literal value in this file is a defect. The dark section overrides semantic.color for Profile A only; see DESIGN_TOKENS.md section on dark mode.",
+
+  "semantic": {
+    "color": {
+      "surface": {
+        "canvas":   { "$type": "color", "$value": "{color.neutral.50}", "$description": "Outermost application background. The panel content area and the Patient screen background." },
+        "default":  { "$type": "color", "$value": "{color.white}", "$description": "The primary reading and content surface. Patient content sits directly on it; panel cards sit on it over the canvas." },
+        "subtle":   { "$type": "color", "$value": "{color.neutral.100}", "$description": "Grouped, sunken or non-editable regions - table headers, read-only blocks, filled input rests." },
+        "inverse":  { "$type": "color", "$value": "{color.neutral.900}", "$description": "Tooltips and inverse chips only." },
+        "scrim":    { "$type": "color", "$value": "{color.neutral.900}", "$description": "Applied at opacity.scrim behind a modal or drawer." }
+      },
+      "text": {
+        "primary":     { "$type": "color", "$value": "{color.neutral.900}", "$description": "v2.1 Text role." },
+        "secondary":   { "$type": "color", "$value": "{color.neutral.600}", "$description": "Supporting copy, helper text, metadata, timestamps. NOT the documented Muted value: neutral.500 measures below 4.5:1 on surface.subtle, so it was moved down one step. See DESIGN_TOKENS.md correction 2." },
+        "placeholder": { "$type": "color", "$value": "{color.neutral.600}", "$description": "A placeholder never substitutes for a label." },
+        "disabled":    { "$type": "color", "$value": "{color.neutral.400}", "$description": "Disabled control text only. WCAG 1.4.3 exempts it; nothing authoritative may ever use it." },
+        "link":        { "$type": "color", "$value": "{color.teal.700}", "$description": "Links are actions, so they carry the action colour. There is no separate link hue." },
+        "on-action":   { "$type": "color", "$value": "{color.white}" },
+        "on-inverse":  { "$type": "color", "$value": "{color.neutral.50}" }
+      },
+      "border": {
+        "subtle":   { "$type": "color", "$value": "{color.neutral.200}", "$description": "Decorative only - dividers and card edges. Never the sole boundary of a control." },
+        "default":  { "$type": "color", "$value": "{color.neutral.300}", "$description": "Decorative only. Same rule as subtle." },
+        "strong":   { "$type": "color", "$value": "{color.neutral.500}", "$description": "Every boundary that identifies an interactive control. Meets WCAG 1.4.11 on all three surfaces. This is where the documented Muted value now lives." },
+        "emphasis": { "$type": "color", "$value": "{color.neutral.700}", "$description": "Selected and active control boundaries." }
+      },
+      "action": {
+        "primary":            { "$type": "color", "$value": "{color.teal.700}", "$description": "v2.1 Primary role. The one action colour in the system." },
+        "primary-hover":      { "$type": "color", "$value": "{color.teal.800}" },
+        "primary-active":     { "$type": "color", "$value": "{color.teal.900}" },
+        "primary-subtle":     { "$type": "color", "$value": "{color.brand.surface-tint}", "$description": "v2.1 Primary Light role. Supporting background behind primary-coloured content." },
+        "primary-subtle-hover": { "$type": "color", "$value": "{color.teal.200}" },
+        "secondary-surface":  { "$type": "color", "$value": "{color.white}", "$description": "Secondary is neutral by construction - outline plus dark text, never a coloured fill." },
+        "secondary-border":   { "$type": "color", "$value": "{color.neutral.500}" },
+        "secondary-text":     { "$type": "color", "$value": "{color.neutral.900}" },
+        "secondary-hover":    { "$type": "color", "$value": "{color.neutral.100}" },
+        "destructive":        { "$type": "color", "$value": "{color.red.600}", "$description": "Every destructive command, and the confirmation of that command, on all three platforms. A destructive action never renders as action.primary." },
+        "destructive-hover":  { "$type": "color", "$value": "{color.red.700}" },
+        "destructive-active": { "$type": "color", "$value": "{color.red.800}" },
+        "destructive-subtle": { "$type": "color", "$value": "{color.red.50}" }
+      },
+      "focus": {
+        "ring":          { "$type": "color", "$value": "{color.neutral.900}", "$description": "Deliberately not derived from the action colour: focus must stay visible on top of an action, a status fill and a destructive control alike." },
+        "ring-contrast": { "$type": "color", "$value": "{color.neutral.50}", "$description": "The second band of the double ring. One of the two bands always clears 3:1 against whatever is behind the control." }
+      },
+      "tone": {
+        "$description": "Six status tones. A tone is never used alone: every lifecycle status resolves to a tone plus an icon plus an emphasis, in semantic.state.json. neutral and restricted are deliberately close in hue and are separated by icon, emphasis and label rather than by colour.",
+        "neutral": {
+          "$description": "Inert, in-hand, or historical-benign. Draft, open, not yet started.",
+          "fill":            { "$type": "color", "$value": "{color.neutral.100}" },
+          "border":          { "$type": "color", "$value": "{color.neutral.500}" },
+          "text":            { "$type": "color", "$value": "{color.neutral.700}" },
+          "icon":            { "$type": "color", "$value": "{color.neutral.700}" },
+          "emphasis":        { "$type": "color", "$value": "{color.neutral.600}" },
+          "on-emphasis":     { "$type": "color", "$value": "{color.white}" },
+          "emphasis-border": { "$type": "color", "$value": "{color.neutral.700}" }
+        },
+        "info": {
+          "$description": "The system or a reviewer is working on it. Under review, evaluating, transferring, scanning. v2.1 Info role.",
+          "fill":            { "$type": "color", "$value": "{color.blue.50}" },
+          "border":          { "$type": "color", "$value": "{color.blue.500}" },
+          "text":            { "$type": "color", "$value": "{color.blue.700}" },
+          "icon":            { "$type": "color", "$value": "{color.blue.700}" },
+          "emphasis":        { "$type": "color", "$value": "{color.blue.600}" },
+          "on-emphasis":     { "$type": "color", "$value": "{color.white}" },
+          "emphasis-border": { "$type": "color", "$value": "{color.blue.700}" }
+        },
+        "success": {
+          "$description": "Reached its intended outcome. Confirmed, accepted, approved, completed, eligible, verified. v2.1 Success role.",
+          "fill":            { "$type": "color", "$value": "{color.green.50}" },
+          "border":          { "$type": "color", "$value": "{color.green.700}" },
+          "text":            { "$type": "color", "$value": "{color.green.700}" },
+          "icon":            { "$type": "color", "$value": "{color.green.700}" },
+          "emphasis":        { "$type": "color", "$value": "{color.green.700}" },
+          "on-emphasis":     { "$type": "color", "$value": "{color.white}" },
+          "emphasis-border": { "$type": "color", "$value": "{color.green.800}" }
+        },
+        "warning": {
+          "$description": "A deadline is running and somebody must act. The single highest-consequence tone in this product: every unrecoverable window is carried by it. text, icon and border use the corrected value; the documented v2.1 Warning value survives only as the emphasis fill, read with on-emphasis over it.",
+          "fill":            { "$type": "color", "$value": "{color.amber.100}" },
+          "border":          { "$type": "color", "$value": "{color.amber.700}" },
+          "text":            { "$type": "color", "$value": "{color.amber.700}" },
+          "icon":            { "$type": "color", "$value": "{color.amber.700}" },
+          "emphasis":        { "$type": "color", "$value": "{color.amber.500}", "$description": "v2.1 Warning role, retained as a large-area fill only." },
+          "on-emphasis":     { "$type": "color", "$value": "{color.neutral.900}", "$description": "Text over the amber fill is the Text role, not white. This is the pairing that makes the documented value usable." },
+          "emphasis-border": { "$type": "color", "$value": "{color.amber.700}", "$description": "Load-bearing: the amber fill alone measures 2.15:1 against the page, so the solid chip's boundary is carried by this border." }
+        },
+        "danger": {
+          "$description": "Ended badly, or is contested. Rejected, failed, disputed, no-show. v2.1 Danger role.",
+          "fill":            { "$type": "color", "$value": "{color.red.50}" },
+          "border":          { "$type": "color", "$value": "{color.red.500}" },
+          "text":            { "$type": "color", "$value": "{color.red.700}" },
+          "icon":            { "$type": "color", "$value": "{color.red.700}" },
+          "emphasis":        { "$type": "color", "$value": "{color.red.600}" },
+          "on-emphasis":     { "$type": "color", "$value": "{color.white}" },
+          "emphasis-border": { "$type": "color", "$value": "{color.red.700}" }
+        },
+        "restricted": {
+          "$description": "No longer available, and not because anything went wrong. Suspended, not eligible, revoked, expired, retired, superseded, withdrawn, closed. Deliberately achromatic so a patient is not alarmed by a provider simply being unavailable, and deliberately heavier than neutral so a dense queue can still tell them apart.",
+          "fill":            { "$type": "color", "$value": "{color.neutral.200}" },
+          "border":          { "$type": "color", "$value": "{color.neutral.700}", "$description": "Two ramp steps heavier than tone.neutral.border on purpose. Rendering the two side by side showed them reading as one tone at queue scale when their borders matched." },
+          "text":            { "$type": "color", "$value": "{color.neutral.800}" },
+          "icon":            { "$type": "color", "$value": "{color.neutral.800}" },
+          "emphasis":        { "$type": "color", "$value": "{color.neutral.800}" },
+          "on-emphasis":     { "$type": "color", "$value": "{color.neutral.50}" },
+          "emphasis-border": { "$type": "color", "$value": "{color.neutral.900}" }
+        }
+      },
+      "state": {
+        "$description": "Interaction and record-availability states. disabled and read-only are different things and must never share a treatment: a disabled control is inert and contrast-exempt, while read-only content is authoritative history that must stay fully legible. The nine immutable or append-only entities always render read-only, never disabled.",
+        "disabled": {
+          "surface": { "$type": "color", "$value": "{color.neutral.100}" },
+          "text":    { "$type": "color", "$value": "{color.neutral.400}" },
+          "border":  { "$type": "color", "$value": "{color.neutral.200}" },
+          "icon":    { "$type": "color", "$value": "{color.neutral.400}" }
+        },
+        "readonly": {
+          "surface": { "$type": "color", "$value": "{color.neutral.100}" },
+          "text":    { "$type": "color", "$value": "{color.neutral.900}", "$description": "Full contrast. Read-only never means dimmed." },
+          "border":  { "$type": "color", "$value": "{color.neutral.300}" },
+          "icon":    { "$type": "color", "$value": "{color.neutral.700}" }
+        },
+        "selected": {
+          "surface": { "$type": "color", "$value": "{color.brand.surface-tint}" },
+          "text":    { "$type": "color", "$value": "{color.neutral.900}" },
+          "border":  { "$type": "color", "$value": "{color.teal.700}" }
+        }
+      }
+    },
+
+    "type": {
+      "$description": "Composite text styles. Every surface uses one of these; a component never assembles its own size, weight and leading.",
+      "display":        { "$type": "typography", "$value": { "fontFamily": "{fontFamily.ui}", "fontSize": "{fontSize.900}", "fontWeight": "{fontWeight.bold}", "lineHeight": "{lineHeight.tight}", "letterSpacing": "{letterSpacing.none}" }, "$description": "One per page at most, and only on a Patient landing or an Admin readiness surface." },
+      "heading-1":      { "$type": "typography", "$value": { "fontFamily": "{fontFamily.ui}", "fontSize": "{fontSize.800}", "fontWeight": "{fontWeight.semibold}", "lineHeight": "{lineHeight.tight}", "letterSpacing": "{letterSpacing.none}" } },
+      "heading-2":      { "$type": "typography", "$value": { "fontFamily": "{fontFamily.ui}", "fontSize": "{fontSize.700}", "fontWeight": "{fontWeight.semibold}", "lineHeight": "{lineHeight.tight}", "letterSpacing": "{letterSpacing.none}" } },
+      "heading-3":      { "$type": "typography", "$value": { "fontFamily": "{fontFamily.ui}", "fontSize": "{fontSize.600}", "fontWeight": "{fontWeight.semibold}", "lineHeight": "{lineHeight.snug}", "letterSpacing": "{letterSpacing.none}" } },
+      "heading-4":      { "$type": "typography", "$value": { "fontFamily": "{fontFamily.ui}", "fontSize": "{fontSize.500}", "fontWeight": "{fontWeight.semibold}", "lineHeight": "{lineHeight.snug}", "letterSpacing": "{letterSpacing.none}" } },
+      "body":           { "$type": "typography", "$value": { "fontFamily": "{fontFamily.ui}", "fontSize": "{fontSize.400}", "fontWeight": "{fontWeight.regular}", "lineHeight": "{lineHeight.normal}", "letterSpacing": "{letterSpacing.none}" }, "$description": "Patient body copy. Never rendered below fontSize.400." },
+      "body-strong":    { "$type": "typography", "$value": { "fontFamily": "{fontFamily.ui}", "fontSize": "{fontSize.400}", "fontWeight": "{fontWeight.semibold}", "lineHeight": "{lineHeight.normal}", "letterSpacing": "{letterSpacing.none}" } },
+      "label":          { "$type": "typography", "$value": { "fontFamily": "{fontFamily.ui}", "fontSize": "{fontSize.300}", "fontWeight": "{fontWeight.medium}", "lineHeight": "{lineHeight.snug}", "letterSpacing": "{letterSpacing.none}" }, "$description": "Field labels, column headers, chip labels. Never uppercase: Arabic has no case, so an uppercase Latin label inside an Arabic form is a mixed-register defect." },
+      "helper":         { "$type": "typography", "$value": { "fontFamily": "{fontFamily.ui}", "fontSize": "{fontSize.300}", "fontWeight": "{fontWeight.regular}", "lineHeight": "{lineHeight.snug}", "letterSpacing": "{letterSpacing.none}" }, "$description": "Helper text, field hints, timestamps, provenance lines. Carries text.secondary." },
+      "dense":          { "$type": "typography", "$value": { "fontFamily": "{fontFamily.ui}", "fontSize": "{fontSize.300}", "fontWeight": "{fontWeight.regular}", "lineHeight": "{lineHeight.snug}", "letterSpacing": "{letterSpacing.none}" }, "$description": "Operational table and grid body text on Profile A. Density compresses the row, never the glyph: this style does not shrink in dense mode." },
+      "dense-label":    { "$type": "typography", "$value": { "fontFamily": "{fontFamily.ui}", "fontSize": "{fontSize.300}", "fontWeight": "{fontWeight.medium}", "lineHeight": "{lineHeight.snug}", "letterSpacing": "{letterSpacing.none}" }, "$description": "Operational column headers. Arabic-capable, so it does not drop below fontSize.300." },
+      "numeric":        { "$type": "typography", "$value": { "fontFamily": "{fontFamily.ui}", "fontSize": "{fontSize.300}", "fontWeight": "{fontWeight.medium}", "lineHeight": "{lineHeight.snug}", "letterSpacing": "{letterSpacing.none}" }, "$description": "Amounts, quantities, counts and dates inside tables and lines. Must be rendered with the tabular figure feature so columns of amounts align and a changing amount does not reflow." },
+      "numeric-strong": { "$type": "typography", "$value": { "fontFamily": "{fontFamily.ui}", "fontSize": "{fontSize.600}", "fontWeight": "{fontWeight.semibold}", "lineHeight": "{lineHeight.tight}", "letterSpacing": "{letterSpacing.none}" }, "$description": "The one authoritative amount on a price, plan or financial surface. Same tabular figure requirement." },
+      "identifier":     { "$type": "typography", "$value": { "fontFamily": "{fontFamily.mono}", "fontSize": "{fontSize.200}", "fontWeight": "{fontWeight.regular}", "lineHeight": "{lineHeight.snug}", "letterSpacing": "{letterSpacing.none}" }, "$description": "Machine identifiers on Admin and audit surfaces only. Never reachable from a Patient surface." },
+      "numeric-features": { "$type": "string", "$value": "tnum lnum", "$description": "UberTib extension, not a DTCG type. The OpenType features every numeric style must request: tabular figures and lining figures." }
+    },
+
+    "space": {
+      "$description": "Layout spacing. Resolved through the active density mode - see density.json. Outer spacing is always looser than inner spacing.",
+      "inset-xs":   { "$type": "dimension", "$value": "{space.3}", "$description": "Chip and dense-row padding." },
+      "inset-sm":   { "$type": "dimension", "$value": "{space.4}" },
+      "inset-md":   { "$type": "dimension", "$value": "{space.6}", "$description": "Default control and field padding." },
+      "inset-lg":   { "$type": "dimension", "$value": "{space.8}", "$description": "Card and panel padding." },
+      "inset-xl":   { "$type": "dimension", "$value": "{space.9}" },
+      "stack-xs":   { "$type": "dimension", "$value": "{space.2}", "$description": "Label to its own control." },
+      "stack-sm":   { "$type": "dimension", "$value": "{space.4}", "$description": "Between related lines inside one block." },
+      "stack-md":   { "$type": "dimension", "$value": "{space.6}", "$description": "Between fields in a form." },
+      "stack-lg":   { "$type": "dimension", "$value": "{space.8}", "$description": "Between blocks inside a region." },
+      "stack-xl":   { "$type": "dimension", "$value": "{space.11}", "$description": "Between regions." },
+      "inline-xs":  { "$type": "dimension", "$value": "{space.2}", "$description": "Icon to its adjacent label." },
+      "inline-sm":  { "$type": "dimension", "$value": "{space.4}" },
+      "inline-md":  { "$type": "dimension", "$value": "{space.6}", "$description": "Between actions in an action bar." },
+      "gutter":     { "$type": "dimension", "$value": "{space.6}", "$description": "Screen edge gutter on Profile C; content-area gutter on Profile A." },
+      "grid-gap":   { "$type": "dimension", "$value": "{space.8}", "$description": "Gap between columns of the Profile A conceptual content grid." }
+    },
+
+    "size": {
+      "control-sm":     { "$type": "dimension", "$value": "{size.control-sm}" },
+      "control-md":     { "$type": "dimension", "$value": "{size.control-md}" },
+      "control-lg":     { "$type": "dimension", "$value": "{size.control-lg}" },
+      "target-floor":   { "$type": "dimension", "$value": "{size.target-minimum}", "$description": "Absolute floor for any interactive target on any platform in any density mode." },
+      "target-primary": { "$type": "dimension", "$value": "{size.target-comfortable}", "$description": "Floor for a Patient primary action and for any deadline-bearing action on any platform." },
+      "icon-sm":        { "$type": "dimension", "$value": "{size.icon-sm}" },
+      "icon-md":        { "$type": "dimension", "$value": "{size.icon-md}" },
+      "icon-lg":        { "$type": "dimension", "$value": "{size.icon-lg}" }
+    },
+
+    "radius": {
+      "chip":    { "$type": "dimension", "$value": "{radius.sm}", "$description": "Status chips are rectangular with a small radius. A full-pill chip reads as a marketing tag rather than as an authoritative state." },
+      "control": { "$type": "dimension", "$value": "{radius.md}" },
+      "surface": { "$type": "dimension", "$value": "{radius.lg}" },
+      "overlay": { "$type": "dimension", "$value": "{radius.xl}" },
+      "circle":  { "$type": "dimension", "$value": "{radius.full}" }
+    },
+
+    "border": {
+      "hairline": { "$type": "dimension", "$value": "{borderWidth.hairline}" },
+      "emphasis": { "$type": "dimension", "$value": "{borderWidth.thick}" }
+    },
+
+    "elevation": {
+      "flat":     { "$type": "shadow", "$value": "{elevation.0}", "$description": "Cards, rows, panels and sections. The default." },
+      "detached": { "$type": "shadow", "$value": "{elevation.1}" },
+      "overlay":  { "$type": "shadow", "$value": "{elevation.2}" },
+      "modal":    { "$type": "shadow", "$value": "{elevation.3}" },
+      "toast":    { "$type": "shadow", "$value": "{elevation.4}" }
+    },
+
+    "focus": {
+      "width":       { "$type": "dimension", "$value": "{borderWidth.thick}" },
+      "outer-width": { "$type": "dimension", "$value": "{borderWidth.heavy}" },
+      "offset":      { "$type": "dimension", "$value": "{space.1}" }
+    },
+
+    "opacity": {
+      "hover":    { "$type": "number", "$value": "{opacity.hover}" },
+      "pressed":  { "$type": "number", "$value": "{opacity.pressed}" },
+      "selected": { "$type": "number", "$value": "{opacity.selected}" },
+      "disabled": { "$type": "number", "$value": "{opacity.disabled}" },
+      "scrim":    { "$type": "number", "$value": "{opacity.scrim}" }
+    }
+  },
+
+  "dark": {
+    "$description": "Dark overrides for semantic.color. Profile A only - the Filament panels ship a dark theme and a user toggle, so these values exist to make that theme verified rather than accidental. Profile C is light-only in V1. Any semantic.color token absent here inherits its light value, which is a defect for a colour token and is checked by the token gate.",
+    "surface": {
+      "canvas":   { "$type": "color", "$value": "{color.neutral.950}" },
+      "default":  { "$type": "color", "$value": "{color.neutral.900}" },
+      "subtle":   { "$type": "color", "$value": "{color.neutral.800}" },
+      "inverse":  { "$type": "color", "$value": "{color.neutral.100}" },
+      "scrim":    { "$type": "color", "$value": "{color.black}" }
+    },
+    "text": {
+      "primary":     { "$type": "color", "$value": "{color.neutral.50}" },
+      "secondary":   { "$type": "color", "$value": "{color.neutral.300}" },
+      "placeholder": { "$type": "color", "$value": "{color.neutral.400}" },
+      "disabled":    { "$type": "color", "$value": "{color.neutral.600}" },
+      "link":        { "$type": "color", "$value": "{color.teal.300}" },
+      "on-action":   { "$type": "color", "$value": "{color.neutral.950}" },
+      "on-inverse":  { "$type": "color", "$value": "{color.neutral.900}" }
+    },
+    "border": {
+      "subtle":   { "$type": "color", "$value": "{color.neutral.700}" },
+      "default":  { "$type": "color", "$value": "{color.neutral.600}" },
+      "strong":   { "$type": "color", "$value": "{color.neutral.400}" },
+      "emphasis": { "$type": "color", "$value": "{color.neutral.300}" }
+    },
+    "action": {
+      "primary":              { "$type": "color", "$value": "{color.teal.400}" },
+      "primary-hover":        { "$type": "color", "$value": "{color.teal.300}" },
+      "primary-active":       { "$type": "color", "$value": "{color.teal.200}" },
+      "primary-subtle":       { "$type": "color", "$value": "{color.teal.900}" },
+      "primary-subtle-hover": { "$type": "color", "$value": "{color.teal.800}" },
+      "secondary-surface":    { "$type": "color", "$value": "{color.neutral.900}" },
+      "secondary-border":     { "$type": "color", "$value": "{color.neutral.400}" },
+      "secondary-text":       { "$type": "color", "$value": "{color.neutral.50}" },
+      "secondary-hover":      { "$type": "color", "$value": "{color.neutral.800}" },
+      "destructive":          { "$type": "color", "$value": "{color.red.400}" },
+      "destructive-hover":    { "$type": "color", "$value": "{color.red.300}" },
+      "destructive-active":   { "$type": "color", "$value": "{color.red.200}" },
+      "destructive-subtle":   { "$type": "color", "$value": "{color.red.950}" }
+    },
+    "focus": {
+      "ring":          { "$type": "color", "$value": "{color.neutral.50}" },
+      "ring-contrast": { "$type": "color", "$value": "{color.neutral.950}" }
+    },
+    "tone": {
+      "neutral": {
+        "fill":            { "$type": "color", "$value": "{color.neutral.800}" },
+        "border":          { "$type": "color", "$value": "{color.neutral.400}" },
+        "text":            { "$type": "color", "$value": "{color.neutral.200}" },
+        "icon":            { "$type": "color", "$value": "{color.neutral.200}" },
+        "emphasis":        { "$type": "color", "$value": "{color.neutral.300}" },
+        "on-emphasis":     { "$type": "color", "$value": "{color.neutral.950}" },
+        "emphasis-border": { "$type": "color", "$value": "{color.neutral.100}" }
+      },
+      "info": {
+        "fill":            { "$type": "color", "$value": "{color.blue.950}" },
+        "border":          { "$type": "color", "$value": "{color.blue.500}" },
+        "text":            { "$type": "color", "$value": "{color.blue.300}" },
+        "icon":            { "$type": "color", "$value": "{color.blue.300}" },
+        "emphasis":        { "$type": "color", "$value": "{color.blue.400}" },
+        "on-emphasis":     { "$type": "color", "$value": "{color.neutral.950}" },
+        "emphasis-border": { "$type": "color", "$value": "{color.blue.300}" }
+      },
+      "success": {
+        "fill":            { "$type": "color", "$value": "{color.green.950}" },
+        "border":          { "$type": "color", "$value": "{color.green.600}" },
+        "text":            { "$type": "color", "$value": "{color.green.300}" },
+        "icon":            { "$type": "color", "$value": "{color.green.300}" },
+        "emphasis":        { "$type": "color", "$value": "{color.green.400}" },
+        "on-emphasis":     { "$type": "color", "$value": "{color.neutral.950}" },
+        "emphasis-border": { "$type": "color", "$value": "{color.green.300}" }
+      },
+      "warning": {
+        "fill":            { "$type": "color", "$value": "{color.amber.950}" },
+        "border":          { "$type": "color", "$value": "{color.amber.600}" },
+        "text":            { "$type": "color", "$value": "{color.amber.300}" },
+        "icon":            { "$type": "color", "$value": "{color.amber.300}" },
+        "emphasis":        { "$type": "color", "$value": "{color.amber.400}" },
+        "on-emphasis":     { "$type": "color", "$value": "{color.neutral.950}" },
+        "emphasis-border": { "$type": "color", "$value": "{color.amber.300}" }
+      },
+      "danger": {
+        "fill":            { "$type": "color", "$value": "{color.red.950}" },
+        "border":          { "$type": "color", "$value": "{color.red.500}" },
+        "text":            { "$type": "color", "$value": "{color.red.300}" },
+        "icon":            { "$type": "color", "$value": "{color.red.300}" },
+        "emphasis":        { "$type": "color", "$value": "{color.red.400}" },
+        "on-emphasis":     { "$type": "color", "$value": "{color.neutral.950}" },
+        "emphasis-border": { "$type": "color", "$value": "{color.red.300}" }
+      },
+      "restricted": {
+        "fill":            { "$type": "color", "$value": "{color.neutral.700}" },
+        "border":          { "$type": "color", "$value": "{color.neutral.200}" },
+        "text":            { "$type": "color", "$value": "{color.neutral.100}" },
+        "icon":            { "$type": "color", "$value": "{color.neutral.100}" },
+        "emphasis":        { "$type": "color", "$value": "{color.neutral.200}" },
+        "on-emphasis":     { "$type": "color", "$value": "{color.neutral.950}" },
+        "emphasis-border": { "$type": "color", "$value": "{color.neutral.50}" }
+      }
+    },
+    "state": {
+      "disabled": {
+        "surface": { "$type": "color", "$value": "{color.neutral.800}" },
+        "text":    { "$type": "color", "$value": "{color.neutral.600}" },
+        "border":  { "$type": "color", "$value": "{color.neutral.700}" },
+        "icon":    { "$type": "color", "$value": "{color.neutral.600}" }
+      },
+      "readonly": {
+        "surface": { "$type": "color", "$value": "{color.neutral.800}" },
+        "text":    { "$type": "color", "$value": "{color.neutral.50}" },
+        "border":  { "$type": "color", "$value": "{color.neutral.600}" },
+        "icon":    { "$type": "color", "$value": "{color.neutral.200}" }
+      },
+      "selected": {
+        "surface": { "$type": "color", "$value": "{color.teal.900}" },
+        "text":    { "$type": "color", "$value": "{color.neutral.50}" },
+        "border":  { "$type": "color", "$value": "{color.teal.400}" }
+      }
+    }
+  }
+}

@@ -1,0 +1,312 @@
+{
+  "$description": "UberTib PRIMITIVE colour. Literal colour values live only in this file. A component never references a primitive; it goes through the semantic layer. Regenerate with docs/ux/scripts/derive_primitive_ramps.py --write.",
+  "color": {
+    "neutral": {
+      "$description": "neutral ramp, sRGB, derived in OKLCH from the documented anchors",
+      "50": {
+        "$type": "color",
+        "$value": "#F8FAFC"
+      },
+      "100": {
+        "$type": "color",
+        "$value": "#F1F5F9"
+      },
+      "200": {
+        "$type": "color",
+        "$value": "#E2E8F0"
+      },
+      "300": {
+        "$type": "color",
+        "$value": "#CAD5E2"
+      },
+      "400": {
+        "$type": "color",
+        "$value": "#91A1B8"
+      },
+      "500": {
+        "$type": "color",
+        "$value": "#64748B",
+        "$description": "v2.1 section 15.1 Muted; retained for borders, prohibited for text"
+      },
+      "600": {
+        "$type": "color",
+        "$value": "#47556B"
+      },
+      "700": {
+        "$type": "color",
+        "$value": "#344057"
+      },
+      "800": {
+        "$type": "color",
+        "$value": "#1F283C"
+      },
+      "900": {
+        "$type": "color",
+        "$value": "#0F172A",
+        "$description": "v2.1 section 15.1 Text"
+      },
+      "950": {
+        "$type": "color",
+        "$value": "#020617"
+      }
+    },
+    "teal": {
+      "$description": "teal ramp, sRGB, derived in OKLCH from the documented anchors",
+      "50": {
+        "$type": "color",
+        "$value": "#F1FDFA"
+      },
+      "100": {
+        "$type": "color",
+        "$value": "#CDFBF1"
+      },
+      "200": {
+        "$type": "color",
+        "$value": "#99F6E4"
+      },
+      "300": {
+        "$type": "color",
+        "$value": "#51ECD4"
+      },
+      "400": {
+        "$type": "color",
+        "$value": "#23D2BD"
+      },
+      "500": {
+        "$type": "color",
+        "$value": "#1EB8A6"
+      },
+      "600": {
+        "$type": "color",
+        "$value": "#169488"
+      },
+      "700": {
+        "$type": "color",
+        "$value": "#0F766E",
+        "$description": "v2.1 section 15.1 Primary"
+      },
+      "800": {
+        "$type": "color",
+        "$value": "#0A5E59"
+      },
+      "900": {
+        "$type": "color",
+        "$value": "#104E4A"
+      },
+      "950": {
+        "$type": "color",
+        "$value": "#052F2E"
+      }
+    },
+    "green": {
+      "$description": "green ramp, sRGB, derived in OKLCH from the documented anchors",
+      "50": {
+        "$type": "color",
+        "$value": "#F1FDF4"
+      },
+      "100": {
+        "$type": "color",
+        "$value": "#DDFBE7"
+      },
+      "200": {
+        "$type": "color",
+        "$value": "#BCF7D0"
+      },
+      "300": {
+        "$type": "color",
+        "$value": "#82F0AA"
+      },
+      "400": {
+        "$type": "color",
+        "$value": "#2EDE77"
+      },
+      "500": {
+        "$type": "color",
+        "$value": "#26C55F"
+      },
+      "600": {
+        "$type": "color",
+        "$value": "#1EA24B"
+      },
+      "700": {
+        "$type": "color",
+        "$value": "#15803D",
+        "$description": "v2.1 section 15.1 Success"
+      },
+      "800": {
+        "$type": "color",
+        "$value": "#106532"
+      },
+      "900": {
+        "$type": "color",
+        "$value": "#14532D"
+      },
+      "950": {
+        "$type": "color",
+        "$value": "#062E16"
+      }
+    },
+    "amber": {
+      "$description": "amber ramp, sRGB, derived in OKLCH from the documented anchors",
+      "50": {
+        "$type": "color",
+        "$value": "#FFFBEB"
+      },
+      "100": {
+        "$type": "color",
+        "$value": "#FEF3C7"
+      },
+      "200": {
+        "$type": "color",
+        "$value": "#FEE686"
+      },
+      "300": {
+        "$type": "color",
+        "$value": "#FED23B"
+      },
+      "400": {
+        "$type": "color",
+        "$value": "#F9BC0D"
+      },
+      "500": {
+        "$type": "color",
+        "$value": "#F59E0B",
+        "$description": "v2.1 section 15.1 Warning; large-area fill only"
+      },
+      "600": {
+        "$type": "color",
+        "$value": "#D87800"
+      },
+      "700": {
+        "$type": "color",
+        "$value": "#B45309",
+        "$description": "measured accessibility correction carrying every warning text, icon and border"
+      },
+      "800": {
+        "$type": "color",
+        "$value": "#943D02"
+      },
+      "900": {
+        "$type": "color",
+        "$value": "#7A3308"
+      },
+      "950": {
+        "$type": "color",
+        "$value": "#451902"
+      }
+    },
+    "red": {
+      "$description": "red ramp, sRGB, derived in OKLCH from the documented anchors",
+      "50": {
+        "$type": "color",
+        "$value": "#FDF2F2"
+      },
+      "100": {
+        "$type": "color",
+        "$value": "#FDE3E3"
+      },
+      "200": {
+        "$type": "color",
+        "$value": "#FCCBCB"
+      },
+      "300": {
+        "$type": "color",
+        "$value": "#FAA6A6"
+      },
+      "400": {
+        "$type": "color",
+        "$value": "#F86D6E"
+      },
+      "500": {
+        "$type": "color",
+        "$value": "#F33E40"
+      },
+      "600": {
+        "$type": "color",
+        "$value": "#DC2626",
+        "$description": "v2.1 section 15.1 Danger"
+      },
+      "700": {
+        "$type": "color",
+        "$value": "#B81E1D"
+      },
+      "800": {
+        "$type": "color",
+        "$value": "#991B1B"
+      },
+      "900": {
+        "$type": "color",
+        "$value": "#7E201F"
+      },
+      "950": {
+        "$type": "color",
+        "$value": "#440D0C"
+      }
+    },
+    "blue": {
+      "$description": "blue ramp, sRGB, derived in OKLCH from the documented anchors",
+      "50": {
+        "$type": "color",
+        "$value": "#F0F6FE"
+      },
+      "100": {
+        "$type": "color",
+        "$value": "#DDEAFC"
+      },
+      "200": {
+        "$type": "color",
+        "$value": "#C1DBFA"
+      },
+      "300": {
+        "$type": "color",
+        "$value": "#97C5F8"
+      },
+      "400": {
+        "$type": "color",
+        "$value": "#62A3F4"
+      },
+      "500": {
+        "$type": "color",
+        "$value": "#4083F1"
+      },
+      "600": {
+        "$type": "color",
+        "$value": "#2563EB",
+        "$description": "v2.1 section 15.1 Info"
+      },
+      "700": {
+        "$type": "color",
+        "$value": "#1E4FD6"
+      },
+      "800": {
+        "$type": "color",
+        "$value": "#2041AC"
+      },
+      "900": {
+        "$type": "color",
+        "$value": "#203B85"
+      },
+      "950": {
+        "$type": "color",
+        "$value": "#182650"
+      }
+    },
+    "brand": {
+      "surface-tint": {
+        "$type": "color",
+        "$value": "#E7F4F3",
+        "$description": "v2.1 section 15.1 Primary Light; supporting backgrounds. Deliberately lower chroma than the teal ramp at any step, so it is kept off-ramp rather than distorting the ramp to swallow it."
+      }
+    },
+    "white": {
+      "$type": "color",
+      "$value": "#FFFFFF",
+      "$description": "absolute value; never referenced by a component"
+    },
+    "black": {
+      "$type": "color",
+      "$value": "#000000",
+      "$description": "absolute value; never referenced by a component"
+    }
+  }
+}

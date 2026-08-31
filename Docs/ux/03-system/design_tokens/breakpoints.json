@@ -1,0 +1,56 @@
+{
+  "$schema": "https://design-tokens.github.io/community-group/format/",
+  "$description": "UberTib responsive thresholds. TWO DISTINCT SETS that must never be merged. Profile C has size classes on a device viewport with no media queries available; Profile A has a conceptual content grid measured on the panel content area, which is the viewport minus a framework-owned shell whose width this chain does not control. A single shared scale would be wrong for both: a 1024px viewport on Profile A is not a 1024px content area. The literal thresholds live under primitive; the profile groups name them.",
+
+  "primitive": {
+    "threshold": {
+      "$description": "Every responsive threshold in the product. Two scales, deliberately kept apart even though two values coincide.",
+      "c-compact":  { "$type": "dimension", "$value": "0px" },
+      "c-medium":   { "$type": "dimension", "$value": "600px" },
+      "c-expanded": { "$type": "dimension", "$value": "840px" },
+      "a-narrow":   { "$type": "dimension", "$value": "0px" },
+      "a-medium":   { "$type": "dimension", "$value": "768px" },
+      "a-wide":     { "$type": "dimension", "$value": "1024px" },
+      "a-maximum":  { "$type": "dimension", "$value": "1440px" }
+    },
+    "verification-width": {
+      "$description": "The narrow widths every Patient surface is checked against for horizontal overflow. 280 is the smallest supported device width and is the one that actually finds bugs.",
+      "minimum": { "$type": "dimension", "$value": "280px" },
+      "small":   { "$type": "dimension", "$value": "320px" },
+      "typical": { "$type": "dimension", "$value": "414px" }
+    }
+  },
+
+  "profile-c": {
+    "$description": "Patient app, React Native. Size classes, not media queries. One primary reading column at every class; a wider class may place tightly related comparison values side by side, but task order stays identical. Phase 2 fixed this and it is not reopened here.",
+    "size-class": {
+      "compact":  { "$type": "dimension", "$value": "{primitive.threshold.c-compact}",  "$description": "Phones in portrait. The design target." },
+      "medium":   { "$type": "dimension", "$value": "{primitive.threshold.c-medium}",   "$description": "Large phones in landscape and small tablets. The reading column widens to its measure ceiling and stops." },
+      "expanded": { "$type": "dimension", "$value": "{primitive.threshold.c-expanded}", "$description": "Tablets. Still one primary reading column, centred, capped at its measure ceiling. Not a two-pane layout." }
+    },
+    "reading-column-max": {
+      "$type": "number", "$value": "{measure.comfortable}",
+      "$description": "In characters, not pixels. The column stops growing at its measure ceiling however wide the device is; whitespace takes the remainder."
+    },
+    "stack-threshold": {
+      "$type": "string", "$value": "largest-supported-text-size",
+      "$description": "Not a width. At the largest supported text size, critical regions STACK rather than truncate or scroll sideways, at every size class. Truncating an amount, a deadline or a controlling reason is a correctness failure, not a layout compromise."
+    }
+  },
+
+  "profile-a": {
+    "$description": "Clinic and Admin Filament panels. A twelve-column conceptual content grid inside a framework-owned shell. Thresholds are measured on the CONTENT AREA width, not the viewport, because the shell navigation width is framework-owned and can change without this chain being consulted.",
+    "grid-columns": { "$type": "number", "$value": 12 },
+    "grid-gap":     { "$type": "dimension", "$value": "{semantic.space.grid-gap}" },
+    "content-width": {
+      "narrow":  { "$type": "dimension", "$value": "{primitive.threshold.a-narrow}",  "$description": "Tablet, or desktop with the shell navigation expanded over a small viewport. Twelve columns collapse to one; a supporting rail moves below the primary content." },
+      "medium":  { "$type": "dimension", "$value": "{primitive.threshold.a-medium}",  "$description": "Two-region layouts resolve: primary content plus a supporting rail." },
+      "wide":    { "$type": "dimension", "$value": "{primitive.threshold.a-wide}",    "$description": "The working default. Full twelve-column behaviour." },
+      "maximum": { "$type": "dimension", "$value": "{primitive.threshold.a-maximum}", "$description": "Content stops widening here. Beyond it the extra width becomes margin, because a table row wider than this loses the association between its first and its last cell." }
+    },
+    "tablet-note": {
+      "$type": "string", "$value": "secondary-but-real",
+      "$description": "PO-UX-07 confirms tablet as a secondary but genuine context for the clinic representative, invited staff and the treating dentist. A narrow content width is therefore a supported layout rather than a degraded one, and the dense mode may not assume a mouse."
+    }
+  }
+}
