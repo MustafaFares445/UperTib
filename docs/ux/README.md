@@ -59,7 +59,7 @@ Coding agents must not treat Phase 3 as screen specifications or implementation 
 |---|---|---|
 | 1 — Discovery, IA, Flows | `01-foundation/*` | Complete |
 | 2 — Wireframes | `02-wireframes/*`, `PHASE_02_HANDOFF.md` | **Complete — awaiting gate approval** |
-| 3 — Design System | `03-system/*`, `PHASE_03_HANDOFF.md` | **Complete — final gate passed.** Architecture, direction, tokens, the 22 `CMP-*`, the 26 `IX-*`, all 165 `WF-*` component bindings, the 60 `TXT-*` content system, 18 lifecycle-status families / 82 statuses, 21/21 `ERR-*` recovery families, the 40 `A11Y-*` accessibility / RTL / data-state obligations, the integration and traceability audit (`TRACEABILITY_AUDIT.md`), and the Session 7 senior product/architecture gate are all complete. CI is promoted to `--phase 3`. See `PHASE_03_HANDOFF.md`. |
+| 3 — Design System | `03-system/*`, `PHASE_03_HANDOFF.md` | **Complete — final gate passed.** Architecture, direction, tokens, the 22 `CMP-*`, the 26 `IX-*`, all 165 `WF-*` component bindings, the 60 `TXT-*` content system, 18 lifecycle-status families / 82 statuses, 21/21 `ERR-*` recovery families, the 40 `A11Y-*` accessibility / RTL / data-state obligations, the integration and traceability audit (`TRACEABILITY_AUDIT.md`), and the Session 7 senior product/architecture gate are all complete. Every local gate is green, CI is promoted to `--phase 3`, and the promoted job passed on the gate commit (`749785c`, Documentation Validation run 59, UX Phase 3 validator exit `0`). See `PHASE_03_HANDOFF.md`. |
 | 4 — Widget and Screen Specs | `04-specs/*` | Not started |
 | 5 — Build and Handoff | `05-build/*` | Not started |
 

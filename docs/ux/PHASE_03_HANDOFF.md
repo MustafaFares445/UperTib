@@ -10,9 +10,10 @@
 
 ## 1. Phase 3 status
 
-**COMPLETE — final gate passed locally.** Every Phase 3 artifact exists at its canonical path, every
-mandatory local gate is green, the component-token source regenerates with zero diff, and CI is
-promoted to `--phase 3`.
+**COMPLETE — final gate passed, locally and on CI.** Every Phase 3 artifact exists at its canonical
+path, every mandatory local gate is green, the component-token source regenerates with zero diff, the
+CI workflow is promoted to `--phase 3`, and the promoted job has actually run and passed on the gate
+commit. The measured CI result is in section 22.
 
 Session 7 was a review session, not an authoring session. It re-measured the whole baseline
 independently, audited the system against canonical product behavior, corrected the defects recorded
@@ -449,8 +450,26 @@ weakened and the engineering documentation validator was not removed.
 The workflow's `docs/**` path trigger is now genuinely correct for the whole UX chain, which it was
 not while two files were tracked under `Docs/`.
 
-**Remote CI result:** see the Session 7 report. Where the executing environment cannot inspect
-GitHub Actions, that is stated explicitly rather than assumed green.
+**Remote CI result: measured, not assumed.** The gate commit `749785c` was pushed to `main` as a
+fast-forward over `7e7db4f`, and the Documentation Validation workflow ran against it as run 59:
+
+| Reported field | Value |
+|---|---|
+| Commit | `749785c669c7cb8a24690985248cce5a9f3ad2f8` |
+| Workflow | Documentation Validation, run 59, `push` to `main` |
+| Conclusion | success |
+| Engineering validator exit | `0` |
+| **UX Phase 3 validator exit** | **`0`** |
+| Reported baseline | 165 screens, 103 flows, 165 wireframes, 22 components, 0 widgets |
+| Reported result | 0 failures, 0 warnings on both validators |
+
+This is the promoted `--phase 3` job, not the previous `--phase 2` one: the workflow's own report names
+the `UX Phase 3 validator`. The run therefore closes the last gate condition.
+
+Independently of the run, the committed tree was also extracted with `git archive` and both validators
+were executed against that extraction rather than against the case-insensitive working directory. That
+is what caught the path-case defect in section 23 item 7, and it is why the CI run passed first time
+rather than discovering the defect on the runner.
 
 ## 23. Known limitations
 
