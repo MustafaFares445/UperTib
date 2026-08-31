@@ -509,7 +509,7 @@ The system must never impersonate the patient when a guardian acts. Revocation o
 ## 11. Private Evidence Intake and Use — Required, Provider-Neutral
 
 **Requirements:** NFR-PLATFORM-003 plus evidence-bearing ELIG, CLINICAL, FINANCE, REVIEWS, and CLAIMS requirements.  
-**Status:** Required design; concrete upload/storage/malware provider contract remains blocked by `Q-PLATFORM-003` and `Q-OPS-001`.
+**Status:** Required design. The provider-neutral evidence-transfer contract is Resolved under `Q-PLATFORM-003`/`PO-UX-17`; only the concrete upload/storage/malware vendor selection remains, tracked by `Q-OPS-001`.
 
 ```mermaid
 sequenceDiagram
@@ -623,7 +623,7 @@ No UX navigation or screen sequence is defined here. User-flow and interface seq
 - `Q-CATALOG-001` — provisional and imported candidate catalog records require licensed clinical production approval.
 - `Q-ELIG-001` — production S/H/I formulas, weights, thresholds, grade bands, and market-calibration thresholds require licensed clinical approval; the sequence ordering above is settled.
 - `Q-PLATFORM-002` — retention/deletion periods require legal/compliance validation.
-- `Q-PLATFORM-003` — concrete OTP/MFA, malware scanning, private-evidence, and related providers remain unresolved.
+- `Q-OPS-001` — concrete OTP/MFA, malware scanning, private-evidence, and related vendor selection remains unresolved. `Q-PLATFORM-003` is Resolved for the provider-neutral interaction contract.
 - `Q-OPS-001` — production hosting/deployment topology/provider remains unresolved.
 
 No new canonical IDs are allocated by this document.

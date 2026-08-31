@@ -32,6 +32,24 @@ def blocks(text, prefix):
         out[b.split()[0].rstrip("—- ")] = b
     return out
 
+ID = r'[A-Z]{3,10}(?:-[A-Z]{3,10})?-\d{3}'
+
+def definitions(prefix, *needles):
+    """Every ID of `prefix` defined as its own heading, and how many times."""
+    counts = {}
+    for text in part(*needles).values():
+        for m in re.finditer(rf'^#{{2,4}}\s+`?({prefix}-{ID})', text, flags=re.M):
+            counts[m.group(1)] = counts.get(m.group(1), 0) + 1
+    return counts
+
+def references(prefix):
+    """Every ID of `prefix` mentioned anywhere under docs/ux, mapped to its files."""
+    out = {}
+    for path, text in ux_files.items():
+        for rid in set(re.findall(rf'\b{prefix}-{ID}\b', text)):
+            out.setdefault(rid, set()).add(path.name)
+    return out
+
 ia      = joined("INFORMATION_ARCHITECTURE", "SCREEN_INVENTORY")
 flows   = blocks(joined("USER_FLOWS"), "FLOW")
 screens = blocks(ia, "SCR")
@@ -82,7 +100,48 @@ if PHASE >= 2:
                 fail.append(f"P2 {p.name}:{i} carries visual detail — wireframes are grey-box")
 
 # ---------- Phase 3 ----------
+# Required Phase 3 artifacts, at their canonical lowercase paths. Existence is asserted
+# explicitly because every other Phase 3 check is conditional on content being *found*:
+# a deleted or mis-cased artifact would otherwise leave this gate green. Session 7 caught
+# exactly that - two files tracked under `Docs/` that resolve only on a case-insensitive
+# filesystem and would be absent from `docs/ux/**` on a case-sensitive CI checkout.
+PHASE_3_REQUIRED = [
+    "03-system/PHASE_03_IMPLEMENTATION_PLAN.md", "03-system/DESIGN_DIRECTION.md",
+    "03-system/DESIGN_TOKENS.md", "03-system/COMPONENT_INVENTORY.md",
+    "03-system/COMPONENT_INVENTORY_PLATFORM.md", "03-system/COMPONENT_INVENTORY_DOMAIN.md",
+    "03-system/WIREFRAME_COMPONENT_MAP.md", "03-system/INTERACTION_PATTERNS.md",
+    "03-system/INTERACTION_PATTERNS_DOMAIN.md", "03-system/CONTENT_GUIDE.md",
+    "03-system/CONTENT_GUIDE_STATES.md", "03-system/CONTENT_GUIDE_ERRORS.md",
+    "03-system/ACCESSIBILITY.md", "03-system/TRACEABILITY_AUDIT.md",
+    "03-system/design_tokens/component.json", "03-system/design_tokens/semantic.state.json",
+    "PHASE_03_HANDOFF.md",
+]
 if PHASE >= 3:
+    for rel in PHASE_3_REQUIRED:
+        if not (UX / rel).is_file():
+            fail.append(f"P3 required artifact missing at canonical path: docs/ux/{rel}")
+
+    # One obligation, one definition. A duplicated heading silently forks a rule into two
+    # sources of truth. Referential integrity is checked rather than any count, because
+    # every family here is append-only and its current size is not a canonical invariant.
+    for prefix, needles in (("A11Y", ("ACCESSIBILITY",)),
+                            ("TXT", ("CONTENT_GUIDE",)),
+                            ("IX", ("INTERACTION_PATTERNS",)),
+                            ("CMP", ("COMPONENT_INVENTORY",))):
+        defined = definitions(prefix, *needles)
+        for rid, n in sorted(defined.items()):
+            if n > 1:
+                fail.append(f"P3 {rid} is defined {n} times - one obligation, one definition")
+        # `CMP-*` is exempt from the reference check: `COMPONENT_INVENTORY.md` section 8
+        # deliberately names the candidates it rejected, and the wireframe-direction check
+        # below already covers the binding that actually matters.
+        if prefix == "CMP":
+            continue
+        for rid, where in sorted(references(prefix).items()):
+            if rid not in defined:
+                fail.append(f"P3 {rid} referenced in "
+                            f"{', '.join(sorted(where))} but defined nowhere")
+
     used_in_wf = set(re.findall(r'\bCMP-[A-Z]{3,10}-\d{3}\b', joined("WIREFRAME")))
     for cid in comps:
         if not any(cid in x for x in (joined("WIREFRAME"), joined("WIDGET_SPECS"), specs)):

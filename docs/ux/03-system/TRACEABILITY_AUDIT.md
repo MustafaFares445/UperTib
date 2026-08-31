@@ -266,13 +266,53 @@ authoritative and are not to be second-guessed or weakened.
 
 ## 14. Path and case hygiene
 
-The canonical Git tree is normalized to lowercase `docs/ux/`. A case-sensitive tree check confirms
-there are **zero tracked `Docs/ux/` paths** and all Phase 3 artifacts are under `docs/ux/`.
+The canonical Git tree is normalized to lowercase `docs/`, verified against the tree rather than the
+working filesystem. **Session 7 completed this normalization and corrected the claim below; the
+history is kept because the instrument, not the judgement, was at fault each time, and later phases
+will reach for the same instrument.**
+
+Three successive measurements of this one fact were wrong, each for a different reason:
+
+1. The original Session 6 claim read `git ls-files | grep -i '^Docs/ux'` as returning **zero**
+   results. That was true when taken and was falsified by this audit's own commit: the working
+   filesystem is case-insensitive (`core.ignorecase=true`), so committing this file recorded it in
+   the index as `Docs/ux/03-system/TRACEABILITY_AUDIT.md` while resolving locally under `docs/`.
+2. The follow-up fix renamed this file and narrowed the claim to `Docs/ux/`. That was then true of
+   `Docs/ux/` — but the pattern was still too narrow to see five mis-cased entries directly under
+   `Docs/`.
+3. Session 7's own first sweep widened the pattern to `^Docs/` and found only two of those five.
+   `git ls-files` escapes non-ASCII paths under the default `core.quotepath=true`, so four
+   Arabic-named source PDFs were emitted beginning with a quote character rather than `D`, and no
+   `^Docs/` grep could match them.
+
+The full mis-cased set was **six** files: this audit artifact, `Docs/UberTib_SRS_Etkan_v1.1.pdf`, and
+four Arabic-named canonical source PDFs. On a case-sensitive checkout — which is what CI runs — every
+one would have landed outside `docs/**`, taking this artifact outside the canonical tree, outside the
+`docs/ux/**` validator glob, and outside the workflow's own `docs/**` path trigger. All six are now
+recorded at lowercase paths by rename only: every blob hash is unchanged and no file was added or
+lost.
+
+A further trap surfaced during the repair. `git add` and `git mv` cannot be trusted to write a
+lowercase path while `HEAD` still holds the capital form, because git resolves the new path's
+directory casing against the existing tree and silently re-records the capital prefix — which is how
+`docs/ux/PHASE_03_HANDOFF.md` was first staged as `Docs/ux/PHASE_03_HANDOFF.md`.
+`git update-index --cacheinfo` takes the path literally and is the instrument that actually works.
 
 `docs/ux/03-system/ACCESSIBILITY.md` and
 `docs/ux/03-system/TRACEABILITY_AUDIT.md` both exist in the canonical lowercase tree.
 
-**`Docs/ux/` paths remaining in the canonical tree: 0.**
+**`Docs/` paths remaining in the canonical tree: 0**, verified three ways — `git ls-files` with
+`core.quotepath=false`, a case-exact listing of `git archive` output, and a full validator run against
+an extracted copy of the tree rather than against the case-insensitive working filesystem.
+
+**Lessons recorded for later phases:**
+
+1. A path-case measurement taken before the session's own commit does not prove the committed tree is
+   clean. Re-verify after staging.
+2. `git ls-files | grep '^Docs/'` is not a sound case audit. Non-ASCII paths are quoted out of reach of
+   the pattern. Use `core.quotepath=false`, and confirm against `git archive` output.
+3. Verify against the tree, not the working directory. On a case-insensitive filesystem the working
+   directory cannot show this class of defect at all.
 
 ## 15. Session / phase metadata audit
 

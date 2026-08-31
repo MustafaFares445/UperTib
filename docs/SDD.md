@@ -112,7 +112,7 @@ The implemented catalog endpoint already demonstrates explicit resources, thrott
 
 Identity should remain one application identity model with explicit role/permission grants and domain relationships rather than creating separate authentication systems per actor. Spatie Permission is already installed and should provide coarse permission capability, while organization/clinic/branch/case/purpose scope must be enforced by application policies and query constraints.
 
-Patient activation requires verified contact ownership. OTP values must be hashed, rate-limited, single-use, and short-lived exactly as specified in NFR-IDENTITY-002. Privileged production roles require a non-SMS second factor; the concrete provider remains unresolved under `Q-PLATFORM-003`.
+Patient activation requires verified contact ownership. OTP values must be hashed, rate-limited, single-use, and short-lived exactly as specified in NFR-IDENTITY-002. Privileged production roles require a non-SMS second factor; selecting the concrete provider is vendor selection tracked by `Q-OPS-001`.
 
 Guardian/family authority must be represented as explicit revocable grants with subject, grantee, scope, purpose, effective period, and legal/grant basis. The patient remains the owner of the case. Every representative action is attributed to the representative identity.
 
@@ -338,7 +338,7 @@ Errors must not leak protected resource existence across unauthorized scopes or 
 
 Spatie Media Library is installed and may remain the media abstraction, but private evidence needs an explicit domain evidence record when provenance, quarantine, purpose, policy, or legal-hold state is required beyond generic media metadata.
 
-Uploads must remain private, use opaque object names, validate extension/magic-byte/MIME/decode, calculate SHA-256, and remain quarantined until malware scanning succeeds. The concrete scanning/storage provider remains unresolved under `Q-PLATFORM-003`.
+Uploads must remain private, use opaque object names, validate extension/magic-byte/MIME/decode, calculate SHA-256, and remain quarantined until malware scanning succeeds. The provider-neutral transfer contract is fixed by `PO-UX-17`; selecting the concrete scanning/storage vendor is tracked by `Q-OPS-001`.
 
 Downloads require fresh authorization and short-lived access (≤60 seconds per NFR). Every protected download must be audited.
 
@@ -364,7 +364,7 @@ Notifications communicate domain outcomes; they are not the authoritative state.
 
 Notification jobs should reference the source domain record and event so retries do not duplicate business effects. Delivery status must be observable for follow-up reminders and operationally important communications.
 
-Concrete SMS/OTP/notification providers are unresolved under `Q-PLATFORM-003`; therefore no provider-specific contract belongs in the canonical architecture yet.
+Concrete SMS/OTP/notification vendor selection is tracked by `Q-OPS-001`; therefore no provider-specific contract belongs in the canonical architecture yet.
 
 ## 27. Security Design
 
@@ -476,12 +476,13 @@ Implementation status is tracked in the current `docs/TRACEABILITY_MATRIX.md` an
 | Q-ELIG-001 | Major | The `P` derivation direction is settled; production S/H/I formulas, thresholds, weights, grade bands, and the production calibration thresholds still require licensed clinical approval. |
 | Q-PLATFORM-002 | Major | Final legal retention/deletion values may change policy/schema/scheduled processing. |
 | Q-OPS-001 | Major | Hosting/provider/topology remains unresolved, including managed-versus-self-hosted MySQL deployment, HA/PITR implementation, object storage, queue, and recovery infrastructure; the production database engine remains MySQL. |
-| Q-PLATFORM-003 | Major | OTP, malware scanning/private evidence, and other external providers are unresolved; no provider-specific integration contract is authoritative. |
 | Q-PLATFORM-004 | Minor | Treat low-thousands expected launch use and 10,000 registered-user engineering envelope as expected population versus capacity headroom unless superseded. |
 | CONFLICT-PLATFORM-001 | Major | Historical backend feature planning named older PHP/Laravel/database/auth assumptions; current verified Composer/repository facts control implementation conventions unless product requirements demand change. |
 | CONFLICT-PLATFORM-002 | Major | Architecture-specific wording inside some NFR sources must not be expanded into additional product behavior before final SRS reconciliation. |
 
-### Resolved allocated conflict
+### Resolved allocated items
+
+`Q-PLATFORM-003` remains permanently allocated but is **Resolved (2026-08-25)** by `PO-UX-17`. The provider-neutral evidence-transfer interaction contract and its eight session states are fixed (`API-PLATFORM-001`, `STATE_MACHINES.md` section 21.1). Concrete OTP/MFA, malware-scanning, private-evidence storage and notification vendor selection is an infrastructure decision tracked by `Q-OPS-001`; no provider-specific integration contract is authoritative until that selection is made.
 
 `CONFLICT-CATALOG-001` remains permanently allocated but is **Resolved (2026-08-24)**. The currently verified `GET /api/v1/catalog/service-groups` route and current OpenAPI contract align. Broader feature-spec aspirations remain Planned rather than being treated as implemented-route evidence.
 

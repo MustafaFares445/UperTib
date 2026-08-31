@@ -1,10 +1,11 @@
 # UberTib UX Documentation — Start Here
 
-**Chain phase:** 2 of 5 complete — Grey-box Wireframes  
+**Chain phase:** 3 of 5 complete — Design System  
 **Baseline:** 2026-08-26  
 **Phase 1 baseline:** 19 UI-bearing actors · 69 JTBDs · 165 screens · 103 flows  
 **Phase 2 baseline:** 165/165 screens mapped to `WF-*` wireframes — Patient 47 · Clinic 56 · Admin 62  
-**Validator:** `python docs/ux/scripts/validate_ux_docs.py --phase 2`
+**Phase 3 baseline:** 22 `CMP-*` · 26 `IX-*` · 60 `TXT-*` · 40 `A11Y-*` · 18 lifecycle machines / 82 statuses · 21/21 `ERR-*`  
+**Validator:** `python docs/ux/scripts/validate_ux_docs.py --phase 3`
 
 ## Authority chain
 
@@ -12,7 +13,7 @@
 2. Product Owner decisions under `.spec/decisions/`, including the UX reconciliation and Syria catalog/pricing governance decisions.
 3. Phase 1 UX owns actors, JTBDs, IA, screen inventory and flows.
 4. Phase 2 UX owns grey-box structure, hierarchy and interaction shape.
-5. Phase 3 will own design-system tokens/components/copy obligations; Phase 4 screen/widget specs; Phase 5 build handoff.
+5. Phase 3 owns design-system direction, tokens, components, interaction patterns, content rules, lifecycle status semantics and accessibility obligations; Phase 4 owns screen/widget specs; Phase 5 owns build handoff.
 
 Figma is derived and never overrides canonical product behavior.
 
@@ -48,8 +49,9 @@ Patient UX is Arabic-first/RTL, smartphone-first and resilient to weak connectiv
 18. `03-system/CONTENT_GUIDE_ERRORS.md`
 19. `03-system/ACCESSIBILITY.md`
 20. `03-system/TRACEABILITY_AUDIT.md`
+21. `PHASE_03_HANDOFF.md`
 
-Coding agents must not treat Phase 2 as final UI styling or implementation contracts. Phase 5 remains the coding handoff owner.
+Coding agents must not treat Phase 3 as screen specifications or implementation contracts. Phase 3 defines the system; Phase 4 places it on screens; Phase 5 remains the coding handoff owner.
 
 ## Phase status
 
@@ -57,7 +59,7 @@ Coding agents must not treat Phase 2 as final UI styling or implementation contr
 |---|---|---|
 | 1 — Discovery, IA, Flows | `01-foundation/*` | Complete |
 | 2 — Wireframes | `02-wireframes/*`, `PHASE_02_HANDOFF.md` | **Complete — awaiting gate approval** |
-| 3 — Design System | `03-system/*` | **In progress — Session 6 of 7 complete.** Architecture, direction, tokens, the 22 `CMP-*`, the 26 `IX-*`, all 165 `WF-*` component bindings, the `TXT-*` content system, 18 lifecycle-status families / 82 statuses, 21/21 `ERR-*` recovery families, accessibility / RTL / status / data-state semantics (`A11Y-*`, `ACCESSIBILITY.md`), and the integration/traceability/mechanical audit (`TRACEABILITY_AUDIT.md`) are implemented. Session 7 remains: the final senior architecture/product audit, final validator extensions if genuinely useful, the `docs/README.md` registry correction, `PHASE_03_HANDOFF.md`, and CI promotion to `--phase 3`. |
+| 3 — Design System | `03-system/*`, `PHASE_03_HANDOFF.md` | **Complete — final gate passed.** Architecture, direction, tokens, the 22 `CMP-*`, the 26 `IX-*`, all 165 `WF-*` component bindings, the 60 `TXT-*` content system, 18 lifecycle-status families / 82 statuses, 21/21 `ERR-*` recovery families, the 40 `A11Y-*` accessibility / RTL / data-state obligations, the integration and traceability audit (`TRACEABILITY_AUDIT.md`), and the Session 7 senior product/architecture gate are all complete. CI is promoted to `--phase 3`. See `PHASE_03_HANDOFF.md`. |
 | 4 — Widget and Screen Specs | `04-specs/*` | Not started |
 | 5 — Build and Handoff | `05-build/*` | Not started |
 
@@ -101,14 +103,16 @@ Total wireframes: **165**. No Phase 2-only screen was introduced.
 
 No product behavior was invented to close the remaining clinical questions.
 
-## Phase 3 carry-forward obligations
+## Phase 3 carry-forward obligations — discharged
 
-Phase 3 must preserve structure while defining final component taxonomy, tokens and copy. In particular:
+The four obligations Phase 2 carried forward are implemented and were re-verified by the Session 7 gate:
 
-- alternative expiry/decline must not sound like cancellation of a previously confirmed appointment;
-- `ELIGIBILITY_REVIEW` requires neutral Patient wording;
-- retryable upload/network failure must not look like evidence rejection;
-- internal classification/calibration/risk vocabulary must be hidden or translated into practical Patient meaning.
+- alternative expiry/decline reads as an unconfirmed booking request, never a penalized cancellation — `TXT-STATE-BOOKING-001`, `IX-BOOKING-001`;
+- `ELIGIBILITY_REVIEW` carries mandatory neutral wording on every surface including the clinic panel — `TXT-PLATFORM-010`, copy obligation 2;
+- retryable transfer failure is structurally separate from authoritative rejection, in different tone, icon and reachable path — `TXT-STATE-PLATFORM-001`, `IX-PLATFORM-006`;
+- internal `S`/`P`/`H`/`I`, calibration mechanics and risk codes are hidden structurally and translated to practical meaning — `TXT-PLATFORM-017`, `TXT-PLATFORM-018`.
+
+Phase 4's own must-not-re-decide list is in `PHASE_03_HANDOFF.md` section 17.
 
 ## Verification
 
@@ -116,7 +120,7 @@ Run cumulative validation at the current gate:
 
 ```bash
 python docs/scripts/validate_docs.py
-python docs/ux/scripts/validate_ux_docs.py --phase 2
+python docs/ux/scripts/validate_ux_docs.py --phase 3
 python docs/ux/scripts/validate_ux_tokens.py
 python scripts/check_no_emoji.py
 ```
@@ -125,9 +129,12 @@ python scripts/check_no_emoji.py
 Token mapping blocks in the component inventory, so the narrative and the token source cannot
 drift. Run it after editing any component's token mapping.
 
-The UX validator stays pinned at `--phase 2` until Phase 3 Session 7. Flipping it earlier would
-turn known, expected, not-yet-authored Phase 3 obligations into a red build on every unrelated
-documentation change.
+The UX validator was pinned at `--phase 2` until Phase 3 Session 7, so that known, expected,
+not-yet-authored Phase 3 obligations could not turn every unrelated documentation change into a red
+build. Session 7 promoted it to `--phase 3` once the final gate passed, and the Phase 3 gate now also
+asserts that every required Phase 3 artifact exists at its canonical lowercase path, that no `A11Y-*`,
+`TXT-*`, `IX-*` or `CMP-*` obligation is defined twice, and that no `A11Y-*`, `IX-*` or `TXT-*`
+reference resolves to nothing.
 
 The token gate is additive and passes now. It runs against
 `docs/ux/03-system/design_tokens/`, **not** the repository-root `tokens/` directory: the design

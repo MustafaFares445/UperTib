@@ -315,7 +315,7 @@ Every permission in this section is about recording or reviewing activity perfor
 | Process retention deletion | System automation / authorized privacy workflow | Conditional | Approved retention rule, no legal hold, destruction audited | NFR-PLATFORM-004 |
 | Access raw object-store path because actor is admin | System administrator | Deny as business authorization | Storage administration cannot substitute for application authorization | NFR-PLATFORM-003, NFR-IDENTITY-001 |
 
-Concrete evidence-storage and malware-scanning providers remain unresolved under `Q-PLATFORM-003` and `Q-OPS-001`.
+Concrete evidence-storage and malware-scanning vendor selection remains unresolved under `Q-OPS-001`; `Q-PLATFORM-003` is Resolved for the provider-neutral contract and its authorization points.
 
 ## 16. System Automation Permissions
 
