@@ -266,14 +266,11 @@ authoritative and are not to be second-guessed or weakened.
 
 ## 14. Path and case hygiene
 
-`git ls-files | grep -i '^Docs/ux'` from the canonical repository returns **zero** results. The only
-`Docs/ux` (capital D) paths on disk are inside
-`UberTip-Backend/.claude/worktrees/quizzical-lovelace-8176e2/`, a separate, pre-existing git worktree
-on a detached `HEAD` at a different commit (`b4c31db`) — not part of the tracked `main` tree and not
-reachable through `git ls-files`. **Not touched**, consistent with the instruction to only fix stale
-casing in this repository's own canonical tree.
+The canonical Git tree is normalized to lowercase `docs/ux/`. A case-sensitive tree check confirms
+there are **zero tracked `Docs/ux/` paths** and all Phase 3 artifacts are under `docs/ux/`.
 
-`docs/ux/03-system/ACCESSIBILITY.md` exists and was read in full for this audit.
+`docs/ux/03-system/ACCESSIBILITY.md` and
+`docs/ux/03-system/TRACEABILITY_AUDIT.md` both exist in the canonical lowercase tree.
 
 **`Docs/ux/` paths remaining in the canonical tree: 0.**
 
@@ -337,8 +334,9 @@ All `Q-*` under `docs/ux/` classified against `UPSTREAM_GAPS.md`:
 | Q-PLATFORM-004 | Open — pre-existing | D | No — grouped with `Q-PLATFORM-002`/`Q-OPS-001` |
 | Q-PLATFORM-008 | Open — raised Session 2 | B | No — brand-palette approval; if declined, only the palette's specific hue is affected, not the token architecture |
 
-No open `Q-*` was closed by assumption. All nine still-open items are carried forward to Session 7
-unchanged.
+No open `Q-*` was closed by assumption. The repository currently has **18 known `Q-*` IDs** in the
+tracked product/UX documentation: **11 resolved** by the 2026-08-25 Product Owner decisions and **7
+still open**. All seven open items in the table above are carried forward to Session 7 unchanged.
 
 ## 19. No Phase 4 / 5 bleed
 
@@ -354,8 +352,9 @@ pre-existing prompt template describing future Phase 4 work, not Phase 4 output;
 ## 20. Production code safety
 
 No file under `UberTip-Backend/app`, `UberTip-Backend/routes`, `UberTip-Backend/database`, or any
-other production path was modified. Only `docs/ux/03-system/TRACEABILITY_AUDIT.md` (this file) was
-created; no other file changed.
+other production path was modified. Session 6 created `docs/ux/03-system/TRACEABILITY_AUDIT.md` (this file) and updated
+`docs/ux/README.md` to add the audit to the reading order and mark Session 6 of 7 complete. No
+production file changed.
 
 ## 21. Exact validator outputs
 
@@ -471,7 +470,7 @@ The job still runs `validate_ux_docs.py --phase 2` only. **Not changed by this s
 
 Session 7 must review and decide on, without this session pre-deciding any of them:
 
-1. Nine still-open `Q-*` dependencies (§18) — confirm none has silently become blocking since
+1. Seven still-open `Q-*` dependencies (§18) — confirm none has silently become blocking since
    2026-08-25.
 2. `Q-PLATFORM-008` (brand palette) — confirm resolved or still deferred before any final visual gate.
 3. Whether the `--phase 3` CI promotion should happen as part of Session 7's own gate, per the
