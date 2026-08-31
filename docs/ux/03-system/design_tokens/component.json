@@ -1,0 +1,937 @@
+{
+  "$schema": "https://design-tokens.github.io/community-group/format/",
+  "$description": "UberTib COMPONENT layer. One group per allocated CMP-*, written in Session 3 alongside COMPONENT_INVENTORY.md so a component and its tokens are never allocated apart. Every value is transcribed from that component's own Token mapping block by docs/ux/scripts/build_component_tokens.py, so the narrative and the source cannot drift. A component token resolves to the semantic layer and nothing else; the gate fails one that reaches a primitive directly.",
+  "contract": {
+    "$description": "Rules a component token group must satisfy. Enforced by docs/ux/scripts/validate_ux_tokens.py.",
+    "naming": {
+      "$type": "string",
+      "$value": "component.<cmp-id-slug>.<property>-<variant>-<state>",
+      "$description": "The group key is the lowercase CMP identifier with its domain, for example component.platform-001. The property, variant and state segments follow the semantic vocabulary already in use - bg, text, border, icon; primary, secondary, destructive; hover, focus, active, disabled."
+    },
+    "resolution": {
+      "$type": "string",
+      "$value": "component-resolves-to-semantic-only",
+      "$description": "A component token references the semantic layer and nothing else. A component token that reaches a primitive directly is a defect: it makes a theme change miss that component."
+    },
+    "allocation": {
+      "$type": "string",
+      "$value": "one-group-per-allocated-CMP",
+      "$description": "A group may exist only for an identifier the component inventory has allocated. There is no component token for an unallocated candidate and none for a pattern that never earned a CMP."
+    },
+    "excluded": {
+      "$type": "string",
+      "$value": "framework-owned-controls",
+      "$description": "No component tokens for button, input, select, checkbox, radio, date picker, modal shell, toast, banner, avatar, badge, tabs or navigation chrome. Profile A takes those from Filament as shipped and Profile C from React Native primitives; both are bound by the semantic layer, the required states and the accessibility obligations, and defining bespoke tokens for them would be phase bleed into implementation."
+    },
+    "required-groups": {
+      "$type": "string",
+      "$value": "surface,text,border,state-triple-binding",
+      "$description": "Every allocated component declares how it takes a surface, its text, its boundary, and - where it renders a lifecycle status - how it consumes the tone, icon and emphasis triple whole. A component that consumes a tone without the icon and the emphasis fails the gate."
+    }
+  },
+  "component": {
+    "$description": "22 allocated groups. Framework-owned controls - button, input, select, checkbox, radio, toggle, date picker, modal shell, drawer, popover, toast, banner, notification, avatar, badge, tag, tabs, breadcrumb, card and navigation chrome - deliberately have NO group here. Profile A takes them from Filament as shipped and Profile C from React Native primitives; both are bound by the semantic layer, the eight required states and the accessibility obligations. Defining bespoke tokens for them would be phase bleed into implementation.",
+    "platform-001": {
+      "$description": "CMP-PLATFORM-001 - State chip. Contract block: COMPONENT_INVENTORY_PLATFORM.md.",
+      "radius": {
+        "$type": "dimension",
+        "$value": "{semantic.radius.chip}"
+      },
+      "state-triple-binding": {
+        "$type": "string",
+        "$value": "tone.*.border,tone.*.emphasis,tone.*.emphasis-border,tone.*.fill,tone.*.icon,tone.*.on-emphasis,tone.*.text",
+        "$description": "Tone-parameterised roles. The tone is resolved at render time from state.<machine>.<STATUS>.tone, one of the six governed tones, and the component consumes the triple WHOLE: a component that takes a tone without also taking the icon and the emphasis is a defect, because the state channel exists so that a colour-only status is structurally impossible."
+      }
+    },
+    "platform-002": {
+      "$description": "CMP-PLATFORM-002 - State summary. Contract block: COMPONENT_INVENTORY_PLATFORM.md.",
+      "surface": {
+        "$type": "color",
+        "$value": "{semantic.color.surface.default}"
+      },
+      "surface-historical": {
+        "$type": "color",
+        "$value": "{semantic.color.state.readonly.surface}"
+      },
+      "border": {
+        "$type": "color",
+        "$value": "{semantic.color.border.subtle}"
+      },
+      "text-reason": {
+        "$type": "color",
+        "$value": "{semantic.color.text.primary}"
+      },
+      "text-meta": {
+        "$type": "color",
+        "$value": "{semantic.color.text.secondary}"
+      },
+      "radius": {
+        "$type": "dimension",
+        "$value": "{semantic.radius.surface}"
+      },
+      "elevation": {
+        "$type": "shadow",
+        "$value": "{semantic.elevation.flat}"
+      },
+      "inset": {
+        "$type": "dimension",
+        "$value": "{semantic.space.inset-lg}"
+      },
+      "stack": {
+        "$type": "dimension",
+        "$value": "{semantic.space.stack-sm}"
+      }
+    },
+    "platform-003": {
+      "$description": "CMP-PLATFORM-003 - Subject context header. Contract block: COMPONENT_INVENTORY_PLATFORM.md.",
+      "surface": {
+        "$type": "color",
+        "$value": "{semantic.color.surface.default}"
+      },
+      "border-end": {
+        "$type": "color",
+        "$value": "{semantic.color.border.subtle}"
+      },
+      "text-subject": {
+        "$type": "color",
+        "$value": "{semantic.color.text.primary}"
+      },
+      "text-authority": {
+        "$type": "color",
+        "$value": "{semantic.color.text.secondary}"
+      },
+      "icon": {
+        "$type": "color",
+        "$value": "{semantic.color.text.secondary}"
+      },
+      "selected-fill": {
+        "$type": "color",
+        "$value": "{semantic.color.state.selected.surface}"
+      },
+      "selected-border": {
+        "$type": "color",
+        "$value": "{semantic.color.state.selected.border}"
+      },
+      "inset": {
+        "$type": "dimension",
+        "$value": "{semantic.space.inset-sm}"
+      },
+      "inline": {
+        "$type": "dimension",
+        "$value": "{semantic.space.inline-sm}"
+      }
+    },
+    "platform-004": {
+      "$description": "CMP-PLATFORM-004 - Action bar. Contract block: COMPONENT_INVENTORY_PLATFORM.md.",
+      "primary-bg": {
+        "$type": "color",
+        "$value": "{semantic.color.action.primary}"
+      },
+      "primary-bg-hover": {
+        "$type": "color",
+        "$value": "{semantic.color.action.primary-hover}"
+      },
+      "primary-bg-active": {
+        "$type": "color",
+        "$value": "{semantic.color.action.primary-active}"
+      },
+      "primary-text": {
+        "$type": "color",
+        "$value": "{semantic.color.text.on-action}"
+      },
+      "secondary-bg": {
+        "$type": "color",
+        "$value": "{semantic.color.action.secondary-surface}"
+      },
+      "secondary-border": {
+        "$type": "color",
+        "$value": "{semantic.color.action.secondary-border}"
+      },
+      "secondary-text": {
+        "$type": "color",
+        "$value": "{semantic.color.action.secondary-text}"
+      },
+      "secondary-bg-hover": {
+        "$type": "color",
+        "$value": "{semantic.color.action.secondary-hover}"
+      },
+      "destructive-bg": {
+        "$type": "color",
+        "$value": "{semantic.color.action.destructive}"
+      },
+      "destructive-bg-hover": {
+        "$type": "color",
+        "$value": "{semantic.color.action.destructive-hover}"
+      },
+      "destructive-bg-active": {
+        "$type": "color",
+        "$value": "{semantic.color.action.destructive-active}"
+      },
+      "destructive-text": {
+        "$type": "color",
+        "$value": "{semantic.color.text.on-action}"
+      },
+      "text-absent-reason": {
+        "$type": "color",
+        "$value": "{semantic.color.text.secondary}"
+      },
+      "focus-ring": {
+        "$type": "color",
+        "$value": "{semantic.color.focus.ring}"
+      },
+      "focus-ring-contrast": {
+        "$type": "color",
+        "$value": "{semantic.color.focus.ring-contrast}"
+      },
+      "radius": {
+        "$type": "dimension",
+        "$value": "{semantic.radius.control}"
+      },
+      "inline": {
+        "$type": "dimension",
+        "$value": "{semantic.space.inline-sm}"
+      }
+    },
+    "platform-005": {
+      "$description": "CMP-PLATFORM-005 - Deadline indicator. Contract block: COMPONENT_INVENTORY_PLATFORM.md.",
+      "type-numeric": {
+        "$type": "typography",
+        "$value": "{semantic.type.numeric}"
+      },
+      "inline": {
+        "$type": "dimension",
+        "$value": "{semantic.space.inline-xs}"
+      },
+      "tick": {
+        "$type": "transition",
+        "$value": "{semantic.motion.state-change}"
+      },
+      "state-triple-binding": {
+        "$type": "string",
+        "$value": "tone.*.border,tone.*.fill,tone.*.icon,tone.*.text",
+        "$description": "Tone-parameterised roles. The tone is resolved at render time from state.<machine>.<STATUS>.tone, one of the six governed tones, and the component consumes the triple WHOLE: a component that takes a tone without also taking the icon and the emphasis is a defect, because the state channel exists so that a colour-only status is structurally impossible."
+      }
+    },
+    "platform-006": {
+      "$description": "CMP-PLATFORM-006 - Record list. Contract block: COMPONENT_INVENTORY_PLATFORM.md.",
+      "row-surface": {
+        "$type": "color",
+        "$value": "{semantic.color.surface.default}"
+      },
+      "row-surface-alt": {
+        "$type": "color",
+        "$value": "{semantic.color.surface.subtle}"
+      },
+      "row-divider": {
+        "$type": "color",
+        "$value": "{semantic.color.border.subtle}"
+      },
+      "header-surface": {
+        "$type": "color",
+        "$value": "{semantic.color.surface.subtle}"
+      },
+      "header-text": {
+        "$type": "color",
+        "$value": "{semantic.color.text.secondary}"
+      },
+      "row-text": {
+        "$type": "color",
+        "$value": "{semantic.color.text.primary}"
+      },
+      "row-meta": {
+        "$type": "color",
+        "$value": "{semantic.color.text.secondary}"
+      },
+      "row-hover": {
+        "$type": "color",
+        "$value": "{semantic.color.action.secondary-hover}"
+      },
+      "row-selected": {
+        "$type": "color",
+        "$value": "{semantic.color.state.selected.surface}"
+      },
+      "row-selected-border": {
+        "$type": "color",
+        "$value": "{semantic.color.state.selected.border}"
+      },
+      "surface-readonly": {
+        "$type": "color",
+        "$value": "{semantic.color.state.readonly.surface}"
+      },
+      "radius": {
+        "$type": "dimension",
+        "$value": "{semantic.radius.surface}"
+      },
+      "elevation": {
+        "$type": "shadow",
+        "$value": "{semantic.elevation.flat}"
+      },
+      "numeric": {
+        "$type": "typography",
+        "$value": "{semantic.type.numeric}"
+      }
+    },
+    "platform-007": {
+      "$description": "CMP-PLATFORM-007 - Filter and search bar. Contract block: COMPONENT_INVENTORY_PLATFORM.md.",
+      "input-surface": {
+        "$type": "color",
+        "$value": "{semantic.color.surface.default}"
+      },
+      "input-border": {
+        "$type": "color",
+        "$value": "{semantic.color.border.strong}"
+      },
+      "input-text": {
+        "$type": "color",
+        "$value": "{semantic.color.text.primary}"
+      },
+      "placeholder": {
+        "$type": "color",
+        "$value": "{semantic.color.text.placeholder}"
+      },
+      "chip-fill": {
+        "$type": "color",
+        "$value": "{semantic.color.state.selected.surface}"
+      },
+      "chip-border": {
+        "$type": "color",
+        "$value": "{semantic.color.state.selected.border}"
+      },
+      "chip-text": {
+        "$type": "color",
+        "$value": "{semantic.color.state.selected.text}"
+      },
+      "count-text": {
+        "$type": "color",
+        "$value": "{semantic.color.text.secondary}"
+      },
+      "radius": {
+        "$type": "dimension",
+        "$value": "{semantic.radius.control}"
+      },
+      "inline": {
+        "$type": "dimension",
+        "$value": "{semantic.space.inline-sm}"
+      }
+    },
+    "platform-008": {
+      "$description": "CMP-PLATFORM-008 - Event timeline. Contract block: COMPONENT_INVENTORY_PLATFORM.md.",
+      "surface": {
+        "$type": "color",
+        "$value": "{semantic.color.surface.default}"
+      },
+      "divider": {
+        "$type": "color",
+        "$value": "{semantic.color.border.subtle}"
+      },
+      "time-text": {
+        "$type": "color",
+        "$value": "{semantic.color.text.secondary}"
+      },
+      "event-text": {
+        "$type": "color",
+        "$value": "{semantic.color.text.primary}"
+      },
+      "identifier": {
+        "$type": "typography",
+        "$value": "{semantic.type.identifier}"
+      },
+      "radius": {
+        "$type": "dimension",
+        "$value": "{semantic.radius.surface}"
+      },
+      "elevation": {
+        "$type": "shadow",
+        "$value": "{semantic.elevation.flat}"
+      },
+      "stack": {
+        "$type": "dimension",
+        "$value": "{semantic.space.stack-sm}"
+      },
+      "disclosure": {
+        "$type": "transition",
+        "$value": "{semantic.motion.disclosure}"
+      }
+    },
+    "platform-009": {
+      "$description": "CMP-PLATFORM-009 - Empty state. Contract block: COMPONENT_INVENTORY_PLATFORM.md.",
+      "surface": {
+        "$type": "color",
+        "$value": "{semantic.color.surface.default}"
+      },
+      "icon": {
+        "$type": "color",
+        "$value": "{semantic.color.text.secondary}"
+      },
+      "heading": {
+        "$type": "color",
+        "$value": "{semantic.color.text.primary}"
+      },
+      "body": {
+        "$type": "color",
+        "$value": "{semantic.color.text.secondary}"
+      },
+      "inset": {
+        "$type": "dimension",
+        "$value": "{semantic.space.inset-xl}"
+      },
+      "stack": {
+        "$type": "dimension",
+        "$value": "{semantic.space.stack-sm}"
+      }
+    },
+    "platform-010": {
+      "$description": "CMP-PLATFORM-010 - Recovery state. Contract block: COMPONENT_INVENTORY_PLATFORM.md.",
+      "surface": {
+        "$type": "color",
+        "$value": "{semantic.color.surface.default}"
+      },
+      "heading": {
+        "$type": "color",
+        "$value": "{semantic.color.text.primary}"
+      },
+      "body": {
+        "$type": "color",
+        "$value": "{semantic.color.text.secondary}"
+      },
+      "inset": {
+        "$type": "dimension",
+        "$value": "{semantic.space.inset-lg}"
+      },
+      "stack": {
+        "$type": "dimension",
+        "$value": "{semantic.space.stack-sm}"
+      },
+      "state-triple-binding": {
+        "$type": "string",
+        "$value": "tone.*.border,tone.*.fill,tone.*.icon",
+        "$description": "Tone-parameterised roles. The tone is resolved at render time from state.<machine>.<STATUS>.tone, one of the six governed tones, and the component consumes the triple WHOLE: a component that takes a tone without also taking the icon and the emphasis is a defect, because the state channel exists so that a colour-only status is structurally impossible."
+      }
+    },
+    "platform-011": {
+      "$description": "CMP-PLATFORM-011 - Submission state indicator. Contract block: COMPONENT_INVENTORY_PLATFORM.md.",
+      "progress": {
+        "$type": "transition",
+        "$value": "{semantic.motion.progress}"
+      },
+      "inset": {
+        "$type": "dimension",
+        "$value": "{semantic.space.inset-sm}"
+      },
+      "inline": {
+        "$type": "dimension",
+        "$value": "{semantic.space.inline-xs}"
+      },
+      "state-triple-binding": {
+        "$type": "string",
+        "$value": "tone.*.border,tone.*.fill,tone.*.icon,tone.*.text",
+        "$description": "Tone-parameterised roles. The tone is resolved at render time from state.<machine>.<STATUS>.tone, one of the six governed tones, and the component consumes the triple WHOLE: a component that takes a tone without also taking the icon and the emphasis is a defect, because the state channel exists so that a colour-only status is structurally impossible."
+      }
+    },
+    "platform-012": {
+      "$description": "CMP-PLATFORM-012 - Evidence transfer item. Contract block: COMPONENT_INVENTORY_PLATFORM.md.",
+      "text": {
+        "$type": "color",
+        "$value": "{semantic.color.text.primary}"
+      },
+      "meta": {
+        "$type": "color",
+        "$value": "{semantic.color.text.secondary}"
+      },
+      "progress-track": {
+        "$type": "color",
+        "$value": "{semantic.color.surface.subtle}"
+      },
+      "progress-fill": {
+        "$type": "color",
+        "$value": "{semantic.color.action.primary}"
+      },
+      "progress-motion": {
+        "$type": "transition",
+        "$value": "{semantic.motion.progress}"
+      },
+      "radius": {
+        "$type": "dimension",
+        "$value": "{semantic.radius.surface}"
+      },
+      "inset": {
+        "$type": "dimension",
+        "$value": "{semantic.space.inset-sm}"
+      },
+      "state-triple-binding": {
+        "$type": "string",
+        "$value": "tone.*.border,tone.*.fill,tone.*.icon",
+        "$description": "Tone-parameterised roles. The tone is resolved at render time from state.<machine>.<STATUS>.tone, one of the six governed tones, and the component consumes the triple WHOLE: a component that takes a tone without also taking the icon and the emphasis is a defect, because the state channel exists so that a colour-only status is structurally impossible."
+      }
+    },
+    "platform-013": {
+      "$description": "CMP-PLATFORM-013 - Human attribution. Contract block: COMPONENT_INVENTORY_PLATFORM.md.",
+      "icon": {
+        "$type": "color",
+        "$value": "{semantic.color.text.secondary}"
+      },
+      "role": {
+        "$type": "color",
+        "$value": "{semantic.color.text.secondary}"
+      },
+      "name": {
+        "$type": "color",
+        "$value": "{semantic.color.text.primary}"
+      },
+      "time": {
+        "$type": "color",
+        "$value": "{semantic.color.text.secondary}"
+      },
+      "basis": {
+        "$type": "color",
+        "$value": "{semantic.color.text.primary}"
+      },
+      "inline": {
+        "$type": "dimension",
+        "$value": "{semantic.space.inline-xs}"
+      }
+    },
+    "platform-014": {
+      "$description": "CMP-PLATFORM-014 - Sensitive confirmation. Contract block: COMPONENT_INVENTORY_PLATFORM.md.",
+      "surface": {
+        "$type": "color",
+        "$value": "{semantic.color.surface.default}"
+      },
+      "scrim": {
+        "$type": "color",
+        "$value": "{semantic.color.surface.scrim}"
+      },
+      "scrim-opacity": {
+        "$type": "number",
+        "$value": "{semantic.opacity.scrim}"
+      },
+      "heading": {
+        "$type": "color",
+        "$value": "{semantic.color.text.primary}"
+      },
+      "body": {
+        "$type": "color",
+        "$value": "{semantic.color.text.primary}"
+      },
+      "meta": {
+        "$type": "color",
+        "$value": "{semantic.color.text.secondary}"
+      },
+      "confirm-bg": {
+        "$type": "color",
+        "$value": "{semantic.color.action.primary}"
+      },
+      "confirm-destructive-bg": {
+        "$type": "color",
+        "$value": "{semantic.color.action.destructive}"
+      },
+      "confirm-text": {
+        "$type": "color",
+        "$value": "{semantic.color.text.on-action}"
+      },
+      "cancel-bg": {
+        "$type": "color",
+        "$value": "{semantic.color.action.secondary-surface}"
+      },
+      "cancel-border": {
+        "$type": "color",
+        "$value": "{semantic.color.action.secondary-border}"
+      },
+      "cancel-text": {
+        "$type": "color",
+        "$value": "{semantic.color.action.secondary-text}"
+      },
+      "radius": {
+        "$type": "dimension",
+        "$value": "{semantic.radius.overlay}"
+      },
+      "elevation": {
+        "$type": "shadow",
+        "$value": "{semantic.elevation.modal}"
+      },
+      "enter": {
+        "$type": "transition",
+        "$value": "{semantic.motion.overlay-enter}"
+      },
+      "exit": {
+        "$type": "transition",
+        "$value": "{semantic.motion.overlay-exit}"
+      }
+    },
+    "platform-015": {
+      "$description": "CMP-PLATFORM-015 - Attention item. Contract block: COMPONENT_INVENTORY_PLATFORM.md.",
+      "surface": {
+        "$type": "color",
+        "$value": "{semantic.color.surface.default}"
+      },
+      "surface-unread": {
+        "$type": "color",
+        "$value": "{semantic.color.action.primary-subtle}"
+      },
+      "divider": {
+        "$type": "color",
+        "$value": "{semantic.color.border.subtle}"
+      },
+      "text": {
+        "$type": "color",
+        "$value": "{semantic.color.text.primary}"
+      },
+      "meta": {
+        "$type": "color",
+        "$value": "{semantic.color.text.secondary}"
+      },
+      "radius": {
+        "$type": "dimension",
+        "$value": "{semantic.radius.surface}"
+      },
+      "elevation": {
+        "$type": "shadow",
+        "$value": "{semantic.elevation.flat}"
+      },
+      "inset": {
+        "$type": "dimension",
+        "$value": "{semantic.space.inset-sm}"
+      },
+      "state-triple-binding": {
+        "$type": "string",
+        "$value": "tone.*.icon",
+        "$description": "Tone-parameterised roles. The tone is resolved at render time from state.<machine>.<STATUS>.tone, one of the six governed tones, and the component consumes the triple WHOLE: a component that takes a tone without also taking the icon and the emphasis is a defect, because the state channel exists so that a colour-only status is structurally impossible."
+      }
+    },
+    "elig-001": {
+      "$description": "CMP-ELIG-001 - Provider decision card. Contract block: COMPONENT_INVENTORY_DOMAIN.md.",
+      "surface": {
+        "$type": "color",
+        "$value": "{semantic.color.surface.default}"
+      },
+      "border": {
+        "$type": "color",
+        "$value": "{semantic.color.border.subtle}"
+      },
+      "border-selected": {
+        "$type": "color",
+        "$value": "{semantic.color.state.selected.border}"
+      },
+      "fill-selected": {
+        "$type": "color",
+        "$value": "{semantic.color.state.selected.surface}"
+      },
+      "text-identity": {
+        "$type": "color",
+        "$value": "{semantic.color.text.primary}"
+      },
+      "text-meta": {
+        "$type": "color",
+        "$value": "{semantic.color.text.secondary}"
+      },
+      "radius": {
+        "$type": "dimension",
+        "$value": "{semantic.radius.surface}"
+      },
+      "elevation": {
+        "$type": "shadow",
+        "$value": "{semantic.elevation.flat}"
+      },
+      "inset": {
+        "$type": "dimension",
+        "$value": "{semantic.space.inset-md}"
+      },
+      "stack": {
+        "$type": "dimension",
+        "$value": "{semantic.space.stack-sm}"
+      }
+    },
+    "elig-002": {
+      "$description": "CMP-ELIG-002 - Price display. Contract block: COMPONENT_INVENTORY_DOMAIN.md.",
+      "amount-text": {
+        "$type": "color",
+        "$value": "{semantic.color.text.primary}"
+      },
+      "amount-type": {
+        "$type": "typography",
+        "$value": "{semantic.type.numeric-strong}"
+      },
+      "mode-text": {
+        "$type": "color",
+        "$value": "{semantic.color.text.secondary}"
+      },
+      "mode-type": {
+        "$type": "typography",
+        "$value": "{semantic.type.helper}"
+      },
+      "provenance-text": {
+        "$type": "color",
+        "$value": "{semantic.color.text.secondary}"
+      },
+      "free-icon": {
+        "$type": "color",
+        "$value": "{semantic.color.tone.success.icon}"
+      },
+      "surface-snapshot": {
+        "$type": "color",
+        "$value": "{semantic.color.state.readonly.surface}"
+      },
+      "text-snapshot": {
+        "$type": "color",
+        "$value": "{semantic.color.state.readonly.text}"
+      },
+      "numeric-features": {
+        "$type": "typography",
+        "$value": "{semantic.type.numeric-features}"
+      },
+      "inline": {
+        "$type": "dimension",
+        "$value": "{semantic.space.inline-xs}"
+      }
+    },
+    "elig-003": {
+      "$description": "CMP-ELIG-003 - Eligibility explanation. Contract block: COMPONENT_INVENTORY_DOMAIN.md.",
+      "surface": {
+        "$type": "color",
+        "$value": "{semantic.color.surface.default}"
+      },
+      "border": {
+        "$type": "color",
+        "$value": "{semantic.color.border.subtle}"
+      },
+      "reason-text": {
+        "$type": "color",
+        "$value": "{semantic.color.text.primary}"
+      },
+      "meta-text": {
+        "$type": "color",
+        "$value": "{semantic.color.text.secondary}"
+      },
+      "surface-readonly": {
+        "$type": "color",
+        "$value": "{semantic.color.state.readonly.surface}"
+      },
+      "radius": {
+        "$type": "dimension",
+        "$value": "{semantic.radius.surface}"
+      },
+      "elevation": {
+        "$type": "shadow",
+        "$value": "{semantic.elevation.flat}"
+      },
+      "inset": {
+        "$type": "dimension",
+        "$value": "{semantic.space.inset-lg}"
+      },
+      "disclosure": {
+        "$type": "transition",
+        "$value": "{semantic.motion.disclosure}"
+      },
+      "state-triple-binding": {
+        "$type": "string",
+        "$value": "tone.*.fill,tone.*.icon",
+        "$description": "Tone-parameterised roles. The tone is resolved at render time from state.<machine>.<STATUS>.tone, one of the six governed tones, and the component consumes the triple WHOLE: a component that takes a tone without also taking the icon and the emphasis is a defect, because the state channel exists so that a colour-only status is structurally impossible."
+      }
+    },
+    "clinical-001": {
+      "$description": "CMP-CLINICAL-001 - Treatment line. Contract block: COMPONENT_INVENTORY_DOMAIN.md.",
+      "surface": {
+        "$type": "color",
+        "$value": "{semantic.color.surface.default}"
+      },
+      "surface-alt": {
+        "$type": "color",
+        "$value": "{semantic.color.surface.subtle}"
+      },
+      "divider": {
+        "$type": "color",
+        "$value": "{semantic.color.border.subtle}"
+      },
+      "text-treatment": {
+        "$type": "color",
+        "$value": "{semantic.color.text.primary}"
+      },
+      "text-category": {
+        "$type": "color",
+        "$value": "{semantic.color.text.secondary}"
+      },
+      "text-reason": {
+        "$type": "color",
+        "$value": "{semantic.color.text.primary}"
+      },
+      "text-covers": {
+        "$type": "color",
+        "$value": "{semantic.color.text.secondary}"
+      },
+      "border-error": {
+        "$type": "color",
+        "$value": "{semantic.color.tone.danger.border}"
+      },
+      "text-error": {
+        "$type": "color",
+        "$value": "{semantic.color.tone.danger.text}"
+      },
+      "surface-snapshot": {
+        "$type": "color",
+        "$value": "{semantic.color.state.readonly.surface}"
+      },
+      "text-snapshot": {
+        "$type": "color",
+        "$value": "{semantic.color.state.readonly.text}"
+      },
+      "numeric": {
+        "$type": "typography",
+        "$value": "{semantic.type.numeric}"
+      },
+      "inset": {
+        "$type": "dimension",
+        "$value": "{semantic.space.inset-sm}"
+      },
+      "stack": {
+        "$type": "dimension",
+        "$value": "{semantic.space.stack-xs}"
+      }
+    },
+    "clinical-002": {
+      "$description": "CMP-CLINICAL-002 - Change disclosure. Contract block: COMPONENT_INVENTORY_DOMAIN.md.",
+      "surface-prior": {
+        "$type": "color",
+        "$value": "{semantic.color.state.readonly.surface}"
+      },
+      "text-prior": {
+        "$type": "color",
+        "$value": "{semantic.color.state.readonly.text}"
+      },
+      "surface-new": {
+        "$type": "color",
+        "$value": "{semantic.color.surface.default}"
+      },
+      "text-new": {
+        "$type": "color",
+        "$value": "{semantic.color.text.primary}"
+      },
+      "divider": {
+        "$type": "color",
+        "$value": "{semantic.color.border.default}"
+      },
+      "changed-marker": {
+        "$type": "color",
+        "$value": "{semantic.color.tone.info.icon}"
+      },
+      "changed-fill": {
+        "$type": "color",
+        "$value": "{semantic.color.tone.info.fill}"
+      },
+      "label": {
+        "$type": "color",
+        "$value": "{semantic.color.text.secondary}"
+      },
+      "radius": {
+        "$type": "dimension",
+        "$value": "{semantic.radius.surface}"
+      },
+      "elevation": {
+        "$type": "shadow",
+        "$value": "{semantic.elevation.flat}"
+      },
+      "inset": {
+        "$type": "dimension",
+        "$value": "{semantic.space.inset-md}"
+      },
+      "disclosure": {
+        "$type": "transition",
+        "$value": "{semantic.motion.disclosure}"
+      }
+    },
+    "policy-001": {
+      "$description": "CMP-POLICY-001 - Governed version header. Contract block: COMPONENT_INVENTORY_DOMAIN.md.",
+      "surface": {
+        "$type": "color",
+        "$value": "{semantic.color.surface.subtle}"
+      },
+      "border": {
+        "$type": "color",
+        "$value": "{semantic.color.border.default}"
+      },
+      "text-scope": {
+        "$type": "color",
+        "$value": "{semantic.color.text.primary}"
+      },
+      "text-version": {
+        "$type": "color",
+        "$value": "{semantic.color.text.primary}"
+      },
+      "text-meta": {
+        "$type": "color",
+        "$value": "{semantic.color.text.secondary}"
+      },
+      "surface-historical": {
+        "$type": "color",
+        "$value": "{semantic.color.state.readonly.surface}"
+      },
+      "radius": {
+        "$type": "dimension",
+        "$value": "{semantic.radius.surface}"
+      },
+      "elevation": {
+        "$type": "shadow",
+        "$value": "{semantic.elevation.flat}"
+      },
+      "inset": {
+        "$type": "dimension",
+        "$value": "{semantic.space.inset-md}"
+      },
+      "state-triple-binding": {
+        "$type": "string",
+        "$value": "tone.*.border,tone.*.fill,tone.*.icon",
+        "$description": "Tone-parameterised roles. The tone is resolved at render time from state.<machine>.<STATUS>.tone, one of the six governed tones, and the component consumes the triple WHOLE: a component that takes a tone without also taking the icon and the emphasis is a defect, because the state channel exists so that a colour-only status is structurally impossible."
+      }
+    },
+    "ops-001": {
+      "$description": "CMP-OPS-001 - Work item row. Contract block: COMPONENT_INVENTORY_DOMAIN.md.",
+      "row-surface": {
+        "$type": "color",
+        "$value": "{semantic.color.surface.default}"
+      },
+      "row-divider": {
+        "$type": "color",
+        "$value": "{semantic.color.border.subtle}"
+      },
+      "text-type": {
+        "$type": "color",
+        "$value": "{semantic.color.text.primary}"
+      },
+      "text-meta": {
+        "$type": "color",
+        "$value": "{semantic.color.text.secondary}"
+      },
+      "flag-icon": {
+        "$type": "color",
+        "$value": "{semantic.color.tone.danger.icon}"
+      },
+      "flag-fill": {
+        "$type": "color",
+        "$value": "{semantic.color.tone.danger.emphasis}"
+      },
+      "flag-text": {
+        "$type": "color",
+        "$value": "{semantic.color.tone.danger.on-emphasis}"
+      },
+      "flag-border": {
+        "$type": "color",
+        "$value": "{semantic.color.tone.danger.emphasis-border}"
+      },
+      "row-hover": {
+        "$type": "color",
+        "$value": "{semantic.color.action.secondary-hover}"
+      },
+      "row-selected": {
+        "$type": "color",
+        "$value": "{semantic.color.state.selected.surface}"
+      },
+      "numeric": {
+        "$type": "typography",
+        "$value": "{semantic.type.numeric}"
+      },
+      "inline": {
+        "$type": "dimension",
+        "$value": "{semantic.space.inline-sm}"
+      }
+    }
+  }
+}

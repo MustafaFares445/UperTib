@@ -40,6 +40,9 @@ Patient UX is Arabic-first/RTL, smartphone-first and resilient to weak connectiv
 10. `03-system/PHASE_03_IMPLEMENTATION_PLAN.md`
 11. `03-system/DESIGN_DIRECTION.md`
 12. `03-system/DESIGN_TOKENS.md` and `03-system/design_tokens/`
+13. `03-system/COMPONENT_INVENTORY.md`, then `_PLATFORM` and `_DOMAIN`
+14. `03-system/WIREFRAME_COMPONENT_MAP.md`
+15. `03-system/INTERACTION_PATTERNS.md`, then `_DOMAIN`
 
 Coding agents must not treat Phase 2 as final UI styling or implementation contracts. Phase 5 remains the coding handoff owner.
 
@@ -49,7 +52,7 @@ Coding agents must not treat Phase 2 as final UI styling or implementation contr
 |---|---|---|
 | 1 — Discovery, IA, Flows | `01-foundation/*` | Complete |
 | 2 — Wireframes | `02-wireframes/*`, `PHASE_02_HANDOFF.md` | **Complete — awaiting gate approval** |
-| 3 — Design System | `03-system/*` | **In progress — Session 2 of 7.** Direction and tokens fixed; components, patterns, content and accessibility not started. |
+| 3 — Design System | `03-system/*` | **In progress — Session 4 of 7 complete.** Direction, tokens, the 22 `CMP-*` and the 26 `IX-*` are fixed, and all 165 `WF-*` are bound to components. Content (`TXT-*`) and accessibility (`A11Y-*`) not started. |
 | 4 — Widget and Screen Specs | `04-specs/*` | Not started |
 | 5 — Build and Handoff | `05-build/*` | Not started |
 
@@ -110,7 +113,12 @@ Run cumulative validation at the current gate:
 python docs/scripts/validate_docs.py
 python docs/ux/scripts/validate_ux_docs.py --phase 2
 python docs/ux/scripts/validate_ux_tokens.py
+python scripts/check_no_emoji.py
 ```
+
+`docs/ux/scripts/build_component_tokens.py` regenerates `design_tokens/component.json` from the
+Token mapping blocks in the component inventory, so the narrative and the token source cannot
+drift. Run it after editing any component's token mapping.
 
 The UX validator stays pinned at `--phase 2` until Phase 3 Session 7. Flipping it earlier would
 turn known, expected, not-yet-authored Phase 3 obligations into a red build on every unrelated

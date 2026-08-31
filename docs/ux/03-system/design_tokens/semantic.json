@@ -212,6 +212,17 @@
       "selected": { "$type": "number", "$value": "{opacity.selected}" },
       "disabled": { "$type": "number", "$value": "{opacity.disabled}" },
       "scrim":    { "$type": "number", "$value": "{opacity.scrim}" }
+    },
+
+    "motion": {
+      "$description": "Semantic motion aliases. Added in Session 3 to close a layering gap: type, space, size, radius, elevation and opacity each already had a semantic tier and motion did not, so a component token had no semantic motion target and would have had to reach motion.json directly - which the gate correctly rejects. No value changed; only the tier was added.",
+      "control-feedback": { "$type": "transition", "$value": "{transition.control-feedback}" },
+      "disclosure":       { "$type": "transition", "$value": "{transition.disclosure}" },
+      "state-change":     { "$type": "transition", "$value": "{transition.state-change}" },
+      "overlay-enter":    { "$type": "transition", "$value": "{transition.overlay-enter}" },
+      "overlay-exit":     { "$type": "transition", "$value": "{transition.overlay-exit}" },
+      "progress":         { "$type": "transition", "$value": "{transition.progress}" },
+      "reduced":          { "$type": "string", "$value": "{reduced-motion.strategy}", "$description": "Every semantic motion above has this reduced-motion equivalent: preserve the feedback, remove the travel. See IX-PLATFORM-013." }
     }
   },
 
