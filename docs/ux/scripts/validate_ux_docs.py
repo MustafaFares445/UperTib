@@ -347,9 +347,103 @@ if PHASE >= 5:
                     fail.append(f"P5 manifest {wid}: mandatoryComponents references unknown component {cid}")
     else:
         fail.append("P5 no 05-build/figma/BUILD_MANIFEST.json")
+
+    # Contract-level invariants (Session 3). A contract is identified by its own canonical heading,
+    # never by a bare ID mention elsewhere in the file - WGT-PLATFORM-002's own contract legitimately
+    # names WGT-PLATFORM-009 and WGT-OPS-001 as out-of-scope cross-references, and a substring check
+    # would misread that mention as "has a contract". Splitting on the heading is what tells the two
+    # apart, and is also what makes "defined twice" and "not an allocated widget" checkable at all.
+    CONTRACT_HEAD = re.compile(r'^###\s+(WGT-' + ID + r')\s+—\s+Implementation Contract', re.M)
+    contract_map, contract_counts = {}, {}
+    _heads = list(CONTRACT_HEAD.finditer(contracts))
+    for i, m in enumerate(_heads):
+        wid = m.group(1)
+        contract_counts[wid] = contract_counts.get(wid, 0) + 1
+        start = m.start()
+        end = _heads[i + 1].start() if i + 1 < len(_heads) else len(contracts)
+        contract_map.setdefault(wid, []).append(contracts[start:end])
+
+    for wid, n in sorted(contract_counts.items()):
+        if n > 1:
+            fail.append(f"P5 {wid} implementation contract is defined {n} times "
+                        f"- one contract, one definition")
+        if wid not in widgets:
+            fail.append(f"P5 contract heading {wid} is not an allocated WGT-* "
+                        f"- Phase 4 does not define it")
+
+    FORBIDDEN_CMD = re.compile(
+        r'\bnpm (test|run|start|install)\b|\bnpx \b|\byarn (test|start)\b|'
+        r'\bexpo (start|run)\b|\breact-native run-', re.I)
+
     for wid in widgets:
-        if wid not in contracts:
+        if wid not in contract_map:
             fail.append(f"P5 {wid} has no implementation contract")
+            continue
+        b = contract_map[wid][0]  # first occurrence; duplicates already flagged above
+
+        # [ \t]* rather than \s* between the label and its value: \s also matches a newline, which
+        # would let these match across a blank field into the following bullet's own content and
+        # silently pass an empty field - caught by this session's own negative test for Runtime.
+        if not re.search(r'^-[ \t]+\*\*Build order:\*\*[ \t]*\d+[ \t]*$', b, flags=re.M):
+            fail.append(f"P5 {wid} contract declares no numeric build order")
+
+        if not re.search(r'^-[ \t]+\*\*Runtime:\*\*[ \t]+\S', b, flags=re.M):
+            fail.append(f"P5 {wid} contract declares no runtime")
+
+        if not re.search(r'-\s+\*\*Phase 4 realization:\*\*.*Profile A\s+`(Stock|Extended|Custom|n/a)`',
+                          b):
+            fail.append(f"P5 {wid} contract declares no valid Profile A realization "
+                        f"(Stock/Extended/Custom/n/a)")
+
+        tf_m = re.search(r'####\s+12\. Target files\n(.*?)(?=\n####\s+13\.)', b, flags=re.S)
+        if not tf_m:
+            fail.append(f"P5 {wid} contract has no section 12 Target files")
+        else:
+            rows = [r for r in tf_m.group(1).splitlines()
+                    if r.strip().startswith('|') and '---' not in r]
+            for row in rows[1:]:  # skip the header row
+                cells = [c.strip() for c in row.strip().strip('|').split('|')]
+                status = cells[-1] if cells else ""
+                if status not in ("Existing", "Proposed", "Proposed, path unverified"):
+                    fail.append(f"P5 {wid} contract target-file row has an invalid path "
+                                f"status: {status!r}")
+
+        cd_m = re.search(r'####\s+5\. Component dependencies\n(.*?)(?=\n####\s+6\.)', b, flags=re.S)
+        if cd_m:
+            for cid in sorted(set(re.findall(r'`(CMP-[A-Z]{3,10}-\d{3})`', cd_m.group(1)))):
+                if cid not in comps:
+                    fail.append(f"P5 {wid} contract references undefined component {cid}")
+
+        ver_m = re.search(r'####\s+29\. Verification\n(.*)', b, flags=re.S)
+        if not ver_m:
+            fail.append(f"P5 {wid} contract has no section 29 Verification")
+        else:
+            vt = ver_m.group(1)
+            positions = {t: vt.find(t) for t in ("Tier A", "Tier B", "Tier C")}
+            for t, pos in positions.items():
+                if pos == -1:
+                    fail.append(f"P5 {wid} contract verification section is missing {t}")
+            if -1 not in positions.values() and not (
+                    positions["Tier A"] < positions["Tier B"] < positions["Tier C"]):
+                fail.append(f"P5 {wid} contract verification tiers are out of order")
+
+        cmd_m = FORBIDDEN_CMD.search(b)
+        if cmd_m:
+            fail.append(f"P5 {wid} contract appears to document an unverified Patient "
+                        f"command as if it existed: {cmd_m.group(0)!r}")
+
+    # Build order is a total order across every contract actually authored so far - duplicated only
+    # when two different widgets claim the same slot, which a later session appending more contracts
+    # would otherwise be free to do by accident.
+    build_orders = {}
+    for wid, blocks_ in contract_map.items():
+        m = re.search(r'^-[ \t]+\*\*Build order:\*\*[ \t]*(\d+)[ \t]*$', blocks_[0], flags=re.M)
+        if m:
+            build_orders.setdefault(int(m.group(1)), []).append(wid)
+    for order, wids in sorted(build_orders.items()):
+        if len(wids) > 1:
+            fail.append(f"P5 build order {order} is claimed by more than one contract: "
+                        f"{', '.join(sorted(wids))}")
 
 print(f"phase {PHASE} | {len(screens)} screens, {len(flows)} flows, {len(wfs)} wireframes, "
       f"{len(comps)} components, {len(widgets)} widgets")
