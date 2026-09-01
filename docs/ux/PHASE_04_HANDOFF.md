@@ -306,8 +306,11 @@ block wins.
 ## 14. CI gate result
 
 `.github/workflows/docs-validation.yml` was promoted from `--phase 3` to `--phase 4` only after
-every local gate was green and every new check was negative-tested. The measured result of the
-promoted job is recorded in section 20.
+every local gate was green and every new check was negative-tested — never before, so that a
+not-yet-authored Phase 4 obligation could not turn an unrelated documentation change into a red
+build. The workflow's step label and published report were updated to say Phase 4 at the same time,
+so the report cannot claim to have run a gate it did not run. The measured result of the promoted
+job is in section 20.
 
 ## 15. What Phase 4 did not do
 
@@ -384,9 +387,38 @@ Phase 4's accessibility sections tell Phase 5 what to verify. They are not evide
 
 ## 20. CI gate result — measured
 
-Recorded after the promoted workflow actually ran. See section 14 for the promotion procedure.
+Recorded after the promoted workflow actually ran, not predicted from the local result.
 
-<!-- CI-RESULT -->
+| Field | Value |
+|---|---|
+| Workflow | Documentation Validation |
+| Run | 61 |
+| Commit | `f3f52ccc3cebba77c8df77bfa235005fe7f62b15` |
+| Status | completed, success |
+| Combined exit code | `0` |
+| Engineering validator | `0` |
+| UX Phase 4 validator | `0` |
+
+Runner output, verbatim from the published validation report:
+
+```text
+=== Engineering documentation ===
+Repository: /home/runner/work/UperTib/UperTib
+Markdown files inspected: 76
+Result: 0 failure(s), 0 warning(s)
+
+=== UX Phase 4 ===
+phase 4 | 165 screens, 103 flows, 165 wireframes, 22 components, 30 widgets
+
+0 failure(s), 0 warning(s)
+```
+
+The runner is a case-sensitive Linux checkout, which is what makes this result meaningful beyond the
+local one: it proves every Phase 4 artifact resolves at its canonical lowercase path and not merely
+on a case-insensitive filesystem. The local and CI engineering validators agree on the same 76 files.
+
+The promoted job counts the Phase 4 gate. A later documentation change that breaks any Phase 4
+invariant now fails the build rather than passing quietly at `--phase 3`.
 
 ## 21. Stop
 
