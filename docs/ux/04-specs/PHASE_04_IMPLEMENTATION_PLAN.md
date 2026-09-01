@@ -274,8 +274,11 @@ Phase 4 change that breaks a Phase 3 rule must fail on the rule it broke.
 
 ### 12.1 Validator extensions, and why each protects a real invariant
 
-Three changes to `docs/ux/scripts/validate_ux_docs.py`, all referential or structural, **none
-count-based** and none weakening an existing check.
+Changes to `docs/ux/scripts/validate_ux_docs.py`, all referential or structural, **none
+count-based** and none weakening an existing check. Two existing checks were replaced, and each
+replacement is strictly stronger than what it replaced: the `API-*`-only data-source check became a
+resolving `API-*`/`SDC-*` check, and the "pattern defined but never applied" warning became a
+placement failure covering four families instead of one.
 
 1. **A widget's data source may be `API-*` or `SDC-*`, and must resolve to its canonical owner.** The
    original check accepted only `API-*`. That is correct for Patient and wrong for the 118 staff
@@ -292,9 +295,26 @@ count-based** and none weakening an existing check.
 3. **Required Phase 4 artifacts exist at their canonical lowercase paths.** The same defect class
    Session 7 of Phase 3 found: every other Phase 4 check is conditional on content being *found*, so a
    deleted or mis-cased artifact would leave the gate green.
+4. **Each screen names the wireframe Phase 2 documents *for that screen*.** Existence of the `WF-*` is
+   not enough. A block copy-pasted from a neighbour keeps a plausible, wrong wireframe, and only the
+   two-way check catches it.
+5. **Each screen declares a data or action contract that resolves to a canonical owner.** The same rule
+   the widgets are held to, applied where the data actually lands. This is the "do not invent data"
+   invariant: a staff surface cannot acquire a REST endpoint, and a patient surface cannot acquire an
+   in-process command, by being written down in a screen block.
+6. **Each screen addresses all nine data states.** A specification that does not say what the screen
+   shows while loading, empty, filtered-empty, partial, stale, denied or failed is not a specification
+   of that screen. A block may answer "not applicable here, because…" — it may not stay silent.
+7. **Each screen composes at least one widget, and every `WGT-*`, `CMP-*` and `FLOW-*` it names is
+   defined by its owner.** Referential integrity across the whole composition, in both directions.
+8. **Every `IX-*`, `TXT-*`, `A11Y-*` and `CMP-*` Phase 3 defined is placed on a widget or a screen.**
+   Placement is the entire purpose of Phase 4. An obligation that reaches neither has been authored and
+   then abandoned, and no later phase will go looking for it. Measured against each family's Phase 3
+   owner, so append-only growth in any family is caught rather than silently tolerated.
 
-Each was negative-tested before being relied on. No existing check was relaxed, no count was hardcoded,
-and the Phase 3 gate is untouched.
+Each was negative-tested before being relied on — broken deliberately, confirmed to fail with the
+expected message, then restored — because a check that never fires proves nothing. No existing check was
+relaxed, no count was hardcoded, and the Phase 1, 2 and 3 gates are untouched and still pass.
 
 ### 12.2 Path case
 
