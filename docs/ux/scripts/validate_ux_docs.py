@@ -165,13 +165,109 @@ if PHASE >= 3:
                 fail.append(f"P3 raw value {m.group(0)} at {p.name}:{i} — use a token")
 
 # ---------- Phase 4 ----------
+# Required Phase 4 artifacts, at their canonical lowercase paths. Asserted explicitly for the same
+# reason Phase 3 asserts its own: every other Phase 4 check is conditional on content being *found*,
+# so a deleted or mis-cased artifact would otherwise leave this gate green.
+PHASE_4_REQUIRED = [
+    "04-specs/PHASE_04_IMPLEMENTATION_PLAN.md", "04-specs/WIDGET_SPECS.md",
+    "04-specs/WIDGET_SPECS_PLATFORM.md", "04-specs/WIDGET_SPECS_DOMAIN.md",
+    "04-specs/SCREEN_SPEC_MAP.md",
+]
+
+def canonical_sources():
+    """Every contract identifier a widget may legitimately declare as its data source.
+
+    Patient/mobile external contracts are `API-*` and are owned by docs/api/API_CONTRACTS.md.
+    Clinic/Admin Filament surfaces are in-process adapters whose contracts are `SDC-*`, owned by
+    docs/domain/STAFF_INTERACTION_CONTRACTS.md - which exists specifically so that a staff surface
+    never has an internal REST endpoint invented for it, and which instructs this pipeline to
+    reference those IDs in Phase 4 specs. Accepting only `API-*` would therefore force either an
+    invented endpoint or a false declaration on every staff widget.
+    """
+    out = set()
+    for rel, level in (("api/API_CONTRACTS.md", 3),
+                       ("domain/STAFF_INTERACTION_CONTRACTS.md", 2)):
+        path = DOCS / rel
+        if path.is_file():
+            out |= set(re.findall(rf'^#{{{level}}}\s+((?:API|SDC)-{ID})',
+                                  path.read_text(encoding="utf-8"), flags=re.M))
+    return out
+
 if PHASE >= 4:
+    for rel in PHASE_4_REQUIRED:
+        if not (UX / rel).is_file():
+            fail.append(f"P4 required artifact missing at canonical path: docs/ux/{rel}")
+
+    # Every SCR-* is specified. The gate already warned when a widget was placed nowhere; without
+    # this, 164 of 165 screens could be unspecified and the gate would stay green. Referential,
+    # not a hardcoded 165 - the screen set is measured from its Phase 1 owner.
+    spec_blocks = blocks(specs, "SCR")
+    for sid in sorted(screens):
+        if sid not in spec_blocks:
+            fail.append(f"P4 {sid} has no screen specification")
+    for sid in sorted(set(spec_blocks) - set(screens)):
+        fail.append(f"P4 {sid} is specified but is not a documented screen")
+
+    sources = canonical_sources()
+
+    # Per-screen invariants. Presence of a block proves nothing on its own: without these, a
+    # block could name the wrong wireframe, invent a contract, or silently drop the states the
+    # whole phase exists to specify. Every check below is referential - it resolves an identifier
+    # against the phase that owns it - so none of them encodes a count that append-only growth
+    # would falsify.
+    for sid, b in sorted(spec_blocks.items()):
+        low = b.lower()
+
+        # The wireframe the spec claims to realize must exist, and Phase 2 must agree that it
+        # belongs to this screen. Catches a copy-pasted block pointing at a neighbour's wireframe.
+        declared_wf = re.findall(r'\*\*Wireframe:\*\*\s+`(WF-' + ID + r')`', b)
+        if not declared_wf:
+            fail.append(f"P4 {sid} names no wireframe")
+        for wid in declared_wf:
+            if wid not in wfs:
+                fail.append(f"P4 {sid} names wireframe {wid}, which Phase 2 does not document")
+            elif sid not in wfs[wid]:
+                fail.append(f"P4 {sid} claims wireframe {wid}, "
+                            f"which Phase 2 documents for a different screen")
+
+        # Same rule the widgets are held to, applied where the data actually lands. This is the
+        # "do not invent data" invariant: a staff surface may not acquire a REST endpoint and a
+        # patient surface may not acquire an in-process command by being written down here.
+        declared_src = set(re.findall(rf'\b(?:API|SDC)-{ID}\b', b))
+        if not declared_src:
+            fail.append(f"P4 {sid} declares no data or action contract")
+        for src in sorted(declared_src - sources):
+            fail.append(f"P4 {sid} declares data source {src}, "
+                        f"which no canonical contract owner defines")
+
+        # A screen specification that does not say what the screen shows while loading, empty,
+        # stale or denied is not a specification of that screen.
+        miss = [s for s in DATA_STATES if s not in low]
+        if miss:
+            fail.append(f"P4 {sid} missing data state(s): {', '.join(miss)}")
+
+        if not re.search(r'\bWGT-' + ID + r'\b', b):
+            fail.append(f"P4 {sid} composes no widget")
+        for wgt in sorted(set(re.findall(r'\bWGT-' + ID + r'\b', b))):
+            if wgt not in widgets:
+                fail.append(f"P4 {sid} composes {wgt}, which no widget specification defines")
+        for cid in sorted(set(re.findall(r'\bCMP-' + ID + r'\b', b))):
+            if cid not in comps:
+                fail.append(f"P4 {sid} binds {cid}, which the component inventory does not define")
+        for fid in sorted(set(re.findall(r'\bFLOW-' + ID + r'\b', b))):
+            if fid not in flows:
+                fail.append(f"P4 {sid} serves {fid}, which Phase 1 does not document")
+
     for wid, b in widgets.items():
         low = b.lower()
         if not re.search(r'\bFR-[A-Z]{3,10}-\d{3}\b', b):
             fail.append(f"P4 {wid} references no requirement")
-        if not re.search(r'\bAPI-[A-Z]{3,10}-\d{3}\b', b):
+        declared = set(re.findall(rf'\b(?:API|SDC)-{ID}\b', b))
+        if not declared:
             fail.append(f"P4 {wid} declares no data source")
+        for src in sorted(declared - sources):
+            fail.append(f"P4 {wid} declares data source {src}, "
+                        f"which no canonical contract owner defines")
         miss = [s for s in DATA_STATES if s not in low]
         if miss:
             fail.append(f"P4 {wid} missing data state(s): {', '.join(miss)}")
@@ -184,9 +280,19 @@ if PHASE >= 4:
         if "class:** chart" in low and not any(
                 k in low for k in ("table fallback", "non-visual", "summary sentence")):
             fail.append(f"P4 {wid} is a chart with no non-visual equivalent")
-    for iid in pats:
-        if not any(iid in b for b in widgets.values()):
-            warn.append(f"P4 {iid} defined but never applied")
+    # Placement is the whole point of Phase 4: Phase 3 defines the system, Phase 4 puts it on
+    # screens. An obligation that reaches neither a widget nor a screen has been authored and
+    # then abandoned, and no later phase will look for it. Checked against the definitions
+    # measured from each family's Phase 3 owner, so append-only growth in any family is caught
+    # rather than silently tolerated, and no count is written down here.
+    placed = joined("WIDGET_SPECS") + "\n" + specs
+    for prefix, needles in (("IX", ("INTERACTION_PATTERNS",)),
+                            ("TXT", ("CONTENT_GUIDE",)),
+                            ("A11Y", ("ACCESSIBILITY",)),
+                            ("CMP", ("COMPONENT_INVENTORY",))):
+        for rid in sorted(definitions(prefix, *needles)):
+            if not re.search(rf'\b{rid}\b', placed):
+                fail.append(f"P4 {rid} is defined by phase 3 but placed on no widget or screen")
 
 # ---------- Phase 5 ----------
 if PHASE >= 5:

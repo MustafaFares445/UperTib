@@ -1,11 +1,12 @@
 # UberTib UX Documentation — Start Here
 
-**Chain phase:** 3 of 5 complete — Design System  
-**Baseline:** 2026-08-26  
+**Chain phase:** 4 of 5 complete — Widget and Screen Specifications  
+**Baseline:** 2026-09-01  
 **Phase 1 baseline:** 19 UI-bearing actors · 69 JTBDs · 165 screens · 103 flows  
 **Phase 2 baseline:** 165/165 screens mapped to `WF-*` wireframes — Patient 47 · Clinic 56 · Admin 62  
 **Phase 3 baseline:** 22 `CMP-*` · 26 `IX-*` · 60 `TXT-*` · 40 `A11Y-*` · 18 lifecycle machines / 82 statuses · 21/21 `ERR-*`  
-**Validator:** `python docs/ux/scripts/validate_ux_docs.py --phase 3`
+**Phase 4 baseline:** 30 `WGT-*` · 165/165 screens specified · every `CMP-*`, `IX-*`, `TXT-*` and `A11Y-*` placed  
+**Validator:** `python docs/ux/scripts/validate_ux_docs.py --phase 4`
 
 ## Authority chain
 
@@ -13,7 +14,7 @@
 2. Product Owner decisions under `.spec/decisions/`, including the UX reconciliation and Syria catalog/pricing governance decisions.
 3. Phase 1 UX owns actors, JTBDs, IA, screen inventory and flows.
 4. Phase 2 UX owns grey-box structure, hierarchy and interaction shape.
-5. Phase 3 owns design-system direction, tokens, components, interaction patterns, content rules, lifecycle status semantics and accessibility obligations; Phase 4 owns screen/widget specs; Phase 5 owns build handoff.
+5. Phase 3 owns design-system direction, tokens, components, interaction patterns, content rules, lifecycle status semantics and accessibility obligations; Phase 4 owns widget composition and per-screen specifications; Phase 5 owns build handoff.
 
 Figma is derived and never overrides canonical product behavior.
 
@@ -50,8 +51,13 @@ Patient UX is Arabic-first/RTL, smartphone-first and resilient to weak connectiv
 19. `03-system/ACCESSIBILITY.md`
 20. `03-system/TRACEABILITY_AUDIT.md`
 21. `PHASE_03_HANDOFF.md`
+22. `04-specs/PHASE_04_IMPLEMENTATION_PLAN.md`
+23. `04-specs/WIDGET_SPECS.md`, then `_PLATFORM` and `_DOMAIN`
+24. `04-specs/SCREEN_SPEC_MAP.md`
+25. platform screen-spec files under `04-specs/`
+26. `PHASE_04_HANDOFF.md`
 
-Coding agents must not treat Phase 3 as screen specifications or implementation contracts. Phase 3 defines the system; Phase 4 places it on screens; Phase 5 remains the coding handoff owner.
+Coding agents must not treat Phase 3 as screen specifications or implementation contracts. Phase 3 defines the system; Phase 4 places it on screens; Phase 5 remains the coding handoff owner. A Phase 4 specification says what a screen must do and what it must never do — it is not an implementation contract and carries no framework decision.
 
 ## Phase status
 
@@ -60,7 +66,7 @@ Coding agents must not treat Phase 3 as screen specifications or implementation 
 | 1 — Discovery, IA, Flows | `01-foundation/*` | Complete |
 | 2 — Wireframes | `02-wireframes/*`, `PHASE_02_HANDOFF.md` | **Complete — awaiting gate approval** |
 | 3 — Design System | `03-system/*`, `PHASE_03_HANDOFF.md` | **Complete — final gate passed.** Architecture, direction, tokens, the 22 `CMP-*`, the 26 `IX-*`, all 165 `WF-*` component bindings, the 60 `TXT-*` content system, 18 lifecycle-status families / 82 statuses, 21/21 `ERR-*` recovery families, the 40 `A11Y-*` accessibility / RTL / data-state obligations, the integration and traceability audit (`TRACEABILITY_AUDIT.md`), and the Session 7 senior product/architecture gate are all complete. Every local gate is green, CI is promoted to `--phase 3`, and the promoted job passed on the gate commit (`749785c`, Documentation Validation run 59, UX Phase 3 validator exit `0`). See `PHASE_03_HANDOFF.md`. |
-| 4 — Widget and Screen Specs | `04-specs/*` | Not started |
+| 4 — Widget and Screen Specs | `04-specs/*`, `PHASE_04_HANDOFF.md` | **Complete — final gate passed.** 30 `WGT-*` allocated across 14 platform-level and 16 domain-level widgets; all 165 `SCR-*` specified against the same thirteen-section schema; every `CMP-*`, `IX-*`, `TXT-*` and `A11Y-*` placed on a widget or screen with none unplaced; all 21 `ERR-*` surfaced with their `TXT-ERR-*` copy rule; all 18 lifecycle machines bound to the screens that render them; every declared data source resolved to a canonical `API-*` or `SDC-*` owner. Every local gate is green and each new Phase 4 check was negative-tested. See `PHASE_04_HANDOFF.md`. |
 | 5 — Build and Handoff | `05-build/*` | Not started |
 
 ## Phase 2 coverage and IDs
@@ -120,10 +126,14 @@ Run cumulative validation at the current gate:
 
 ```bash
 python docs/scripts/validate_docs.py
-python docs/ux/scripts/validate_ux_docs.py --phase 3
+python docs/ux/scripts/validate_ux_docs.py --phase 4
 python docs/ux/scripts/validate_ux_tokens.py
 python scripts/check_no_emoji.py
+python scripts/check_no_emoji.py docs
 ```
+
+The emoji gate takes an explicit path because its default scan set excludes `docs/`; both
+invocations are run at every gate.
 
 `docs/ux/scripts/build_component_tokens.py` regenerates `design_tokens/component.json` from the
 Token mapping blocks in the component inventory, so the narrative and the token source cannot
@@ -140,3 +150,12 @@ The token gate is additive and passes now. It runs against
 `docs/ux/03-system/design_tokens/`, **not** the repository-root `tokens/` directory: the design
 kit's own token and contrast scripts hardcode that root path and would report a green result for
 the kit's demonstration tokens rather than for this product.
+
+The Phase 4 gate additionally asserts that every documented screen has exactly one specification and
+every specification is a documented screen; that each screen names the wireframe Phase 2 documents
+*for that screen*; that each screen and each widget declares a data source resolving to a canonical
+`API-*` or `SDC-*` owner; that each screen addresses all nine data states; that every `WGT-*`,
+`CMP-*` and `FLOW-*` a screen names is defined; and that no `IX-*`, `TXT-*`, `A11Y-*` or `CMP-*` is
+defined by Phase 3 and then placed nowhere. Every one of those checks was negative-tested — broken
+deliberately, confirmed to fail with the expected message, and restored — because a check that never
+fires proves nothing. The results are in `PHASE_04_HANDOFF.md` section 13.

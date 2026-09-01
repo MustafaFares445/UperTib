@@ -43,14 +43,14 @@ jobs:
           python docs/scripts/validate_docs.py > engineering-validation-output.txt 2>&1
           engineering_status=$?
 
-          python docs/ux/scripts/validate_ux_docs.py --phase 3 > ux-validation-output.txt 2>&1
+          python docs/ux/scripts/validate_ux_docs.py --phase 4 > ux-validation-output.txt 2>&1
           ux_status=$?
 
           {
             echo '=== Engineering documentation ==='
             cat engineering-validation-output.txt
             echo
-            echo '=== UX Phase 3 ==='
+            echo '=== UX Phase 4 ==='
             cat ux-validation-output.txt
           } | tee validation-output.txt
 
@@ -79,7 +79,7 @@ jobs:
             echo "- Commit: \`$GITHUB_SHA\`"
             echo "- Combined exit code: \`$VALIDATOR_STATUS\`"
             echo "- Engineering validator: \`$ENGINEERING_STATUS\`"
-            echo "- UX Phase 3 validator: \`$UX_STATUS\`"
+            echo "- UX Phase 4 validator: \`$UX_STATUS\`"
             echo "- Workflow: \`Documentation Validation\`"
             echo
             echo '```text'
