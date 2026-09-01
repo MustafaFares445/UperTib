@@ -301,14 +301,18 @@ if PHASE >= 5:
     if mani.exists():
         data = json.loads(mani.read_text(encoding="utf-8"))
         declared = {c["id"] for c in data.get("components", [])}
+        widget_mandatory = {w["id"]: w.get("mandatoryComponents", []) for w in data.get("widgets", [])}
         def walk(node, frame):
             for k, v in node.items():
                 if isinstance(v, str) and RAW.search(v) and not v.startswith("{"):
                     fail.append(f"P5 manifest {frame}: non-token value {v!r} in '{k}'")
                 if k == "componentId" and v not in declared:
                     fail.append(f"P5 manifest {frame}: unknown componentId {v}")
+                if isinstance(v, str) and re.search(r'\bdark\b', v, re.I):
+                    fail.append(f"P5 manifest {frame}: dark-mode tag {v!r} in '{k}' — V1 is light-only")
             for c in node.get("children", []):
                 walk(c, frame)
+        frame_keys = []
         for page in data.get("pages", []):
             for f in page.get("frames", []):
                 fid = f.get("id", "?")
@@ -316,7 +320,31 @@ if PHASE >= 5:
                     fail.append(f"P5 manifest frame {fid} matches no documented ID")
                 if not f.get("layout"):
                     fail.append(f"P5 manifest frame {fid} has no auto-layout")
+                fkey = f.get("frameKey")
+                if not fkey:
+                    fail.append(f"P5 manifest frame {fid} has no frameKey")
+                else:
+                    frame_keys.append(fkey)
+                name = f.get("name", "")
+                if not name.startswith(fid):
+                    fail.append(f"P5 manifest frame {fid}: name {name!r} does not begin with its own id")
+                if not f.get("direction"):
+                    fail.append(f"P5 manifest frame {fid} ({fkey}) declares no direction")
+                if page.get("name") == "04 · Screens":
+                    if not f.get("profile"):
+                        fail.append(f"P5 manifest frame {fid} ({fkey}) declares no profile")
+                    elif f["profile"] == "C" and not f.get("sizeClass"):
+                        fail.append(f"P5 manifest frame {fid} ({fkey}) is profile C but declares no sizeClass")
+                    elif f["profile"] == "A" and not f.get("contentWidth"):
+                        fail.append(f"P5 manifest frame {fid} ({fkey}) is profile A but declares no contentWidth")
                 walk(f, fid)
+        dupes = {k for k in frame_keys if frame_keys.count(k) > 1}
+        for k in sorted(dupes):
+            fail.append(f"P5 manifest frameKey {k!r} is not unique")
+        for wid, mand in widget_mandatory.items():
+            for cid in mand:
+                if cid not in declared:
+                    fail.append(f"P5 manifest {wid}: mandatoryComponents references unknown component {cid}")
     else:
         fail.append("P5 no 05-build/figma/BUILD_MANIFEST.json")
     for wid in widgets:

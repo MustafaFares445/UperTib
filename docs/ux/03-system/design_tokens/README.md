@@ -30,7 +30,7 @@ semantic.json      purpose aliases: surface, text, border, action, focus, tone, 
                    plus type, space, size, radius, elevation and opacity roles.
                    Plus the dark compatibility override map. It is retained for future compatibility and is not a V1 shipping-mode commitment.
 semantic.state.json  the state channel: every lifecycle status as a tone/icon/emphasis triple.
-component.json     component-scoped tokens. Deliberately empty until Session 3.
+component.json     component-scoped tokens. 22 allocated component groups, Phase 4 complete.
 ```
 
 A literal value outside a `primitive.*` file or a group named `primitive` fails the gate. A
@@ -45,7 +45,7 @@ component token that reaches a primitive directly fails the gate.
 | `primitive.space.json` | Space, control and target sizes, icon sizes, radii, border widths, elevation, opacity. |
 | `semantic.json` | Every purpose alias, light, plus the `dark` override map. |
 | `semantic.state.json` | 18 machines, 82 statuses, 36 governed icons, four emphasis treatments, two work-item flags. |
-| `component.json` | The component-tier contract. No entries yet, by design. |
+| `component.json` | The component-tier contract. 22 allocated component groups, Phase 4 complete. |
 | `motion.json` | Duration and easing primitives, six transition presets, the reduced-motion strategy. |
 | `density.json` | Three density modes and the two floors no mode may cross. |
 | `breakpoints.json` | Two separate responsive scales — Profile C size classes, Profile A content grid. |

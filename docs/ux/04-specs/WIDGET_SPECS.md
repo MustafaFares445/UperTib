@@ -238,7 +238,7 @@ criteria.
 
 **No conformance claim, accessibility or otherwise.** The target is WCAG 2.2 AA from
 `NFR-PLATFORM-005`; these blocks specify obligations against it. Whether a rendered widget meets them is
-a Phase 5 measurement and `ACCESSIBILITY.md` section 20 lists those obligations one by one.
+a Phase 5 measurement and `ACCESSIBILITY.md` section 25 lists those obligations one by one.
 
 **No claim that a widget reads well.** The mechanical checks establish that the composition is
 consistent, that every reference resolves, that no widget composes a component its screens do not bind,

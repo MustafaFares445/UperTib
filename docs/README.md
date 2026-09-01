@@ -112,9 +112,9 @@ Canonical forms are `FR-*`, `BR-*`, `NFR-*`, `DR-*`, `TD-*`, `ASM-*`, `Q-*`, `CO
 | CLAIMS | 009 | 007 | PLATFORM | 004 | 004 |
 | POLICY | 002 | 002 | AUDIT | 002 | 002 |
 
-`WF-*` (Phase 2) is allocated one-to-one with `SCR-*` — 165 across 12 domains. Phase 3 allocated 22 `CMP-*`, 26 `IX-*`, 60 `TXT-*` and 40 `A11Y-*`; see `docs/ux/PHASE_03_HANDOFF.md`. `WGT-*` (Phase 4) is not yet allocated. `SDC-*` staff interaction contracts keep their own append-only registry in `docs/domain/STAFF_INTERACTION_CONTRACTS.md` section 9 — 24 allocated across 11 domains.
+`WF-*` (Phase 2) is allocated one-to-one with `SCR-*` — 165 across 12 domains. Phase 3 allocated 22 `CMP-*`, 26 `IX-*`, 60 `TXT-*` and 40 `A11Y-*`; see `docs/ux/PHASE_03_HANDOFF.md`. `WGT-*` (Phase 4) is 30, allocated; see `docs/ux/PHASE_04_HANDOFF.md`. `SDC-*` staff interaction contracts keep their own append-only registry in `docs/domain/STAFF_INTERACTION_CONTRACTS.md` section 9 — 24 allocated across 11 domains.
 
-**Registry snapshot:** 36 allocated `API-*` contracts, 21 `ERR-*` definitions, 92 `TASK-*` implementation tasks, and 91 concrete `TC-*` cases. UX chain: 165 `SCR-*`, 103 `FLOW-*`, 165 `WF-*`, 22 `CMP-*`, 26 `IX-*`, 60 `TXT-*`, 40 `A11Y-*`, 0 `WGT-*`. Counts describe allocations, not completed code/tests.
+**Registry snapshot:** 36 allocated `API-*` contracts, 21 `ERR-*` definitions, 92 `TASK-*` implementation tasks, and 91 concrete `TC-*` cases. UX chain: 165 `SCR-*`, 103 `FLOW-*`, 165 `WF-*`, 22 `CMP-*`, 26 `IX-*`, 60 `TXT-*`, 40 `A11Y-*`, 30 `WGT-*`. Counts describe allocations, not completed code/tests.
 
 ## Functional Requirement Alias Map
 

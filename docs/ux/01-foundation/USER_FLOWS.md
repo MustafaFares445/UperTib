@@ -1262,7 +1262,7 @@ flowchart TD
 **Trigger:** The provider sets or changes their price for a service at a branch.
 **Success criterion:** The price is stored with catalog scope, branch, governed display mode, currency, amount or bounds, effective period and provenance, and `P` is derived prospectively where calibration permits.
 **Screens:** `SCR-ELIG-008` or `SCR-ELIG-011` → `SCR-ELIG-010` → `SCR-ELIG-011`
-**Contracts:** SDC-ELIG-001
+**Contracts:** SDC-ELIG-005
 **Steps:**
 1. User picks the governed display mode — free, fixed, from, range or requires-a-plan — from the approved commercial options, then enters the amount or bounds, currency and effective period → System validates the combination against the mode and the applicable price-policy scope.
 2. System records the price fact with provenance, superseding any previous fact for the same scope rather than overwriting it.
@@ -1366,7 +1366,7 @@ flowchart TD
 **Trigger:** A service and branch is `PENDING_EVALUATION` or `NOT_ELIGIBLE` and the provider wants to fix it.
 **Success criterion:** The provider knows exactly what to supply, supplies it, and a new evaluation runs.
 **Screens:** `SCR-ELIG-011` → `SCR-ELIG-012` → `SCR-ELIG-009`, `SCR-ELIG-006` or `SCR-ELIG-010` → `SCR-ELIG-011`
-**Contracts:** SDC-ELIG-003, SDC-ELIG-001
+**Contracts:** SDC-ELIG-003, SDC-ELIG-001, SDC-ELIG-005
 **Steps:**
 1. User opens eligibility status → System returns state per service and branch with last evaluation time.
 2. User opens a blocker → System names each missing or invalid item, the controlling gate, and reevaluation status.

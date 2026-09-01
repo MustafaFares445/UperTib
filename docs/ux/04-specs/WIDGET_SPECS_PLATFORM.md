@@ -959,7 +959,7 @@ actor's intent has not changed.
 **Purpose:** make a resumable draft legible as a draft — saved, not submitted, invisible to the
 counterparty, and resumable by the same actor — on the surfaces where abandoning would cost real work.
 
-**Class:** region · **Platforms:** C, A · **Archetypes:** form, workspace · **Reach:** 10 of 165
+**Class:** region · **Platforms:** A · **Archetypes:** form, workspace · **Reach:** 10 of 165
 **User intent:** stop in the middle and come back without losing anything or accidentally committing.
 **Requirements:** `FR-IDENTITY-001`, `FR-CLINICAL-001`, `FR-CATALOG-003`, `NFR-PLATFORM-006`
 **Data source:** `SDC-IDENTITY-001`, `SDC-ELIG-001`, `SDC-CLINICAL-001`, `SDC-CLAIMS-001`,

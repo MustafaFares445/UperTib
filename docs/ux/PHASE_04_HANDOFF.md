@@ -211,6 +211,11 @@ follows the contract that actually backs the surface and the discrepancy is rais
 `01-foundation/INFORMATION_ARCHITECTURE.md` to `SDC-ELIG-005`. Until then the generator applies the
 correction explicitly and the screen block states it in its own `Data` section.
 
+**Resolved in Phase 5 Session 1.** The `SCR-ELIG-010` entry in `01-foundation/INFORMATION_ARCHITECTURE.md`
+now reads `SDC-ELIG-005`, independently re-verified against four sources
+(`PHASE_05_IMPLEMENTATION_PLAN.md` section 4). The original discrepancy above is retained as the
+historical record of what Phase 4 found and could not itself apply.
+
 Six further corrections were placement corrections inside Phase 4 rather than upstream ones, and are
 recorded in `WIDGET_SPECS.md` section 6.1. In each case a widget's mandatory component core did not
 match a screen's Phase 3 binding, and Phase 4 narrowed the widget's placement. **Phase 3 was not
@@ -374,8 +379,9 @@ Phase 4's accessibility sections tell Phase 5 what to verify. They are not evide
 1. **Specifications are not renders.** Every gate here is textual and referential. None proves a
    pixel, a contrast ratio, a focus ring or a tap target. No conformance claim follows from a green
    Phase 4 gate.
-2. **`SCR-ELIG-010` carries a documented deviation from its Phase 1 contract line** until the Phase 1
-   owner applies the correction in section 10.
+2. **`SCR-ELIG-010` carried a documented deviation from its Phase 1 contract line**, pending the Phase 1
+   owner applying the correction in section 10. **Resolved in Phase 5 Session 1** — the correction was
+   applied and independently re-verified; see `PHASE_05_IMPLEMENTATION_PLAN.md` section 4.
 3. **Two `API-*` contracts are bound by nothing** by design (section 9). If the doctor experience
    ever gains a mobile surface, that decision must be made upstream, not in a screen block.
 4. **The clinical and legal dependencies are open** (section 11). Surfaces are specified; content is
