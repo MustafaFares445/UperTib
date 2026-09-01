@@ -2247,7 +2247,7 @@ Panel id `clinic`, path `/clinic` — both `(Proposed)`. All 56 are `New`; no Cl
 **Purpose:** Let the provider record their actual price for a service at a branch.
 **Serves:** JTBD-ELIG-006
 **Requirements:** FR-ELIG-009, FR-ELIG-014
-**Contract:** SDC-ELIG-001
+**Contract:** SDC-ELIG-005
 **Roles:** Clinic / provider representative; Treating dentist within scope
 **Entry points:** `SCR-ELIG-008`; `SCR-ELIG-011`
 **Exits:** `SCR-ELIG-011`
