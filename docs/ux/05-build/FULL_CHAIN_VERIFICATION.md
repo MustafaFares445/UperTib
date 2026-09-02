@@ -1,7 +1,7 @@
 # Phase 5 Full-Chain Verification
 
-**Status:** mechanical/documentation verification baseline for the Phase 5 completion gate.
-**Remote CI:** pending the Phase 5 promotion commit. This file must be updated with the measured run before the final gate is called complete.
+**Status:** complete mechanical/documentation verification for the Phase 5 gate.
+**Remote CI:** Documentation Validation run 69 (`33615225543`) passed on commit `74040bd2ac7e8a6255d4eede80c0d5a4bec881b7`.
 
 ## 1. Measured chain inventory
 
@@ -18,7 +18,7 @@
 | Accessibility obligations | 40 |
 | ERR families | 21 |
 | Widgets | 30 |
-| Implementation contracts | 30 after the Phase 5 completion commit |
+| Implementation contracts | 30 |
 | Manifest frames | 509 |
 
 Platform screen baseline remains Patient 47, Clinic 56, Admin 62.
@@ -110,7 +110,13 @@ These are classified release/authority dependencies, not reasons for Phase 5 to 
 
 ### Tier A — documentation/mechanical
 
-The final CI gate runs the engineering validator, UX `--phase 5`, UX token validator, emoji gates and component-token regeneration/diff check. The actual remote output is recorded after the gate commit.
+The promoted Phase 5 CI gate ran successfully on run 69:
+
+- engineering validator: 0 failures / 0 warnings;
+- UX `--phase 5`: 0 failures / 0 warnings;
+- token validator: 935 tokens, 114/114 required light pairs and 114/114 dark-compatibility pairs, 0 failures;
+- emoji gates: repository and docs clean;
+- component token regeneration: 22 groups / 199 concrete tokens / 8 tone-bound groups, with zero generated diff.
 
 ### Tier B — rendered design QA
 
@@ -126,6 +132,6 @@ No Tier B/C item is reported as passed here.
 
 Canonical UX path is `docs/ux/`; tracked uppercase `Docs/ux/` count is 0. No production source change is part of this Phase 5 completion run.
 
-## 10. Final-gate condition
+## 10. Final-gate result
 
-The documentation chain may be called complete only after the promoted remote workflow actually executes UX Phase 5 validation and all configured documentation gates pass. Until then the status is candidate complete, CI pending.
+The promoted remote workflow executed UX Phase 5 validation and every configured documentation/UX gate passed on run 69. The Phase 1–5 documentation/specification chain is therefore complete. Rendered design QA and runtime QA remain mandatory later evidence and are not included in this completion claim.

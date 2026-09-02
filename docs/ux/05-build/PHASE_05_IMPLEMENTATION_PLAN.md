@@ -1,7 +1,7 @@
 # UX Phase 5 Implementation Plan — Build and Handoff
 
 **Phase:** UX 5 — Build and Handoff
-**Execution status:** Sessions 1–6 artifacts complete; Session 7 completion gate prepared, remote Phase 5 CI pending
+**Execution status:** Sessions 1–7 complete; final Phase 5 remote gate passed
 **Input gate:** `docs/ux/PHASE_04_HANDOFF.md`, complete and passed on CI
 **Owns:** the Phase 5 artifact architecture, the widget implementation classification, the build
 dependency order, the target-path analysis, the manifest and frame-coverage strategy, the
@@ -943,7 +943,7 @@ repository evidence for each change is stated.
 | 4 | Remaining platform contracts, build order 8 to 14 | Remaining seven platform contracts | **Complete** |
 | 5 | Domain contracts, build order 15 to 30 | Sixteen domain contracts | **Complete — 30/30 contracts** |
 | 6 | Traceability and full-chain verification | `05-build/DESIGN_TRACEABILITY.md`, `05-build/FULL_CHAIN_VERIFICATION.md`, `AGENTS.md` pointer | **Complete — rendered/runtime QA explicitly deferred** |
-| 7 | Final gate, handoff, CI promotion | `PHASE_05_HANDOFF.md`; CI promoted to `--phase 5` | **Candidate complete — remote CI result pending** |
+| 7 | Final gate, handoff, CI promotion | `PHASE_05_HANDOFF.md`; CI promoted to `--phase 5` | **Complete — run 69 passed on `74040bd`** |
 
 **Why seven rather than five.**
 
@@ -1005,4 +1005,4 @@ The completion run surfaced implementation prerequisites rather than UX blockers
 
 ---
 
-**Phase 5 plan status:** all non-rendered documentation/handoff artifacts are authored. Remote promoted Phase 5 CI remains the final mechanical gate; actual Figma rendering and runtime QA are deliberately outside this documentation completion claim.
+**Phase 5 plan status:** complete. All non-rendered documentation/handoff artifacts are authored and the promoted Phase 5 CI gate passed on run 69. Actual Figma rendering and runtime QA are deliberately outside this documentation completion claim.

@@ -1,7 +1,7 @@
 # UX Phase 5 Handoff — Build and Implementation Contract
 
 **Phase:** UX 5 — Build and Handoff  
-**Status:** Candidate complete — remote Phase 5 CI execution pending.  
+**Status:** Complete — final Phase 5 remote gate passed.  
 **Scope completed in this run:** all remaining non-rendered, non-production implementation-handoff work.  
 **Scope deliberately not performed:** actual Figma rendering/visual review and runtime accessibility QA.
 
@@ -184,9 +184,17 @@ Any change to an earlier phase invalidates downstream evidence until rechecked:
 
 ## 14. Validation gate
 
-The Phase 5 candidate commit promotes CI from UX `--phase 4` to `--phase 5` and keeps earlier mechanical gates active. It also runs the UX token, emoji and generated-component-token consistency checks in CI.
+CI is promoted from UX `--phase 4` to `--phase 5`. The final promoted gate was measured on commit `74040bd2ac7e8a6255d4eede80c0d5a4bec881b7`, Documentation Validation run **69** (`33615225543`), and completed successfully.
 
-The final status becomes **Complete** only after the actual promoted workflow run passes. Until that run is measured, this handoff remains Candidate complete.
+Measured remote output:
+
+- engineering documentation: 60 FR / 14 NFR, 36 API, 21 ERR, 92 TASK, 91 TC; **0 failures, 0 warnings**;
+- UX Phase 5: 165 screens, 103 flows, 165 wireframes, 22 components, 30 widgets; **0 failures, 0 warnings**;
+- UX token gate: 935 tokens, 18 machines / 82 statuses, light 114/114 required pairs and dark-compatibility 114/114 required pairs; **0 failures**;
+- emoji gates: repository 208 files and docs 92 files; **clean**;
+- component-token regeneration: 22 groups, 199 concrete tokens, 8 tone-bound groups; generated file remained unchanged.
+
+This closes the Phase 5 documentation/specification gate. These results are mechanical/documentation evidence only and do not convert deferred rendered or runtime QA into passing evidence.
 
 ## 15. Production code
 
