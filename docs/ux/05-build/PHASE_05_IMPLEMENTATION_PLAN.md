@@ -720,7 +720,7 @@ strategy that hides its own exclusions is indistinguishable from an incomplete o
 
 No placeholder text of any kind. Content is sourced, in this precedence:
 
-1. **Entity and field names** from `docs/database/ERD.md` — 53 tables, 6 existing and 47 proposed —
+1. **Entity and field names** from `docs/database/ERD.md` — 54 tables, 6 existing and 48 proposed —
    so a frame shows the field the implementation will actually bind.
 2. **Lifecycle status labels** from `CONTENT_GUIDE_STATES.md`, which carries the Arabic chip label
    and the per-audience meaning for all 82 statuses across 18 machines. A frame never invents a
@@ -764,7 +764,7 @@ slot for them and this repository needs them. Each says why.
 | 6 | Realization | `Stock`, `Extended`, `Custom` or `Native`, per profile | section 5 |
 | 7 | **Panel and route target** | For Profile A: which panel — `admin` or `clinic` — which panel provider, and the navigation group | **new.** The repository has one panel and the second is Proposed; a contract naming a Resource without naming its panel is ambiguous here |
 | 8 | Target files | Directory and class, each tagged `Existing`, `Proposed (canonical)` or `Proposed, path unverified` | section 7 **new: the three-way tag** |
-| 9 | **Shared application-layer prerequisite** | The `TASK-*` from `docs/IMPLEMENTATION_PLAN.md` that must land first | **new, and the most important addition.** 47 of 53 ERD tables are Proposed; without this a contract would let an agent build a panel surface over a model that does not exist |
+| 9 | **Shared application-layer prerequisite** | The `TASK-*` from `docs/IMPLEMENTATION_PLAN.md` that must land first | **new, and the most important addition.** 48 of 54 ERD tables are Proposed; without this a contract would let an agent build a panel surface over a model that does not exist |
 | 10 | **Data model prerequisite** | The ERD tables the projection reads, each marked Existing or Proposed | **new**, same reason |
 | 11 | Data source and view-model mapping | The owning `API-*` or `SDC-*`, restating that contract's own projection and command text field by field | Phase 4 block |
 | 12 | Caching, refresh and polling | Including the stale-versus-error precedence the widget inherits | Phase 4 block |

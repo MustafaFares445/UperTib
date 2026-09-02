@@ -1,12 +1,15 @@
 # UX Phase 5 Implementation Contracts
 
 **Phase:** UX 5 — Build and Handoff
-**Session:** 3 of 7 — foundation implementation contracts, build order 1–7
+**Sessions:** 3 of 7 (foundation contracts, build order 1–7, complete) and 4 of 7 (remaining platform
+contracts, build order 8–14, complete).
 **Input gates:** `docs/ux/05-build/PHASE_05_IMPLEMENTATION_PLAN.md` (Session 1, complete),
 `docs/ux/05-build/figma/BUILD_MANIFEST.json` and `docs/ux/05-build/figma/NAMING.md` (Session 2, complete).
-**This session writes:** the seven foundation contracts — `WGT-PLATFORM-001`, `-003`, `-002`, `-004`,
-`-005`, `-010`, `-007` — in that build order. Contracts 8–30 are not authored here; Session 4 writes
-build order 8–14 and Session 5 writes the sixteen domain contracts, 15–30.
+**Session 3 wrote:** the seven foundation contracts — `WGT-PLATFORM-001`, `-003`, `-002`, `-004`, `-005`,
+`-010`, `-007` — in that build order.
+**Session 4 wrote:** the remaining seven platform contracts — `WGT-PLATFORM-006`, `-014`, `-011`, `-008`,
+`-013`, `-009`, `-012` — in that build order, completing all 14 platform-level contracts (build order
+1–14). Contracts 15–30, the sixteen domain contracts, are not authored here; Session 5 writes them.
 
 Every contract in this file is a complete, self-sufficient instruction set for the coding agent that
 later builds the widget it describes. A contract explains **how** to implement behaviour Phases 1–4
@@ -2756,6 +2759,2234 @@ Profile A, `Extended`:
 - Proof that the committed decision row is genuinely unmodifiable through every interface (no edit/
   delete path reachable anywhere), verified against the real Filament and API surfaces — not run —
   requires implementation.
+
+---
+
+### WGT-PLATFORM-006 — Implementation Contract
+
+#### 1. Identity
+
+- **WGT ID:** WGT-PLATFORM-006
+- **Name:** Decision-bearing event timeline
+- **Build order:** 8
+- **Platforms:** C, A
+- **Runtime:** RN list (Proposed, path unverified) + Filament custom view (Proposed, both panels)
+- **Phase 4 realization:** Profile C `Native`; Profile A `Custom`
+- **Screen reach:** 33 of 165
+- **Source specification:** `docs/ux/04-specs/WIDGET_SPECS_PLATFORM.md`, `WGT-PLATFORM-006` block
+
+#### 2. Implements
+
+- `FR-AUDIT-001`
+- `FR-CLINICAL-005`
+- `FR-FINANCE-004`
+- `NFR-AUDIT-001`
+
+#### 3. Used by
+
+**33 screens**, confirmed against every row of `SCREEN_SPEC_MAP.md` (6 Patient, 6 Clinic, 21 Admin):
+
+- **Patient app (6):** `SCR-BOOKING-004` (Booking detail), `SCR-CLINICAL-002` (Case summary),
+  `SCR-CLINICAL-005` (Case timeline), `SCR-FINANCE-002` (Financial timeline), `SCR-REVIEWS-003` (My
+  review), `SCR-CLAIMS-004` (Claim detail).
+- **Clinic panel (6):** `SCR-IDENTITY-017` (Status and requested changes), `SCR-CLINICAL-009` (Case
+  workspace), `SCR-CLINICAL-013` (Plan version history), `SCR-FINANCE-006` (Case financial
+  workspace), `SCR-REVIEWS-005` (Provider reviews), `SCR-CLAIMS-007` (Claim response and evidence).
+- **Admin panel (21):** `SCR-IDENTITY-028` (Application review), `SCR-CATALOG-006` (Launch gates),
+  `SCR-CATALOG-007` (Record gate decision), `SCR-ELIG-018` (Decision inspector), `SCR-ELIG-020`
+  (Suspension operations), `SCR-BOOKING-014` (Booking operations), `SCR-BOOKING-015` (Booking
+  oversight), `SCR-CLINICAL-019` (Case oversight detail), `SCR-FINANCE-010` (Records operations),
+  `SCR-FINANCE-011` (Dispute review), `SCR-FINANCE-012` (External execution tracking), `SCR-CLAIMS-010`
+  (Claim review), `SCR-CLAIMS-011` (Evidence and deadlines), `SCR-OPS-003` (Work item detail),
+  `SCR-POLICY-003` (Review and scheduling), `SCR-POLICY-004` (Historical reproduction), `SCR-AUDIT-001`
+  (Audit explorer), `SCR-AUDIT-002` (Audit event detail), `SCR-AUDIT-003` (Integrity exceptions),
+  `SCR-AUDIT-004` (Idempotency conflicts), `SCR-PLATFORM-006` (Evidence access log).
+
+#### 4. Widget dependencies
+
+- **Required predecessor:** `WGT-PLATFORM-001` (build order 1) only, per **E1** — "`WGT-PLATFORM-001`
+  precedes all 29 others" (`WIDGET_SPECS.md` section 3; `PHASE_05_IMPLEMENTATION_PLAN.md` section 6.5,
+  build order 8, "Depends on: 1"). The measured edge set (section 6.2 of the same plan, six edge groups,
+  thirty-four edges) contains **no other edge** naming `WGT-PLATFORM-006` as either source or target — it
+  is not a stated predecessor of, or successor to, any other widget.
+- **Not a build dependency:** screens that place both `WGT-PLATFORM-005` and this widget together
+  (list-and-detail archetypes) do so by co-occurrence only; `PHASE_05_IMPLEMENTATION_PLAN.md` section 6.1
+  explicitly instructs that widget-level edges are derived **only** from statements Phase 4 actually
+  makes, never from screen co-occurrence, and no such statement exists between these two widgets.
+
+#### 5. Component dependencies
+
+**Mandatory core:**
+
+| `CMP-*` | Role here |
+|---|---|
+| `CMP-PLATFORM-008` — Event timeline | The whole widget. Variants: `case` (booking, stage, follow-up, financial, review and claim events on one case), `record` (one record's own events), `financial` (append-only external financial events, carrying the money-boundary obligation), `governance` (append-only launch-gate and policy decisions), `audit` (audit events, correlation identifiers in the identifier type style, Admin only). Anatomy: `ordering statement` → per event: `when` → `CMP-PLATFORM-001` (what happened) → `CMP-PLATFORM-013` (who, where a human owns it) → `[ disclosure: the event's own detail ]` → `[ load older ]` (bounded, explicit boundary — never infinite scroll). No decorative connector rail is drawn; order is carried by position and the stated time, which is what survives right-to-left, reflow and a screen reader. |
+
+**Conditional:**
+
+| `CMP-*` | Composed when |
+|---|---|
+| `CMP-PLATFORM-001` — State chip | Per event, where the event carries a lifecycle status |
+| `CMP-PLATFORM-013` — Human attribution | Per event, only where a person decided (`decided-by-person`, `reviewed-by-licensed`) — a computed event uses `computed-by-system` and names no person |
+| `CMP-ELIG-002` — Price display | Per event, where the event carries an amount (the `financial` variant's primary content) |
+
+#### 6. Interaction dependencies
+
+- **`IX-PLATFORM-016` (owner) — Bounded reads over unbounded history.** The first page is read and
+  rendered; **the bound is stated** — a page size, a top-N or a date window is named, never left silent;
+  further pages are requested explicitly on Profile A or incrementally on Profile C; **ordering is stable
+  across pages**, because it is a property of the record, not the view — an unstable sort over append-only
+  history misrepresents the order of events, which for an audit or financial log is a correctness
+  failure. Appending a page never moves what the actor has already read and never resets scroll position.
+  A failed append keeps the loaded pages, states that older entries could not be read, and offers retry
+  for that page — **a truncated history is never rendered as complete.** Load-more is a real, keyboard-
+  reachable control; infinite scrolling with no reachable load-more control is prohibited on Profile A.
+- **`IX-PLATFORM-008` — Progressive disclosure.** An event's own detail sits behind an explicit in-place
+  disclosure, never a second screen; opening it never moves what the actor was already reading; the
+  disclosure control keeps focus on open and the revealed content is the next tab stop.
+- **`IX-PLATFORM-010` — Bidirectional and mixed-direction content.** Timestamps, correlation identifiers,
+  amounts with currency and Latin clinic/doctor names inside an event are each isolated at render time; a
+  reordered identifier or amount is a **wrong** identifier or amount, not a cosmetic defect.
+- **`IX-PLATFORM-003` — Authoritative read refresh and staleness disclosure.** A financial or clinical
+  timeline read as current when it is stale is a correctness failure (section 18); the timeline marks
+  itself stale with its as-of time and offers retry rather than silently presenting old events as current.
+
+#### 7. Content dependencies
+
+| `TXT-*` | Ownership | Applies to |
+|---|---|---|
+| `TXT-PLATFORM-013` — Financial transparency | Canonical, 5-rule list | The `financial` variant's every event: no text states or implies the platform held, paid, insured or refunded money — each financial event is a **record of an external occurrence**, never a transaction the platform executed. |
+| `TXT-PLATFORM-014` — Version and amendment communication | Canonical | Where an appended event is itself a version acceptance or amendment (e.g. a plan-acceptance event on the `case` variant): the prior version stays reachable and unmodified: the event states what changed, never restates a full document. |
+| `TXT-PLATFORM-017` — Audience translation families | Canonical, per-term table | Structurally hides internal-only terms (scientific grade, pricing class, protection level, risk profile, calibration state) from any Patient-facing event text — the timeline never surfaces an internal classification by any disclosure depth. |
+| `TXT-PLATFORM-020` — Arabic mechanics | Canonical | Western/tabular digits for every event timestamp and amount; bidi isolation per identifier, amount and date; the ordering statement itself is real text, never inferred from layout. |
+
+#### 8. Accessibility dependencies
+
+| `A11Y-*` | Implementation assertion |
+|---|---|
+| `A11Y-PLATFORM-012` — Native structural semantics | The timeline is a real list, not a sequence of headings, so it does not pollute the document outline (WCAG 1.3.1); each disclosure declares its expanded/collapsed state. |
+| `A11Y-PLATFORM-023` — Long content is sized-for; critical values never truncate | An event's reason, a decider's name and a financial amount never truncate at any text size or density mode — `CMP-PLATFORM-013` and `CMP-ELIG-002` are two of the four named critical-value carriers this obligation binds (WCAG 1.4.10 informative extension). |
+| `A11Y-PLATFORM-030` — Bidirectional content: AT reading order and isolation | Correct **screen-reader pronunciation order**, not only visual order, for every isolated timestamp, correlation identifier and amount inside an event (WCAG 1.3.2) — `CMP-PLATFORM-008` is named explicitly as a carrier. |
+| `A11Y-PLATFORM-015` — No colour-alone communication | Every event's status consumes the full tone/icon/emphasis triple; a computed outcome is distinguishable from a human decision by wording and icon, never by tone alone (WCAG 1.4.1). |
+| `A11Y-AUDIT-001` — Sensitive decision capture accessibility | Where an appended event **is** a sensitive decision rendered after the fact (a claim decision, an integrity finding), its accessible attribution states the role and the basis together as one unit, never a bare "decided" with the reason floating unassociated — the same accountability guarantee `IX-AUDIT-001` requires at the moment of decision extends to this widget's later, read-only rendering of it. |
+
+#### 9. Canonical data/action contracts
+
+This widget **owns no fixed `API-*`/`SDC-*` of its own.** Its data source is "the owning record's own
+history projection." Representative examples Phase 4 names, by ID only:
+
+- **Profile C:** `API-CLINICAL-004` (unified case timeline), `API-FINANCE-005` (case financial timeline).
+- **Profile A:** `SDC-AUDIT-001` (Audit Explorer and Historical Reproduction), `SDC-FINANCE-001`
+  (Clinic/Admin Financial Record Workspace), `SDC-CLINICAL-001` (Clinic Case and Treatment Workspace).
+
+On every other screen, the applicable projection is that screen's own declared `API-*`/`SDC-*` (section
+0.6), never invented here.
+
+#### 10. Shared application-layer prerequisites
+
+- **`TASK-CLINICAL-007`** — "Implement Patient Case Summary and Unified Timeline APIs" — the direct
+  prerequisite implementing `API-CLINICAL-004`; its own implementation note: "compose role-filtered
+  timeline from authoritative domain records; do not create a mutable timeline table as alternate truth."
+- **`TASK-AUDIT-001`** — "Implement Sensitive Audit and Provenance Foundation" — the prerequisite for the
+  `audit`/`governance` variants and for every human-attributed event this widget renders.
+- Same shared rendering-primitive prerequisite as every widget above: `TASK-PLATFORM-001`/`-005`
+  (Filament), `TASK-PLATFORM-008` (React Native).
+
+#### 11. Data model prerequisites
+
+| Entity | Status | Relevance |
+|---|---|---|
+| `audit_events` | Proposed logical table, append-only | The `audit` variant's source; correlation identifiers rendered in the identifier type style (Admin only). |
+| `financial_events` | Proposed, append-only | The `financial` variant's source; contains no gateway transaction, wallet balance, capture or settlement field — facts about external activity only. |
+| `booking_events` | Proposed, append-only | Backs booking-domain entries composed into the `case` variant. |
+| `claim_decisions` | Proposed, immutable | Backs claim-decision entries; human-attributed via `CMP-PLATFORM-013`. |
+| `claim_deadline_events` | Proposed, append-only | Backs deadline-history entries; extensions/pauses never erase the original deadline. |
+| `accepted_treatment_snapshots` | Proposed, immutable | Backs clinical plan-acceptance entries on the `case` variant. |
+
+Five of the nine immutable or append-only entities (section 25) are event or decision logs, and this
+widget is what renders them — this is its stated reason to exist (`WIDGET_SPECS_PLATFORM.md` line 502).
+**Gap, flagged and not resolved here:** the ERD defines no dedicated append-only "clinical stage event"
+table — `case_treatment_stages` (Proposed) carries a mutable `current_state` column rather than an event
+log, so a case timeline's clinical-stage entries are derived from `accepted_treatment_snapshots` and the
+stage's own state transitions rather than from a sixth append-only source; this is a data-model gap for
+the relevant `TASK-CLINICAL-*` owner, not a defect in this contract.
+
+#### 12. Target files
+
+| Target area | Path | Status |
+|---|---|---|
+| RN list, virtualized, in-place disclosure | Patient React Native project — path not yet determined | Proposed, path unverified |
+| Filament custom view (shared timeline partial) | `app/Filament/Support/` (shared timeline component) applied per `Resource` under `app/Filament/Resources/` / `app/Filament/Clinic/Resources/` | Proposed |
+
+#### 13. Data/view-model mapping
+
+| Canonical concept (host projection) | View-model responsibility |
+|---|---|
+| Ordering axis and its time field | `orderingStatement: string` — real text, stated, never inferred from layout |
+| Each event's own facts | `events[i]: { at, summary, status?, decider?, amount?, detail? }` |
+| Event's lifecycle status, where it carries one | `events[i].status` → `CMP-PLATFORM-001`'s own triple, never a bare string |
+| Event's decider, where a human decided | `events[i].decider` → `CMP-PLATFORM-013`, `decided-by-person`/`reviewed-by-licensed`; absent (not guessed) where the event was computed |
+| Event's amount, where present | `events[i].amount` → `CMP-ELIG-002`, in its governed mode |
+| Applied read bound | `boundStatement: string` — always present where the set is unbounded, per `IX-PLATFORM-016` |
+
+No field is invented beyond what the host's own `API-*`/`SDC-*` projection already carries.
+
+#### 14. Refresh / caching / polling
+
+Event-driven, per `IX-PLATFORM-003`: initial load renders event skeletons with no count implied; a
+refresh appends a new event without disturbing events already read, and announces politely if the actor
+is viewing the record. No polling interval or cache TTL is specified or invented.
+
+#### 15. Idempotency / correlation
+
+**Not applicable.** This widget issues no command — it is a pure read-side history projection. It never
+mutates, edits, corrects or deletes an event by construction (section 25); a correction is always a **new**
+appended event, authored elsewhere, that this widget simply renders in its place in the order.
+
+#### 16. Permission gate
+
+- **Canonical permission source:** `docs/domain/PERMISSIONS_MATRIX.md` — "View own case summary/timeline"
+  (Patient, own case, role-safe fields), "View case financial timeline" (authorized case party / scoped
+  finance staff, fields filtered by role), "View sensitive audit trail" (authorized audit/compliance/
+  operations actor, explicit purpose and target scope, protected payloads minimized).
+- **Server-side enforcement point:** the host projection's own scope-aware query (`API-CLINICAL-004`,
+  `API-FINANCE-005`, `SDC-AUDIT-001`) — events outside the actor's purpose scope are not fetched, never
+  filtered client-side after the fact.
+- **UI consequence:** `error-permission` — events outside the actor's purpose scope are not returned, and
+  the surface states that **the view is scope-limited**, never presenting a shorter history as if it were
+  complete. A scope-limited history reading as a complete one is the exact failure this widget's own
+  acceptance criterion 5 prohibits.
+
+#### 17. Props / configuration
+
+| Name | Type | Required | Default | Source | Notes |
+|---|---|---|---|---|---|
+| `variant` | `case \| record \| financial \| governance \| audit` | Yes | none | Host archetype | Never a sixth value |
+| `events` | `Event[]` (section 13) | Yes | `[]` | Host's own projection | Order is the host's own order, never re-sorted client-side |
+| `orderingStatement` | string | Yes | — | Host's own read | Real text, never omitted |
+| `boundStatement` | string \| null | No | `null` | Host's own read | See section 13; states what could not be read on a partial page |
+| `onDisclose` | callback | No | — | — | Opens an event's own detail in place, per `IX-PLATFORM-008` |
+| `onLoadOlder` | callback | Yes where the set is unbounded | — | — | Drives `IX-PLATFORM-016`; focus returns to the boundary control on completion, never to the top |
+
+#### 18. State rendering
+
+| State | Behaviour |
+|---|---|
+| `loading-initial` | Event skeletons; the count is not implied. |
+| `loading-refresh` | Existing events stay; a new event appends and is announced politely if the actor is viewing the record. |
+| `empty-no-data` | A record with no events yet says so plainly. It is not an error and offers no action. |
+| `empty-filtered` | Where the surface filters history, the filter is named as the cause and history order is never changed by it. |
+| `partial` | A bounded page loaded and the next did not: the boundary states that older events exist and could not be read, never that history ends here. |
+| `stale` | Timeline shown with its as-of time. A financial or clinical timeline read as current when it is stale is a correctness failure. |
+| `error-fetch` | Loaded events preserved, retry at the boundary. |
+| `error-permission` | Events outside the actor's purpose scope are not returned, and the surface says the view is scope-limited rather than showing a shorter history as if complete. |
+| `success` | Events in order. |
+| Offline / unstable | Last read events with as-of time; the boundary control states that older events need a connection. |
+
+#### 19. Lifecycle/state semantics
+
+This widget renders lifecycle status **per event**, not as a single machine of its own — each event's own
+status resolves through `CMP-PLATFORM-001` from whichever status machine that event's own domain owns
+(`design_tokens/semantic.state.json`), never a status invented by this widget. Its own, additional
+obligation is the **decision-vs-computation distinction**: where a person decided, `CMP-PLATFORM-013`
+names the decider and the basis they recorded at the time; where the system evaluated, the event is
+labelled as computed and names no person — conflating the two, in either direction, breaks the appeal
+paths `FR-REVIEWS-002` and `FR-CLAIMS-005` depend on. A correction never rewrites an earlier event's
+status; it appears as its own, later event, and the earlier one remains exactly as it was recorded.
+
+#### 20. Tokens
+
+`component.platform-008.*` (mandatory — surface, divider, time-text, event-text, identifier, disclosure
+motion), conditional `component.platform-001.*`, `component.platform-013.*`, `component.elig-002.*`.
+
+#### 21. Content
+
+Resolves to `TXT-PLATFORM-013`, `-014`, `-017`, `-020`. No canonical `ERR-*` string is restated by this
+widget; a failed read cites its `ERR-*` by ID only, on the boundary or structural-state control that
+carries it.
+
+#### 22. Accessibility contract
+
+- **Role/name:** a real list, not headings; each event's accessible name carries its time, its status (or
+  computed/decided label) and its actor together.
+- **Focus:** the load-older control is the last item; returning from it restores focus to the boundary,
+  not to the top of the list. Opening a disclosure keeps focus on the disclosure control; the revealed
+  detail is the next tab stop.
+- **Keyboard:** every disclosure and every load-older control is keyboard reachable; the list is
+  traversable without a pointer.
+- **Screen reader:** a new event appended while the actor is viewing the record is announced politely;
+  the ordering statement is exposed as real text so order need not be inferred from layout.
+- **No colour-only:** a computed outcome is distinguishable from a decided one by wording and icon, not
+  tone alone; a financial event's confirmed/disputed distinction likewise never rests on colour alone.
+
+#### 23. RTL / bidi
+
+- **The timeline runs top to bottom in both directions; the ordering axis is vertical, so no reversal
+  applies** — this is the one widget in the build so far whose primary axis is unaffected by direction.
+- **Bidi isolation classes: `amount`, `date`, `id`.** Correlation identifiers, amounts and timestamps
+  inside every event are bidirectionally isolated, per `IX-PLATFORM-010`.
+
+#### 24. Responsive behavior
+
+- **Profile C:** one event per reading-column block.
+- **Profile A:** the timeline stays in the primary region; at `profile-a.content-width.narrow` the
+  who-and-basis line (`CMP-PLATFORM-013`) stacks beneath the event rather than moving into a tooltip.
+
+#### 25. Immutability / historical safety
+
+**This widget is the archetypal reader of an immutable record, not an author of one.** By construction it
+composes **no** edit, delete or correct affordance in any variant, over any of the five immutable or
+append-only entities named in section 11 (or any other event/decision log a host projection points it
+at). A correction is always a **new** appended event, a new version, or a state transition — never a
+mutation of what this widget already rendered. This is the structural counterpart to `WGT-PLATFORM-007`
+(section 25 there): that contract is the **authoring** point of an immutable record; this one is
+permanently and only its **reader**.
+
+#### 26. Framework defaults to disable
+
+Profile A, `Custom`:
+
+- Filament's stock table row actions (edit, delete, and any bulk action) are **not attached** to the
+  custom view this widget renders — this is precisely why the realization is `Custom` rather than
+  `Extended`: a stock table would offer sort and row actions this widget's own purpose prohibits by
+  construction, and there is no "remove the defaults" step because the defaults are never wired in the
+  first place.
+- Filament's default infinite-scroll or auto-loading table behaviour (where enabled by a package) is not
+  used; the load-older boundary is an explicit, keyboard-reachable control, per `IX-PLATFORM-016`.
+
+#### 27. Prohibitions
+
+1. No control reachable from the timeline may mutate an existing event.
+2. A correction must never appear by modifying an earlier event; it appears only as a later one.
+3. A computed outcome must never be rendered as a human judgement, or the reverse.
+4. Infinite scroll with no stated, reachable boundary must never appear on Profile A.
+5. An event's reason, decider name or amount must never truncate, at any size or density.
+6. A scope-limited history must never render as if it were complete.
+
+#### 28. Definition of Done
+
+- [ ] No control reachable from the timeline mutates an existing event.
+- [ ] A correction appears as a later event and the earlier event is still readable, unmodified.
+- [ ] Where a person decided, the decider and the basis are shown; where the system evaluated, it is
+      labelled as computed.
+- [ ] The read boundary is explicit and states that older events exist, on both profiles.
+- [ ] A scope-limited history says it is scope-limited rather than appearing complete.
+- [ ] None of the six prohibitions in section 27 is violated on any of the 33 surfaces.
+
+#### 29. Verification
+
+**Tier A:**
+- `python docs/ux/scripts/validate_ux_docs.py --phase 5` — contract exists, build order 8, predecessor
+  `WGT-PLATFORM-001` declared, mandatory `CMP-PLATFORM-008` resolves.
+- `python docs/scripts/validate_docs.py`, `python scripts/check_no_emoji.py` (root and `docs`).
+
+**Tier B:**
+- `node scripts/verify_states.mjs <file>` — event chip/attribution contrast in default/hover/focus, light
+  mode.
+- `node scripts/axe_audit.mjs <file>` — list (not headings) role, disclosure expand state, event
+  accessible names.
+- `node scripts/verify_responsive.mjs <file>` — who-and-basis stacking at the narrow verification widths.
+
+**Tier C (all: not run — requires implementation):**
+- A live scope-limited read (revoked purpose grant mid-session) proving the surface states "scope-
+  limited" rather than a shorter but silently complete history — not run — requires implementation.
+- Real load-older focus restoration to the boundary control, verified keyboard-only, on both profiles —
+  not run — requires implementation.
+- Screen-reader pronunciation-order pass over a mixed-direction event (Arabic summary, Latin identifier,
+  amount) — not run — requires implementation.
+- Proof that no edit/delete path reaches any of the five immutable/append-only entity types this widget
+  renders, verified against the real Filament and API surfaces — not run — requires implementation.
+
+---
+
+### WGT-PLATFORM-014 — Implementation Contract
+
+#### 1. Identity
+
+- **WGT ID:** WGT-PLATFORM-014
+- **Name:** Before-and-after disclosure block
+- **Build order:** 9
+- **Platforms:** C, A
+- **Runtime:** RN shared component (Proposed, path unverified) + Filament custom infolist view (Proposed,
+  both panels)
+- **Phase 4 realization:** Profile C `Native`; Profile A `Custom`
+- **Screen reach:** 15 of 165
+- **Source specification:** `docs/ux/04-specs/WIDGET_SPECS_PLATFORM.md`, `WGT-PLATFORM-014` block
+
+#### 2. Implements
+
+- `FR-CLINICAL-007`
+- `FR-POLICY-002`
+- `FR-CATALOG-002`
+- `NFR-AUDIT-003`
+
+#### 3. Used by
+
+**15 screens**, confirmed against every row of `SCREEN_SPEC_MAP.md` (2 Patient, 3 Clinic, 10 Admin):
+
+- **Patient app (2):** `SCR-CLINICAL-003` (Treatment plan), `SCR-CLINICAL-004` (Plan acceptance).
+- **Clinic panel (3):** `SCR-CLINICAL-013` (Plan version history), `SCR-IDENTITY-017` (Status and
+  requested changes), `SCR-CLAIMS-007` (Claim response and evidence).
+- **Admin panel (10):** `SCR-CLINICAL-019` (Case oversight detail), `SCR-CLAIMS-011` (Evidence and
+  deadlines), `SCR-CATALOG-004` (Definition versions), `SCR-CATALOG-008` (Publish definition),
+  `SCR-CATALOG-010` (Procedure catalog and family mapping), `SCR-ELIG-019` (Eligibility policy inputs),
+  `SCR-FINANCE-011` (Dispute review), `SCR-POLICY-001` (Policy versions), `SCR-POLICY-003` (Review and
+  scheduling), `SCR-POLICY-004` (Historical reproduction).
+
+#### 4. Widget dependencies
+
+- **Required predecessor:** `WGT-PLATFORM-001` (build order 1) only, per **E1** (`PHASE_05_
+  IMPLEMENTATION_PLAN.md` section 6.5, build order 9, "Depends on: 1"). The measured edge set (section
+  6.2) names no other edge involving `WGT-PLATFORM-014`.
+- **Not a build dependency:** this widget shares no stated hosting or content relationship with
+  `WGT-PLATFORM-006`, `-007` or `-013` despite frequent screen co-occurrence (a decision that changed
+  something is often shown both as a timeline entry and as a before/after disclosure) — section 6.1's
+  no-co-occurrence rule applies identically here.
+
+#### 5. Component dependencies
+
+**Mandatory core:**
+
+| `CMP-*` | Role here |
+|---|---|
+| `CMP-CLINICAL-002` — Change disclosure | The whole widget. Six variants: `amendment` (patient-facing, disclosed before acceptance is possible), `version` (governed catalog, procedure, commercial option and policy versions), `requested-changes` (a reviewer's itemised requests against what was submitted), `deadline-history` (original against effective, with the appended events that moved it), `resolution` (the disputed record against the projection after the appended resolution), `reproduction` (reproduced outcome against recorded, verdict is match or mismatch). Anatomy: `what changed, in one sentence` → `prior` / `new` aligned rows in logical order → `unchanged, stated as unchanged` → `why, and on whose authority` (`CMP-PLATFORM-013`) → `effect` (what this governs, from when, and what it does not). Rendered **stacked, prior first,** on Profile C in every mode; side-by-side only on Profile A at `wide`. |
+
+**Conditional:**
+
+| `CMP-*` | Composed when |
+|---|---|
+| `CMP-PLATFORM-001` — State chip | Per version, where the compared record carries a lifecycle status |
+| `CMP-PLATFORM-013` — Human attribution | For who changed it, or `computed-by-system` for a reproduction's own re-evaluation |
+| `CMP-CLINICAL-001` — Treatment line | Where the changed unit is a treatment plan line |
+| `CMP-ELIG-002` — Price display | Where the change moves an amount, each side in its own governed mode |
+| `CMP-POLICY-001` — Governed version header | Where the change is a governed catalog/procedure/policy version (Admin only; `CMP-POLICY-001` is itself `n/a` on Profile C) |
+
+#### 6. Interaction dependencies
+
+- **`IX-CLINICAL-001` — Amendment disclosure and re-acceptance.** The `amendment` variant's owning
+  sequence: the clinician proposes a new plan version while the prior accepted version is untouched; the
+  patient is shown **what changed**, itemised — never two complete plans to compare by eye; **acceptance
+  is not available until the change set has been disclosed** (the one legitimate blocked-control case:
+  the same actor becomes able to act by doing something visible on this surface); **both sides of the
+  comparison load together** — a one-sided render is prohibited, because a change set with the prior side
+  missing reads as the whole truth; on acceptance a **new** snapshot is created and the prior one remains
+  reachable and immutable; focus lands on the change set, never on accept, and accept is not moved onto by
+  focus as a side effect of becoming enabled.
+- **`IX-POLICY-002` — Version comparison and historical reproduction.** The `version`/`reproduction`
+  variants' owning sequence, **Admin only**: both sides render through `CMP-POLICY-001` with their
+  effective period and gate state; for a `reproduction`, the recorded decision is re-evaluated under its
+  **then-effective** policy version and compared against the recorded outcome; **the verdict is match or
+  mismatch, stated explicitly** — a mismatch is a **result, not an error**, routed to the integrity-
+  exception surface rather than to a retry, because treating it as a failed read would hide exactly what
+  the reproduction exists to find. Where the then-effective policy cannot be determined, the reproduction
+  does not run under the current policy as a substitute — that would produce a confident wrong answer.
+- **`IX-PLATFORM-008` — Progressive disclosure.** History, full evaluation detail and advanced options sit
+  behind an explicit disclosure that states what it contains before opening; opening never moves what the
+  actor was already reading.
+- **`IX-PLATFORM-016` — Bounded reads over unbounded history.** Applies to the `version` variant's own
+  history list of prior versions: the bound is stated, ordering is stable across pages, and a truncated
+  history is never rendered as complete.
+
+#### 7. Content dependencies
+
+| `TXT-*` | Ownership | Applies to |
+|---|---|---|
+| `TXT-PLATFORM-013` — Financial transparency | Canonical, 5-rule list | Where a changed line moves an amount: no text states or implies money moved because terms changed; each treatment line names its category, reason and what it covers. |
+| `TXT-PLATFORM-014` — Version and amendment communication | Canonical, owner for this widget | Fixed formula: the prior version stays visible and unmodifiable, full contrast, never dimmed; what changed is disclosed before acceptance is possible; the two regions are named explicitly "as it was" / "as it is", never ambiguous "old/new"; the accept control names the **amended terms specifically**, not bare "accept"; no text states or implies money moved merely because terms changed. |
+| `TXT-PLATFORM-018` — Prohibitions master list | Canonical, 16-item list | Items 3 (no money-movement implication), 5 (no plan line without category and reason), 13 (irreversibility never colour/tone-only) bind this widget wherever its comparison touches a treatment line, an amount, or an irreversible acceptance. |
+| `TXT-STATE-CLINICAL-001` — Treatment plan and accepted terms | Canonical | The `amendment` variant's own status vocabulary (`PROPOSED`/`ACCEPTED`/`EXPIRED`); `PROPOSED` requires viewing any material change before acceptance, per `IX-CLINICAL-001`. |
+| `TXT-STATE-POLICY-001` — Policy version | Canonical | The `version`/`reproduction` variants' own status vocabulary (`draft`/`reviewed`/`scheduled`/`active`/`retired`/`superseded`); a `retired`/`superseded` version never renders as still governing anything. |
+
+#### 8. Accessibility dependencies
+
+| `A11Y-*` | Implementation assertion |
+|---|---|
+| `A11Y-CLINICAL-001` — Treatment/plan change accessibility | The two sides are labelled regions ("as it was," "as it is") a screen reader can enter directly; each changed item announces as changed, with both values, in one unit; the accept control's accessible name states that it accepts the **amended** terms specifically — this is the one accept control in the system where a generic label would be actively misleading (WCAG 1.3.1, 1.4.1, 2.4.3). |
+| `A11Y-POLICY-001` — Governed version and comparison accessibility | The governed-version header is announced **before** the content it frames; `expired` is distinguishable from `approved` in the announcement, the status most likely to be misread as still valid; both sides of a comparison load and announce together, never partial-as-verdict; a mismatch announces as a distinct result type, never folded into routine version drift (WCAG 1.3.1, 2.4.3) — Profile A only, `n/a` on Profile C by design. |
+| `A11Y-PLATFORM-012` — Native structural semantics | The version-history list carries real list/table semantics, not a visually-styled grid with no underlying structure (WCAG 1.3.1). |
+| `A11Y-PLATFORM-015` — No colour-alone communication | A changed value is marked by icon and label as well as fill, never by colour alone (WCAG 1.4.1). |
+| `A11Y-FINANCE-001` — Financial value accessibility | A before/after financial comparison announces both values in one unit, labelled "as it was" / "as it is," never as two independently-announced numbers the listener must remember and compare (WCAG 1.3.1, 1.3.2, 4.1.2). |
+| `A11Y-PLATFORM-030` — Bidirectional content: AT reading order and isolation | Version identifiers, effective dates and amounts on both sides are isolated with correct **screen-reader pronunciation order**, not only visual order (WCAG 1.3.2). |
+
+#### 9. Canonical data/action contracts
+
+This widget **owns no fixed `API-*`/`SDC-*` of its own.** Its data source is "the owning comparison's own
+contract." Representative examples Phase 4 names, by ID only:
+
+- **Profile C:** `API-CLINICAL-002` (get proposed/accepted treatment plan — carries the `amendment`
+  block with `supersedes_version_id`, `changed_lines[]`, `reason_per_change` and `price_difference` per
+  `FR-CLINICAL-007`).
+- **Profile A:** `SDC-CLINICAL-001` (Clinic Case and Treatment Workspace), `SDC-POLICY-001` (Policy
+  Lifecycle Workspace), `SDC-CATALOG-001` (Admin Catalog Governance Workspace), `SDC-CLAIMS-001` (Claim /
+  Dispute Participation and Review Workspace), `SDC-FINANCE-001` (Clinic/Admin Financial Record
+  Workspace), `SDC-IDENTITY-001` (Clinic Onboarding Applicant Workspace — the `requested-changes`
+  variant), `SDC-AUDIT-001` (Audit Explorer and Historical Reproduction — the `reproduction` variant).
+
+On every other screen, the applicable contract is that screen's own declared `API-*`/`SDC-*` (section
+0.6), never invented here.
+
+#### 10. Shared application-layer prerequisites
+
+- **`TASK-CLINICAL-011`** — "Implement Disclosed Treatment Amendments" — the direct prerequisite for the
+  `amendment` variant: "compute the summary from the line and modifier diff against the superseded
+  version and persist it on the new version; refuse to propose a superseding version without it."
+- **`TASK-CLINICAL-003`** — "Implement Dentist-Authored Treatment Plan Versioning" — the versioning
+  foundation `TASK-CLINICAL-011` itself depends on.
+- **`TASK-POLICY-001`** — "Implement the General Versioned Policy Foundation" — the prerequisite for the
+  `version`/`reproduction` variants over `policy_versions`: draft → reviewed → scheduled → active →
+  retired/superseded lifecycle with content hash, provenance, and historical lookup.
+- **`TASK-CATALOG-003`** — "Build the Two-Layer Catalog and Mapping Governance" — the catalog-version
+  prerequisite over `procedure_item_versions`.
+- Same shared rendering-primitive prerequisite as every widget above: `TASK-PLATFORM-001`/`-005`
+  (Filament), `TASK-PLATFORM-008` (React Native).
+
+#### 11. Data model prerequisites
+
+| Entity | Status | Relevance |
+|---|---|---|
+| `treatment_plan_versions` | Proposed | Backs the `amendment` variant directly — `supersedes_version_id` plus `amendment_summary_json` carry the disclosed amendment `FR-CLINICAL-007` requires; a separate amendment table is deliberately avoided (the version chain **is** the amendment history). |
+| `accepted_treatment_snapshots` | Proposed, immutable | The prior side of an accepted amendment; amendments create a new linked snapshot and never rewrite this one. |
+| `policy_versions` | Proposed / Governed | Backs the `version`/`reproduction` variants for price-band, market-calibration, commercial-option, proposal-validity and currency-normalization policy. |
+| `procedure_item_versions` | Proposed / Governed | Backs the `version` variant for the catalog/procedure layer; activated, retired and superseded versions are immutable, only a draft is deletable. |
+| `commercial_options` | Proposed / Governed | Backs an amount-moving modifier shown on either side of a plan-line comparison. |
+
+#### 12. Target files
+
+| Target area | Path | Status |
+|---|---|---|
+| RN shared comparison component (stacked, prior first) | Patient React Native project — path not yet determined | Proposed, path unverified |
+| Filament custom infolist view | `app/Filament/Support/` (shared change-disclosure partial) applied per `Resource` under `app/Filament/Resources/` / `app/Filament/Clinic/Resources/` | Proposed |
+
+#### 13. Data/view-model mapping
+
+| Canonical concept (host command's own contract) | View-model responsibility |
+|---|---|
+| The one-sentence change summary | `summary: string` — rendered before the detail, always |
+| Each changed element | `changes[i]: { label, prior, next }` — aligned pair, one row per changed element, in logical order |
+| Unchanged elements | `unchanged: string[]` — stated explicitly, so absence of a row is never read as absence of a change |
+| Recorded reason and authority | `{ reason, attribution }` → `CMP-PLATFORM-013` |
+| The effect | `effect: { governs, from, doesNotGovern }` |
+| Reproduction verdict, where the variant is `reproduction` | `verdict: match \| mismatch`, plus both compared outcomes |
+
+No field is invented — every value is assembled from data the host command's own read already resolved
+(per section 18, `loading-initial`: "both sides load before either renders").
+
+#### 14. Refresh / caching / polling
+
+Both sides load together and render together; a newer version arriving while the block is open **states
+that** rather than swapping the comparison underneath the reader (section 18, `loading-refresh`). No
+polling interval is specified.
+
+#### 15. Idempotency / correlation
+
+**Not applicable to the disclosure itself.** This widget renders a comparison; it issues no command of
+its own. Where the `amendment` variant's accept control commits, that commit is the owning `IX-PLATFORM-
+001` server-committed mutation's concern (with its own idempotency key, fixed at first submission) — this
+widget hands off to it rather than duplicating it.
+
+#### 16. Permission gate
+
+- **Canonical permission source:** `docs/domain/PERMISSIONS_MATRIX.md`.
+- **Server-side enforcement point:** the host command's own policy — a version outside the actor's purpose
+  scope is not returned by the read.
+- **UI consequence:** on `error-permission`, the block states the comparison is **scope-limited**, never
+  rendering one side alone as if it were the whole comparison. The `reproduction` variant additionally
+  never substitutes the current policy for an undeterminable then-effective one (section 6).
+
+#### 17. Props / configuration
+
+| Name | Type | Required | Default | Source | Notes |
+|---|---|---|---|---|---|
+| `variant` | `amendment \| version \| requested-changes \| deadline-history \| resolution \| reproduction` | Yes | none | Host's own declared comparison kind | Never inferred client-side |
+| `summary` | string | Yes | — | Host's own read | Rendered first, always |
+| `changes` | `Change[]` (section 13) | Yes | `[]` | Host's own read | Both sides load together; `null` on either side blocks render (section 18) |
+| `unchanged` | `string[]` | No | `[]` | Host's own read | Stated, never omitted |
+| `attribution` | object | No | — | `CMP-PLATFORM-013` | Absent (not guessed) where the read failed |
+| `verdict` | `match \| mismatch \| null` | Only for `reproduction` | `null` | Host's own re-evaluation | `mismatch` routes to the integrity-exception surface, never to a retry |
+| `onAccept` | callback | Only for `amendment` | — | — | Unavailable until the change set has been disclosed; never moved onto by focus |
+
+#### 18. State rendering
+
+| State | Behaviour |
+|---|---|
+| `loading-initial` | Both sides load before either renders. A one-sided diff is a misleading diff. |
+| `loading-refresh` | A newer version arriving while the block is open states that rather than swapping the comparison underneath the reader. |
+| `empty-no-data` | No change exists: stated plainly. On the `amendment` variant this means the current version is the accepted one. |
+| `empty-filtered` | n/a. A comparison is not filtered. |
+| `partial` | If one side failed to load, the block does **not** render a diff. It states which side is missing, because a partial diff reads as a complete one. |
+| `stale` | Comparison carries its as-of time; acceptance is never offered against a stale comparison. |
+| `error-fetch` | Retry in place; neither side is rendered alone. |
+| `error-permission` | A version outside the actor's purpose scope is not returned and the block says the comparison is scope-limited. |
+| `success` | The aligned comparison. |
+| Offline / unstable | Last read comparison with as-of time; acceptance is withdrawn. |
+
+#### 19. Lifecycle/state semantics
+
+Where the compared record carries a lifecycle status of its own (a plan version's `PROPOSED`/`ACCEPTED`/
+`EXPIRED`, or a policy version's `draft`/`reviewed`/`scheduled`/`active`/`retired`/`superseded`), each
+side's status renders through `CMP-PLATFORM-001` from that record's own governing machine — this widget
+never invents a comparison-specific status vocabulary. The `reproduction` variant's verdict
+(`match`/`mismatch`) is a distinct result type from a lifecycle status and is never rendered through
+`CMP-PLATFORM-001`; a `mismatch` is an integrity finding, not a state, and changes no stored history
+(section 25).
+
+#### 20. Tokens
+
+`component.clinical-002.*` (mandatory — prior/new surfaces and text at full contrast for the prior side,
+changed-marker, disclosure motion), conditional `component.platform-001.*`, `component.platform-013.*`,
+`component.clinical-001.*`, `component.elig-002.*`, `component.policy-001.*`.
+
+#### 21. Content
+
+Resolves to `TXT-PLATFORM-013`, `-014`, `-018`, `TXT-STATE-CLINICAL-001`, `TXT-STATE-POLICY-001`. No
+canonical `ERR-*` string is restated; `ERR-CLINICAL-001` is referenced by ID where a plan cannot be
+accepted.
+
+#### 22. Accessibility contract
+
+- **Role/name:** two labelled regions, "as it was" / "as it is", entered directly rather than inferred
+  from position.
+- **Focus:** on the `amendment` variant, focus moves to the change set when it first becomes viewable and
+  **deliberately not onto the accept control**, so an in-flight keystroke cannot commit an irreversible
+  acceptance; on Profile A the comparison is keyboard traversable row by row.
+- **Keyboard:** each changed element is a distinct stop, not one undifferentiated region.
+- **Screen reader:** each changed element announces as a pair — element, prior value, new value — so the
+  association survives without the visual layout; the accept control's accessible name states it accepts
+  the amended terms specifically.
+- **No colour-only:** a changed value is marked by icon and label as well as fill; a reproduction mismatch
+  is announced as a distinct result type, never folded into ordinary version drift.
+
+#### 23. RTL / bidi
+
+- **Prior and new sit in logical order and mirror together**, so the reader's before is always at the
+  logical `start`; the stacked Profile C treatment keeps prior first in reading order regardless of
+  direction.
+- **Bidi isolation classes: `id`, `date`, `amount`.** Version identifiers, content hashes, amounts and
+  effective dates are bidirectionally isolated.
+
+#### 24. Responsive behavior
+
+- **Profile C:** stacks prior and new vertically per changed element **at every size class** — a
+  side-by-side diff does not fit a reading column and splitting it would break the pairing.
+- **Profile A:** two columns at `profile-a.content-width.wide`, stacked per row at `narrow`.
+- At the largest supported text size, a changed value never truncates on either side; the two sides stack
+  with each row's pair kept adjacent.
+
+#### 25. Immutability / historical safety
+
+**The prior side of every comparison is a read of an immutable or governed-immutable record, never a
+mutable one this widget could accidentally edit.** An accepted treatment snapshot, an activated policy
+version and an activated procedure-item version are all immutable once reached; a superseding version
+never removes its predecessor from reach, and this widget renders the predecessor at **full contrast**,
+never dimmed (`A11Y-CLINICAL-001`, `TXT-PLATFORM-014`). A `reproduction` mismatch is an integrity
+exception, escalated for review — it **never** triggers a silent correction of the recorded outcome, and
+the widget itself performs no repair.
+
+#### 26. Framework defaults to disable
+
+Profile A, `Custom`:
+
+- Filament ships no aligned before-and-after comparison with an authority slot and an "unchanged is
+  stated" rule, so there is no stock default to disable — the `Custom` realization exists precisely
+  because the comparison, the itemisation and the immutable-prior-side guarantee have no Filament
+  equivalent to configure.
+- Filament's default infolist section rendering (which would show only the current version's fields) is
+  not used as the comparison surface; the two-sided anatomy is built explicitly rather than approximated
+  from a single-record view.
+
+#### 27. Prohibitions
+
+1. A diff must never render when one side did not load.
+2. An unaccepted amendment must never be presented as governing anything.
+3. A change must never be disclosed only after acceptance is already possible.
+4. The prior version must never be overwritten anywhere in the rendering.
+5. A reproduction mismatch must never be treated as a correction rather than an integrity exception.
+6. A diff must never be colour-only.
+
+#### 28. Definition of Done
+
+- [ ] On the `amendment` variant, the change set is disclosed and reachable before acceptance is offered.
+- [ ] A partial read renders no diff and names the missing side.
+- [ ] Unchanged elements are stated as unchanged rather than omitted.
+- [ ] Each changed element announces as element, prior value, new value.
+- [ ] Focus never lands on the accept control as a side effect of disclosure.
+- [ ] A reproduction mismatch raises an integrity exception and changes no stored history.
+- [ ] None of the six prohibitions in section 27 is violated on any of the 15 surfaces.
+
+#### 29. Verification
+
+**Tier A:**
+- `python docs/ux/scripts/validate_ux_docs.py --phase 5` — contract exists, build order 9, predecessor
+  `WGT-PLATFORM-001` declared, mandatory `CMP-CLINICAL-002` resolves.
+- `python docs/scripts/validate_docs.py`, `python scripts/check_no_emoji.py` (root and `docs`).
+
+**Tier B:**
+- `node scripts/verify_states.mjs <file>` — prior-side full-contrast (never dimmed) vs new-side contrast,
+  default/hover/focus, light mode.
+- `node scripts/axe_audit.mjs <file>` — labelled-region role for both sides, changed-item pair
+  announcement, accept control accessible name.
+- `node scripts/verify_responsive.mjs <file>` — Profile C stacking at every size class; no page-level
+  horizontal overflow at the narrow verification widths.
+
+**Tier C (all: not run — requires implementation):**
+- Real focus behaviour on the `amendment` variant proving focus never lands on accept as a side effect of
+  disclosure, verified keyboard-only — not run — requires implementation.
+- Screen-reader pass confirming each changed element announces as element/prior/new in one unit, in
+  Arabic, on both profiles — not run — requires implementation.
+- A live `reproduction` mismatch proving it routes to the integrity-exception surface and writes no
+  correction to the recorded decision — not run — requires implementation.
+- Real then-effective policy resolution proving a reproduction never silently substitutes the current
+  policy when the historical one cannot be determined — not run — requires implementation.
+
+---
+
+### WGT-PLATFORM-011 — Implementation Contract
+
+#### 1. Identity
+
+- **WGT ID:** WGT-PLATFORM-011
+- **Name:** Draft continuity bar
+- **Build order:** 10
+- **Platforms:** A
+- **Runtime:** Filament panel region (Proposed, both panels)
+- **Phase 4 realization:** Profile C `n/a`; Profile A `Custom`
+- **Screen reach:** 10 of 165
+- **Source specification:** `docs/ux/04-specs/WIDGET_SPECS_PLATFORM.md`, `WGT-PLATFORM-011` block
+
+**Known Phase 4 header inconsistency, not corrected here:** `docs/ux/04-specs/WIDGET_SPECS.md` section 3
+lists this widget's `Platforms` column as `C, A`, while its own dedicated block in
+`WIDGET_SPECS_PLATFORM.md` line 962, its Realization table, and its measured 10-screen placement (all
+Profile A) agree it is Profile A only. `PHASE_05_IMPLEMENTATION_PLAN.md` section 8 (item 4) records this
+exact discrepancy and states plainly that "correcting it is a Phase 4 edit" — this contract follows the
+three agreeing sources (Profile A only) and does not attempt the Phase 4 correction.
+
+#### 2. Implements
+
+- `FR-IDENTITY-001`
+- `FR-CLINICAL-001`
+- `FR-CATALOG-003`
+- `NFR-PLATFORM-006`
+
+#### 3. Used by
+
+**10 screens**, confirmed against every row of `SCREEN_SPEC_MAP.md` (0 Patient, 8 Clinic, 2 Admin):
+
+- **Clinic panel (8):** `SCR-IDENTITY-012` (Application workspace), `SCR-IDENTITY-013` (Applicant source
+  facts), `SCR-IDENTITY-014` (Branch source facts), `SCR-IDENTITY-017` (Status and requested changes),
+  `SCR-ELIG-008` (Activation request), `SCR-CLINICAL-010` (Plan authoring), `SCR-CLINICAL-011` (Stages and
+  pricing), `SCR-CLAIMS-007` (Claim response and evidence).
+- **Admin panel (2):** `SCR-CATALOG-005` (Family and definition editor), `SCR-POLICY-002` (Version
+  editor).
+
+On the Patient side the equivalent obligation is carried by `API-PLATFORM-002` reconciliation rather than
+by a draft (section 9), so this widget has no Patient placement.
+
+#### 4. Widget dependencies
+
+- **Required predecessor:** `WGT-PLATFORM-001` (build order 1) only, per **E1** (`PHASE_05_
+  IMPLEMENTATION_PLAN.md` section 6.5, build order 10, "Depends on: 1"). The measured edge set (section
+  6.2) names no other edge involving `WGT-PLATFORM-011` as a build dependency.
+- **Not a build dependency:** this widget's own block names `WGT-PLATFORM-012` **only** to explain why it
+  is `n/a` on Profile C — "on the Patient side the equivalent obligation is carried by `API-PLATFORM-002`
+  reconciliation rather than by a draft." `PHASE_05_IMPLEMENTATION_PLAN.md` section 6.2 explicitly
+  examines and **rejects** this exact mention as an edge: "neither is a build dependency and neither is
+  drawn as one."
+
+#### 5. Component dependencies
+
+**Mandatory core:**
+
+| `CMP-*` | Role here |
+|---|---|
+| `CMP-PLATFORM-011` — Submission state indicator | The `inline` variant, reused for the draft's own save cycle rather than a committing action: `pending`/`retrying` resolve to "saving," `completed` resolves to a saved time left standing (never "saving..." shown after the server confirmed), `failed` states plainly that the last save did not land, with local edits preserved. This is a **content reuse** of the same honest-state contract `IX-PLATFORM-001`/`-002` already define — a draft save is a server-committed mutation like any other, evaluated under the identical never-optimistic rule. |
+
+**Conditional:**
+
+| `CMP-*` | Composed when |
+|---|---|
+| `CMP-PLATFORM-001` — State chip | For the draft's own lifecycle status, where the host machine carries a `DRAFT` value distinct from a submitted one |
+| `CMP-PLATFORM-006` — Record list | `embedded` variant, for the section-completeness list on the `sectioned` variant |
+| `CMP-PLATFORM-013` — Human attribution | Where the draft is owned by a named person distinct from the current actor (e.g. a co-authored application) |
+
+#### 6. Interaction dependencies
+
+- **`IX-PLATFORM-005` (owner) — Draft save and resume without a submitted record.** In-progress data is
+  saved as a draft, with its last-saved time visible; **the draft creates no submitted business record**
+  — `DRAFT` is a real lifecycle status in six of the eighteen machines and is not a submission; on return,
+  the draft is offered with what it contains and when it was saved; submission is a separate, deliberate
+  act with its own confirmation where the action is sensitive. If the draft cannot be saved, the actor is
+  told **while they can still act**, not on return — a save failure never silently discards input. On
+  resume, focus lands on the first incomplete required field, not at the top of the form; on a long
+  workspace, focus returns to the section the actor left.
+- **`IX-PLATFORM-008` — Progressive disclosure.** At `profile-a.content-width.narrow`, the section-
+  completeness list collapses into a labelled disclosure while the draft status and last-saved time
+  remain visible outside it.
+- **`IX-PLATFORM-001` — Server-committed mutation.** The underlying save call this widget's own status
+  indicator reflects: an idempotency key fixed at first submission, submitting rendered honestly, no
+  re-submission while a save is in flight, an authoritative re-read (the saved time) after commit.
+
+#### 7. Content dependencies
+
+| `TXT-*` | Ownership | Applies to |
+|---|---|---|
+| `TXT-PLATFORM-008` — Loading states | Canonical | "Saving" names the act in progress; the bar never shows a generic "loading" for a save-in-flight, and never shows saved before the server confirms. |
+| `TXT-PLATFORM-010` — Pending and review states | Canonical | Where the draft's own host record carries a pending/under-review status distinct from `DRAFT` itself (e.g. a submitted-then-returned application), the same non-accusatory formula applies. |
+| `TXT-PLATFORM-014` — Version and amendment communication | Canonical | Where resuming a draft surfaces a change made elsewhere since the actor last edited it (`stale`, section 18): the actor is told rather than having one version silently win. |
+| `TXT-PLATFORM-019` — Structural state and archetype copy | Canonical | The `form` archetype rule this widget is the canonical carrier of: "حفظ كمسودة متاح لأي نموذج طويل" (save-as-draft is available for any long form). |
+
+#### 8. Accessibility dependencies
+
+| `A11Y-*` | Implementation assertion |
+|---|---|
+| `A11Y-PLATFORM-028` — Multi-step and draft-form progress is accessible and resumable (owner) | Per-section completeness is exposed as a real, announceable state, not colour alone; on resume, focus lands on the first incomplete required field or, on a long workspace, the section the actor left — never at the top of the form by default (WCAG 1.3.1, 2.4.3). |
+| `A11Y-PLATFORM-011` — Live-region announcement policy | The draft status is announced when it changes from saving to saved, **once, politely** — not on every keystroke (WCAG 4.1.3). |
+| `A11Y-PLATFORM-009` — Accessible name, role and state for every interactive element and status | Every section-completeness entry and the submit control's unavailability reason are exposed with an explicit accessible name/role/state, not left to default DOM-adjacent text (WCAG 4.1.2). |
+| `A11Y-PLATFORM-005` — Focus not obscured by sticky chrome | The bar stays visible while the actor scrolls the form, without covering a focused element (WCAG 2.4.11). |
+
+#### 9. Canonical data/action contracts
+
+This widget **owns no fixed `API-*`/`SDC-*` of its own.** Its data source is "the owning workspace's own
+contract." Phase 4 names six `SDC-*`, by ID only:
+
+- **Profile A:** `SDC-IDENTITY-001` (Clinic Onboarding Applicant Workspace), `SDC-ELIG-001` (Clinic
+  Service Activation Workspace), `SDC-CLINICAL-001` (Clinic Case and Treatment Workspace), `SDC-CLAIMS-001`
+  (Claim / Dispute Participation and Review Workspace), `SDC-CATALOG-001` (Admin Catalog Governance
+  Workspace), `SDC-POLICY-001` (Policy Lifecycle Workspace).
+
+**Profile C has no placement.** `API-PLATFORM-002` (Patient Notification Center) carries the analogous
+Patient-side obligation through reconciliation against the authoritative resource rather than through a
+resumable draft record — a structural difference the widget's own block names explicitly (section 3), not
+a gap in this contract.
+
+On every other screen, the applicable contract is that screen's own declared `SDC-*` (section 0.6), never
+invented here.
+
+#### 10. Shared application-layer prerequisites
+
+**No dedicated Filament draft/autosave `TASK-*` currently exists in `docs/implementation/*.md`.** Searched
+against every `ADMIN_IMPLEMENTATION_PLAN.md` and `CLINIC_IMPLEMENTATION_PLAN.md` task for "draft" or
+"autosave" by name: none is found. This is a genuine gap in the implementation plan, flagged and **not**
+resolved here — no such task is invented. The closest applicable prerequisites are the same
+shared-rendering-primitive tasks every widget above depends on:
+
+- **`TASK-PLATFORM-001`** — "Harden the Existing Admin Panel Boundary" — the Admin panel shell this
+  widget's Admin-panel placements (`SCR-CATALOG-005`, `SCR-POLICY-002`) build inside.
+- **`TASK-PLATFORM-005`** — "Create the Separate Clinic Filament Panel" — the Clinic panel shell this
+  widget's eight Clinic-panel placements build inside.
+
+Whichever `TASK-*` eventually implements each host `SDC-*` workspace's own draft/save mechanism (e.g. the
+`TASK-IDENTITY-*`, `TASK-CLINICAL-*`, `TASK-CATALOG-*` or `TASK-POLICY-*` owning the relevant Filament
+resource) is this widget's true functional prerequisite per-screen; none is named generically here because
+no cross-cutting draft-persistence task exists to name.
+
+#### 11. Data model prerequisites
+
+**No generic "drafts" table exists in `docs/database/ERD.md`.** Two distinct gaps, both flagged and
+neither resolved here:
+
+| Host `SDC-*` | Draft persistence found | Status |
+|---|---|---|
+| `SDC-CLINICAL-001` | `treatment_plan_versions.state` — an in-progress lifecycle value on the plan version's own row, not a separate draft entity | Proposed |
+| `SDC-POLICY-001`, `SDC-CATALOG-001` | `policy_versions.status` / `procedure_item_versions.status` — the same pattern, an in-progress status on the governed version's own row | Proposed / Governed |
+| `SDC-IDENTITY-001` | **No table of any kind identified.** `docs/database/ERD.md` defines no clinic-onboarding-application table at all, despite `SDC-IDENTITY-001` stating full `DRAFT`/`SUBMITTED`/`CHANGES_REQUESTED`/`RESUBMITTED`/`APPROVED`/`REJECTED` states and draft/submit/resubmit commands over it | Not modelled |
+| `SDC-ELIG-001`, `SDC-CLAIMS-001` | No dedicated draft table identified; presumed to follow the same in-progress-status-on-own-row pattern pending the owning `TASK-ELIG-*`/`TASK-CLAIMS-*` | Proposed |
+
+This contract does not invent a drafts table or a clinic-onboarding-application table to close either gap
+— it records the gap so the owning `TASK-IDENTITY-*` prerequisite addresses it when authored.
+
+#### 12. Target files
+
+| Target area | Path | Status |
+|---|---|---|
+| Filament panel region, sticky while scrolling | `app/Filament/Support/` (shared draft-continuity helper) applied per `Resource` under `app/Filament/Resources/` / `app/Filament/Clinic/Resources/` | Proposed |
+
+#### 13. Data/view-model mapping
+
+| Canonical concept (host workspace's own contract) | View-model responsibility |
+|---|---|
+| The draft's own lifecycle status | `draftStatus: DRAFT \| saving \| saved`, resolved from the host's own machine, never invented |
+| Last successful save | `lastSavedAt: string \| null` — a time, never "saving..." left standing after it finished |
+| Section completeness (`sectioned` variant) | `sections: { name, complete: boolean }[]` — sections complete in any order; only submission is gated on completeness |
+| Outstanding items | `outstanding: string[]` — named, not only counted |
+| Draft owner, where distinct from the current actor | `owner?: Attribution` → `CMP-PLATFORM-013` |
+
+No field is invented — the draft loads before any editable field is offered (section 18,
+`loading-initial`), so the view-model is assembled from data already resolved.
+
+#### 14. Refresh / caching / polling
+
+Event-driven: a save in flight shows as saving and resolves to a saved time; it never shows saved before
+the server confirms (section 18, `loading-refresh`). No polling interval or autosave cadence is specified
+or invented — the autosave trigger (on blur, on interval, on navigation) is the host workspace's own
+implementation detail, out of this widget's fixed scope.
+
+#### 15. Idempotency / correlation
+
+**Applies to the underlying save call, not to the bar's own rendering.** Each save is a server-committed
+mutation under `IX-PLATFORM-001`, with its own idempotency key fixed at first submission; a retry of a
+failed save reuses the original key, per `IX-PLATFORM-002` (composed by reference, not restated). This
+widget's own responsibility is honest display of that call's outcome — saving, saved, or "the last save
+did not land" — never inventing a saved state the server has not confirmed.
+
+#### 16. Permission gate
+
+- **Canonical permission source:** `docs/domain/PERMISSIONS_MATRIX.md` — revocation or expiry of a
+  grant/scope "takes effect immediately" (general rule, section 21), applied here to draft-editing
+  authority specifically.
+- **Server-side enforcement point:** the host workspace's own policy check on each save/read.
+- **UI consequence:** on `error-permission`, "authority to edit this draft was lost: editing is removed
+  structurally and the actor is told what scope they now hold" — never left to discover the loss through a
+  failed save.
+
+#### 17. Props / configuration
+
+| Name | Type | Required | Default | Source | Notes |
+|---|---|---|---|---|---|
+| `variant` | `sectioned \| single` | Yes | none | Host archetype — `sectioned` for application/authoring workspaces, `single` for one-form drafts | Never inferred client-side |
+| `draftStatus` | `DRAFT \| saving \| saved` | Yes | — | Host's own machine | See section 13 |
+| `lastSavedAt` | string \| null | Yes | `null` | Host's own read | Never a fabricated time |
+| `sections` | `Section[]` | Only for `sectioned` | `[]` | Host's own read | Sections complete in any order |
+| `submitDisabledReason` | string \| null | Yes | — | Host's own read, from `sections` | Bound to the submit control programmatically |
+| `onSaveAndClose` | callback | Yes | — | — | A reachable, keyboard-activatable control, not only an implicit behaviour |
+
+#### 18. State rendering
+
+| State | Behaviour |
+|---|---|
+| `loading-initial` | The draft loads before any editable field is offered, so the actor never types into a form that is about to be replaced. |
+| `loading-refresh` | A save in flight shows as saving and resolves to a saved time; it never shows saved before the server confirms. |
+| `empty-no-data` | No draft exists yet: the bar states that starting creates one, and that a draft is not a submission. |
+| `empty-filtered` | n/a. |
+| `partial` | A section whose completeness could not be computed says so; submission is blocked with that named rather than allowed optimistically. |
+| `stale` | A draft edited elsewhere is detected on re-read; the actor is told rather than having one version silently win. |
+| `error-fetch` | Local edits are preserved and the bar states that the last save did not land. Nothing is discarded. |
+| `error-permission` | Authority to edit this draft was lost: editing is removed structurally and the actor is told what scope they now hold. |
+| `success` | Saved, with its time. |
+| Offline / unstable | Edits are held and the bar states plainly that the last save has not landed. It never shows a saved time it did not receive. |
+
+#### 19. Lifecycle/state semantics
+
+`DRAFT` is a real, governed lifecycle status in six of the host machines, resolved through `CMP-PLATFORM-
+001` exactly like any other status where the host record carries one — this widget never treats "draft" as
+a UI-only concept distinct from the record's own machine. **A draft is never visible to the counterparty
+and is never described as submitted, on any surface, at any disclosure depth** — this is the widget's
+central correctness obligation, carried in every variant.
+
+#### 20. Tokens
+
+`component.platform-011.*` (mandatory, `inline` variant), conditional `component.platform-001.*`,
+`component.platform-006.*` (`embedded`), `component.platform-013.*`.
+
+#### 21. Content
+
+Resolves to `TXT-PLATFORM-008`, `-010`, `-014`, `-019`. No canonical `ERR-*` string is restated by this
+widget.
+
+#### 22. Accessibility contract
+
+- **Role/name:** the draft status is a real, announceable region; each section-completeness entry has an
+  explicit accessible name/role/state.
+- **Focus:** on resume, focus lands on the first incomplete required field or the section the actor left —
+  never the top of the form by default; focus is never moved by an autosave.
+- **Keyboard:** each section is reachable by keyboard; save-and-close is a real, activatable control.
+- **Screen reader:** the draft status announces once, politely, on the saving-to-saved transition — never
+  per keystroke; the submit control's unavailability reason is programmatically associated with it.
+- **No colour-only:** section completeness is exposed as a real state, not colour alone.
+
+#### 23. RTL / bidi
+
+- The bar mirrors as a whole.
+- **Bidi isolation class: `date`.** The saved timestamp is bidirectionally isolated.
+
+#### 24. Responsive behavior
+
+- **Profile A only.** The bar stays visible while the actor scrolls the form, without obscuring a focused
+  element (`A11Y-PLATFORM-005`). At `profile-a.content-width.narrow` the section completeness collapses
+  into a labelled disclosure while the draft status and last-saved time remain visible.
+- At the largest supported text size, the bar stacks above the form rather than becoming an icon; section
+  names wrap; the outstanding-items list never truncates.
+
+#### 25. Immutability / historical safety
+
+**A draft is, by definition, not yet a governed or immutable record** — it is the pre-submission state a
+later, immutable snapshot or version is created from. This widget's own immutability obligation runs the
+other way: it must never present a draft **as** a submitted or accepted record on any surface, at any
+disclosure depth, and it must never let a draft become visible to the counterparty before the actor
+deliberately submits. Once the host workspace's own submission creates the governed record (a
+`treatment_plan_version`, a `policy_version`), that record's own immutability is `WGT-PLATFORM-014`'s and
+its host contract's concern, not this widget's.
+
+#### 26. Framework defaults to disable
+
+Profile A, `Custom`:
+
+- Filament ships no draft-continuity contract with section completeness and a not-yet-submitted guarantee,
+  so there is no stock default to disable — the `Custom` realization exists because this behaviour has no
+  Filament equivalent to configure.
+- Filament's default form-dirty-state indicator (where present via a package) is not substituted for this
+  widget's own honest saving/saved/failed states, because the default does not distinguish "saving" from
+  "saved" as two named, server-confirmed states.
+
+#### 27. Prohibitions
+
+1. A draft must never show as saved before the server confirms.
+2. A draft must never be visible to the counterparty.
+3. A submit control must never be available while required items are outstanding.
+4. A linear wizard must never hide the shape of the task.
+5. An autosave must never move focus or steal a keystroke.
+6. A draft must never be presented as a submitted record anywhere.
+
+#### 28. Definition of Done
+
+- [ ] A draft is never visible to the counterparty and is never described as submitted.
+- [ ] Saved state is shown only after the server confirms.
+- [ ] Sections complete in any order; only submission is gated on completeness, and what remains is named.
+- [ ] An interrupted session resumes with every field intact.
+- [ ] Autosave never moves focus and never announces per keystroke.
+- [ ] None of the six prohibitions in section 27 is violated on any of the 10 surfaces.
+
+#### 29. Verification
+
+**Tier A:**
+- `python docs/ux/scripts/validate_ux_docs.py --phase 5` — contract exists, build order 10, predecessor
+  `WGT-PLATFORM-001` declared, mandatory `CMP-PLATFORM-011` resolves.
+- `python docs/scripts/validate_docs.py`, `python scripts/check_no_emoji.py` (root and `docs`).
+
+**Tier B:**
+- `node scripts/verify_states.mjs <file>` — draft-status/section-completeness contrast in default/hover/
+  focus, light mode.
+- `node scripts/axe_audit.mjs <file>` — draft-status live region, section-completeness accessible names,
+  submit-unavailability association.
+- `node scripts/verify_responsive.mjs <file>` — sticky-bar-never-obscures-focus at the narrow verification
+  widths; disclosure collapse at `narrow`.
+
+**Tier C (all: not run — requires implementation):**
+- Real interrupted-session resume proving every field is intact and focus lands on the first incomplete
+  required field, keyboard-only — not run — requires implementation.
+- Live proof that an autosave never moves focus or announces per keystroke, verified with a screen reader
+  during active typing — not run — requires implementation.
+- Real authority-loss mid-edit proving editing is removed structurally rather than surfaced as a failed
+  save — not run — requires implementation.
+- Live proof, once the owning `TASK-IDENTITY-*` closes the gap in section 11, that a clinic-onboarding
+  draft persists correctly — not run — requires implementation and the data-model gap to close first.
+
+---
+
+### WGT-PLATFORM-008 — Implementation Contract
+
+#### 1. Identity
+
+- **WGT ID:** WGT-PLATFORM-008
+- **Name:** Evidence transfer panel
+- **Build order:** 11
+- **Platforms:** C, A
+- **Runtime:** RN resumable transfer (Proposed, path unverified) + Filament file field, configured
+  (Proposed, both panels)
+- **Phase 4 realization:** Profile C `Native`; Profile A `Extended`
+- **Screen reach:** 9 of 165
+- **Source specification:** `docs/ux/04-specs/WIDGET_SPECS_PLATFORM.md`, `WGT-PLATFORM-008` block
+
+#### 2. Implements
+
+- `FR-CLAIMS-002`
+- `FR-ELIG-008`
+- `FR-IDENTITY-001`
+- `NFR-PLATFORM-003`
+
+#### 3. Used by
+
+**9 screens**, confirmed against every row of `SCREEN_SPEC_MAP.md` (1 Patient, 4 Clinic, 4 Admin):
+
+- **Patient app (1):** `SCR-CLAIMS-003` (Protection claim).
+- **Clinic panel (4):** `SCR-IDENTITY-015` (Application evidence), `SCR-ELIG-009` (Activation evidence),
+  `SCR-CLINICAL-014` (Stage execution and evidence), `SCR-CLAIMS-007` (Claim response and evidence).
+- **Admin panel (4):** `SCR-IDENTITY-029` (Fact and evidence verification), `SCR-ELIG-017` (Evidence
+  verification), `SCR-CLAIMS-011` (Evidence and deadlines), `SCR-PLATFORM-006` (Evidence access log).
+
+#### 4. Widget dependencies
+
+- **Required predecessor:** `WGT-PLATFORM-001` (build order 1) only, per **E1** (`PHASE_05_
+  IMPLEMENTATION_PLAN.md` section 6.5, build order 11, "Depends on: 1").
+- **Stated successor (not a predecessor of this widget):** **E6** — "`WGT-PLATFORM-008` precedes
+  `WGT-CLAIMS-001`" (`WGT-CLAIMS-001`'s own offline row: supplying evidence "resumes from its interruption
+  point under `WGT-PLATFORM-008`"). This is an outgoing edge from this widget, recorded here for
+  completeness; it places no dependency obligation on WGT-PLATFORM-008 itself, and `WGT-CLAIMS-001` is a
+  Session 5 domain contract, out of scope for this session.
+
+#### 5. Component dependencies
+
+**Mandatory core:**
+
+| `CMP-*` | Role here |
+|---|---|
+| `CMP-PLATFORM-012` — Evidence transfer item | The whole widget, one item per row. Variants: `intake` (the actor supplies), `review` (an authorised reviewer verifies or rejects), `access-log` (state plus access and download events, no transfer action). The eight fixed session states — `SELECTED`, `UPLOADING`, `PAUSED`, `FAILED_RETRYABLE`, `UPLOADED`, `VALIDATING_SCANNING`, `ACCEPTED`, `REJECTED` — are the component's primary axis, fixed by `PO-UX-17`. **The structural separation between `FAILED_RETRYABLE` (a transfer failure, offering resume/retry, never worded as a rejection) and `REJECTED` (an authoritative outcome, reachable only from validation or review, naming a specific correctable requirement) is the whole point of this widget.** `UPLOADED` is not `ACCEPTED`: an item that transferred successfully is still quarantined until the required scan succeeds and still unverified until a reviewer accepts it — three separate facts, three separate states, never collapsed. |
+
+**Conditional:**
+
+| `CMP-*` | Composed when |
+|---|---|
+| `CMP-PLATFORM-006` — Record list | `embedded` variant, for the requirement list the item set is bound to |
+| `CMP-PLATFORM-005` — Deadline indicator | Where an item carries an expiry (e.g. a credential document) |
+| `CMP-PLATFORM-013` — Human attribution | Where a reviewer accepted or rejected the item, naming the reviewer and the recorded basis |
+
+#### 6. Interaction dependencies
+
+- **`IX-PLATFORM-006` (owner) — Resumable evidence transfer.** The eight fixed session states in order,
+  with two exits: `ACCEPTED` (cleared for use) and `REJECTED` (refused, with the specific correctable
+  requirement named). **The structural separation is the whole pattern:** `FAILED_RETRYABLE` is reachable
+  only from transfer; `REJECTED` only from validation or review; a dropped connection can never route to
+  `ERR-PLATFORM-005`, and `ERR-PLATFORM-005` guidance can never be reachable from a transfer failure. An
+  interrupted transfer **resumes from where it stopped** where the session supports it, rather than
+  restarting. Focus stays in the evidence region across state changes; on rejection, focus moves to the
+  rejected item's own stated requirement, because that is the only place the actor can act.
+- **`IX-PLATFORM-009` — Long read with progress.** `UPLOADING` and `VALIDATING_SCANNING` are the loading
+  states; progress is determinate while transferring, and `VALIDATING_SCANNING` is explicitly
+  indeterminate **with a stated reason**, never a bare spinner.
+- **`IX-PLATFORM-002` — Idempotent retry.** A retryable transfer failure's retry resumes or retries the
+  **same item**, never minting a new evidence record; a repeated retryable failure states how many times
+  it has been tried and stops offering an unbounded loop.
+- **`IX-PLATFORM-018` — Field-bound validation and correction.** A `REJECTED` outcome's stated requirement
+  is bound to the specific item, with the actor's remaining valid items preserved; correcting replaces the
+  named item without re-entering the rest of the form.
+
+#### 7. Content dependencies
+
+| `TXT-*` | Ownership | Applies to |
+|---|---|---|
+| `TXT-PLATFORM-009` — Offline and weak network | Canonical | "A transfer failure caused by a weak network is never phrased as a rejection" — copy obligation 3, the most important rule in this widget's whole content surface; resume from the point of interruption is the default path. |
+| `TXT-PLATFORM-010` — Pending and review states | Canonical | Where an item's own state is `VALIDATING_SCANNING`, the same non-accusatory pending formula applies. |
+| `TXT-PLATFORM-011` — Warnings | Canonical | A non-critical informational note about an item, distinct from a rejection or a deadline warning. |
+| `TXT-ERR-PLATFORM-005` — Evidence rejected or failed validation | Canonical, fires only from `REJECTED` | Never reachable from `FAILED_RETRYABLE`; where the specific failed check is known, names it instead of repeating the generic sentence alone; recovery is always replacement with a different file, never resubmission of the same one. |
+| `TXT-STATE-PLATFORM-001` — Evidence transfer session | Canonical, fixed 8-state table | The chip label, triple and meaning for every one of the eight session states, in Arabic; the structural separation rule closing the table binds this widget directly. |
+
+#### 8. Accessibility dependencies
+
+| `A11Y-*` | Implementation assertion |
+|---|---|
+| `A11Y-PLATFORM-034` — Evidence-transfer accessibility (owner) | The eight session states are distinguishable by wording and icon, not tone alone; `FAILED_RETRYABLE` announces politely and moves focus to the item's resume control; `REJECTED` announces politely with distinct wording and moves focus to the stated correctable requirement, never to a retry control. |
+| `A11Y-PLATFORM-011` — Live-region announcement policy | Progress is announced at intervals, never continuously; `UPLOADED` announces once (WCAG 4.1.3). |
+| `A11Y-PLATFORM-027` — Field-bound error association, summary, input preservation | A `REJECTED` item's stated requirement is programmatically bound to the item, not merely visually adjacent (WCAG 3.3.1, 3.3.3). |
+| `A11Y-PLATFORM-015` — No colour-alone communication | `FAILED_RETRYABLE` and `REJECTED` differ by icon and wording as well as tone (WCAG 1.4.1). |
+| `A11Y-PLATFORM-013` — Target size floor and comfortable floor | The resume/retry/replace/remove controls each clear `semantic.size.target-floor` (WCAG 2.5.8). |
+
+#### 9. Canonical data/action contracts
+
+- **Profile C:** `API-PLATFORM-001` — Private Evidence Transfer. Status: **Proposed.** `POST /api/v1/
+  evidence-sessions` (open), `PUT .../content` (transfer, resumable by byte-range offset), `POST .../
+  finalize`. Idempotency key required on open and finalize; repeated finalize returns the original
+  terminal outcome. **Deliberately provider-neutral** — no presigned URL, vendor SDK or vendor-specific
+  multipart protocol is named, so the concrete storage and scanner can be selected later without a
+  contract change (`PO-UX-17`). Private evidence is never returned as a raw storage path, a public URL, or
+  a signed URL in this or any other contract.
+- **Profile A:** `SDC-IDENTITY-001` (Clinic Onboarding Applicant Workspace), `SDC-ELIG-001` (Clinic
+  Service Activation Workspace — "no manual A/B/C/D/F/P/H/I/final eligibility inputs"), `SDC-ELIG-002`
+  (Admin Verification Workbench), `SDC-CLAIMS-001` (Claim / Dispute Participation and Review Workspace),
+  `SDC-AUDIT-001` (Audit Explorer and Historical Reproduction — the `access-log` variant).
+
+#### 10. Shared application-layer prerequisites
+
+- **`TASK-PLATFORM-002`** — "Implement Private Evidence Intake, Quarantine, and Authorized Download" —
+  **the single most important prerequisite for this widget**, establishing the shared private evidence
+  service every one of the nine screens depends on: "validate extension + magic + MIME + decodability;
+  enforce configured size/count limits; opaque UUID/object identity; SHA-256; quarantine until scan
+  passes; fresh authorization for download; signed access ≤60 seconds when used; audit every sensitive
+  download. Provider remains unresolved." Its own dependencies: `TASK-AUDIT-001`, `TASK-IDENTITY-002`.
+- Same shared rendering-primitive prerequisite as every widget above: `TASK-PLATFORM-001`/`-005`
+  (Filament), `TASK-PLATFORM-008` (React Native).
+
+#### 11. Data model prerequisites
+
+| Entity | Status | Relevance |
+|---|---|---|
+| `evidence_items` | Proposed | The canonical destination for a transferred item: `object_key`, `mime_type`, `sha256`, `scan_state`, `scan_completed_at`. Business use is blocked until the required scan/validation state passes. |
+| `evidence_bindings` | Proposed | Binds one `evidence_item` to exactly one parent record (`service_activation_request_id`, `case_treatment_stage_id`, `financial_event_id`, `claim_id`, `claim_appeal_id`, `review_appeal_id`) and a `purpose`; a database CHECK requires exactly one parent per row. |
+
+#### 12. Target files
+
+| Target area | Path | Status |
+|---|---|---|
+| RN resumable transfer, session state per item | Patient React Native project — path not yet determined | Proposed, path unverified |
+| Filament file field, configured against the requirement set | `app/Filament/Support/` (shared evidence-item field) applied per `Resource` under `app/Filament/Resources/` / `app/Filament/Clinic/Resources/` | Proposed |
+
+#### 13. Data/view-model mapping
+
+| Canonical concept (host requirement's own contract) | View-model responsibility |
+|---|---|
+| The governing requirement, from the host definition | `requirement: { description, why }` — loads before any item control is offered |
+| Item's own session state | `items[i].sessionState: SELECTED \| UPLOADING \| PAUSED \| FAILED_RETRYABLE \| UPLOADED \| VALIDATING_SCANNING \| ACCEPTED \| REJECTED` |
+| What to do next per item | `items[i].nextAction: resume \| retry \| correct-and-resupply \| none` — differs per exit, never a uniform "retry" |
+| File identity shown to the actor | `items[i].displayName` — **never** the opaque storage identifier |
+| Reviewer's outcome, where the `review` variant applies | `items[i].reviewedBy?: Attribution` → `CMP-PLATFORM-013` |
+
+No storage path, signed link, or scanner-internal value is ever placed in the view-model (section 27).
+
+#### 14. Refresh / caching / polling
+
+Item states refresh without interrupting an in-flight transfer (section 18, `loading-refresh`). No
+polling interval is specified; `VALIDATING_SCANNING`'s resolution is event-driven from the scan service.
+
+#### 15. Idempotency / correlation
+
+**Applies at the session level, per item.** `API-PLATFORM-001` requires an idempotency key on open and
+finalize; a transient transfer failure is retried on the **same** session, never as a new evidence record
+(`API-PLATFORM-001` Business Rules). A retryable failure's retry reuses the item's own session; it never
+mints a second `evidence_items` row for the same intent.
+
+#### 16. Permission gate
+
+- **Canonical permission source:** `docs/domain/PERMISSIONS_MATRIX.md` §15 "Private Evidence and Files" —
+  "Fresh authorization for exact evidence purpose/resource; audit required" (upload); "Quarantine remains
+  effective until required scan succeeds" (use before scan is a **Deny**); "Fresh authorization for exact
+  evidence/resource/purpose; download audited" (view/download); "Reuse signed/private file URL after
+  authorization expiry" is a **Deny**.
+- **Server-side enforcement point:** the evidence service `TASK-PLATFORM-002` establishes.
+- **UI consequence:** on `error-permission`, "viewing or downloading requires fresh authorization for the
+  exact purpose; a denial states that rather than showing an empty item set."
+
+#### 17. Props / configuration
+
+| Name | Type | Required | Default | Source | Notes |
+|---|---|---|---|---|---|
+| `variant` | `intake \| review \| access-log` | Yes | none | Host archetype | `access-log` offers no transfer action |
+| `requirement` | `{ description, why }` | Yes | — | Host's own governing definition | Loads before any add-item control |
+| `items` | `Item[]` (section 13) | Yes | `[]` | Host's own read | One row per item |
+| `onAddItem` | callback | Only for `intake` | — | — | Subject to the requirement, never a free upload |
+| `onResume` / `onRetry` | callback | Yes where `FAILED_RETRYABLE`/`PAUSED` items exist | — | — | Reuses the item's own session, never a new one |
+| `onReplace` | callback | Only for `intake`, on a `REJECTED` item | — | — | Correcting the named requirement, never retrying the same file |
+
+#### 18. State rendering
+
+| State | Behaviour |
+|---|---|
+| `loading-initial` | The requirement list loads before any item control is offered, because a free upload with no requirement is not a thing this product has. |
+| `loading-refresh` | Item states refresh without interrupting an in-flight transfer. |
+| `empty-no-data` | No requirement applies: stated plainly, with no add control. |
+| `empty-filtered` | n/a. The requirement set is governed, not filtered. |
+| `partial` | Some item states resolved and some did not; an unresolved item is never rendered as satisfied. |
+| `stale` | Item states shown with their as-of time; acceptance is never inferred from a stale read. |
+| `error-fetch` | Requirement list preserved; retry in place; an in-flight transfer is not cancelled by a failed status read. |
+| `error-permission` | Viewing or downloading requires fresh authorization for the exact purpose; a denial states that rather than showing an empty item set. |
+| `success` | Items with their current states. |
+| Offline / unstable | The load-bearing condition. A transfer resumes from the point of interruption rather than restarting, and the panel says the connection is unavailable rather than reporting a failure. |
+
+#### 19. Lifecycle/state semantics
+
+The eight fixed session states are the widget's entire lifecycle vocabulary and are **not** rendered
+through `CMP-PLATFORM-001`'s general status-machine mechanism — they are `CMP-PLATFORM-012`'s own
+dedicated triple, fixed by `PO-UX-17`, deliberately distinct so the transfer-vs-rejection separation
+cannot be diluted by reuse with an unrelated machine. Where the host record's own lifecycle status is
+separately relevant (e.g. the claim itself is `UNDER_REVIEW` while its evidence items transfer), that
+status renders through `CMP-PLATFORM-001` on the host surface, never inside this widget.
+
+#### 20. Tokens
+
+`component.platform-012.*` (mandatory — `FAILED_RETRYABLE` resolves to `tone.warning`, `REJECTED` to
+`tone.danger`, with different icons and emphases, enforced by the token gate), conditional
+`component.platform-006.*` (`embedded`), `component.platform-005.*`, `component.platform-013.*`.
+
+#### 21. Content
+
+Resolves to `TXT-PLATFORM-009`, `-010`, `-011`, `TXT-ERR-PLATFORM-005`, `TXT-STATE-PLATFORM-001`.
+`ERR-PLATFORM-005` is referenced by ID only, on the `REJECTED` exit; it is never reachable from
+`FAILED_RETRYABLE`.
+
+#### 22. Accessibility contract
+
+- **Role/name:** each item's accessible name carries its file identity and its current session state
+  together.
+- **Focus:** `FAILED_RETRYABLE` moves focus to the item's resume control; `REJECTED` moves focus to the
+  stated correctable requirement, never to a retry control.
+- **Keyboard:** the file control is keyboard operable on Profile A; resume, retry, replace and remove are
+  all reachable by keyboard.
+- **Screen reader:** progress announces at intervals, never continuously; `UPLOADED` announces once;
+  `VALIDATING_SCANNING`'s transition into `ACCEPTED` or `REJECTED` is announced, because it happens
+  without user action.
+- **No colour-only:** the eight session states are distinguishable by wording and icon; no state is
+  conveyed by colour alone.
+
+#### 23. RTL / bidi
+
+- Progress fills from the logical `start` in both directions; a progress bar filling physically
+  left-to-right in a right-to-left interface is a directional defect.
+- **Bidi isolation classes: `id`, `date`.** Filenames, content hashes and item identifiers are
+  bidirectionally isolated; directional icons mirror, state icons do not.
+
+#### 24. Responsive behavior
+
+- **Profile C:** item rows stack in the reading column with the state and the next action always
+  together.
+- **Profile A:** requirement and items sit in one region; at `profile-a.content-width.narrow` each item's
+  state and next action stack rather than moving off-screen.
+
+#### 25. Immutability / historical safety
+
+Once an item reaches `ACCEPTED` and is bound to one of the nine immutable entities (via `evidence_
+bindings`), it is read-only at full contrast in every later rendering — the `access-log` variant is the
+canonical read of that history, offering no transfer action. A rejection is never retried as the same
+file; it is corrected by replacement, which creates a **new** `evidence_items` row rather than mutating
+the rejected one, so the rejected item's own record (and the reviewer's basis for rejecting it) remains
+readable.
+
+#### 26. Framework defaults to disable
+
+Profile A, `Extended`:
+
+- Filament's own upload states (a generic "uploading"/"uploaded"/"failed") **do not distinguish the two
+  exits** — `FAILED_RETRYABLE` from `REJECTED` — and are **replaced**, not relabelled, by the eight-state
+  machine rendered as a custom item row.
+- Filament's default file-field preview, where it would expose a raw storage path or filename, is
+  **not** used as-is; the displayed identity is the actor-recognisable name, never the opaque object key.
+
+#### 27. Prohibitions
+
+1. Transfer success must never collapse into evidence acceptance.
+2. A single failure state must never cover both `FAILED_RETRYABLE` and `REJECTED`.
+3. A storage path, opaque filename, signed link or scanner internal must never be exposed on any surface.
+4. A quarantined item must never be treated as satisfying a requirement.
+5. A public or long-lived link to any evidence must never exist.
+6. A transfer vendor must never be named.
+
+#### 28. Definition of Done
+
+- [ ] `FAILED_RETRYABLE` and `REJECTED` differ in tone, icon, wording, next action and focus destination.
+- [ ] `UPLOADED` never renders as accepted, and a quarantined item never satisfies a requirement.
+- [ ] An interrupted transfer resumes from its interruption point rather than restarting.
+- [ ] No surface exposes a storage path, a raw filename, a signed link or a scanner internal.
+- [ ] Progress announces at intervals, not continuously.
+- [ ] Every viewing or download action requires fresh purpose-bound authorization and is audited.
+- [ ] None of the six prohibitions in section 27 is violated on any of the 9 surfaces.
+
+#### 29. Verification
+
+**Tier A:**
+- `python docs/ux/scripts/validate_ux_docs.py --phase 5` — contract exists, build order 11, predecessor
+  `WGT-PLATFORM-001` declared, mandatory `CMP-PLATFORM-012` resolves.
+- `python docs/scripts/validate_docs.py`, `python scripts/check_no_emoji.py` (root and `docs`).
+
+**Tier B:**
+- `node scripts/verify_states.mjs <file>` — `FAILED_RETRYABLE` vs `REJECTED` contrast in default/hover/
+  focus, light mode.
+- `node scripts/axe_audit.mjs <file>` — item accessible names, focus-destination assertions for the two
+  exits, resume/retry/replace/remove reachability.
+- `node scripts/verify_responsive.mjs <file>` — item state/next-action stacking at the narrow verification
+  widths.
+
+**Tier C (all: not run — requires implementation):**
+- Real resumable transfer proof: an interrupted upload resumes from its byte offset rather than
+  restarting, on the actual React Native client — not run — requires implementation.
+- Live proof that no storage path, filename, signed link or scanner internal is ever reachable on any
+  surface, verified against the real API responses — not run — requires implementation.
+- Screen-reader pass confirming `FAILED_RETRYABLE` and `REJECTED` announce with distinct wording and move
+  focus to their correct respective destinations — not run — requires implementation.
+- A live repeated-retry proving the same idempotency-keyed session, never a new evidence record, under
+  contention — not run — requires implementation.
+
+---
+
+### WGT-PLATFORM-013 — Implementation Contract
+
+#### 1. Identity
+
+- **WGT ID:** WGT-PLATFORM-013
+- **Name:** Itemized verification list
+- **Build order:** 12
+- **Platforms:** A
+- **Runtime:** Filament repeater or table, configured (Proposed, Admin panel only)
+- **Phase 4 realization:** Profile C `n/a`; Profile A `Extended`
+- **Screen reach:** 6 of 165
+- **Source specification:** `docs/ux/04-specs/WIDGET_SPECS_PLATFORM.md`, `WGT-PLATFORM-013` block
+
+#### 2. Implements
+
+- `FR-IDENTITY-001`
+- `FR-ELIG-007`
+- `FR-AUDIT-001`
+
+#### 3. Used by
+
+**6 screens**, confirmed against every row of `SCREEN_SPEC_MAP.md` (0 Patient, 0 Clinic, 6 Admin —
+verification is a staff activity, per the widget's own Realization table):
+
+- **Admin panel (6):** `SCR-IDENTITY-029` (Fact and evidence verification), `SCR-IDENTITY-030` (Request
+  changes), `SCR-IDENTITY-038` (Legal representation verification), `SCR-ELIG-015` (Activation request
+  review), `SCR-ELIG-016` (Source fact verification), `SCR-ELIG-017` (Evidence verification).
+
+#### 4. Widget dependencies
+
+- **Required predecessor:** `WGT-PLATFORM-001` (build order 1) only, per **E1** (`PHASE_05_
+  IMPLEMENTATION_PLAN.md` section 6.5, build order 12, "Depends on: 1"). The measured edge set (section
+  6.2) names no other edge involving `WGT-PLATFORM-013`.
+
+#### 5. Component dependencies
+
+**Mandatory core:**
+
+| `CMP-*` | Role here |
+|---|---|
+| `CMP-PLATFORM-013` — Human attribution | Per-item provenance and, once decided, the reviewer's own attribution. Anatomy per item: `item` → `submitted value` → `provenance` → `outcome` → `[ reason ]` (required on reject and on request-change; becomes the applicant's blocker text) → `outstanding count`. |
+
+**Conditional:**
+
+| `CMP-*` | Composed when |
+|---|---|
+| `CMP-PLATFORM-006` — Record list | `embedded` variant, for the item set itself |
+| `CMP-PLATFORM-012` — Evidence transfer item | `review` variant, where the item is evidence rather than a source fact — purpose-bound access, every view audited |
+| `CMP-PLATFORM-014` — Sensitive confirmation | Where the item decision is authoritative (the `facts` variant's approve/reject, which creates or activates governed truth) |
+| `CMP-PLATFORM-001` — State chip | Per item, for its own outcome state |
+
+#### 6. Interaction dependencies
+
+- **`IX-PLATFORM-018` — Field-bound validation and correction.** Every error, and every required reason on
+  reject/request-change, is bound to the specific item it concerns, not collected only in a summary; the
+  reviewer's own input survives entirely across a failed commit.
+- **`IX-PLATFORM-008` — Progressive disclosure.** An item's full submitted detail and its provenance sit
+  behind an explicit disclosure where the row itself would otherwise be too dense to scan.
+- **`IX-PLATFORM-001` — Server-committed mutation.** Each per-item outcome is its own server-committed
+  mutation: an idempotency key fixed at first submission, no re-submission of the same item's outcome
+  while in flight, an authoritative re-read of the item's own state after commit.
+- **`IX-AUDIT-001` — Sensitive decision capture and irreversibility.** Where the item's decision is
+  authoritative (the `facts` variant), `CMP-PLATFORM-014` intervenes before the command reaches the
+  server: states what this action is, what it will do, whether it can be undone, and what it affects; a
+  reason is required; on commit, the decision, its reason, its actor and its time are recorded and the
+  reason becomes the recorded **basis** `CMP-PLATFORM-013` later shows.
+
+#### 7. Content dependencies
+
+| `TXT-*` | Ownership | Applies to |
+|---|---|---|
+| `TXT-PLATFORM-005` — Validation | Canonical | The fixed formula for every field-level validation message: what is wrong, plus how to fix it, bound directly to the item's own field. |
+| `TXT-PLATFORM-010` — Pending and review states | Canonical | Items awaiting verification carry the same non-accusatory pending formula; a positive-direction pending outcome and a negative one never share any visual element. |
+| `TXT-PLATFORM-011` — Warnings | Canonical | A non-critical note on an item, distinct from a rejection reason. |
+| `TXT-PLATFORM-016` — Permissions | Canonical | A denial for a reviewer outside their competence or assignment never names an internal permission key and never implies an override exists; a removed decision control is absent and explained, never merely disabled. |
+
+#### 8. Accessibility dependencies
+
+| `A11Y-*` | Implementation assertion |
+|---|---|
+| `A11Y-PLATFORM-001` — Complete keyboard operability, Profile A | The whole list is operable by keyboard, item by item, without a pointer (WCAG 2.1.1). |
+| `A11Y-PLATFORM-012` — Native structural semantics | The item set carries real list/table structure, and an item's provenance is part of its accessible name, not a hover-only detail (WCAG 1.3.1). |
+| `A11Y-PLATFORM-027` — Field-bound error association, summary, input preservation | The reason field carries a persistent visible label and its error is bound to it (WCAG 3.3.1, 3.3.3). |
+| `A11Y-PLATFORM-011` — Live-region announcement policy | Recording an outcome keeps focus on the item and announces the outstanding count politely (WCAG 4.1.3). |
+| `A11Y-PLATFORM-015` — No colour-alone communication | An item's outcome consumes the full tone/icon/emphasis triple (WCAG 1.4.1). |
+| `A11Y-AUDIT-001` — Sensitive decision capture accessibility | On the `facts` variant, `CMP-PLATFORM-014`'s accessible description ties directly to the effect statement; the required reason field's error is bound; the confirm control's accessible name states the effect, not only the verb. |
+
+#### 9. Canonical data/action contracts
+
+This widget **owns no fixed `API-*`/`SDC-*` of its own** — Profile A only, so no `API-*` applies. Its data
+source is "the owning review workspace's own contract." Phase 4 names three `SDC-*`, by ID only:
+
+- **Profile A:** `SDC-IDENTITY-002` (Admin Clinic Onboarding Review Workspace — approve/reject, creates
+  provider/branch/grant on approval; "approval must not activate services, assign scientific grade,
+  directly set P/H/I, or publish the provider"), `SDC-IDENTITY-005` (Admin Legal-Basis Representation
+  Verification — "approval is the **only** path that creates the grant"), `SDC-ELIG-002` (Admin
+  Verification Workbench — "no direct editing of computed final S/P/H/I/eligibility").
+
+#### 10. Shared application-layer prerequisites
+
+- **`TASK-IDENTITY-002`** — "Implement Scoped Staff Grants and Resource Authorization" — the
+  competence/assignment scope enforcement this widget's own `error-permission` state depends on: "policies
+  must re-check active grants on each protected action."
+- **`TASK-ELIG-001`** — "Implement Provider/Branch Verification Work Context" — a dependency of
+  `TASK-ELIG-002`, giving verification staff a scoped operational context.
+- **`TASK-ELIG-002`** — "Implement Approved Facts and Activation Evidence Decisions" — the most directly
+  relevant prerequisite: "convert submitted evidence/source facts into governed approved/rejected fact
+  records that can safely drive eligibility. Decision must record source, actor, reason, evidence,
+  effective/expiry metadata, and affected scopes."
+- Same shared rendering-primitive prerequisite as every widget above: `TASK-PLATFORM-001` (Admin panel).
+
+#### 11. Data model prerequisites
+
+| Entity | Status | Relevance |
+|---|---|---|
+| `approved_facts` | Proposed | The `facts` variant's own destination: source, actor, reason, effective/expiry and a `supersedes_fact_id` link — once used in an immutable decision, a correction is a **new** fact, never a rewrite. |
+| `evidence_items` / `evidence_bindings` | Proposed | The `evidence` variant's source, shared with `WGT-PLATFORM-008` (section 11 there). |
+| `service_activation_requests` | Proposed | The upstream record `approved_facts` verify against; "no column accepts final S/P/H/I outcome entry." |
+| `guardian_grants` | Proposed | The legal-basis grant table `SDC-IDENTITY-005`'s approval creates; the widget itself never writes to it directly — approval does, through the host command. |
+
+#### 12. Target files
+
+| Target area | Path | Status |
+|---|---|---|
+| Filament repeater or table, per-row outcome, required reason, custom provenance slot | `app/Filament/Resources/` (each owning review resource) | Proposed |
+
+#### 13. Data/view-model mapping
+
+| Canonical concept (host workspace's own contract) | View-model responsibility |
+|---|---|
+| Each item's submitted value and provenance | `items[i]: { value, provenance, outcome?, reason? }` — an item with unknown provenance is never offered for approval |
+| Item outcome | `items[i].outcome: pending \| verified \| rejected \| change-requested` |
+| Required reason on a negative outcome | `items[i].reason: string` — required for `rejected`/`change-requested`, becomes the applicant's own blocker text |
+| Outstanding count | `outstandingCount: number`, derived — never counts an item whose state failed to load as verified |
+| Reviewer competence/assignment | Resolved server-side; the view-model never receives an item outside the reviewer's own scope (section 16) |
+
+No field is invented beyond what the host `SDC-*` workspace's own projection already carries.
+
+#### 14. Refresh / caching / polling
+
+Item outcomes refresh without losing an in-progress reason (section 18, `loading-refresh`). No polling
+interval is specified or invented.
+
+#### 15. Idempotency / correlation
+
+**Applies per item.** Each item's outcome commit carries its own idempotency key, fixed at first
+submission, under `IX-PLATFORM-001`; a retry of a failed per-item commit reuses that item's original key,
+never a new one, under `IX-PLATFORM-002` (composed by reference). On the `facts` variant, `IX-AUDIT-001`'s
+own correlation/audit requirement applies additionally: actor, time, reason and outcome are recorded
+together as one append-only event per decided item.
+
+#### 16. Permission gate
+
+- **Canonical permission source:** `docs/domain/PERMISSIONS_MATRIX.md` — the ten-dimension authorization
+  model (section "1–10"), of which dimensions 6 ("workflow responsibility"), 7 ("subject-matter scope")
+  and the "Verify source facts/evidence" row (assigned work item, organization/subject competence, no
+  prohibited conflict) govern this widget directly; the pattern is stated at its clearest in the row
+  denying a medically sensitive decision "without required clinical competence."
+- **Server-side enforcement point:** the host workspace's own scoped query and policy check.
+- **UI consequence:** "items outside the reviewer's competence or assignment are not offered, and a scope
+  loss removes decision controls structurally" — never merely disabled.
+
+#### 17. Props / configuration
+
+| Name | Type | Required | Default | Source | Notes |
+|---|---|---|---|---|---|
+| `variant` | `facts \| evidence \| changes` | Yes | none | Host archetype — `facts` (source-fact verification, creates governed truth), `evidence` (composes `CMP-PLATFORM-012` `review`), `changes` (itemised requests, one reason per item) | Never a fourth value |
+| `items` | `Item[]` (section 13) | Yes | `[]` | Host's own read | An item with unknown provenance is never offered for approval |
+| `outstandingCount` | number | Yes | derived | — | See section 13 |
+| `onDecide` | callback | Yes | — | — | Per item; `facts` routes through `CMP-PLATFORM-014` first |
+| `reasonRequired` | boolean | Yes | derived from outcome | — | `true` for `rejected`/`change-requested` |
+
+#### 18. State rendering
+
+| State | Behaviour |
+|---|---|
+| `loading-initial` | The item set and its provenance load together; an item with unknown provenance is not offered for approval. |
+| `loading-refresh` | Item outcomes refresh without losing an in-progress reason. |
+| `empty-no-data` | Nothing assigned: stated plainly, with no decision control. |
+| `empty-filtered` | Where the reviewer filters by competence or outcome, the filter is named as the cause. |
+| `partial` | Some item states loaded and some did not; an unloaded item is never counted as verified and the completion count says so. |
+| `stale` | Item outcomes with their as-of time; a decision is not committed against a stale item set. |
+| `error-fetch` | Reviewer input preserved; retry in place. |
+| `error-permission` | Items outside the reviewer's competence or assignment are not offered, and a scope loss removes decision controls structurally. |
+| `success` | Item outcomes, with the outstanding count. |
+| Offline / unstable | Rare on this profile; the same rule applies rather than a degraded one. Decision controls are withdrawn. |
+
+#### 19. Lifecycle/state semantics
+
+Each item's own outcome (`pending`/`verified`/`rejected`/`change-requested`) is a lifecycle status
+resolved through `CMP-PLATFORM-001`, never invented per-screen. Where the `facts` variant's decision is
+authoritative, the recorded reason becomes the **basis** `CMP-PLATFORM-013` renders on the resulting
+record thereafter — this widget hands the data off; it does not itself perform that later binding, matching
+`WGT-PLATFORM-007`'s own equivalent hand-off (its section 19).
+
+#### 20. Tokens
+
+`component.platform-013.*` (mandatory), conditional `component.platform-006.*` (`embedded`),
+`component.platform-012.*` (`review`), `component.platform-014.*`, `component.platform-001.*`.
+
+#### 21. Content
+
+Resolves to `TXT-PLATFORM-005`, `-010`, `-011`, `-016`. No canonical `ERR-*` string is restated.
+
+#### 22. Accessibility contract
+
+- **Role/name:** each item's accessible name carries its provenance and its current outcome together.
+- **Focus:** recording an outcome keeps focus on the item; the outstanding count announces politely
+  after.
+- **Keyboard:** the whole list is operable item by item without a pointer.
+- **Screen reader:** the reason field's error is bound to it; the outstanding count is announced as it
+  changes.
+- **No colour-only:** an item's outcome is never carried by tone alone.
+
+#### 23. RTL / bidi
+
+- Columns mirror.
+- **Bidi isolation class: `id`.** Submitted values containing Latin identifiers, licence numbers and
+  registration codes are bidirectionally isolated — a reordered licence number is a **wrong** licence
+  number.
+
+#### 24. Responsive behavior
+
+- **Profile A only.** At `profile-a.content-width.wide` the item, value, provenance and outcome sit in one
+  row; at `narrow` each item stacks with its value directly above its outcome, and the table's own bounded
+  scroll is permitted while the page's is not.
+- The submitted value and the reason wrap in full at any text size; neither truncates, because a reviewer
+  comparing a truncated value is comparing the wrong thing.
+
+#### 25. Immutability / historical safety
+
+Once an item's decision commits, the resulting `approved_facts` row (or equivalent governed record) is
+append-only: a later correction to the same fact creates a **new**, linked row via `supersedes_fact_id`,
+never a rewrite of the decided one. This widget itself renders the **current** decision state per item; a
+full decision history for one item, where needed, is `WGT-PLATFORM-006`'s concern, not this widget's.
+
+#### 26. Framework defaults to disable
+
+Profile A, `Extended`:
+
+- **Filament's own bulk approve is not registered.** This is the widget's own hard prohibition (section
+  27, item 1) restated as a configuration rule: the framework's stock bulk-action affordance is never
+  wired onto this list, for any variant.
+- Filament's default confirm-only action modal is insufficient for the `facts` variant's required-reason
+  decisions and is replaced by `CMP-PLATFORM-014`'s required-reason variant, matching the same
+  configuration rule `WGT-PLATFORM-007` (section 26) already establishes.
+
+#### 27. Prohibitions
+
+1. A bulk approve or bulk reject control must never exist.
+2. A global reject with no itemisation must never appear, forcing the applicant to redo the whole form.
+3. An item whose provenance did not load must never be approved.
+4. Evidence must never be used before its required scan succeeds.
+5. A storage path, filename or scanner internal must never be exposed.
+6. A rejection reason must never omit what the counterparty must do.
+
+#### 28. Definition of Done
+
+- [ ] Every outcome is recorded per item with its provenance and a reason where the outcome is negative.
+- [ ] No bulk approve or bulk reject control exists on any of the six surfaces.
+- [ ] A requested change is itemised, and the applicant surface locks everything that was not flagged.
+- [ ] Evidence cannot be marked usable before its required scan succeeds.
+- [ ] The outstanding count is accurate under a partial read and says so when it is not.
+- [ ] None of the six prohibitions in section 27 is violated on any of the 6 surfaces.
+
+#### 29. Verification
+
+**Tier A:**
+- `python docs/ux/scripts/validate_ux_docs.py --phase 5` — contract exists, build order 12, predecessor
+  `WGT-PLATFORM-001` declared, mandatory `CMP-PLATFORM-013` resolves.
+- `python docs/scripts/validate_docs.py`, `python scripts/check_no_emoji.py` (root and `docs`).
+
+**Tier B:**
+- `node scripts/verify_states.mjs <file>` — per-item outcome contrast in default/hover/focus, light mode.
+- `node scripts/axe_audit.mjs <file>` — item accessible names including provenance, reason-field
+  association, outstanding-count live region.
+- `node scripts/verify_responsive.mjs <file>` — item stacking at `narrow`; bounded table scroll contained
+  within its own container.
+
+**Tier C (all: not run — requires implementation):**
+- Live proof that no bulk approve/reject control is reachable through any interface, verified against the
+  real Filament configuration — not run — requires implementation.
+- Real competence/assignment scope enforcement proving an out-of-scope item is never offered for decision
+  — not run — requires implementation.
+- Screen-reader pass confirming the outstanding count announces correctly under a partial read — not run
+  — requires implementation.
+- A live retry with the original idempotency key producing exactly one committed per-item decision under
+  contention — not run — requires implementation.
+
+---
+
+### WGT-PLATFORM-009 — Implementation Contract
+
+#### 1. Identity
+
+- **WGT ID:** WGT-PLATFORM-009
+- **Name:** Attention and notification feed
+- **Build order:** 13
+- **Platforms:** C, A
+- **Runtime:** RN feed (Proposed, path unverified) + Filament dashboard widget (Proposed, both panels)
+- **Phase 4 realization:** Profile C `Native`; Profile A `Extended`
+- **Screen reach:** 4 of 165
+- **Source specification:** `docs/ux/04-specs/WIDGET_SPECS_PLATFORM.md`, `WGT-PLATFORM-009` block
+
+#### 2. Implements
+
+- `FR-PLATFORM-001`
+- `FR-BOOKING-003`
+- `FR-CLINICAL-005`
+
+#### 3. Used by
+
+**4 screens**, confirmed against every row of `SCREEN_SPEC_MAP.md` (2 Patient, 1 Clinic, 1 Admin — not
+"4 Patient dashboards": two placements are Profile A):
+
+- **Patient app (2):** `SCR-PLATFORM-001` (Needs attention), `SCR-PLATFORM-009` (Notification centre).
+- **Clinic panel (1):** `SCR-PLATFORM-003` (Clinic dashboard).
+- **Admin panel (1):** `SCR-PLATFORM-004` (Admin dashboard).
+
+#### 4. Widget dependencies
+
+- **Required predecessors:** `WGT-PLATFORM-001` (build order 1, per **E1**) and `WGT-PLATFORM-002` (build
+  order 3, per **E4** — "`WGT-PLATFORM-002` precedes `WGT-PLATFORM-009`": "the Profile A feed is scoped by
+  `WGT-PLATFORM-002` rather than filtered," `PHASE_05_IMPLEMENTATION_PLAN.md` section 6.5, build order 13,
+  "Depends on: 1, 3"). The `WGT-PLATFORM-002` dependency is a **stated scoping relationship**, not a mere
+  co-occurrence: the `panel-attention` variant's own scope comes from `WGT-PLATFORM-002`'s subject context,
+  never from a filter this widget owns itself.
+- **Not a build dependency:** the widget's own composition of `CMP-PLATFORM-006` for the list frame is a
+  direct component reuse and does not require `WGT-PLATFORM-005` (which also composes `CMP-PLATFORM-006`)
+  to exist first.
+
+#### 5. Component dependencies
+
+**Mandatory core:**
+
+| `CMP-*` | Role here |
+|---|---|
+| `CMP-PLATFORM-015` — Attention item | The whole widget. Variants: `attention` (the landing surface, ordered by what the case needs now, not recency), `notification` (the notification centre, chronological with read/unread, owning no business status of its own), `panel-attention` (Profile A dashboards, scoped by `WGT-PLATFORM-002` rather than filtered). Anatomy: `[ what needs you ][ status ][ remaining time ]` → `[ which record ]` — the link is always to the authoritative record. **The same obligation appears in `attention` and `notification` at the same time** — neither is a copy of the other, and neither may be the only place it appears, because no delivery transport may be relied on for correctness. |
+| `CMP-PLATFORM-001` — State chip | Mandatory core alongside `CMP-PLATFORM-015` — every attention item's own status is rendered through the shared triple, never a status invented by the feed itself. |
+
+**Conditional:**
+
+| `CMP-*` | Composed when |
+|---|---|
+| `CMP-PLATFORM-005` — Deadline indicator | Where the item carries a deadline |
+| `CMP-PLATFORM-006` — Record list | The list frame the feed's items sit inside |
+
+#### 6. Interaction dependencies
+
+- **`IX-BOOKING-001` — Deadline approach and expiry.** `CMP-PLATFORM-015` on the attention surface **and**
+  the notification centre carries a running deadline; the duplication is deliberate — no delivery
+  transport may be relied on for correctness, so the obligation must be discoverable without a message
+  arriving. On closure while the surface is open, dependent actions are removed and focus moves to the
+  statement of what happened. **A non-confirmation is never a punitive cancellation** — a booking closed
+  because an alternative was declined or expired reads as an appointment that was not confirmed, with no
+  penalty language.
+- **`IX-PLATFORM-003` — Authoritative read refresh and staleness disclosure.** An entry created hours ago
+  cannot be trusted about a deadline, so opening one **re-reads the authoritative record** before
+  rendering its state, rather than trusting the cached feed entry.
+- **`IX-PLATFORM-015` — List to detail and back.** Opening an item and returning restores focus to it; the
+  detail surface reads authoritative state for that record, never the feed row's own projection.
+- **`IX-PLATFORM-013` — Reduced-motion parity.** A newly arrived item's entrance and any value-change tick
+  on `CMP-PLATFORM-005` both have a defined reduced-motion equivalent: travel removed, feedback preserved.
+
+#### 7. Content dependencies
+
+| `TXT-*` | Ownership | Applies to |
+|---|---|---|
+| `TXT-PLATFORM-001` — Voice and tone | Canonical | "An approaching deadline" row: clear about the remaining time, without provoking unwarranted panic — the governing tone rule, applied to this feed's highest-tension content. |
+| `TXT-PLATFORM-007` — Empty states | Canonical | The Patient `between-cases` empty attention surface: near-empty, stated plainly, never manufacturing activity. |
+| `TXT-PLATFORM-010` — Pending and review states | Canonical | Where an item's own status is pending/under-review, the same non-accusatory formula applies. |
+| `TXT-PLATFORM-019` — Structural state and archetype copy | Canonical, `dashboard` row | "Any metric with no comparison basis is never shown alone; the last refresh always states its time" — the `panel-attention` variant's own dashboard-archetype obligation. |
+
+#### 8. Accessibility dependencies
+
+| `A11Y-*` | Implementation assertion |
+|---|---|
+| `A11Y-PLATFORM-011` — Live-region announcement policy | A newly arrived item is not announced merely for arriving; an item that changes what the actor can currently do is (WCAG 4.1.3). |
+| `A11Y-PLATFORM-012` — Native structural semantics | The feed is exposed as a real list, one accessible name per item (WCAG 1.3.1). |
+| `A11Y-PLATFORM-013` — Target size floor and comfortable floor | Every deadline-bearing item clears `semantic.size.target-primary`, the floor for every Patient primary action and every deadline-bearing action on any platform (WCAG 2.5.8). |
+| `A11Y-PLATFORM-015` — No colour-alone communication | Remaining time and status are never carried by colour alone (WCAG 1.4.1). |
+| `A11Y-PLATFORM-024` — Reduced-motion parity | The value-change tick on a running deadline has a defined reduced-motion equivalent (WCAG 2.3.3 informative extension). |
+
+#### 9. Canonical data/action contracts
+
+- **Profile C:** `API-PLATFORM-002` — Patient Notification Center. Status: **Proposed.** `GET /api/v1/
+  notifications`, `POST /api/v1/notifications/{notification}/read`. **Entries are durable in-system
+  records, independent of push/SMS/email delivery**, which remain optional adapters (`PO-UX-09`).
+  **Reading or dismissing a notification never changes business state.** Every entry links to the
+  authoritative resource rather than restating business state, "because an entry created hours ago cannot
+  be trusted to describe a current deadline or eligibility state." Guardian access is filtered to the
+  active grant scope.
+- **Profile A:** `SDC-OPS-001` — Staff Work Queue. "Escalated and overdue are **flags, not states** — an
+  item can be `IN_PROGRESS`, escalated and overdue at once, and the projection must expose all three
+  independently."
+
+#### 10. Shared application-layer prerequisites
+
+- **`TASK-PLATFORM-013`** — "Implement Patient Notification and Attention Center" — the direct prerequisite
+  implementing `API-PLATFORM-002` and the durable Patient surface: "entries are durable records
+  independent of push/SMS/email adapters; mark-read touches only the read flag and must not be reachable
+  as a business acknowledgement; store a reference to the authoritative resource rather than a copy of
+  business state." Its own note: **"do not add a fifth primary navigation tab."** Dependencies:
+  `TASK-PLATFORM-008`, `TASK-IDENTITY-007`, and the emitting domain tasks that create each notification
+  intent.
+- Same shared rendering-primitive prerequisite as every widget above: `TASK-PLATFORM-001`/`-005`
+  (Filament), `TASK-PLATFORM-008` (React Native).
+
+#### 11. Data model prerequisites
+
+| Entity | Status | Relevance |
+|---|---|---|
+| `notification_intents` | Proposed | The **delivery-channel** tracking table only (push/SMS/email attempt state) — the optional adapter, never the source of correctness. |
+| `work_items` | Proposed | Backs `SDC-OPS-001`'s projection for the `panel-attention` variant. |
+
+**Gap, flagged and not resolved here:** `docs/database/ERD.md` defines **no dedicated table for the
+durable in-app notification/attention record itself** — only its delivery-channel cousin
+(`notification_intents`). `TASK-PLATFORM-013`'s own Data/Migration Impact line calls for a "new
+notification entry table with read state" as still to be created. This contract does not invent that
+table; it records the gap for `TASK-PLATFORM-013`'s own author to close.
+
+#### 12. Target files
+
+| Target area | Path | Status |
+|---|---|---|
+| RN landing feed and notification centre, one shared item component | Patient React Native project — path not yet determined | Proposed, path unverified |
+| Filament dashboard widget over the scoped work projection | `app/Filament/Widgets/` (Admin) / `app/Filament/Clinic/Widgets/` | Proposed |
+
+#### 13. Data/view-model mapping
+
+| Canonical concept (host projection) | View-model responsibility |
+|---|---|
+| The obligation itself | `items[i].obligation: string` — states the obligation, not the raw event ("a different time was offered and you have until X to decide", never "your booking changed") |
+| Item's own status, where it carries one | `items[i].status` → `CMP-PLATFORM-001` |
+| Deadline, where present | `items[i].deadline?: { at, variant }` → `CMP-PLATFORM-005` |
+| Read state (`notification` variant only) | `items[i].read: boolean` — owns no business status |
+| Linked authoritative record | `items[i].recordRef` — the link is always to the authoritative record, never a copy of its state |
+| Represented subject, where the actor represents someone | `items[i].subject: string` — named in the item itself, not only in the header |
+
+No field is invented — an item's deadline that failed to load is `items[i].deadline: "unavailable"`,
+never a fabricated one (section 18, `partial`).
+
+#### 14. Refresh / caching / polling
+
+Items stay and a new item appends (section 18, `loading-refresh`); on the Patient surface, returning to
+the app is itself a refresh trigger, per `IX-PLATFORM-003`. No polling interval is specified or invented.
+
+#### 15. Idempotency / correlation
+
+**Not applicable to the feed's own read.** Marking an entry read is naturally idempotent — repeated calls
+create no additional effect (`API-PLATFORM-002` Idempotency/Concurrency) — and changes no business state.
+The feed issues no other command of its own.
+
+#### 16. Permission gate
+
+- **Canonical permission source:** `docs/domain/PERMISSIONS_MATRIX.md` — revocation/expiry "takes effect
+  immediately" (general rule); `API-PLATFORM-002`'s own rule, "guardian access is filtered to the active
+  grant scope."
+- **Server-side enforcement point:** the notification/attention read query itself, scoped at read time —
+  never filtered client-side after fetch.
+- **UI consequence:** on `error-permission`, "items outside a revoked grant disappear with the scope change
+  stated; never rendered as a quiet empty feed" — a scope loss is distinguishable from a genuinely empty
+  feed.
+
+#### 17. Props / configuration
+
+| Name | Type | Required | Default | Source | Notes |
+|---|---|---|---|---|---|
+| `variant` | `attention \| notification \| panel-attention` | Yes | none | Host archetype | `panel-attention` is scoped by `WGT-PLATFORM-002`, never filtered |
+| `items` | `Item[]` (section 13) | Yes | `[]` | Host's own read | `attention` orders by what the case needs now; `notification` orders chronologically |
+| `onOpen` | callback | Yes | — | — | Re-reads the authoritative record before rendering the item's state |
+| `onMarkRead` | callback | Only for `notification` | — | — | Changes only the read flag; never a business acknowledgement |
+
+#### 18. State rendering
+
+| State | Behaviour |
+|---|---|
+| `loading-initial` | Item skeletons; no count implied. |
+| `loading-refresh` | Items stay; a new item appends. On the Patient surface, returning to the app is a refresh trigger. |
+| `empty-no-data` | `CMP-PLATFORM-009` `between-cases` on Profile C: near-empty, says so plainly, and never manufactures activity. |
+| `empty-filtered` | n/a on `attention`, which is scoped rather than filtered. Applies on `notification` where a read filter is offered. |
+| `partial` | An item whose deadline did not load is shown without a fabricated one and says the remaining time is unavailable. |
+| `stale` | The feed carries its as-of time. An entry written hours ago cannot be trusted about a deadline, so opening one re-reads the authoritative record. |
+| `error-fetch` | Last known items preserved with retry. |
+| `error-permission` | Items outside a revoked grant disappear with the scope change stated; never rendered as a quiet empty feed. |
+| `success` | Items in the variant's order. |
+| Offline / unstable | Last known items with as-of time. Opening an item states that the authoritative re-read needs a connection rather than showing the cached entry as current. |
+
+#### 19. Lifecycle/state semantics
+
+**The `notification` variant owns no business status of its own** — its read/unread flag is entirely
+distinct from, and never merged with, the status shown by `CMP-PLATFORM-001` on the referenced record.
+The `attention` and `panel-attention` variants render whichever status the linked record's own machine
+carries, unmodified. A deadline's closure is never rendered as a punitive cancellation (`IX-BOOKING-001`);
+where the underlying booking status resolves to `CANCELLED` for a no-penalty reason, that status's own
+tone (`tone.restricted`, not `tone.danger`) is preserved, never overridden by this widget.
+
+#### 20. Tokens
+
+`component.platform-015.*` (mandatory), `component.platform-001.*` (mandatory), conditional
+`component.platform-005.*`, `component.platform-006.*`.
+
+#### 21. Content
+
+Resolves to `TXT-PLATFORM-001`, `-007`, `-010`, `-019`. No canonical `ERR-*` string is restated.
+
+#### 22. Accessibility contract
+
+- **Role/name:** each item is one link or button whose accessible name carries the obligation, the status
+  and the deadline together, so a screen reader user does not have to enter the item to know whether it is
+  urgent.
+- **Focus:** opening an item and returning restores focus to it.
+- **Keyboard:** the feed is exposed and traversable as a list.
+- **Screen reader:** unread is announced, not only tinted; marking read announces nothing and changes no
+  business state; a newly arrived item that changes what the actor can currently do is announced, one that
+  merely arrived is not.
+- **No colour-only:** remaining time and status are legible without colour.
+
+#### 23. RTL / bidi
+
+- Items flow start to end and mirror.
+- **Bidi isolation classes: `date`, `id`.** Remaining time and record identifiers are bidirectionally
+  isolated.
+
+#### 24. Responsive behavior
+
+- **Profile C:** one item per reading-column block.
+- **Profile A:** the feed is a dashboard region that keeps its full item text at
+  `profile-a.content-width.narrow` rather than compressing to an icon and a count.
+
+#### 25. Immutability / historical safety
+
+This widget renders no immutable or append-only entity directly — its items are **references** to the
+authoritative record, never a copy of its state (section 13). Marking an entry read is the widget's only
+own write, and it changes read state alone, never the referenced record's own history.
+
+#### 26. Framework defaults to disable
+
+Profile A, `Extended`:
+
+- Filament's notification centre is used to hold the **duplicate** entry for anything deadline-bearing —
+  it is not treated as the sole source, consistent with `CMP-PLATFORM-015`'s own "duplication is
+  deliberate" rule; a dashboard widget that surfaces only Filament's own toast history, with no durable
+  backing record, is insufficient.
+
+#### 27. Prohibitions
+
+1. A control here must never read as accepting, acknowledging or deciding anything.
+2. A business status must never be owned by the feed rather than by the referenced record.
+3. A deadline must never be rendered by colour alone.
+4. A remaining time must never be fabricated.
+5. Activity must never be manufactured on an empty attention surface.
+6. Delivery must never be treated as the mechanism a deadline's correctness depends on.
+
+#### 28. Definition of Done
+
+- [ ] Every deadline-bearing item appears on both the attention surface and the notification centre.
+- [ ] Marking an entry read changes no business state and no control here implies otherwise.
+- [ ] Opening an entry re-reads the authoritative record before rendering its state.
+- [ ] Remaining time is legible without colour.
+- [ ] With nothing pending, the Patient surface is near-empty and says so.
+- [ ] None of the six prohibitions in section 27 is violated on any of the 4 surfaces.
+
+#### 29. Verification
+
+**Tier A:**
+- `python docs/ux/scripts/validate_ux_docs.py --phase 5` — contract exists, build order 13, predecessors
+  `WGT-PLATFORM-001`/`-002` declared, mandatory `CMP-PLATFORM-015`/`-001` resolve.
+- `python docs/scripts/validate_docs.py`, `python scripts/check_no_emoji.py` (root and `docs`).
+
+**Tier B:**
+- `node scripts/verify_states.mjs <file>` — item/status/deadline contrast in default/hover/focus, light
+  mode.
+- `node scripts/axe_audit.mjs <file>` — list role, item accessible names, unread announcement.
+- `node scripts/verify_responsive.mjs <file>` — full item text retained (no icon-and-count compression) at
+  `profile-a.content-width.narrow`.
+
+**Tier C (all: not run — requires implementation):**
+- Real duplication proof: every deadline-bearing intent produces an entry on both the attention surface
+  and the notification centre, verified against a live emitting domain task — not run — requires
+  implementation.
+- Live proof that mark-read changes no business state, verified against the real API — not run — requires
+  implementation.
+- Screen-reader pass confirming a newly arrived item that changes the actor's available actions is
+  announced, and one that merely arrived is not — not run — requires implementation.
+- Real revoked-grant filtering proving items disappear with the scope change stated, not as a quiet empty
+  feed — not run — requires implementation.
+
+---
+
+### WGT-PLATFORM-012 — Implementation Contract
+
+#### 1. Identity
+
+- **WGT ID:** WGT-PLATFORM-012
+- **Name:** Submission reconciliation panel
+- **Build order:** 14
+- **Platforms:** C
+- **Runtime:** React Native, patient project root (Proposed, path unverified)
+- **Phase 4 realization:** Profile C `Native`; Profile A `n/a`
+- **Screen reach:** 1 of 165
+- **Source specification:** `docs/ux/04-specs/WIDGET_SPECS_PLATFORM.md`, `WGT-PLATFORM-012` block
+
+**Allocation note, carried from Phase 4 and not re-derived here:** this widget is allocated under the
+second clause of criterion 1 — "one context, high consequence, substantial complexity." It composes four
+components, implements two interaction patterns end to end, spans three domains, and encodes the rule
+that a retry reuses its original key while a new intent does not; left unspecified it would be
+re-derived per domain, which is how the duplicate this product exists to prevent gets created.
+
+#### 2. Implements
+
+- `FR-PLATFORM-001`
+- `FR-BOOKING-001`
+- `FR-FINANCE-002`
+- `NFR-AUDIT-002`
+
+#### 3. Used by
+
+**1 screen** — `SCR-PLATFORM-002` (Pending submissions), `WF-PLATFORM-002`, Patient app.
+
+#### 4. Widget dependencies
+
+- **Required predecessors:** `WGT-PLATFORM-001` (build order 1, per **E1**) and `WGT-PLATFORM-003` (build
+  order 2, per **E5** — "`WGT-PLATFORM-003` precedes `WGT-PLATFORM-012`": its `inline` and `banner`
+  variants "belong to `WGT-PLATFORM-003`," and Profile A "reconciles in place through
+  `WGT-PLATFORM-003`," `PHASE_05_IMPLEMENTATION_PLAN.md` section 6.5, build order 14, "Depends on: 1, 2").
+- **Examined and rejected as an edge:** `WGT-PLATFORM-011` names this widget only to explain why
+  `WGT-PLATFORM-011` itself is `n/a` on Profile C — "`PHASE_05_IMPLEMENTATION_PLAN.md` section 6.2
+  explicitly rejects this exact mention: "neither is a build dependency and neither is drawn as one."
+
+#### 5. Component dependencies
+
+**Mandatory core:**
+
+| `CMP-*` | Role here |
+|---|---|
+| `CMP-PLATFORM-011` — Submission state indicator | The `queue` variant — "the Patient pending-submissions surface, listing every outstanding mutation." This **is** the surface the `queue` variant exists for; no second variant applies here, because `inline` and `banner` belong to `WGT-PLATFORM-003`. |
+| `CMP-PLATFORM-006` — Record list | The list frame, one row per outstanding command. |
+
+**Conditional:**
+
+| `CMP-*` | Composed when |
+|---|---|
+| `CMP-PLATFORM-001` — State chip | Per reconciled record, once its authoritative state is known |
+| `CMP-PLATFORM-010` — Recovery state | `unknown-outcome` variant — "no new command is offered until the outcome is reconciled" |
+| `CMP-PLATFORM-002` — State summary | For the reconciled state, once resolved |
+
+#### 6. Interaction dependencies
+
+- **`IX-PLATFORM-004` (owner) — Resume and reconcile an unknown outcome.** The surface renders
+  `CMP-PLATFORM-010`'s `unknown-outcome` variant; **no new command of the same intent is offered** — not a
+  retry labelled as a new submission, not the original action re-enabled; reconciliation reads
+  authoritative state for the affected record; the outcome is one of three — committed, did not commit, or
+  still unknown — each stated plainly; only once the outcome is known does the surface restore its normal
+  action set. If reconciliation itself fails, the submission stays outstanding and visible rather than
+  being quietly dropped. Focus moves to the unknown-outcome block when it replaces the action region,
+  because leaving focus on a control that no longer acts is how a keyboard user submits twice.
+- **`IX-PLATFORM-002` — Idempotent retry.** Retry reuses **the original key**; a new key is a new intent
+  and is never issued automatically; where the server replays a prior outcome, the interface says the
+  submission had already been received rather than implying the retry caused it.
+- **`IX-PLATFORM-001` — Server-committed mutation.** Each outstanding entry is itself the record of a
+  server-committed mutation whose idempotency key was fixed at first submission; this panel is that
+  contract's durable, cross-session home.
+- **`IX-PLATFORM-003` — Authoritative read refresh and staleness disclosure.** The panel **never** reports
+  from its local queue alone — every reconciliation is an authoritative read, on entry, on refocus, and on
+  explicit refresh.
+
+#### 7. Content dependencies
+
+| `TXT-*` | Ownership | Applies to |
+|---|---|---|
+| `TXT-PLATFORM-008` — Loading states | Canonical | Reconciliation in progress is named as reconciliation, never a generic "loading," and never presented as unknown or as failed while genuinely in progress. |
+| `TXT-PLATFORM-009` — Offline and weak network | Canonical | Outstanding commands persist across app restarts and reconcile on reconnection — "stale and labelled is better than empty"; a retry never presents an attempt count as a penalty. |
+| `TXT-PLATFORM-010` — Pending and review states | Canonical | An outstanding, not-yet-reconciled entry uses the same non-accusatory pending formula, distinct in tone and icon from a genuinely failed one. |
+| `TXT-ERR-AUDIT-001` — ERR-AUDIT-001 · Idempotency key conflict | Canonical | Not user-recoverable by another retry; the supporting copy directs the actor to refresh and confirm current state before deciding whether the original action still stands — never resolved by re-submitting under the same key. |
+
+#### 8. Accessibility dependencies
+
+| `A11Y-*` | Implementation assertion |
+|---|---|
+| `A11Y-PLATFORM-011` — Live-region announcement policy | A reconciled outcome is announced politely; an unknown outcome is announced as unknown, never as failed (WCAG 4.1.3). |
+| `A11Y-PLATFORM-006` — Focus movement after mutation | Focus moves to the resolved row once reconciliation completes (WCAG 2.4.3). |
+| `A11Y-PLATFORM-012` — Native structural semantics | The panel is exposed as a real list (WCAG 1.3.1). |
+| `A11Y-PLATFORM-015` — No colour-alone communication | Unknown, failed and completed are three distinct states carried by wording and icon as well as tone, never colour alone (WCAG 1.4.1). |
+
+#### 9. Canonical data/action contracts
+
+This widget **owns no contract of its own, deliberately** — a client-side queue that was its own source
+of truth would be a second source of truth. It reconciles against the authoritative reads its outstanding
+commands themselves belong to, by ID only:
+
+- `API-BOOKING-002` (List My Bookings — read-only, scoped, state/date filters).
+- `API-CLAIMS-003` (List Case Claims/Refund Requests — read-only, scoped, states/deadlines).
+- `API-FINANCE-005` (Get Case Financial Timeline — read-only; "wording must not imply platform custody or
+  settlement").
+
+No document allocates an `API-PLATFORM-*` (or similar) endpoint dedicated to this widget; a check of
+`docs/api/API_CONTRACTS.md` and `docs/TRACEABILITY_MATRIX.md` confirms zero direct references to
+`WGT-PLATFORM-012` anywhere outside this contract and the Phase 4/5 planning documents themselves.
+
+#### 10. Shared application-layer prerequisites
+
+- **`TASK-PLATFORM-008`** — "Bootstrap and Baseline the React Native Patient Application" — the RN project
+  itself does not yet exist; this is a hard precondition for any of this widget's own code.
+- **`TASK-AUDIT-003`** — "Implement Patient API Idempotency, Correlation, and Stable Error Envelope" —
+  "same idempotency key + same command returns original committed outcome; materially different reuse
+  returns `ERR-AUDIT-001`" — the exact contract this widget's own reconciliation and retry logic depends
+  on.
+- **`TASK-PLATFORM-009`** — "Build the Shared Mobile API, Cache, and Network-Recovery Layer" — "on
+  mutation timeout, fetch authoritative resource before issuing a new command" — the direct mechanism this
+  widget's owning `IX-PLATFORM-004` sequence is built on. Dependencies: `TASK-PLATFORM-008`,
+  `TASK-IDENTITY-006`, `TASK-AUDIT-003`.
+
+#### 11. Data model prerequisites
+
+| Entity | Status | Relevance |
+|---|---|---|
+| `idempotency_records` | Proposed | The server-side backing for the idempotency contract this widget's reconciliation logic depends on; unique on (`actor_user_id`, `operation`, `scope_key`, `idempotency_key`); a different payload fingerprint on the same key is rejected. |
+
+`NFR-AUDIT-002` (Concurrency and Idempotency) is the governing non-functional requirement: "identical
+actor/operation/scope/key/payload produces exactly one committed side effect and original response; same
+key/different payload is deterministically rejected; zero overbooking, duplicate acceptances, duplicate
+financial events... under tested contention." This widget's entire purpose is to make that guarantee
+**visible and actionable** to the Patient actor, never to implement it itself — implementation is
+server-side, in `idempotency_records` and its owning services.
+
+#### 12. Target files
+
+| Target area | Path | Status |
+|---|---|---|
+| Durable outstanding-command store, reconciled on resume | Patient React Native project — path not yet determined | Proposed, path unverified |
+
+**Confirmed:** no React Native Patient project exists anywhere in the repository at the time of this
+contract — the only `package.json` in the tree is `UberTip-Backend/package.json` (Laravel/Filament
+front-end build tooling), consistent with `PHASE_05_IMPLEMENTATION_PLAN.md`'s own statement that
+"`TASK-PLATFORM-008` owns that bootstrap and must record the real commands before downstream mobile tasks
+use them."
+
+#### 13. Data/view-model mapping
+
+| Canonical concept (the outstanding command itself) | View-model responsibility |
+|---|---|
+| What was asked for | `entries[i].description: string` — wraps in full, never truncated |
+| When it was issued | `entries[i].issuedAt: string` |
+| Current state | `entries[i].state: pending \| reconciling \| unknown \| completed \| failed` |
+| Reconciled outcome, once resolved | `entries[i].outcome?: AuthoritativeRecord` → the authoritative record, never the local queue's own guess |
+| Original idempotency key | `entries[i].idempotencyKey: string` — fixed at first submission, reused on retry |
+
+No field is invented — the panel reads authoritative state before rendering any outcome (section 18,
+`loading-initial`).
+
+#### 14. Refresh / caching / polling
+
+Reconciliation in progress is shown as in progress, not as unknown and not as failed (section 18,
+`loading-refresh`). Outstanding commands persist across app restarts and reconcile on reconnection
+without the actor having to remember (section 18, offline/unstable — the load-bearing condition). No
+polling interval is specified; reconciliation is triggered by `IX-PLATFORM-003`'s four moments (entry,
+refocus, explicit refresh, post-mutation).
+
+#### 15. Idempotency / correlation
+
+**This widget is the archetypal committing-adjacent surface — the visible face of the idempotency
+contract itself**, though the panel issues no *new* command of its own until an outcome is known.
+
+- **Idempotency applies:** yes, to every retry of an outstanding entry.
+- **Key fixed at first submission**, unchanged across a retry of the same intent — never regenerated by
+  this panel.
+- **Key reuse on retry:** `IX-PLATFORM-002` — reuses the original key; a materially different retry is
+  rejected under `ERR-AUDIT-001`, never silently accepted as a correction.
+- **Unknown-outcome path:** `IX-PLATFORM-004` — no new command is offered until reconciled.
+- **Correlation/audit requirement:** `FR-AUDIT-003`/`NFR-AUDIT-002`. Exactly one committed side effect per
+  actor/operation/scope/key/payload, verified server-side by `idempotency_records`; this widget's own
+  obligation is honest display of that guarantee's outcome, never a second implementation of it.
+
+#### 16. Permission gate
+
+- **Canonical permission source:** `docs/domain/PERMISSIONS_MATRIX.md` — revocation/expiry "takes effect
+  immediately" (general rule).
+- **Server-side enforcement point:** each reconciled read's own authorization check (`API-BOOKING-002`,
+  `API-CLAIMS-003`, `API-FINANCE-005`).
+- **UI consequence:** "scope lost since the command was issued: the panel states that and offers no
+  retry" — a permission loss is distinguished from an unknown outcome, never conflated with it.
+
+#### 17. Props / configuration
+
+| Name | Type | Required | Default | Source | Notes |
+|---|---|---|---|---|---|
+| `entries` | `Entry[]` (section 13) | Yes | `[]` | Durable local store, reconciled against authoritative reads | Never the sole source of truth |
+| `onReconcile` | callback | Yes | — | — | An authoritative read, never a client-side guess |
+| `onRetry` | callback | Yes, per unresolved entry | — | — | Reuses the entry's own original idempotency key |
+
+#### 18. State rendering
+
+| State | Behaviour |
+|---|---|
+| `loading-initial` | The panel reads authoritative state before rendering any outcome. It never reports from its local queue alone. |
+| `loading-refresh` | Reconciliation in progress is shown as in progress, not as unknown and not as failed. |
+| `empty-no-data` | Nothing outstanding: stated plainly. This is the normal case and is not an error. |
+| `empty-filtered` | n/a. The panel is not filtered. |
+| `partial` | Some commands reconciled and some did not; the unreconciled ones stay unknown and offer no new command. |
+| `stale` | A reconciliation read that failed leaves the command unknown with its as-of time. Unknown is a designed state, not an absence of information. |
+| `error-fetch` | Retry the reconciliation read, not the command. The distinction is the whole point. |
+| `error-permission` | Scope lost since the command was issued: the panel states that and offers no retry. |
+| `success` | The authoritative record, reachable, with the local entry cleared. |
+| Offline / unstable | The load-bearing condition. Outstanding commands persist across app restarts and reconcile on reconnection without the actor having to remember. |
+
+#### 19. Lifecycle/state semantics
+
+An entry's own `pending`/`reconciling`/`unknown`/`completed`/`failed` state is `CMP-PLATFORM-011`'s own
+submission-state vocabulary, not a business lifecycle status — once an entry's outcome resolves, the
+**reconciled record's own** status (a booking, claim or financial event's own machine) takes over,
+rendered through `CMP-PLATFORM-001`/`-002`. This widget never invents a business status of its own for
+what a reconciled record has become; it renders the queue state up to the point of resolution and then
+hands off entirely.
+
+#### 20. Tokens
+
+`component.platform-011.*` (mandatory, `queue` variant), `component.platform-006.*` (mandatory),
+conditional `component.platform-001.*`, `component.platform-010.*` (`unknown-outcome`),
+`component.platform-002.*`.
+
+#### 21. Content
+
+Resolves to `TXT-PLATFORM-008`, `-009`, `-010`, `TXT-ERR-AUDIT-001`. No other canonical `ERR-*` string is
+restated; each reconciled record's own error surface is that record's own owning contract's concern.
+
+#### 22. Accessibility contract
+
+- **Role/name:** the panel is exposed as a real list; each row's accessible name carries what was asked
+  for and its current state.
+- **Focus:** a reconciled outcome moves focus to the resolved row; an unknown-outcome block, when it
+  replaces the action region, receives focus directly.
+- **Keyboard:** reconcile and retry are both real, reachable controls.
+- **Screen reader:** a reconciled outcome is announced politely; an unknown outcome is announced as
+  unknown, never as failed.
+- **No colour-only:** unknown, failed and completed are three distinct announced states, never carried by
+  tone alone.
+
+#### 23. RTL / bidi
+
+- Rows mirror.
+- **Bidi isolation classes: `date`, `id`.** Timestamps and record identifiers are bidirectionally
+  isolated.
+
+#### 24. Responsive behavior
+
+- **Profile C only**, one row per reading-column block; the retry control never falls below
+  `semantic.size.target-floor`, the comfortable target floor.
+- The description of what was asked for wraps in full at any text size; the outcome is never truncated.
+
+#### 25. Immutability / historical safety
+
+This widget's own local entries are transient by design — cleared once reconciled (section 18, `success`)
+— and carry no immutability obligation of their own. What they reconcile **against** may itself be one of
+the nine immutable/append-only entities (a `booking_events` row, a `financial_events` row); this widget
+never writes to those directly and never presents an unreconciled local guess as if it were that
+authoritative record.
+
+#### 26. Framework defaults to disable
+
+**Not applicable — Profile A `n/a`.** This widget has no Filament realization and therefore no framework
+default to configure or disable; its only runtime is React Native, where no comparable stock default
+exists to override.
+
+#### 27. Prohibitions
+
+1. A new command must never be offered while an outcome is unknown.
+2. A retry must never mint a new idempotency key.
+3. An outcome must never be reported from the local queue without an authoritative read.
+4. An unknown outcome must never be presented as a failure.
+5. An entry that has not reconciled must never be cleared.
+
+#### 28. Definition of Done
+
+- [ ] No new command is offered against a record whose prior outcome is unknown.
+- [ ] A retry carries the original idempotency key; a changed intent carries a new one.
+- [ ] Outstanding entries survive an app restart and reconcile on reconnection.
+- [ ] An outcome is reported only after an authoritative read, never from the local queue.
+- [ ] Unknown, failed and completed are three distinct announced states.
+- [ ] None of the five prohibitions in section 27 is violated on the single surface this widget occupies.
+
+#### 29. Verification
+
+**Tier A:**
+- `python docs/ux/scripts/validate_ux_docs.py --phase 5` — contract exists, build order 14, predecessors
+  `WGT-PLATFORM-001`/`-003` declared, mandatory `CMP-PLATFORM-011`/`-006` resolve.
+- `python docs/scripts/validate_docs.py`, `python scripts/check_no_emoji.py` (root and `docs`).
+
+**Tier B:**
+- `node scripts/verify_states.mjs <file>` — unknown/failed/completed contrast in default/hover/focus,
+  light mode.
+- `node scripts/axe_audit.mjs <file>` — list role, row accessible names, unknown-outcome announcement.
+- `node scripts/verify_responsive.mjs <file>` — retry-control target-floor compliance at the narrow
+  verification widths.
+
+**Tier C (all: not run — requires implementation, and blocked on `TASK-PLATFORM-008`'s RN bootstrap):**
+- Real app-restart persistence and reconnection reconciliation, verified on the actual React Native client
+  once it exists — not run — requires implementation.
+- Live proof that a retry under contention with the original idempotency key produces exactly one
+  committed record, never a duplicate — not run — requires implementation.
+- Screen-reader pass confirming unknown/failed/completed announce as three genuinely distinct states —
+  not run — requires implementation.
+- Real scope-loss-mid-flight proof that the panel states the loss and offers no retry, rather than
+  presenting it as an unknown outcome — not run — requires implementation.
 
 ---
 

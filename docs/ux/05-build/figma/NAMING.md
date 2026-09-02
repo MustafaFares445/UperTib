@@ -213,7 +213,7 @@ manifest rather than hand-written.
 
 No lorem ipsum, anywhere. Content precedence, unchanged from the Session 1 plan section 9.6:
 
-1. Entity and field names from `docs/database/ERD.md` (53 tables — 6 existing, 47 proposed), so a
+1. Entity and field names from `docs/database/ERD.md` (54 tables — 6 existing, 48 proposed), so a
    frame shows the field an implementation will actually bind.
 2. Lifecycle status labels — the Arabic chip label and per-audience meaning — from
    `CONTENT_GUIDE_STATES.md`, for all 82 statuses across 18 machines. A frame never renders a bare
