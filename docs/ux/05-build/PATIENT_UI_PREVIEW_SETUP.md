@@ -28,7 +28,7 @@ The setup pins a reproducible preparation baseline rather than floating `latest`
 |---|---:|---|
 | React | 19.2.8 | component runtime |
 | React DOM | 19.2.8 | web renderer dependency |
-| React Native | 0.87.1 | Patient-compatible component primitives |
+| React Native | 0.86.3 | Patient-compatible component primitives |
 | React Native Web | 0.21.2 | browser renderer |
 | Storybook | 10.5.10 | component/screen workshop |
 | @storybook/react-native-web-vite | 10.5.10 | maintained RN Web framework |
@@ -64,13 +64,13 @@ On a developer machine:
 
 ```bash
 cd tools/patient-ui-preview
-npm install
+npm ci
 npm run playwright:install
 npm run verify
 npm run storybook
 ```
 
-The first `npm install` creates `package-lock.json`. Commit that lockfile before substantive UI generation.
+The dependency lockfile is committed. Use `npm ci` for reproducible local and CI setup.
 
 ## Canonical token integration
 
