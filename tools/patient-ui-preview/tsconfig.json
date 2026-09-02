@@ -18,10 +18,9 @@
     "types": [
       "node"
     ],
-    "baseUrl": ".",
     "paths": {
       "@preview/*": [
-        "src/*"
+        "./src/*"
       ],
       "@ux-tokens/*": [
         "../../docs/ux/03-system/design_tokens/*"
