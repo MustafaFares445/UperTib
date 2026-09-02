@@ -1,0 +1,54 @@
+name: Patient UI Preview
+
+on:
+  pull_request:
+    paths:
+      - 'tools/patient-ui-preview/**'
+      - '.claude/skills/patient-ui-preview/SKILL.md'
+      - '.github/workflows/patient-ui-preview.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Verify Storybook preview
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: tools/patient-ui-preview
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Install preview dependencies
+        run: npm install
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build Storybook
+        run: npm run storybook:build
+
+      - name: Run readiness smoke test
+        run: npm run test:smoke
+
+      - name: Upload Playwright artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: patient-ui-preview-playwright
+          path: tools/patient-ui-preview/artifacts/
+          if-no-files-found: ignore
+          retention-days: 7
