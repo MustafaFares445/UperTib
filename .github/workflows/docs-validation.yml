@@ -108,11 +108,11 @@ jobs:
           {
             echo '# Documentation Validation Report'
             echo
-            echo "- Commit: `$GITHUB_SHA`"
-            echo "- Combined exit code: `$VALIDATOR_STATUS`"
-            echo "- Engineering validator: `$ENGINEERING_STATUS`"
-            echo "- UX Phase 5 validator and UX gates: `$UX_STATUS`"
-            echo "- Workflow: `Documentation Validation`"
+            printf '%s\n' "- Commit: $GITHUB_SHA"
+            printf '%s\n' "- Combined exit code: $VALIDATOR_STATUS"
+            printf '%s\n' "- Engineering validator: $ENGINEERING_STATUS"
+            printf '%s\n' "- UX Phase 5 validator and UX gates: $UX_STATUS"
+            printf '%s\n' "- Workflow: Documentation Validation"
             echo
             echo '```text'
             cat validation-output.txt

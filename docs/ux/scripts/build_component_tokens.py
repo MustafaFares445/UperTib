@@ -11,7 +11,7 @@ import json
 import re
 from pathlib import Path
 
-BASE = Path(r"C:\laragon\www\UberTip\docs\ux\03-system")
+BASE = Path(__file__).resolve().parent.parent / "03-system"
 FILES = ["COMPONENT_INVENTORY_PLATFORM.md", "COMPONENT_INVENTORY_DOMAIN.md"]
 TARGET = BASE / "design_tokens" / "component.json"
 
