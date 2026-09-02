@@ -1,6 +1,13 @@
 name: Patient UI Preview
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'tools/patient-ui-preview/**'
+      - '.claude/skills/patient-ui-preview/SKILL.md'
+      - '.github/workflows/patient-ui-preview.yml'
   pull_request:
     paths:
       - 'tools/patient-ui-preview/**'
@@ -9,7 +16,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   verify:
@@ -23,45 +30,23 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref }}
 
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
           node-version: '24'
+          cache: npm
+          cache-dependency-path: tools/patient-ui-preview/package-lock.json
 
       - name: Install preview dependencies
-        run: npm install
+        run: npm ci
 
-      - name: Commit generated dependency lockfile
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
-        shell: bash
-        run: |
-          if git diff --quiet -- package-lock.json && git ls-files --error-unmatch package-lock.json >/dev/null 2>&1; then
-            echo "package-lock.json is already committed"
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add package-lock.json
-          git commit -m "chore: lock Patient UI preview dependencies"
-          git push origin "HEAD:${{ github.head_ref }}"
-
-      - name: Capture npm audit report
+      - name: Audit dependencies
         shell: bash
         run: |
           mkdir -p artifacts
           npm audit --json > artifacts/npm-audit.json || true
           npm audit --omit=dev --audit-level=high
-
-      - name: Upload generated lockfile
-        uses: actions/upload-artifact@v4
-        with:
-          name: patient-ui-preview-package-lock
-          path: tools/patient-ui-preview/package-lock.json
-          if-no-files-found: error
-          retention-days: 7
 
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
@@ -75,11 +60,11 @@ jobs:
       - name: Run readiness smoke test
         run: npm run test:smoke
 
-      - name: Upload Playwright artifacts
+      - name: Upload Playwright and audit artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: patient-ui-preview-playwright
+          name: patient-ui-preview-artifacts
           path: tools/patient-ui-preview/artifacts/
           if-no-files-found: ignore
           retention-days: 7
