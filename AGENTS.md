@@ -134,7 +134,7 @@ Stable client-relevant failures must receive `ERR-*` IDs and be documented in `d
 
 Engineering documentation may describe required capabilities, states, permissions, data, API behavior, and error surfaces, but must not invent wireframes, layouts, design tokens, Figma artifacts, component styling, or unimplemented navigation.
 
-No business UI currently establishes authoritative screen behavior. Screen design and UX flows belong to the dedicated UX pipeline unless a later task explicitly changes scope.
+No business UI currently establishes authoritative screen behavior. Implementation-facing UI work must follow `docs/ux/05-build/IMPLEMENTATION_CONTRACTS.md`; Figma is derived visual reference, not product truth, and any upstream UX change requires downstream revalidation.
 
 ## Current Documentation Run
 

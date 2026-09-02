@@ -1,15 +1,13 @@
 # UX Phase 5 Implementation Contracts
 
 **Phase:** UX 5 — Build and Handoff
-**Sessions:** 3 of 7 (foundation contracts, build order 1–7, complete) and 4 of 7 (remaining platform
-contracts, build order 8–14, complete).
+**Sessions:** 3–5 of 7 complete — all 30 implementation contracts are authored in build order.
 **Input gates:** `docs/ux/05-build/PHASE_05_IMPLEMENTATION_PLAN.md` (Session 1, complete),
 `docs/ux/05-build/figma/BUILD_MANIFEST.json` and `docs/ux/05-build/figma/NAMING.md` (Session 2, complete).
 **Session 3 wrote:** the seven foundation contracts — `WGT-PLATFORM-001`, `-003`, `-002`, `-004`, `-005`,
 `-010`, `-007` — in that build order.
-**Session 4 wrote:** the remaining seven platform contracts — `WGT-PLATFORM-006`, `-014`, `-011`, `-008`,
-`-013`, `-009`, `-012` — in that build order, completing all 14 platform-level contracts (build order
-1–14). Contracts 15–30, the sixteen domain contracts, are not authored here; Session 5 writes them.
+**Session 4 wrote:** the remaining seven platform contracts, completing build order 1–14.
+**Session 5 wrote:** the sixteen domain contracts, build order 15–30, completing 30/30 allocated WGT implementation contracts.
 
 Every contract in this file is a complete, self-sufficient instruction set for the coding agent that
 later builds the widget it describes. A contract explains **how** to implement behaviour Phases 1–4
@@ -96,41 +94,17 @@ behind it, unless the point being made is specifically about which semantic role
 
 ### 0.4 Build-order rule
 
-Contracts are ordered by the dependency-and-scheduling order `PHASE_05_IMPLEMENTATION_PLAN.md` section
-6.5 fixed, never by domain or convenience. Build order 1–7, the scope of this session:
+All 30 contracts use the total build order fixed by `PHASE_05_IMPLEMENTATION_PLAN.md` section 6.5 and repeated in each contract's Identity section. Build order is a scheduling order, not permission to invent dependencies.
 
-| Order | Widget | Depends on (build order) | Platforms | Profile A realization |
-|---:|---|---|---|---|
-| 1 | `WGT-PLATFORM-001` | none | C, A | `Extended` |
-| 2 | `WGT-PLATFORM-003` | 1 | C, A | `Extended` |
-| 3 | `WGT-PLATFORM-002` | 1 | C, A | `Custom` |
-| 4 | `WGT-PLATFORM-004` | 1 | C, A | `Stock` |
-| 5 | `WGT-PLATFORM-005` | 1, 4 | C, A | `Extended` |
-| 6 | `WGT-PLATFORM-010` | 1 | C, A | `Stock` |
-| 7 | `WGT-PLATFORM-007` | 1, 2 | C, A | `Extended` |
+The only cross-widget dependency groups accepted from Phase 4 are:
 
-A coding agent building order *N* may assume every lower build-order contract already exists and is
-implemented; it must not assume any higher one exists, including one placed on the same screen. Order
-is a dependency floor, not a claim that the two widgets are otherwise related — section 0.4.1.
+- `WGT-PLATFORM-001` precedes all other allocated widgets.
+- `WGT-PLATFORM-003` precedes `WGT-PLATFORM-007` and `WGT-PLATFORM-012`.
+- `WGT-PLATFORM-004` precedes `WGT-PLATFORM-005`.
+- `WGT-PLATFORM-002` precedes `WGT-PLATFORM-009`.
+- `WGT-PLATFORM-008` precedes `WGT-CLAIMS-001`.
 
-#### 0.4.1 Build order is not a dependency edge
-
-`PHASE_05_IMPLEMENTATION_PLAN.md` section 6.2 measured exactly six cross-widget edges, quoted from a
-Phase 4 statement each time, and no others. Of those six, three touch this session's seven widgets and
-are restated in the affected contracts rather than only here:
-
-- `WGT-PLATFORM-001` precedes all other widgets (`WIDGET_SPECS.md` section 3) — every widget in this
-  file names this as its sole hard predecessor.
-- `WGT-PLATFORM-003` precedes `WGT-PLATFORM-007` — `WGT-PLATFORM-003` **hosts the trigger** for the
-  confirmation `WGT-PLATFORM-007` owns; they are one action role in two moments, never two roles
-  (`WIDGET_SPECS.md` section 3).
-- `WGT-PLATFORM-004` precedes `WGT-PLATFORM-005` — `WGT-PLATFORM-005`'s `empty-filtered` state renders
-  "with the applied filter still visible in `WGT-PLATFORM-004`" (its own Phase 4 block).
-
-No other pair among `WGT-PLATFORM-002`, `-004`, `-005`, `-010` carries a build dependency on each other,
-even where they co-occur on the same screen. Composing components in common, or appearing on the same
-`SCR-*`, is not a dependency (`WIDGET_SPECS.md` section 3: widgets compose components; they do not
-compose each other, with only the two named exceptions above).
+Co-occurrence on a screen, shared components, or a higher build-order number is not a dependency. Every contract may assume only its explicitly named predecessors and the Phase 3 component tier.
 
 ### 0.5 Figma-derived-not-canonical rule
 
@@ -4990,3 +4964,3917 @@ exists to override.
 
 ---
 
+
+
+### WGT-POLICY-001 — Implementation Contract
+
+#### 1. Identity
+
+- **WGT ID:** `WGT-POLICY-001`
+- **Name:** Governed version and lifecycle bar
+- **Build order:** 15
+- **Platforms:** A
+- **Runtime:** Filament
+- **Phase 4 realization:** Profile C `n/a`; Profile A `Custom`
+- **Screen reach:** 16 documented screen placements
+- **Source specification:** `docs/ux/04-specs/WIDGET_SPECS_DOMAIN.md`
+- **Purpose:** state which version this is, when it is effective, what review it has passed, and that its history stays readable — so that "configurable" never reads as "instant and unreviewed".
+- **User intent:** know what is in force, what is coming, and what governed the thing I am looking at.
+
+#### 2. Implements
+
+- `FR-POLICY-001`
+- `FR-POLICY-002`
+- `FR-CATALOG-002`
+- `FR-CATALOG-003`
+
+No requirement is broadened by this contract; canonical acceptance criteria remain in `docs/PRD.md`.
+
+#### 3. Used by
+
+- `SCR-CATALOG-003`
+- `SCR-CATALOG-004`
+- `SCR-CATALOG-005`
+- `SCR-CATALOG-006`
+- `SCR-CATALOG-007`
+- `SCR-CATALOG-008`
+- `SCR-CATALOG-009`
+- `SCR-CATALOG-010`
+- `SCR-CATALOG-011`
+- `SCR-ELIG-018`
+- `SCR-ELIG-019`
+- `SCR-ELIG-023`
+- `SCR-POLICY-001`
+- `SCR-POLICY-002`
+- `SCR-POLICY-003`
+- `SCR-POLICY-004`
+
+The Phase 4 screen specification remains the owner of each screen's exact composition.
+
+#### 4. Widget dependencies
+
+- **Required predecessors:** `WGT-PLATFORM-001`
+- Build order is not evidence of any additional dependency. Co-occurrence on a screen does not create one.
+
+#### 5. Component dependencies
+
+- **Mandatory core:** `CMP-POLICY-001`
+- **Conditional:** `CMP-PLATFORM-001`, `CMP-PLATFORM-005`, `CMP-PLATFORM-013`, `CMP-CLINICAL-002`, `CMP-PLATFORM-008`
+- Mandatory components must be implemented from their Phase 3 contracts before this widget.
+
+#### 6. Interaction dependencies
+
+- `IX-POLICY-001`
+- `IX-POLICY-002`
+- `IX-PLATFORM-003`
+- `IX-PLATFORM-008`
+
+#### 7. Content dependencies
+
+- `TXT-PLATFORM-014`
+- `TXT-PLATFORM-010`
+- `TXT-STATE-POLICY-001`
+- `TXT-STATE-CATALOG-001`
+
+Canonical copy remains owned by the Phase 3 content system and error catalog.
+
+#### 8. Accessibility dependencies
+
+- `A11Y-POLICY-001`
+- `A11Y-PLATFORM-012`
+- `A11Y-PLATFORM-015`
+- `A11Y-PLATFORM-016`
+- `A11Y-PLATFORM-030`
+
+These IDs are implementation assertions, not a Phase 5 claim that rendered/runtime accessibility has passed.
+
+#### 9. Canonical data/action contracts
+
+- **Profile C API:** n/a
+- **Profile A SDC:** `SDC-POLICY-001`, `SDC-POLICY-002`, `SDC-CATALOG-001`, `SDC-CATALOG-002`, `SDC-ELIG-002`
+- Use the projection and command semantics exactly as declared by the canonical owner; do not invent an endpoint for Filament or an in-process command for Patient.
+
+#### 10. Shared application-layer prerequisites
+
+- `TASK-POLICY-001`
+- `TASK-POLICY-002`
+- `TASK-CATALOG-002`
+- `TASK-AUDIT-001`
+- Cross-cutting authorization/audit/idempotency prerequisites from `docs/IMPLEMENTATION_PLAN.md` apply where the canonical command requires them.
+
+#### 11. Data model prerequisites
+
+| Entity / table | Status |
+|---|---|
+| `policy_versions` | Proposed |
+| `service_definitions` | Existing |
+| `procedure_item_versions` | Proposed |
+| `service_launch_gates` | Existing |
+| `audit_events` | Proposed |
+
+
+
+
+#### 12. Target files
+
+| Target area | Path / owner | Status |
+|---|---|---|
+| Admin panel registration context | `UberTip-Backend/app/Providers/Filament/AdminPanelProvider.php` | Existing |
+| Shared Filament support area | `UberTip-Backend/app/Filament/Support/` | Proposed |
+
+A conventional path is not upgraded to Existing unless it is present in the repository.
+
+#### 13. Data/view-model mapping
+
+Map only the fields/projections declared by `SDC-POLICY-001`, `SDC-POLICY-002`, `SDC-CATALOG-001`, `SDC-CATALOG-002`, `SDC-ELIG-002`. The adapter may normalize presentation shape, but identifiers, lifecycle state, authority, provenance, amounts and timestamps remain server truth. Configurable means governed and versioned, never instant. Show version, audience, effective window, review gate and accountable approver without collapsing draft/current/history.
+
+#### 14. Refresh / caching / polling
+
+Authoritative state is read on entry/refocus/explicit refresh and after the widget's own successful mutations where the platform contract calls for it. Preserve usable content during refresh when Phase 4 requires that. Do not invent cache TTLs, polling intervals, retry counts or timers.
+
+#### 15. Idempotency / correlation
+
+The bar is a read/comparison surface. Idempotency is n/a to rendering; any publish/retire/approve command is owned by the enclosing state-gated action contract and must use its canonical command idempotency.
+
+#### 16. Permission gate
+
+Canonical permission source: `docs/domain/PERMISSIONS_MATRIX.md`. Publication and review actions require the canonical capability and scope; the bar itself may render a safe read projection only. UI hiding/disablement is never the authorization boundary; server-side policy/scope enforcement occurs before any protected read or mutation.
+
+#### 17. Props / configuration
+
+| Name | Type | Required | Default | Source | Notes |
+|---|---|---:|---|---|---|
+| `projection` | canonical view model | yes | none | API/SDC projection | No client-created business truth |
+| `authorityContext` | scope/grant context | yes when protected | none | authenticated server context | Re-evaluate after authority loss |
+| `variant` | Phase 4 variant | when more than one exists | source-defined | WGT specification | Never invent a new product variant |
+| `readOnly` | boolean | when historical/oversight variant applies | source-defined | lifecycle/permission | Read-only is not disabled |
+| `onCommit` | command adapter | only on committing variants | none | canonical action contract | Must return/reconcile authoritative result |
+
+#### 18. State rendering
+
+| State | Behaviour |
+|---|---|
+| `loading-initial` | Version identity and state resolve before any content beneath the bar renders, because content read without its version is content read without its meaning |
+| `loading-refresh` | A newly activated version states the change rather than swapping the version being read |
+| `empty-no-data` | No version exists for this key and scope yet: stated, with what creating the first draft would do |
+| `empty-filtered` | On a version list, a state or audience filter names itself as the cause |
+| `partial` | If the effective period or the review state did not load, the bar says so and any publication action is unavailable |
+| `stale` | The bar carries its as-of time; publication is withdrawn against a stale read |
+| `error-fetch` | Known version identity preserved with retry |
+| `error-permission` | A version outside the actor's owned domain is read-only; authoring and publication controls are absent, not disabled |
+| `success` | The version bar |
+| Offline / unstable | Read-only; publication is never queued |
+
+The structural precedence is still owned by `WGT-PLATFORM-001`; this widget does not redefine it.
+
+#### 19. Lifecycle/state semantics
+
+Configurable means governed and versioned, never instant. Show version, audience, effective window, review gate and accountable approver without collapsing draft/current/history. Lifecycle labels and meanings come from `CONTENT_GUIDE_STATES.md` / `semantic.state.json`. Where a status is rendered, consume tone, icon and emphasis together; color alone never carries state.
+
+#### 20. Tokens
+
+- Mandatory component-token groups: component.policy-001
+- Shared state and surface values come from semantic/component token references only.
+- No raw visual or timing value is owned by this contract.
+
+#### 21. Content
+
+Bound content families: TXT-PLATFORM-014, TXT-PLATFORM-010, TXT-STATE-POLICY-001, TXT-STATE-CATALOG-001. Dynamic values come from the canonical projection; audience translation follows Phase 3. Do not copy canonical error strings into code as a second source of truth.
+
+#### 22. Accessibility contract
+
+the bar is the first landmark of the surface and announces
+version, state, audience and effective period as one unit. An activation or retirement announces and the
+surface re-reads. Historical versions are keyboard reachable from the bar.
+
+Profile-specific runtime checks remain mandatory after implementation; documentation coverage is not conformance evidence.
+
+#### 23. RTL / bidi
+
+the bar mirrors. Version identifiers, effective dates and policy keys are
+bidirectionally isolated.
+
+Amounts, currencies, dates/times, phone numbers, codes/IDs, email/URL, Latin names and version identifiers are isolated as required; machine identifiers are never visually reversed.
+
+#### 24. Responsive behavior
+
+Profile A only. One row at `profile-a.content-width.wide`; at `narrow` version and state
+stay on the first line and the effective period and review state stack beneath. Text/content rule: the audience label, the review state and the effective period never
+truncate, because those three are what a reader most easily misreads.
+
+Profile C uses its native size-class model; Profile A uses content-width/reflow rules. The two breakpoint systems are never merged.
+
+#### 25. Immutability / historical safety
+
+Activated and historical policy/catalog versions are immutable. Never register generic edit/delete on historical rows; changes create a new version or prospective lifecycle transition.
+
+#### 26. Framework defaults to disable
+
+Custom Profile A region. Do not register generic edit/delete on historical versions; do not use mutable form state as the source of the current/effective badge.
+
+#### 27. Prohibitions
+
+editing an activated, retired or superseded version; a change presented as retroactive; a
+draft that can become production by toggling visibility, activation or an effective date; evaluation
+content presented as production content; an overlap of effective periods resolved silently rather than
+surfaced; a clinically meaningful change activating on the drafter's authority alone; the drafter
+approving their own draft; exposing a calibration output.
+
+Treat each prohibition as a negative implementation test.
+
+#### 28. Definition of Done
+
+- Canonical API/SDC projection and command boundaries are preserved.
+- Every applicable Phase 4 data state is implemented without optimistic clinical/financial/authorization truth.
+- Permission checks are enforced server-side and UI availability matches canonical authority/state.
+- Semantic/component tokens only; canonical TXT ownership is preserved.
+- Applicable A11Y and RTL/bidi assertions are implemented.
+- Historical/immutable entities expose no prohibited mutation.
+- The Phase 4 Prohibited list has negative coverage.
+- Patient code, when applicable, waits for `TASK-PLATFORM-008` to establish real repository paths and verified commands.
+- No unrelated WGT contract or upstream UX behavior is changed.
+
+#### 29. Verification
+
+**Tier A — repository/code verification once implemented**
+
+- Run `python docs/scripts/validate_docs.py` and `python docs/ux/scripts/validate_ux_docs.py --phase 5`.
+- For Laravel/Filament work, run the repository's verified Composer lint/type/test scripts applicable to the changed area.
+- Verify API/SDC, permission, idempotency, immutable-history and negative-prohibition tests named by the owning TASK/TESTING_STRATEGY entries.
+
+**Tier B — rendered design QA**
+
+- Verify hierarchy, token use, Arabic/RTL layout, long-content behavior, state distinction and rendered contrast against the Phase 4 spec and build manifest.
+- Status: not run in this documentation session.
+
+**Tier C — runtime QA**
+
+- Verify keyboard/focus, screen-reader announcements, touch/target behavior, text scaling/reflow, reduced motion and real permission/error transitions on the implemented runtime.
+- Profile C commands remain unresolved until `TASK-PLATFORM-008` records the actual client scripts.
+- Status: not run — requires implementation.
+
+
+
+### WGT-ELIG-002 — Implementation Contract
+
+#### 1. Identity
+
+- **WGT ID:** `WGT-ELIG-002`
+- **Name:** Eligibility decision block
+- **Build order:** 16
+- **Platforms:** C, A
+- **Runtime:** React Native + Filament
+- **Phase 4 realization:** Profile C `Native`; Profile A `Custom`
+- **Screen reach:** 13 documented screen placements
+- **Source specification:** `docs/ux/04-specs/WIDGET_SPECS_DOMAIN.md`
+- **Purpose:** state the controlling reason a provider, service and branch combination is or is not currently available, in the audience's terms, with **pending evaluation visibly distinct from a negative outcome** and no internal symbol reachable outside the one explicitly authorized projection.
+- **User intent:** understand why this is or is not available, and what would change it.
+
+#### 2. Implements
+
+- `FR-ELIG-016`
+- `FR-ELIG-017`
+- `FR-ELIG-007`
+- `FR-ELIG-013`
+
+No requirement is broadened by this contract; canonical acceptance criteria remain in `docs/PRD.md`.
+
+#### 3. Used by
+
+- `SCR-ELIG-004`
+- `SCR-ELIG-007`
+- `SCR-ELIG-008`
+- `SCR-ELIG-011`
+- `SCR-ELIG-012`
+- `SCR-ELIG-013`
+- `SCR-ELIG-014`
+- `SCR-ELIG-015`
+- `SCR-ELIG-018`
+- `SCR-ELIG-020`
+- `SCR-ELIG-021`
+- `SCR-ELIG-022`
+- `SCR-BOOKING-014`
+
+The Phase 4 screen specification remains the owner of each screen's exact composition.
+
+#### 4. Widget dependencies
+
+- **Required predecessors:** `WGT-PLATFORM-001`
+- Build order is not evidence of any additional dependency. Co-occurrence on a screen does not create one.
+
+#### 5. Component dependencies
+
+- **Mandatory core:** `CMP-ELIG-003`
+- **Conditional:** `CMP-PLATFORM-002`, `CMP-PLATFORM-001`, `CMP-PLATFORM-013`, `CMP-PLATFORM-006`, `CMP-POLICY-001`
+- Mandatory components must be implemented from their Phase 3 contracts before this widget.
+
+#### 6. Interaction dependencies
+
+- `IX-ELIG-001`
+- `IX-PLATFORM-007`
+- `IX-PLATFORM-008`
+- `IX-PLATFORM-003`
+
+#### 7. Content dependencies
+
+- `TXT-PLATFORM-010`
+- `TXT-PLATFORM-017`
+- `TXT-PLATFORM-018`
+- `TXT-STATE-ELIG-001`
+- `TXT-ERR-ELIG-001`
+- `TXT-ERR-ELIG-002`
+
+Canonical copy remains owned by the Phase 3 content system and error catalog.
+
+#### 8. Accessibility dependencies
+
+- `A11Y-PLATFORM-015`
+- `A11Y-PLATFORM-009`
+- `A11Y-PLATFORM-011`
+- `A11Y-PLATFORM-023`
+- `A11Y-PLATFORM-012`
+- `A11Y-PLATFORM-016`
+
+These IDs are implementation assertions, not a Phase 5 claim that rendered/runtime accessibility has passed.
+
+#### 9. Canonical data/action contracts
+
+- **Profile C API:** `API-ELIG-002`
+- **Profile A SDC:** `SDC-ELIG-002`, `SDC-ELIG-003`, `SDC-ELIG-004`
+- Use the projection and command semantics exactly as declared by the canonical owner; do not invent an endpoint for Filament or an in-process command for Patient.
+
+#### 10. Shared application-layer prerequisites
+
+- `TASK-ELIG-001`
+- `TASK-ELIG-006`
+- `TASK-ELIG-009`
+- `TASK-ELIG-010`
+- `TASK-PLATFORM-008`
+- Cross-cutting authorization/audit/idempotency prerequisites from `docs/IMPLEMENTATION_PLAN.md` apply where the canonical command requires them.
+
+#### 11. Data model prerequisites
+
+| Entity / table | Status |
+|---|---|
+| `eligibility_decisions` | Proposed |
+| `eligibility_gate_results` | Proposed |
+| `approved_facts` | Proposed |
+| `provider_service_prices` | Proposed |
+| `policy_versions` | Proposed |
+
+
+
+
+#### 12. Target files
+
+| Target area | Path / owner | Status |
+|---|---|---|
+| Patient implementation area | Patient React Native project / feature area owned by `TASK-PLATFORM-008` | Proposed, path unverified |
+| Admin panel registration context | `UberTip-Backend/app/Providers/Filament/AdminPanelProvider.php` | Existing |
+| Admin Filament resource area | `UberTip-Backend/app/Filament/Resources/` | Proposed |
+| Clinic panel/provider area | `UberTip-Backend/app/Providers/Filament/ClinicPanelProvider.php` and `app/Filament/Clinic/*` | Proposed |
+
+A conventional path is not upgraded to Existing unless it is present in the repository.
+
+#### 13. Data/view-model mapping
+
+Map only the fields/projections declared by `API-ELIG-002`, `SDC-ELIG-002`, `SDC-ELIG-003`, `SDC-ELIG-004`. The adapter may normalize presentation shape, but identifiers, lifecycle state, authority, provenance, amounts and timestamps remain server truth. Keep PENDING_EVALUATION distinct from NOT_ELIGIBLE. Patient and provider-facing views must not expose S/P/H/I, calibration, weights, thresholds or internal grade mechanics.
+
+#### 14. Refresh / caching / polling
+
+Authoritative state is read on entry/refocus/explicit refresh and after the widget's own successful mutations where the platform contract calls for it. Preserve usable content during refresh when Phase 4 requires that. Do not invent cache TTLs, polling intervals, retry counts or timers.
+
+#### 15. Idempotency / correlation
+
+Read-only decision rendering; idempotency is n/a. Remediation commands are owned by their source flows and must re-read the authoritative decision after commit.
+
+#### 16. Permission gate
+
+Canonical permission source: `docs/domain/PERMISSIONS_MATRIX.md`. The server projection decides which reason detail is visible to each role. Internal gate inputs and formulas are never client-authoritative. UI hiding/disablement is never the authorization boundary; server-side policy/scope enforcement occurs before any protected read or mutation.
+
+#### 17. Props / configuration
+
+| Name | Type | Required | Default | Source | Notes |
+|---|---|---:|---|---|---|
+| `projection` | canonical view model | yes | none | API/SDC projection | No client-created business truth |
+| `authorityContext` | scope/grant context | yes when protected | none | authenticated server context | Re-evaluate after authority loss |
+| `variant` | Phase 4 variant | when more than one exists | source-defined | WGT specification | Never invent a new product variant |
+| `readOnly` | boolean | when historical/oversight variant applies | source-defined | lifecycle/permission | Read-only is not disabled |
+| `onCommit` | command adapter | only on committing variants | none | canonical action contract | Must return/reconcile authoritative result |
+
+#### 18. State rendering
+
+| State | Behaviour |
+|---|---|
+| `loading-initial` | No outcome is rendered until the scope and the decision resolve together. An outcome without its scope is a wrong outcome |
+| `loading-refresh` | A decision that changes while the actor is viewing it is announced; if it blocks the actor's current intent, focus moves to this block |
+| `empty-no-data` | No activation request or decision exists for this scope yet: stated as not yet assessed, which is not a negative outcome |
+| `empty-filtered` | Where scopes are filtered, the filter is named as the cause and the unfiltered scope count stays visible |
+| `partial` | Some scopes resolved and some did not; an unresolved scope is not rendered as eligible or as failing |
+| `stale` | The assessment time is always shown, so staleness is visible by construction rather than as an exception |
+| `error-fetch` | The last known decision is preserved with its as-of time and retry |
+| `error-permission` | The `reviewer` projection is offered only to explicitly authorized roles; a denial states the scope limit and never degrades silently to a shorter explanation |
+| `success` | The decision, with its controlling reason |
+| Offline / unstable | Last known decision with as-of time. No action that depends on current eligibility is offered |
+
+The structural precedence is still owned by `WGT-PLATFORM-001`; this widget does not redefine it.
+
+#### 19. Lifecycle/state semantics
+
+Keep PENDING_EVALUATION distinct from NOT_ELIGIBLE. Patient and provider-facing views must not expose S/P/H/I, calibration, weights, thresholds or internal grade mechanics. Lifecycle labels and meanings come from `CONTENT_GUIDE_STATES.md` / `semantic.state.json`. Where a status is rendered, consume tone, icon and emphasis together; color alone never carries state.
+
+#### 20. Tokens
+
+- Mandatory component-token groups: component.elig-003
+- Shared state and surface values come from semantic/component token references only.
+- No raw visual or timing value is owned by this contract.
+
+#### 21. Content
+
+Bound content families: TXT-PLATFORM-010, TXT-PLATFORM-017, TXT-PLATFORM-018, TXT-STATE-ELIG-001, TXT-ERR-ELIG-001, TXT-ERR-ELIG-002. Dynamic values come from the canonical projection; audience translation follows Phase 3. Do not copy canonical error strings into code as a second source of truth.
+
+#### 22. Accessibility contract
+
+the outcome announces as a triple, never as a colour. A change
+that blocks the actor's current intent announces assertively and moves focus here; a change that does
+not announces politely without moving focus. Each blocker is a keyboard-reachable link to its resolving
+action on Profile A.
+
+Profile-specific runtime checks remain mandatory after implementation; documentation coverage is not conformance evidence.
+
+#### 23. RTL / bidi
+
+scope, outcome and reason sit in logical order. Service codes, branch identifiers,
+policy version identifiers and timestamps are bidirectionally isolated.
+
+Amounts, currencies, dates/times, phone numbers, codes/IDs, email/URL, Latin names and version identifiers are isolated as required; machine identifiers are never visually reversed.
+
+#### 24. Responsive behavior
+
+Profile C stacks scope, outcome, reason and assessment time in the reading column.
+Profile A keeps the block in the primary region; at `profile-a.content-width.narrow` the blocker list
+stacks beneath the outcome and each blocker's resolving action stays with it. Text/content rule: the controlling reason is never truncated at any size, on any
+variant. A blocker's description wraps in full.
+
+Profile C uses its native size-class model; Profile A uses content-width/reflow rules. The two breakpoint systems are never merged.
+
+#### 25. Immutability / historical safety
+
+Eligibility decisions are immutable snapshots. A re-evaluation creates a new decision; never edit the prior outcome.
+
+#### 26. Framework defaults to disable
+
+Custom on Profile A. Do not reduce the decision to a generic badge or expose an override/edit action.
+
+#### 27. Prohibitions
+
+rendering `PENDING_EVALUATION` as a negative outcome or as grade `F`; exposing raw
+internal `I`, `K`, `EU`, the uncapped result or the applied-cap reason anywhere except the one
+explicitly authorized reviewer projection; any control that selects, edits or overrides an outcome, at
+any role; a single provider-wide eligibility status; presenting a suspension as affecting scopes it does
+not affect; asserting a held booking's outcome from this block, which belongs to the governed review.
+
+Treat each prohibition as a negative implementation test.
+
+#### 28. Definition of Done
+
+- Canonical API/SDC projection and command boundaries are preserved.
+- Every applicable Phase 4 data state is implemented without optimistic clinical/financial/authorization truth.
+- Permission checks are enforced server-side and UI availability matches canonical authority/state.
+- Semantic/component tokens only; canonical TXT ownership is preserved.
+- Applicable A11Y and RTL/bidi assertions are implemented.
+- Historical/immutable entities expose no prohibited mutation.
+- The Phase 4 Prohibited list has negative coverage.
+- Patient code, when applicable, waits for `TASK-PLATFORM-008` to establish real repository paths and verified commands.
+- No unrelated WGT contract or upstream UX behavior is changed.
+
+#### 29. Verification
+
+**Tier A — repository/code verification once implemented**
+
+- Run `python docs/scripts/validate_docs.py` and `python docs/ux/scripts/validate_ux_docs.py --phase 5`.
+- For Laravel/Filament work, run the repository's verified Composer lint/type/test scripts applicable to the changed area.
+- Verify API/SDC, permission, idempotency, immutable-history and negative-prohibition tests named by the owning TASK/TESTING_STRATEGY entries.
+
+**Tier B — rendered design QA**
+
+- Verify hierarchy, token use, Arabic/RTL layout, long-content behavior, state distinction and rendered contrast against the Phase 4 spec and build manifest.
+- Status: not run in this documentation session.
+
+**Tier C — runtime QA**
+
+- Verify keyboard/focus, screen-reader announcements, touch/target behavior, text scaling/reflow, reduced motion and real permission/error transitions on the implemented runtime.
+- Profile C commands remain unresolved until `TASK-PLATFORM-008` records the actual client scripts.
+- Status: not run — requires implementation.
+
+
+
+### WGT-IDENTITY-002 — Implementation Contract
+
+#### 1. Identity
+
+- **WGT ID:** `WGT-IDENTITY-002`
+- **Name:** Authorization grant panel
+- **Build order:** 17
+- **Platforms:** C, A
+- **Runtime:** React Native + Filament
+- **Phase 4 realization:** Profile C `Native`; Profile A `Extended`
+- **Screen reach:** 13 documented screen placements
+- **Source specification:** `docs/ux/04-specs/WIDGET_SPECS_DOMAIN.md`
+- **Purpose:** make the exact scope being granted legible **before** it is granted, and keep revocation reachable regardless of what else is happening to the subject's records. An over-broad grant is an authorization breach across every interface, and a revocation that a booking can block is not a revocation.
+- **User intent:** know precisely who can act for whom, on what, until when, and stop it immediately.
+
+#### 2. Implements
+
+- `FR-IDENTITY-003`
+- `FR-IDENTITY-001`
+- `FR-AUDIT-001`
+
+No requirement is broadened by this contract; canonical acceptance criteria remain in `docs/PRD.md`.
+
+#### 3. Used by
+
+- `SCR-IDENTITY-005`
+- `SCR-IDENTITY-006`
+- `SCR-IDENTITY-007`
+- `SCR-IDENTITY-008`
+- `SCR-IDENTITY-022`
+- `SCR-IDENTITY-023`
+- `SCR-IDENTITY-024`
+- `SCR-IDENTITY-026`
+- `SCR-IDENTITY-033`
+- `SCR-IDENTITY-034`
+- `SCR-IDENTITY-035`
+- `SCR-IDENTITY-037`
+- `SCR-IDENTITY-038`
+
+The Phase 4 screen specification remains the owner of each screen's exact composition.
+
+#### 4. Widget dependencies
+
+- **Required predecessors:** `WGT-PLATFORM-001`
+- Build order is not evidence of any additional dependency. Co-occurrence on a screen does not create one.
+
+#### 5. Component dependencies
+
+- **Mandatory core:** `CMP-PLATFORM-003`, `CMP-PLATFORM-004`
+- **Conditional:** `CMP-PLATFORM-006`, `CMP-PLATFORM-005`, `CMP-PLATFORM-014`, `CMP-PLATFORM-013`, `CMP-PLATFORM-001`
+- Mandatory components must be implemented from their Phase 3 contracts before this widget.
+
+#### 6. Interaction dependencies
+
+- `IX-PLATFORM-007`
+- `IX-AUDIT-001`
+- `IX-PLATFORM-001`
+- `IX-PLATFORM-018`
+
+#### 7. Content dependencies
+
+- `TXT-PLATFORM-012`
+- `TXT-PLATFORM-016`
+- `TXT-PLATFORM-017`
+- `TXT-STATE-IDENTITY-002`
+
+Canonical copy remains owned by the Phase 3 content system and error catalog.
+
+#### 8. Accessibility dependencies
+
+- `A11Y-PLATFORM-014`
+- `A11Y-PLATFORM-016`
+- `A11Y-PLATFORM-012`
+- `A11Y-PLATFORM-027`
+- `A11Y-PLATFORM-011`
+- `A11Y-AUDIT-001`
+
+These IDs are implementation assertions, not a Phase 5 claim that rendered/runtime accessibility has passed.
+
+#### 9. Canonical data/action contracts
+
+- **Profile C API:** `API-IDENTITY-003`, `API-IDENTITY-004`, `API-IDENTITY-005`, `API-IDENTITY-006`
+- **Profile A SDC:** `SDC-IDENTITY-003`, `SDC-IDENTITY-004`, `SDC-IDENTITY-005`
+- Use the projection and command semantics exactly as declared by the canonical owner; do not invent an endpoint for Filament or an in-process command for Patient.
+
+#### 10. Shared application-layer prerequisites
+
+- `TASK-IDENTITY-002`
+- `TASK-IDENTITY-004`
+- `TASK-IDENTITY-006`
+- `TASK-IDENTITY-007`
+- `TASK-AUDIT-001`
+- Cross-cutting authorization/audit/idempotency prerequisites from `docs/IMPLEMENTATION_PLAN.md` apply where the canonical command requires them.
+
+#### 11. Data model prerequisites
+
+| Entity / table | Status |
+|---|---|
+| `users` | Existing |
+| `guardian_grants` | Proposed |
+| `staff_scope_grants` | Proposed |
+| `audit_events` | Proposed |
+
+
+
+
+#### 12. Target files
+
+| Target area | Path / owner | Status |
+|---|---|---|
+| Patient implementation area | Patient React Native project / feature area owned by `TASK-PLATFORM-008` | Proposed, path unverified |
+| Admin panel registration context | `UberTip-Backend/app/Providers/Filament/AdminPanelProvider.php` | Existing |
+| Admin Filament resource area | `UberTip-Backend/app/Filament/Resources/` | Proposed |
+| Clinic panel/provider area | `UberTip-Backend/app/Providers/Filament/ClinicPanelProvider.php` and `app/Filament/Clinic/*` | Proposed |
+
+A conventional path is not upgraded to Existing unless it is present in the repository.
+
+#### 13. Data/view-model mapping
+
+Map only the fields/projections declared by `API-IDENTITY-003`, `API-IDENTITY-004`, `API-IDENTITY-005`, `API-IDENTITY-006`, `SDC-IDENTITY-003`, `SDC-IDENTITY-004`, `SDC-IDENTITY-005`. The adapter may normalize presentation shape, but identifiers, lifecycle state, authority, provenance, amounts and timestamps remain server truth. Render who may act, for whom, on what, effective period and legal/delegated basis together. An over-broad or ambiguous scope is an authorization defect.
+
+#### 14. Refresh / caching / polling
+
+Authoritative state is read on entry/refocus/explicit refresh and after the widget's own successful mutations where the platform contract calls for it. Preserve usable content during refresh when Phase 4 requires that. Do not invent cache TTLs, polling intervals, retry counts or timers.
+
+#### 15. Idempotency / correlation
+
+Grant/revoke commands are committing operations. Reuse the canonical idempotency/correlation context on retry; never infer success from local visibility changes.
+
+#### 16. Permission gate
+
+Canonical permission source: `docs/domain/PERMISSIONS_MATRIX.md`. Who may grant/revoke is determined server-side from the exact grant basis, relationship and active scope. Revocation remains reachable regardless of booking/case state. UI hiding/disablement is never the authorization boundary; server-side policy/scope enforcement occurs before any protected read or mutation.
+
+#### 17. Props / configuration
+
+| Name | Type | Required | Default | Source | Notes |
+|---|---|---:|---|---|---|
+| `projection` | canonical view model | yes | none | API/SDC projection | No client-created business truth |
+| `authorityContext` | scope/grant context | yes when protected | none | authenticated server context | Re-evaluate after authority loss |
+| `variant` | Phase 4 variant | when more than one exists | source-defined | WGT specification | Never invent a new product variant |
+| `readOnly` | boolean | when historical/oversight variant applies | source-defined | lifecycle/permission | Read-only is not disabled |
+| `onCommit` | command adapter | only on committing variants | none | canonical action contract | Must return/reconcile authoritative result |
+
+#### 18. State rendering
+
+| State | Behaviour |
+|---|---|
+| `loading-initial` | The grant set loads before any control; a revoke control over an unknown grant is not offered |
+| `loading-refresh` | Grant states refresh; a grant that changed while open states the change rather than swapping silently |
+| `empty-no-data` | No grants: stated plainly, with the one action that creates the first one where the actor may |
+| `empty-filtered` | Where the surface filters by state, the applied filter is named as the cause |
+| `partial` | A grant whose scope did not load is shown as scope-unknown and offers no action, because an unknown scope must never read as full scope |
+| `stale` | Grant states carry their as-of time; no grant is acted on against a stale read |
+| `error-fetch` | The known set is preserved with retry |
+| `error-permission` | Delegation authority lost: creation and revocation are removed structurally and the remaining view is read-only |
+| `success` | The grant set with its history |
+| Offline / unstable | Read-only. Revocation is a security action and is never queued optimistically |
+
+The structural precedence is still owned by `WGT-PLATFORM-001`; this widget does not redefine it.
+
+#### 19. Lifecycle/state semantics
+
+Render who may act, for whom, on what, effective period and legal/delegated basis together. An over-broad or ambiguous scope is an authorization defect. Lifecycle labels and meanings come from `CONTENT_GUIDE_STATES.md` / `semantic.state.json`. Where a status is rendered, consume tone, icon and emphasis together; color alone never carries state.
+
+#### 20. Tokens
+
+- Mandatory component-token groups: component.platform-003, component.platform-004
+- Shared state and surface values come from semantic/component token references only.
+- No raw visual or timing value is owned by this contract.
+
+#### 21. Content
+
+Bound content families: TXT-PLATFORM-012, TXT-PLATFORM-016, TXT-PLATFORM-017, TXT-STATE-IDENTITY-002. Dynamic values come from the canonical projection; audience translation follows Phase 3. Do not copy canonical error strings into code as a second source of truth.
+
+#### 22. Accessibility contract
+
+the scope is part of each grant's accessible name, not a
+hover-only detail. Revocation is separated from any adjacent primary action and uses the destructive
+role in both the trigger and the confirmation. After revocation, focus moves to the updated grant list
+and the change is announced. On Profile A the whole panel is keyboard operable.
+
+Profile-specific runtime checks remain mandatory after implementation; documentation coverage is not conformance evidence.
+
+#### 23. RTL / bidi
+
+the three grant facts sit in logical order. Grantee identifiers and effective dates
+are bidirectionally isolated.
+
+Amounts, currencies, dates/times, phone numbers, codes/IDs, email/URL, Latin names and version identifiers are isolated as required; machine identifiers are never visually reversed.
+
+#### 24. Responsive behavior
+
+Profile C stacks the grant facts in the reading column. Profile A keeps the grant list
+as a table at `profile-a.content-width.wide` and degrades to `reading-list` at `narrow`, because a
+truncated scope column is exactly the failure this widget exists to prevent. Text/content rule: a capability list wraps in full; a scope is never truncated, because
+a truncated scope is an unread scope. At the largest text size each grant stacks with scope directly
+beneath the parties.
+
+Profile C uses its native size-class model; Profile A uses content-width/reflow rules. The two breakpoint systems are never merged.
+
+#### 25. Immutability / historical safety
+
+Grant history remains attributable after expiry/revocation. Revocation changes active authority prospectively and must not erase historical attribution.
+
+#### 26. Framework defaults to disable
+
+Extended Profile A actions must not use visibility callbacks as authorization. Disable generic delete; revocation is the governed destructive transition.
+
+#### 27. Prohibitions
+
+a revocation that any booking, case or downstream state can block; a guardian
+self-authorizing a dependent's grant; offering a capability the inviter does not hold; deleting an
+expired or revoked grant from history; presenting a coarse role as if it granted data access; an
+administrator self-granting a scope to bypass a policy that requires another accountable reviewer;
+implying that switching context creates authority.
+
+Treat each prohibition as a negative implementation test.
+
+#### 28. Definition of Done
+
+- Canonical API/SDC projection and command boundaries are preserved.
+- Every applicable Phase 4 data state is implemented without optimistic clinical/financial/authorization truth.
+- Permission checks are enforced server-side and UI availability matches canonical authority/state.
+- Semantic/component tokens only; canonical TXT ownership is preserved.
+- Applicable A11Y and RTL/bidi assertions are implemented.
+- Historical/immutable entities expose no prohibited mutation.
+- The Phase 4 Prohibited list has negative coverage.
+- Patient code, when applicable, waits for `TASK-PLATFORM-008` to establish real repository paths and verified commands.
+- No unrelated WGT contract or upstream UX behavior is changed.
+
+#### 29. Verification
+
+**Tier A — repository/code verification once implemented**
+
+- Run `python docs/scripts/validate_docs.py` and `python docs/ux/scripts/validate_ux_docs.py --phase 5`.
+- For Laravel/Filament work, run the repository's verified Composer lint/type/test scripts applicable to the changed area.
+- Verify API/SDC, permission, idempotency, immutable-history and negative-prohibition tests named by the owning TASK/TESTING_STRATEGY entries.
+
+**Tier B — rendered design QA**
+
+- Verify hierarchy, token use, Arabic/RTL layout, long-content behavior, state distinction and rendered contrast against the Phase 4 spec and build manifest.
+- Status: not run in this documentation session.
+
+**Tier C — runtime QA**
+
+- Verify keyboard/focus, screen-reader announcements, touch/target behavior, text scaling/reflow, reduced motion and real permission/error transitions on the implemented runtime.
+- Profile C commands remain unresolved until `TASK-PLATFORM-008` records the actual client scripts.
+- Status: not run — requires implementation.
+
+
+
+### WGT-OPS-001 — Implementation Contract
+
+#### 1. Identity
+
+- **WGT ID:** `WGT-OPS-001`
+- **Name:** Work queue row and list
+- **Build order:** 18
+- **Platforms:** A
+- **Runtime:** Filament
+- **Phase 4 realization:** Profile C `n/a`; Profile A `Extended`
+- **Screen reach:** 8 documented screen placements
+- **Source specification:** `docs/ux/04-specs/WIDGET_SPECS_DOMAIN.md`
+- **Purpose:** render operational work items with their five states **and their two independent flags**, because the row a supervisor most needs to find is simultaneously in progress, escalated and overdue, and collapsing that into one status column loses exactly that row.
+- **User intent:** find what I should work on next, and see what is slipping.
+
+#### 2. Implements
+
+- `FR-OPS-001`
+- `FR-OPS-002`
+- `FR-AUDIT-001`
+
+No requirement is broadened by this contract; canonical acceptance criteria remain in `docs/PRD.md`.
+
+#### 3. Used by
+
+- `SCR-PLATFORM-003`
+- `SCR-PLATFORM-004`
+- `SCR-IDENTITY-021`
+- `SCR-OPS-001`
+- `SCR-OPS-002`
+- `SCR-OPS-003`
+- `SCR-ELIG-014`
+- `SCR-ELIG-022`
+
+The Phase 4 screen specification remains the owner of each screen's exact composition.
+
+#### 4. Widget dependencies
+
+- **Required predecessors:** `WGT-PLATFORM-001`
+- Build order is not evidence of any additional dependency. Co-occurrence on a screen does not create one.
+
+#### 5. Component dependencies
+
+- **Mandatory core:** `CMP-OPS-001`
+- **Conditional:** `CMP-PLATFORM-001`, `CMP-PLATFORM-005`, `CMP-PLATFORM-007`, `CMP-PLATFORM-008`, `CMP-PLATFORM-013`
+- Mandatory components must be implemented from their Phase 3 contracts before this widget.
+
+#### 6. Interaction dependencies
+
+- `IX-OPS-001`
+- `IX-PLATFORM-014`
+- `IX-PLATFORM-015`
+- `IX-PLATFORM-001`
+- `IX-PLATFORM-016`
+
+#### 7. Content dependencies
+
+- `TXT-PLATFORM-007`
+- `TXT-PLATFORM-010`
+- `TXT-PLATFORM-016`
+- `TXT-STATE-OPS-001`
+
+Canonical copy remains owned by the Phase 3 content system and error catalog.
+
+#### 8. Accessibility dependencies
+
+- `A11Y-PLATFORM-012`
+- `A11Y-PLATFORM-015`
+- `A11Y-PLATFORM-001`
+- `A11Y-PLATFORM-011`
+- `A11Y-PLATFORM-008`
+- `A11Y-PLATFORM-036`
+
+These IDs are implementation assertions, not a Phase 5 claim that rendered/runtime accessibility has passed.
+
+#### 9. Canonical data/action contracts
+
+- **Profile C API:** n/a
+- **Profile A SDC:** `SDC-OPS-001`
+- Use the projection and command semantics exactly as declared by the canonical owner; do not invent an endpoint for Filament or an in-process command for Patient.
+
+#### 10. Shared application-layer prerequisites
+
+- `TASK-OPS-001`
+- `TASK-OPS-002`
+- `TASK-AUDIT-001`
+- Cross-cutting authorization/audit/idempotency prerequisites from `docs/IMPLEMENTATION_PLAN.md` apply where the canonical command requires them.
+
+#### 11. Data model prerequisites
+
+| Entity / table | Status |
+|---|---|
+| `work_items` | Proposed |
+| `audit_events` | Proposed |
+
+
+
+
+#### 12. Target files
+
+| Target area | Path / owner | Status |
+|---|---|---|
+| Admin panel registration context | `UberTip-Backend/app/Providers/Filament/AdminPanelProvider.php` | Existing |
+| Admin Filament resource area | `UberTip-Backend/app/Filament/Resources/` | Proposed |
+
+A conventional path is not upgraded to Existing unless it is present in the repository.
+
+#### 13. Data/view-model mapping
+
+Map only the fields/projections declared by `SDC-OPS-001`. The adapter may normalize presentation shape, but identifiers, lifecycle state, authority, provenance, amounts and timestamps remain server truth. Render OPEN/ASSIGNED/IN_PROGRESS/WAITING/COMPLETED plus independent escalated and overdue flags. A row may carry all three concepts simultaneously.
+
+#### 14. Refresh / caching / polling
+
+Authoritative state is read on entry/refocus/explicit refresh and after the widget's own successful mutations where the platform contract calls for it. Preserve usable content during refresh when Phase 4 requires that. Do not invent cache TTLs, polling intervals, retry counts or timers.
+
+#### 15. Idempotency / correlation
+
+Claim/assign/start/wait/resume/complete/escalate/reopen are committing commands and use canonical correlation/idempotency where declared. Pure filtering and reads are n/a.
+
+#### 16. Permission gate
+
+Canonical permission source: `docs/domain/PERMISSIONS_MATRIX.md`. Assignment and action require active role, organization, clinic/branch/case and subject-matter scope; enforce before state mutation. UI hiding/disablement is never the authorization boundary; server-side policy/scope enforcement occurs before any protected read or mutation.
+
+#### 17. Props / configuration
+
+| Name | Type | Required | Default | Source | Notes |
+|---|---|---:|---|---|---|
+| `projection` | canonical view model | yes | none | API/SDC projection | No client-created business truth |
+| `authorityContext` | scope/grant context | yes when protected | none | authenticated server context | Re-evaluate after authority loss |
+| `variant` | Phase 4 variant | when more than one exists | source-defined | WGT specification | Never invent a new product variant |
+| `readOnly` | boolean | when historical/oversight variant applies | source-defined | lifecycle/permission | Read-only is not disabled |
+| `onCommit` | command adapter | only on committing variants | none | canonical action contract | Must return/reconcile authoritative result |
+
+#### 18. State rendering
+
+| State | Behaviour |
+|---|---|
+| `loading-initial` | Row skeletons; the queue count is not implied by them |
+| `loading-refresh` | Rows stay; an item reassigned away from the current actor announces on the surface viewing it and does not force navigation |
+| `empty-no-data` | Nothing in scope: stated plainly. On the clinic feed this is a real and welcome state |
+| `empty-filtered` | The persisted filter excluded everything: named as the cause, with the filter visible and clearable |
+| `partial` | An item whose due time or blocking reason did not load says so; an unloaded due time is never rendered as no deadline |
+| `stale` | The queue carries its as-of time; claim and completion are withdrawn against a stale read to avoid two actors claiming one item |
+| `error-fetch` | Known rows preserved with retry |
+| `error-permission` | A scope revoked mid-shift removes the affected items and states the scope change. **A permission failure must never read as a quiet day** |
+| `success` | Rows in the variant's order |
+| Offline / unstable | Rare on this profile; the same rule applies. Claim and completion are withdrawn |
+
+The structural precedence is still owned by `WGT-PLATFORM-001`; this widget does not redefine it.
+
+#### 19. Lifecycle/state semantics
+
+Render OPEN/ASSIGNED/IN_PROGRESS/WAITING/COMPLETED plus independent escalated and overdue flags. A row may carry all three concepts simultaneously. Lifecycle labels and meanings come from `CONTENT_GUIDE_STATES.md` / `semantic.state.json`. Where a status is rendered, consume tone, icon and emphasis together; color alone never carries state.
+
+#### 20. Tokens
+
+- Mandatory component-token groups: component.ops-001
+- Shared state and surface values come from semantic/component token references only.
+- No raw visual or timing value is owned by this contract.
+
+#### 21. Content
+
+Bound content families: TXT-PLATFORM-007, TXT-PLATFORM-010, TXT-PLATFORM-016, TXT-STATE-OPS-001. Dynamic values come from the canonical projection; audience translation follows Phase 3. Do not copy canonical error strings into code as a second source of truth.
+
+#### 22. Accessibility contract
+
+state, escalation and overdue are announced as three separate
+facts, never merged. The queue is keyboard operable including claim, assign and complete where the actor
+holds them. Returning from an item restores focus to its row. An assignment conflict states the conflict
+rather than showing an optimistic owner the server did not accept.
+
+Profile-specific runtime checks remain mandatory after implementation; documentation coverage is not conformance evidence.
+
+#### 23. RTL / bidi
+
+columns mirror. Resource identifiers, due times and priorities are bidirectionally
+isolated.
+
+Amounts, currencies, dates/times, phone numbers, codes/IDs, email/URL, Latin names and version identifiers are isolated as required; machine identifiers are never visually reversed.
+
+#### 24. Responsive behavior
+
+Profile A only. `table` at `profile-a.content-width.wide`; at `narrow` either a bounded
+internal horizontal scroll or degradation to `reading-list`, stated per screen, with the page never
+scrolling horizontally. Text/content rule: a blocking reason wraps in full; the due time and the state never
+truncate. At the largest text sizes the queue degrades to `reading-list`.
+
+Profile C uses its native size-class model; Profile A uses content-width/reflow rules. The two breakpoint systems are never merged.
+
+#### 25. Immutability / historical safety
+
+Work items may transition, but their transition/audit history is append-only. Deleting work must never delete the source business record.
+
+#### 26. Framework defaults to disable
+
+Disable generic delete and any bulk mutation not explicitly authorized. State, escalated and overdue remain independent fields, not one Filament status.
+
+#### 27. Prohibitions
+
+collapsing escalated or overdue into the state column; a flag rendered by recolouring
+the state chip; completing a work item changing the source domain record; work assignment granting
+source-data access; a permission failure rendered as an empty queue; an optimistic assignment.
+
+Treat each prohibition as a negative implementation test.
+
+#### 28. Definition of Done
+
+- Canonical API/SDC projection and command boundaries are preserved.
+- Every applicable Phase 4 data state is implemented without optimistic clinical/financial/authorization truth.
+- Permission checks are enforced server-side and UI availability matches canonical authority/state.
+- Semantic/component tokens only; canonical TXT ownership is preserved.
+- Applicable A11Y and RTL/bidi assertions are implemented.
+- Historical/immutable entities expose no prohibited mutation.
+- The Phase 4 Prohibited list has negative coverage.
+- Patient code, when applicable, waits for `TASK-PLATFORM-008` to establish real repository paths and verified commands.
+- No unrelated WGT contract or upstream UX behavior is changed.
+
+#### 29. Verification
+
+**Tier A — repository/code verification once implemented**
+
+- Run `python docs/scripts/validate_docs.py` and `python docs/ux/scripts/validate_ux_docs.py --phase 5`.
+- For Laravel/Filament work, run the repository's verified Composer lint/type/test scripts applicable to the changed area.
+- Verify API/SDC, permission, idempotency, immutable-history and negative-prohibition tests named by the owning TASK/TESTING_STRATEGY entries.
+
+**Tier B — rendered design QA**
+
+- Verify hierarchy, token use, Arabic/RTL layout, long-content behavior, state distinction and rendered contrast against the Phase 4 spec and build manifest.
+- Status: not run in this documentation session.
+
+**Tier C — runtime QA**
+
+- Verify keyboard/focus, screen-reader announcements, touch/target behavior, text scaling/reflow, reduced motion and real permission/error transitions on the implemented runtime.
+- Profile C commands remain unresolved until `TASK-PLATFORM-008` records the actual client scripts.
+- Status: not run — requires implementation.
+
+
+
+### WGT-CLINICAL-002 — Implementation Contract
+
+#### 1. Identity
+
+- **WGT ID:** `WGT-CLINICAL-002`
+- **Name:** Treatment plan reader
+- **Build order:** 19
+- **Platforms:** C, A
+- **Runtime:** React Native + Filament
+- **Phase 4 realization:** Profile C `Native`; Profile A `Extended`
+- **Screen reach:** 7 documented screen placements
+- **Source specification:** `docs/ux/04-specs/WIDGET_SPECS_DOMAIN.md`
+- **Purpose:** render an authored or accepted plan so that **every amount names its category, its reason and what it covers**, in four audiences, and so that a historical snapshot reads at full contrast rather than being dimmed for being unchangeable.
+- **User intent:** understand exactly what is proposed or agreed, and what each amount is for.
+
+#### 2. Implements
+
+- `FR-CLINICAL-002`
+- `FR-CLINICAL-006`
+- `FR-FINANCE-001`
+- `FR-POLICY-003`
+
+No requirement is broadened by this contract; canonical acceptance criteria remain in `docs/PRD.md`.
+
+#### 3. Used by
+
+- `SCR-CLINICAL-003`
+- `SCR-CLINICAL-004`
+- `SCR-CLINICAL-013`
+- `SCR-CLINICAL-019`
+- `SCR-FINANCE-001`
+- `SCR-FINANCE-006`
+- `SCR-CLAIMS-010`
+
+The Phase 4 screen specification remains the owner of each screen's exact composition.
+
+#### 4. Widget dependencies
+
+- **Required predecessors:** `WGT-PLATFORM-001`
+- Build order is not evidence of any additional dependency. Co-occurrence on a screen does not create one.
+
+#### 5. Component dependencies
+
+- **Mandatory core:** `CMP-CLINICAL-001`
+- **Conditional:** `CMP-ELIG-002`, `CMP-PLATFORM-001`, `CMP-PLATFORM-002`, `CMP-CLINICAL-002`, `CMP-PLATFORM-013`
+- Mandatory components must be implemented from their Phase 3 contracts before this widget.
+
+#### 6. Interaction dependencies
+
+- `IX-PLATFORM-008`
+- `IX-CLINICAL-001`
+- `IX-PLATFORM-016`
+- `IX-PLATFORM-003`
+
+#### 7. Content dependencies
+
+- `TXT-PLATFORM-013`
+- `TXT-PLATFORM-014`
+- `TXT-PLATFORM-017`
+- `TXT-PLATFORM-018`
+- `TXT-STATE-CLINICAL-001`
+
+Canonical copy remains owned by the Phase 3 content system and error catalog.
+
+#### 8. Accessibility dependencies
+
+- `A11Y-CLINICAL-001`
+- `A11Y-FINANCE-001`
+- `A11Y-PLATFORM-012`
+- `A11Y-PLATFORM-023`
+- `A11Y-PLATFORM-030`
+- `A11Y-PLATFORM-015`
+
+These IDs are implementation assertions, not a Phase 5 claim that rendered/runtime accessibility has passed.
+
+#### 9. Canonical data/action contracts
+
+- **Profile C API:** `API-CLINICAL-002`, `API-FINANCE-001`
+- **Profile A SDC:** `SDC-CLINICAL-001`, `SDC-FINANCE-001`, `SDC-CLAIMS-001`
+- Use the projection and command semantics exactly as declared by the canonical owner; do not invent an endpoint for Filament or an in-process command for Patient.
+
+#### 10. Shared application-layer prerequisites
+
+- `TASK-CLINICAL-004`
+- `TASK-CLINICAL-007`
+- `TASK-CLINICAL-008`
+- `TASK-CLINICAL-009`
+- `TASK-FINANCE-001`
+- Cross-cutting authorization/audit/idempotency prerequisites from `docs/IMPLEMENTATION_PLAN.md` apply where the canonical command requires them.
+
+#### 11. Data model prerequisites
+
+| Entity / table | Status |
+|---|---|
+| `treatment_plan_versions` | Proposed |
+| `treatment_plan_lines` | Proposed |
+| `treatment_line_modifiers` | Proposed |
+| `accepted_treatment_snapshots` | Proposed |
+| `financial_terms_snapshots` | Proposed |
+| `procedure_item_versions` | Proposed |
+
+
+
+
+#### 12. Target files
+
+| Target area | Path / owner | Status |
+|---|---|---|
+| Patient implementation area | Patient React Native project / feature area owned by `TASK-PLATFORM-008` | Proposed, path unverified |
+| Admin panel registration context | `UberTip-Backend/app/Providers/Filament/AdminPanelProvider.php` | Existing |
+| Admin Filament resource area | `UberTip-Backend/app/Filament/Resources/` | Proposed |
+| Clinic panel/provider area | `UberTip-Backend/app/Providers/Filament/ClinicPanelProvider.php` and `app/Filament/Clinic/*` | Proposed |
+
+A conventional path is not upgraded to Existing unless it is present in the repository.
+
+#### 13. Data/view-model mapping
+
+Map only the fields/projections declared by `API-CLINICAL-002`, `API-FINANCE-001`, `SDC-CLINICAL-001`, `SDC-FINANCE-001`, `SDC-CLAIMS-001`. The adapter may normalize presentation shape, but identifiers, lifecycle state, authority, provenance, amounts and timestamps remain server truth. Every amount identifies category, reason and what it covers. Show agreed currency; later normalization never rewrites an accepted amount. No unexplained surcharge.
+
+#### 14. Refresh / caching / polling
+
+Authoritative state is read on entry/refocus/explicit refresh and after the widget's own successful mutations where the platform contract calls for it. Preserve usable content during refresh when Phase 4 requires that. Do not invent cache TTLs, polling intervals, retry counts or timers.
+
+#### 15. Idempotency / correlation
+
+Pure read surface; idempotency is n/a. Acceptance/proposal commands are separate contracts/actions.
+
+#### 16. Permission gate
+
+Canonical permission source: `docs/domain/PERMISSIONS_MATRIX.md`. Patient sees only their authorized case projection; Clinic/Admin detail is scope- and competence-filtered server-side. UI hiding/disablement is never the authorization boundary; server-side policy/scope enforcement occurs before any protected read or mutation.
+
+#### 17. Props / configuration
+
+| Name | Type | Required | Default | Source | Notes |
+|---|---|---:|---|---|---|
+| `projection` | canonical view model | yes | none | API/SDC projection | No client-created business truth |
+| `authorityContext` | scope/grant context | yes when protected | none | authenticated server context | Re-evaluate after authority loss |
+| `variant` | Phase 4 variant | when more than one exists | source-defined | WGT specification | Never invent a new product variant |
+| `readOnly` | boolean | when historical/oversight variant applies | source-defined | lifecycle/permission | Read-only is not disabled |
+| `onCommit` | command adapter | only on committing variants | none | canonical action contract | Must return/reconcile authoritative result |
+
+#### 18. State rendering
+
+| State | Behaviour |
+|---|---|
+| `loading-initial` | The plan loads whole. A partially rendered plan with some lines missing would be a different plan |
+| `loading-refresh` | A newer version arriving states that rather than replacing the version being read |
+| `empty-no-data` | No plan proposed yet: stated as awaiting the dentist, which is not an error and offers the patient no action |
+| `empty-filtered` | n/a. A plan is not a filtered projection |
+| `partial` | If any line or the terms failed to load, the surface says so and **does not render a total**, because a total over an incomplete line set is a wrong number |
+| `stale` | The plan carries its as-of time; acceptance is withdrawn against a stale read |
+| `error-fetch` | Retry in place; no partial plan is presented as whole |
+| `error-permission` | Role-based field filtering applies; a scope-limited projection says it is scope-limited |
+| `success` | The plan |
+| Offline / unstable | Last read plan with as-of time; acceptance withdrawn |
+
+The structural precedence is still owned by `WGT-PLATFORM-001`; this widget does not redefine it.
+
+#### 19. Lifecycle/state semantics
+
+Every amount identifies category, reason and what it covers. Show agreed currency; later normalization never rewrites an accepted amount. No unexplained surcharge. Lifecycle labels and meanings come from `CONTENT_GUIDE_STATES.md` / `semantic.state.json`. Where a status is rendered, consume tone, icon and emphasis together; color alone never carries state.
+
+#### 20. Tokens
+
+- Mandatory component-token groups: component.clinical-001
+- Shared state and surface values come from semantic/component token references only.
+- No raw visual or timing value is owned by this contract.
+
+#### 21. Content
+
+Bound content families: TXT-PLATFORM-013, TXT-PLATFORM-014, TXT-PLATFORM-017, TXT-PLATFORM-018, TXT-STATE-CLINICAL-001. Dynamic values come from the canonical projection; audience translation follows Phase 3. Do not copy canonical error strings into code as a second source of truth.
+
+#### 22. Accessibility contract
+
+each line announces as description, quantity and unit, amount
+with currency, and category where a modifier exists — so the amount is never heard without its reason.
+The total announces with its currency and as derived. A historical snapshot announces as historical.
+Disclosure of inclusions keeps focus on the line.
+
+Profile-specific runtime checks remain mandatory after implementation; documentation coverage is not conformance evidence.
+
+#### 23. RTL / bidi
+
+the line reads start to end in logical order. Amounts with currency, quantities,
+units, procedure identifiers and version identifiers are bidirectionally isolated. An amount is never
+reordered, because a reordered amount is a wrong amount.
+
+Amounts, currencies, dates/times, phone numbers, codes/IDs, email/URL, Latin names and version identifiers are isolated as required; machine identifiers are never visually reversed.
+
+#### 24. Responsive behavior
+
+Profile C is one line per reading-column block, with the amount and what it covers
+adjacent. Profile A keeps a line table at `profile-a.content-width.wide` and degrades to `reading-list`
+at `narrow`, never truncating an amount to keep a column. Text/content rule: the plain-language description, the inclusions, the exclusions and
+the modifier reason all wrap in full. **No amount, total, currency or category ever truncates.** At the
+largest text size each line stacks with its amount adjacent to its description.
+
+Profile C uses its native size-class model; Profile A uses content-width/reflow rules. The two breakpoint systems are never merged.
+
+#### 25. Immutability / historical safety
+
+Accepted snapshots and historical plan versions are immutable and remain full-contrast readable. Amendments create a superseding version and later a new accepted snapshot.
+
+#### 26. Framework defaults to disable
+
+Extended Profile A reader must omit generic Edit/Delete for accepted/historical versions and must not dim read-only content as disabled.
+
+#### 27. Prohibitions
+
+an amount without its category and reason; an unexplained surcharge; a component charged
+twice; dimming an immutable snapshot; any edit affordance on an accepted version; implying that UberTib
+diagnoses, treats, insures, or collects or holds the money; recomputing an agreed amount from a later
+exchange rate, rounding rule or currency policy; presenting an unaccepted amendment as governing
+anything.
+
+Treat each prohibition as a negative implementation test.
+
+#### 28. Definition of Done
+
+- Canonical API/SDC projection and command boundaries are preserved.
+- Every applicable Phase 4 data state is implemented without optimistic clinical/financial/authorization truth.
+- Permission checks are enforced server-side and UI availability matches canonical authority/state.
+- Semantic/component tokens only; canonical TXT ownership is preserved.
+- Applicable A11Y and RTL/bidi assertions are implemented.
+- Historical/immutable entities expose no prohibited mutation.
+- The Phase 4 Prohibited list has negative coverage.
+- Patient code, when applicable, waits for `TASK-PLATFORM-008` to establish real repository paths and verified commands.
+- No unrelated WGT contract or upstream UX behavior is changed.
+
+#### 29. Verification
+
+**Tier A — repository/code verification once implemented**
+
+- Run `python docs/scripts/validate_docs.py` and `python docs/ux/scripts/validate_ux_docs.py --phase 5`.
+- For Laravel/Filament work, run the repository's verified Composer lint/type/test scripts applicable to the changed area.
+- Verify API/SDC, permission, idempotency, immutable-history and negative-prohibition tests named by the owning TASK/TESTING_STRATEGY entries.
+
+**Tier B — rendered design QA**
+
+- Verify hierarchy, token use, Arabic/RTL layout, long-content behavior, state distinction and rendered contrast against the Phase 4 spec and build manifest.
+- Status: not run in this documentation session.
+
+**Tier C — runtime QA**
+
+- Verify keyboard/focus, screen-reader announcements, touch/target behavior, text scaling/reflow, reduced motion and real permission/error transitions on the implemented runtime.
+- Profile C commands remain unresolved until `TASK-PLATFORM-008` records the actual client scripts.
+- Status: not run — requires implementation.
+
+
+
+### WGT-IDENTITY-001 — Implementation Contract
+
+#### 1. Identity
+
+- **WGT ID:** `WGT-IDENTITY-001`
+- **Name:** Verification challenge form
+- **Build order:** 20
+- **Platforms:** C, A
+- **Runtime:** React Native + Filament
+- **Phase 4 realization:** Profile C `Native`; Profile A `Extended`
+- **Screen reach:** 6 documented screen placements
+- **Source specification:** `docs/ux/04-specs/WIDGET_SPECS_DOMAIN.md`
+- **Purpose:** run a contact-verification challenge so that send throttling, attempt exhaustion and expiry read as three different situations with three different recoveries, and so that verification is never a cognitive test.
+- **User intent:** prove this number is mine and get on with what I came to do.
+
+#### 2. Implements
+
+- `FR-IDENTITY-002`
+- `FR-IDENTITY-001`
+
+No requirement is broadened by this contract; canonical acceptance criteria remain in `docs/PRD.md`.
+
+#### 3. Used by
+
+- `SCR-IDENTITY-002`
+- `SCR-IDENTITY-003`
+- `SCR-IDENTITY-011`
+- `SCR-IDENTITY-019`
+- `SCR-IDENTITY-025`
+- `SCR-PLATFORM-005`
+
+The Phase 4 screen specification remains the owner of each screen's exact composition.
+
+#### 4. Widget dependencies
+
+- **Required predecessors:** `WGT-PLATFORM-001`
+- Build order is not evidence of any additional dependency. Co-occurrence on a screen does not create one.
+
+#### 5. Component dependencies
+
+- **Mandatory core:** `CMP-PLATFORM-011`
+- **Conditional:** `CMP-PLATFORM-005`, `CMP-PLATFORM-004`, `CMP-PLATFORM-010`
+- Mandatory components must be implemented from their Phase 3 contracts before this widget.
+
+#### 6. Interaction dependencies
+
+- `IX-PLATFORM-018`
+- `IX-PLATFORM-001`
+- `IX-PLATFORM-002`
+- `IX-PLATFORM-012`
+
+#### 7. Content dependencies
+
+- `TXT-PLATFORM-003`
+- `TXT-PLATFORM-005`
+- `TXT-PLATFORM-011`
+- `TXT-ERR-IDENTITY-003`
+- `TXT-ERR-IDENTITY-004`
+
+Canonical copy remains owned by the Phase 3 content system and error catalog.
+
+#### 8. Accessibility dependencies
+
+- `A11Y-PLATFORM-029`
+- `A11Y-PLATFORM-026`
+- `A11Y-PLATFORM-027`
+- `A11Y-PLATFORM-011`
+- `A11Y-PLATFORM-013`
+- `A11Y-PLATFORM-019`
+
+These IDs are implementation assertions, not a Phase 5 claim that rendered/runtime accessibility has passed.
+
+#### 9. Canonical data/action contracts
+
+- **Profile C API:** `API-IDENTITY-001`, `API-IDENTITY-002`
+- **Profile A SDC:** `SDC-IDENTITY-001`, `SDC-IDENTITY-003`, `SDC-IDENTITY-004`
+- Use the projection and command semantics exactly as declared by the canonical owner; do not invent an endpoint for Filament or an in-process command for Patient.
+
+#### 10. Shared application-layer prerequisites
+
+- `TASK-IDENTITY-001`
+- `TASK-IDENTITY-003`
+- `TASK-IDENTITY-005`
+- `TASK-PLATFORM-008`
+- Cross-cutting authorization/audit/idempotency prerequisites from `docs/IMPLEMENTATION_PLAN.md` apply where the canonical command requires them.
+
+#### 11. Data model prerequisites
+
+| Entity / table | Status |
+|---|---|
+| `users` | Existing |
+| `identity_contacts` | Proposed |
+| `contact_verification_challenges` | Proposed |
+| `audit_events` | Proposed |
+
+
+
+
+#### 12. Target files
+
+| Target area | Path / owner | Status |
+|---|---|---|
+| Patient implementation area | Patient React Native project / feature area owned by `TASK-PLATFORM-008` | Proposed, path unverified |
+| Admin panel registration context | `UberTip-Backend/app/Providers/Filament/AdminPanelProvider.php` | Existing |
+| Admin Filament resource area | `UberTip-Backend/app/Filament/Resources/` | Proposed |
+| Clinic panel/provider area | `UberTip-Backend/app/Providers/Filament/ClinicPanelProvider.php` and `app/Filament/Clinic/*` | Proposed |
+
+A conventional path is not upgraded to Existing unless it is present in the repository.
+
+#### 13. Data/view-model mapping
+
+Map only the fields/projections declared by `API-IDENTITY-001`, `API-IDENTITY-002`, `SDC-IDENTITY-001`, `SDC-IDENTITY-003`, `SDC-IDENTITY-004`. The adapter may normalize presentation shape, but identifiers, lifecycle state, authority, provenance, amounts and timestamps remain server truth. Throttle, attempt exhaustion and expiry are three different conditions with different recoveries. No cognitive test; paste, autofill and accessible mechanisms remain available.
+
+#### 14. Refresh / caching / polling
+
+Authoritative state is read on entry/refocus/explicit refresh and after the widget's own successful mutations where the platform contract calls for it. Preserve usable content during refresh when Phase 4 requires that. Do not invent cache TTLs, polling intervals, retry counts or timers.
+
+#### 15. Idempotency / correlation
+
+Challenge send/verify uses the canonical challenge identifier and correlation rules. Resend must not reset accumulated failures; do not invent key formats or resend intervals.
+
+#### 16. Permission gate
+
+Canonical permission source: `docs/domain/PERMISSIONS_MATRIX.md`. Verification proves control of a contact; it does not itself grant access beyond the canonical identity/role/grant decision. UI hiding/disablement is never the authorization boundary; server-side policy/scope enforcement occurs before any protected read or mutation.
+
+#### 17. Props / configuration
+
+| Name | Type | Required | Default | Source | Notes |
+|---|---|---:|---|---|---|
+| `projection` | canonical view model | yes | none | API/SDC projection | No client-created business truth |
+| `authorityContext` | scope/grant context | yes when protected | none | authenticated server context | Re-evaluate after authority loss |
+| `variant` | Phase 4 variant | when more than one exists | source-defined | WGT specification | Never invent a new product variant |
+| `readOnly` | boolean | when historical/oversight variant applies | source-defined | lifecycle/permission | Read-only is not disabled |
+| `onCommit` | command adapter | only on committing variants | none | canonical action contract | Must return/reconcile authoritative result |
+
+#### 18. State rendering
+
+| State | Behaviour |
+|---|---|
+| `loading-initial` | The challenge context loads before the field is offered, so the actor never types into a field for an expired challenge |
+| `loading-refresh` | A resend replaces the prior code and says so; accumulated failures are not reset by it |
+| `empty-no-data` | n/a. A challenge form always has a subject |
+| `empty-filtered` | n/a |
+| `partial` | If the throttle window is unknown, the resend control states that rather than showing a fabricated countdown |
+| `stale` | An expired challenge is stated as expired with the route to a new one; it is never left looking valid |
+| `error-fetch` | The entered code is preserved and retry is offered |
+| `error-permission` | An identity with no active grant is denied with the reason, never shown an empty panel |
+| `success` | Verified; the actor returns to the surface that gated them, with its context restored |
+| Offline / unstable | The submit control states the condition. A code is never treated as verified locally |
+
+The structural precedence is still owned by `WGT-PLATFORM-001`; this widget does not redefine it.
+
+#### 19. Lifecycle/state semantics
+
+Throttle, attempt exhaustion and expiry are three different conditions with different recoveries. No cognitive test; paste, autofill and accessible mechanisms remain available. Lifecycle labels and meanings come from `CONTENT_GUIDE_STATES.md` / `semantic.state.json`. Where a status is rendered, consume tone, icon and emphasis together; color alone never carries state.
+
+#### 20. Tokens
+
+- Mandatory component-token groups: component.platform-011
+- Shared state and surface values come from semantic/component token references only.
+- No raw visual or timing value is owned by this contract.
+
+#### 21. Content
+
+Bound content families: TXT-PLATFORM-003, TXT-PLATFORM-005, TXT-PLATFORM-011, TXT-ERR-IDENTITY-003, TXT-ERR-IDENTITY-004. Dynamic values come from the canonical projection; audience translation follows Phase 3. Do not copy canonical error strings into code as a second source of truth.
+
+#### 22. Accessibility contract
+
+focus enters on the code field. The remaining wait is announced
+politely when it starts and when it ends, not on every tick. Attempts remaining is announced with the
+failure. **Paste, password managers and platform autofill are never blocked**, and no step asks the
+actor to transcribe, calculate or recognise anything.
+
+Profile-specific runtime checks remain mandatory after implementation; documentation coverage is not conformance evidence.
+
+#### 23. RTL / bidi
+
+the code field accepts digits in logical order and the entered value is
+bidirectionally isolated so it reads back exactly as typed. The echoed phone number is isolated.
+
+Amounts, currencies, dates/times, phone numbers, codes/IDs, email/URL, Latin names and version identifiers are isolated as required; machine identifiers are never visually reversed.
+
+#### 24. Responsive behavior
+
+Profile C keeps field, submit and resend within one screen height so the on-screen
+keyboard does not hide the resend control. Profile A uses the framework login layout unchanged. Text/content rule: the remaining-wait line wraps; the number never truncates. At the
+largest text size the field, submit and resend stack in that order.
+
+Profile C uses its native size-class model; Profile A uses content-width/reflow rules. The two breakpoint systems are never merged.
+
+#### 25. Immutability / historical safety
+
+Verification challenges are consumed/expired records, not editable history. Successful verification updates identity/contact state without rewriting prior challenge evidence.
+
+#### 26. Framework defaults to disable
+
+Extended Profile A authentication must preserve paste/autofill and canonical throttling/attempt semantics. Do not rely on generic login error copy or select a provider.
+
+#### 27. Prohibitions
+
+revealing whether a number belongs to an existing account; a fabricated countdown;
+blocking paste or autofill; a puzzle, transcription or memory test as any part of authentication;
+resetting accumulated failures on resend; treating an SMS factor as sufficient for a privileged
+production role.
+
+Treat each prohibition as a negative implementation test.
+
+#### 28. Definition of Done
+
+- Canonical API/SDC projection and command boundaries are preserved.
+- Every applicable Phase 4 data state is implemented without optimistic clinical/financial/authorization truth.
+- Permission checks are enforced server-side and UI availability matches canonical authority/state.
+- Semantic/component tokens only; canonical TXT ownership is preserved.
+- Applicable A11Y and RTL/bidi assertions are implemented.
+- Historical/immutable entities expose no prohibited mutation.
+- The Phase 4 Prohibited list has negative coverage.
+- Patient code, when applicable, waits for `TASK-PLATFORM-008` to establish real repository paths and verified commands.
+- No unrelated WGT contract or upstream UX behavior is changed.
+
+#### 29. Verification
+
+**Tier A — repository/code verification once implemented**
+
+- Run `python docs/scripts/validate_docs.py` and `python docs/ux/scripts/validate_ux_docs.py --phase 5`.
+- For Laravel/Filament work, run the repository's verified Composer lint/type/test scripts applicable to the changed area.
+- Verify API/SDC, permission, idempotency, immutable-history and negative-prohibition tests named by the owning TASK/TESTING_STRATEGY entries.
+
+**Tier B — rendered design QA**
+
+- Verify hierarchy, token use, Arabic/RTL layout, long-content behavior, state distinction and rendered contrast against the Phase 4 spec and build manifest.
+- Status: not run in this documentation session.
+
+**Tier C — runtime QA**
+
+- Verify keyboard/focus, screen-reader announcements, touch/target behavior, text scaling/reflow, reduced motion and real permission/error transitions on the implemented runtime.
+- Profile C commands remain unresolved until `TASK-PLATFORM-008` records the actual client scripts.
+- Status: not run — requires implementation.
+
+
+
+### WGT-ELIG-001 — Implementation Contract
+
+#### 1. Identity
+
+- **WGT ID:** `WGT-ELIG-001`
+- **Name:** Provider option set
+- **Build order:** 21
+- **Platforms:** C
+- **Runtime:** React Native
+- **Phase 4 realization:** Profile C `Native`; Profile A `n/a`
+- **Screen reach:** 5 documented screen placements
+- **Source specification:** `docs/ux/04-specs/WIDGET_SPECS_DOMAIN.md`
+- **Purpose:** render one provider, service and branch option with the attribute set `PO-UX-04` fixes, in whichever of four arrangements the surface needs — and make a composite ranking structurally impossible by never assembling one.
+- **User intent:** choose who to see, on facts I can check, without being ranked at.
+
+#### 2. Implements
+
+- `FR-ELIG-001`
+- `FR-ELIG-005`
+- `FR-ELIG-018`
+- `FR-ELIG-006`
+
+No requirement is broadened by this contract; canonical acceptance criteria remain in `docs/PRD.md`.
+
+#### 3. Used by
+
+- `SCR-ELIG-002`
+- `SCR-ELIG-003`
+- `SCR-ELIG-005`
+- `SCR-BOOKING-001`
+- `SCR-BOOKING-002`
+
+The Phase 4 screen specification remains the owner of each screen's exact composition.
+
+#### 4. Widget dependencies
+
+- **Required predecessors:** `WGT-PLATFORM-001`
+- Build order is not evidence of any additional dependency. Co-occurrence on a screen does not create one.
+
+#### 5. Component dependencies
+
+- **Mandatory core:** `CMP-ELIG-001`
+- **Conditional:** `CMP-ELIG-002`, `CMP-PLATFORM-001`, `CMP-PLATFORM-002`, `CMP-PLATFORM-004`
+- Mandatory components must be implemented from their Phase 3 contracts before this widget.
+
+#### 6. Interaction dependencies
+
+- `IX-ELIG-001`
+- `IX-PLATFORM-014`
+- `IX-PLATFORM-015`
+- `IX-PLATFORM-008`
+
+#### 7. Content dependencies
+
+- `TXT-PLATFORM-013`
+- `TXT-PLATFORM-017`
+- `TXT-PLATFORM-018`
+- `TXT-STATE-ELIG-001`
+
+Canonical copy remains owned by the Phase 3 content system and error catalog.
+
+#### 8. Accessibility dependencies
+
+- `A11Y-PLATFORM-012`
+- `A11Y-PLATFORM-013`
+- `A11Y-PLATFORM-015`
+- `A11Y-FINANCE-001`
+- `A11Y-PLATFORM-023`
+- `A11Y-PLATFORM-035`
+
+These IDs are implementation assertions, not a Phase 5 claim that rendered/runtime accessibility has passed.
+
+#### 9. Canonical data/action contracts
+
+- **Profile C API:** `API-ELIG-001`
+- **Profile A SDC:** n/a
+- Use the projection and command semantics exactly as declared by the canonical owner; do not invent an endpoint for Filament or an in-process command for Patient.
+
+#### 10. Shared application-layer prerequisites
+
+- `TASK-ELIG-007`
+- `TASK-ELIG-009`
+- `TASK-ELIG-010`
+- `TASK-PLATFORM-008`
+- Cross-cutting authorization/audit/idempotency prerequisites from `docs/IMPLEMENTATION_PLAN.md` apply where the canonical command requires them.
+
+#### 11. Data model prerequisites
+
+| Entity / table | Status |
+|---|---|
+| `providers` | Proposed |
+| `branches` | Proposed |
+| `provider_branch_assignments` | Proposed |
+| `provider_service_prices` | Proposed |
+| `eligibility_decisions` | Proposed |
+| `services` | Existing |
+
+
+
+
+#### 12. Target files
+
+| Target area | Path / owner | Status |
+|---|---|---|
+| Patient implementation area | Patient React Native project / feature area owned by `TASK-PLATFORM-008` | Proposed, path unverified |
+
+A conventional path is not upgraded to Existing unless it is present in the repository.
+
+#### 13. Data/view-model mapping
+
+Map only the fields/projections declared by `API-ELIG-001`. The adapter may normalize presentation shape, but identifiers, lifecycle state, authority, provenance, amounts and timestamps remain server truth. One option is one provider + one service + one branch. No composite score, market ranking, S/P/H/I, calibration, confidence or internal risk vocabulary.
+
+#### 14. Refresh / caching / polling
+
+Authoritative state is read on entry/refocus/explicit refresh and after the widget's own successful mutations where the platform contract calls for it. Preserve usable content during refresh when Phase 4 requires that. Do not invent cache TTLs, polling intervals, retry counts or timers.
+
+#### 15. Idempotency / correlation
+
+Read/select surface; idempotency is n/a. Booking commit is owned by WGT-BOOKING-001.
+
+#### 16. Permission gate
+
+Canonical permission source: `docs/domain/PERMISSIONS_MATRIX.md`. Only patient-safe provider/service/branch facts are returned. Internal eligibility inputs and private provider evidence never enter the view model. UI hiding/disablement is never the authorization boundary; server-side policy/scope enforcement occurs before any protected read or mutation.
+
+#### 17. Props / configuration
+
+| Name | Type | Required | Default | Source | Notes |
+|---|---|---:|---|---|---|
+| `projection` | canonical view model | yes | none | API/SDC projection | No client-created business truth |
+| `authorityContext` | scope/grant context | yes when protected | none | authenticated server context | Re-evaluate after authority loss |
+| `variant` | Phase 4 variant | when more than one exists | source-defined | WGT specification | Never invent a new product variant |
+| `readOnly` | boolean | when historical/oversight variant applies | source-defined | lifecycle/permission | Read-only is not disabled |
+| `onCommit` | command adapter | only on committing variants | none | canonical action contract | Must return/reconcile authoritative result |
+
+#### 18. State rendering
+
+| State | Behaviour |
+|---|---|
+| `loading-initial` | Option skeletons at row height. No partial option is rendered: an option missing its price or its availability is not an option yet |
+| `loading-refresh` | Options stay; an option that stopped being eligible is marked unavailable and **loses its choose action** rather than silently remaining bookable |
+| `empty-no-data` | No eligible option for this service: stated as no currently available provider for this service, never as no dentistry existing |
+| `empty-filtered` | An area or availability filter excluded everything: the filter is named as the cause and relaxing it is the recovery |
+| `partial` | A rating or nearest-appointment that did not load is absent and stated as unavailable, never rendered as zero or as none |
+| `stale` | Options carry their assessment time. A stale assessment is itself information the patient needs |
+| `error-fetch` | The query is preserved so retry does not mean re-entering the service and area |
+| `error-permission` | n/a in the public case. Where a grant scopes the search, a scope loss renders as denial rather than as no results |
+| `success` | Options |
+| Offline / unstable | Last result set with its as-of time; choosing states that it needs a connection, because booking revalidates server-side |
+
+The structural precedence is still owned by `WGT-PLATFORM-001`; this widget does not redefine it.
+
+#### 19. Lifecycle/state semantics
+
+One option is one provider + one service + one branch. No composite score, market ranking, S/P/H/I, calibration, confidence or internal risk vocabulary. Lifecycle labels and meanings come from `CONTENT_GUIDE_STATES.md` / `semantic.state.json`. Where a status is rendered, consume tone, icon and emphasis together; color alone never carries state.
+
+#### 20. Tokens
+
+- Mandatory component-token groups: component.elig-001
+- Shared state and surface values come from semantic/component token references only.
+- No raw visual or timing value is owned by this contract.
+
+#### 21. Content
+
+Bound content families: TXT-PLATFORM-013, TXT-PLATFORM-017, TXT-PLATFORM-018, TXT-STATE-ELIG-001. Dynamic values come from the canonical projection; audience translation follows Phase 3. Do not copy canonical error strings into code as a second source of truth.
+
+#### 22. Accessibility contract
+
+each option announces as a single unit with its attributes in
+the fixed order, so two options are comparable without sight. Selecting an option for comparison
+announces the selection count against the cap. The choose action is the last element in the option.
+
+Profile-specific runtime checks remain mandatory after implementation; documentation coverage is not conformance evidence.
+
+#### 23. RTL / bidi
+
+attributes flow start to end and mirror. Amounts with currency, branch codes and
+service codes are bidirectionally isolated. In the `column` variant the columns mirror as a group so the
+comparison reads in the same order.
+
+Amounts, currencies, dates/times, phone numbers, codes/IDs, email/URL, Latin names and version identifiers are isolated as required; machine identifiers are never visually reversed.
+
+#### 24. Responsive behavior
+
+Profile C only. `compact` shows one option per reading-column block; `medium` and
+`expanded` may place two or three comparison columns side by side for the `column` variant only, and
+task order is identical at every size class. Text/content rule: a long Arabic clinic name wraps; the price, the availability meaning
+and the assessment time never truncate. At the largest text size the `column` variant collapses to
+stacked options in the same order, because a three-column comparison in one reading column is unreadable
+rather than merely tight.
+
+Profile C uses its native size-class model; Profile A uses content-width/reflow rules. The two breakpoint systems are never merged.
+
+#### 25. Immutability / historical safety
+
+The option is a safe projection of current eligibility and governed price facts. Historical accepted financial/treatment snapshots are never recomputed from this live option.
+
+#### 26. Framework defaults to disable
+
+Profile A n/a. Profile C is Native; no component-library assumption is made until TASK-PLATFORM-008 records the actual client stack.
+
+#### 27. Prohibitions
+
+any composite or best-doctor score; a ranking presented as quality; exposing internal
+`I`, `K` or `EU`, a service risk level, a comparison value, a sample count or a confidence figure;
+labelling any price a market average, a city average, a tariff or a recommended price; presenting a
+from-amount or a range as a quoted total; a free service rendered as missing data; implying that price
+or reviews affect scientific eligibility; a cross-service comparison; more than three comparison
+options; a saved or favourited comparison, which V1 does not have.
+
+Treat each prohibition as a negative implementation test.
+
+#### 28. Definition of Done
+
+- Canonical API/SDC projection and command boundaries are preserved.
+- Every applicable Phase 4 data state is implemented without optimistic clinical/financial/authorization truth.
+- Permission checks are enforced server-side and UI availability matches canonical authority/state.
+- Semantic/component tokens only; canonical TXT ownership is preserved.
+- Applicable A11Y and RTL/bidi assertions are implemented.
+- Historical/immutable entities expose no prohibited mutation.
+- The Phase 4 Prohibited list has negative coverage.
+- Patient code, when applicable, waits for `TASK-PLATFORM-008` to establish real repository paths and verified commands.
+- No unrelated WGT contract or upstream UX behavior is changed.
+
+#### 29. Verification
+
+**Tier A — repository/code verification once implemented**
+
+- Run `python docs/scripts/validate_docs.py` and `python docs/ux/scripts/validate_ux_docs.py --phase 5`.
+- For Laravel/Filament work, run the repository's verified Composer lint/type/test scripts applicable to the changed area.
+- Verify API/SDC, permission, idempotency, immutable-history and negative-prohibition tests named by the owning TASK/TESTING_STRATEGY entries.
+
+**Tier B — rendered design QA**
+
+- Verify hierarchy, token use, Arabic/RTL layout, long-content behavior, state distinction and rendered contrast against the Phase 4 spec and build manifest.
+- Status: not run in this documentation session.
+
+**Tier C — runtime QA**
+
+- Verify keyboard/focus, screen-reader announcements, touch/target behavior, text scaling/reflow, reduced motion and real permission/error transitions on the implemented runtime.
+- Profile C commands remain unresolved until `TASK-PLATFORM-008` records the actual client scripts.
+- Status: not run — requires implementation.
+
+
+
+### WGT-FINANCE-001 — Implementation Contract
+
+#### 1. Identity
+
+- **WGT ID:** `WGT-FINANCE-001`
+- **Name:** External financial event ledger
+- **Build order:** 22
+- **Platforms:** C, A
+- **Runtime:** React Native + Filament
+- **Phase 4 realization:** Profile C `Native`; Profile A `Extended`
+- **Screen reach:** 5 documented screen placements
+- **Source specification:** `docs/ux/04-specs/WIDGET_SPECS_DOMAIN.md`
+- **Purpose:** render the append-only external financial record so that agreed, reported, confirmed, disputed, refunded and pending-external-execution are six visibly distinct things — and so that **no wording anywhere implies UberTib holds, moves, captures or settles money**, which it does not.
+- **User intent:** see what was agreed, what has been reported, and what is actually settled between the parties.
+
+#### 2. Implements
+
+- `FR-FINANCE-002`
+- `FR-FINANCE-003`
+- `FR-FINANCE-004`
+- `FR-FINANCE-007`
+
+No requirement is broadened by this contract; canonical acceptance criteria remain in `docs/PRD.md`.
+
+#### 3. Used by
+
+- `SCR-FINANCE-002`
+- `SCR-FINANCE-006`
+- `SCR-FINANCE-010`
+- `SCR-FINANCE-011`
+- `SCR-FINANCE-012`
+
+The Phase 4 screen specification remains the owner of each screen's exact composition.
+
+#### 4. Widget dependencies
+
+- **Required predecessors:** `WGT-PLATFORM-001`
+- Build order is not evidence of any additional dependency. Co-occurrence on a screen does not create one.
+
+#### 5. Component dependencies
+
+- **Mandatory core:** `CMP-PLATFORM-008`, `CMP-ELIG-002`
+- **Conditional:** `CMP-PLATFORM-001`, `CMP-PLATFORM-002`, `CMP-CLINICAL-002`, `CMP-PLATFORM-013`, `CMP-PLATFORM-004`
+- Mandatory components must be implemented from their Phase 3 contracts before this widget.
+
+#### 6. Interaction dependencies
+
+- `IX-PLATFORM-016`
+- `IX-PLATFORM-010`
+- `IX-PLATFORM-001`
+- `IX-PLATFORM-008`
+- `IX-AUDIT-001`
+
+#### 7. Content dependencies
+
+- `TXT-PLATFORM-013`
+- `TXT-PLATFORM-015`
+- `TXT-PLATFORM-018`
+- `TXT-STATE-FINANCE-001`
+- `TXT-ERR-FINANCE-001`
+
+Canonical copy remains owned by the Phase 3 content system and error catalog.
+
+#### 8. Accessibility dependencies
+
+- `A11Y-FINANCE-001`
+- `A11Y-PLATFORM-012`
+- `A11Y-PLATFORM-015`
+- `A11Y-PLATFORM-030`
+- `A11Y-PLATFORM-023`
+- `A11Y-PLATFORM-011`
+
+These IDs are implementation assertions, not a Phase 5 claim that rendered/runtime accessibility has passed.
+
+#### 9. Canonical data/action contracts
+
+- **Profile C API:** `API-FINANCE-005`, `API-FINANCE-001`
+- **Profile A SDC:** `SDC-FINANCE-001`
+- Use the projection and command semantics exactly as declared by the canonical owner; do not invent an endpoint for Filament or an in-process command for Patient.
+
+#### 10. Shared application-layer prerequisites
+
+- `TASK-FINANCE-001`
+- `TASK-FINANCE-002`
+- `TASK-FINANCE-003`
+- `TASK-FINANCE-004`
+- `TASK-FINANCE-008`
+- `TASK-FINANCE-010`
+- `TASK-FINANCE-011`
+- `TASK-AUDIT-001`
+- Cross-cutting authorization/audit/idempotency prerequisites from `docs/IMPLEMENTATION_PLAN.md` apply where the canonical command requires them.
+
+#### 11. Data model prerequisites
+
+| Entity / table | Status |
+|---|---|
+| `financial_terms_snapshots` | Proposed |
+| `financial_events` | Proposed |
+| `currency_normalizations` | Proposed |
+| `audit_events` | Proposed |
+
+
+
+
+#### 12. Target files
+
+| Target area | Path / owner | Status |
+|---|---|---|
+| Patient implementation area | Patient React Native project / feature area owned by `TASK-PLATFORM-008` | Proposed, path unverified |
+| Admin panel registration context | `UberTip-Backend/app/Providers/Filament/AdminPanelProvider.php` | Existing |
+| Admin Filament resource area | `UberTip-Backend/app/Filament/Resources/` | Proposed |
+| Clinic panel/provider area | `UberTip-Backend/app/Providers/Filament/ClinicPanelProvider.php` and `app/Filament/Clinic/*` | Proposed |
+
+A conventional path is not upgraded to Existing unless it is present in the repository.
+
+#### 13. Data/view-model mapping
+
+Map only the fields/projections declared by `API-FINANCE-005`, `API-FINANCE-001`, `SDC-FINANCE-001`. The adapter may normalize presentation shape, but identifiers, lifecycle state, authority, provenance, amounts and timestamps remain server truth. V1 records external financial facts only. It does not capture, hold, transfer, settle, pay out, execute a refund or maintain a wallet balance.
+
+#### 14. Refresh / caching / polling
+
+Authoritative state is read on entry/refocus/explicit refresh and after the widget's own successful mutations where the platform contract calls for it. Preserve usable content during refresh when Phase 4 requires that. Do not invent cache TTLs, polling intervals, retry counts or timers.
+
+#### 15. Idempotency / correlation
+
+Report/confirm/dispute/correction commands are committing and must reuse canonical idempotency/correlation on retry. Reads are n/a.
+
+#### 16. Permission gate
+
+Canonical permission source: `docs/domain/PERMISSIONS_MATRIX.md`. Server-side case/scope permission controls who may read or assert each counterpart fact; the UI cannot elevate a report into confirmation. UI hiding/disablement is never the authorization boundary; server-side policy/scope enforcement occurs before any protected read or mutation.
+
+#### 17. Props / configuration
+
+| Name | Type | Required | Default | Source | Notes |
+|---|---|---:|---|---|---|
+| `projection` | canonical view model | yes | none | API/SDC projection | No client-created business truth |
+| `authorityContext` | scope/grant context | yes when protected | none | authenticated server context | Re-evaluate after authority loss |
+| `variant` | Phase 4 variant | when more than one exists | source-defined | WGT specification | Never invent a new product variant |
+| `readOnly` | boolean | when historical/oversight variant applies | source-defined | lifecycle/permission | Read-only is not disabled |
+| `onCommit` | command adapter | only on committing variants | none | canonical action contract | Must return/reconcile authoritative result |
+
+#### 18. State rendering
+
+| State | Behaviour |
+|---|---|
+| `loading-initial` | The snapshot and the events load together. A position computed from events without the snapshot is a wrong position |
+| `loading-refresh` | A new event appends and announces; the position recomputes and is announced once |
+| `empty-no-data` | Terms agreed but no events yet: the agreed position renders and the event list states plainly that nothing has been reported |
+| `empty-filtered` | Where events are filtered, the filter is named as the cause and history order is unchanged |
+| `partial` | If any event failed to load, **the derived position is not rendered** and the block says so. A position over a partial event set is a wrong number |
+| `stale` | The ledger carries its as-of time. An unconfirmed assertion read as settled is the failure this guards against |
+| `error-fetch` | Known events preserved with retry |
+| `error-permission` | A party sees only what they are authorized to see; a scope limit is stated rather than shown as a shorter history |
+| `success` | The ledger and the derived position |
+| Offline / unstable | Readable with as-of time. Reporting and responding are withdrawn |
+
+The structural precedence is still owned by `WGT-PLATFORM-001`; this widget does not redefine it.
+
+#### 19. Lifecycle/state semantics
+
+V1 records external financial facts only. It does not capture, hold, transfer, settle, pay out, execute a refund or maintain a wallet balance. Lifecycle labels and meanings come from `CONTENT_GUIDE_STATES.md` / `semantic.state.json`. Where a status is rendered, consume tone, icon and emphasis together; color alone never carries state.
+
+#### 20. Tokens
+
+- Mandatory component-token groups: component.platform-008, component.elig-002
+- Shared state and surface values come from semantic/component token references only.
+- No raw visual or timing value is owned by this contract.
+
+#### 21. Content
+
+Bound content families: TXT-PLATFORM-013, TXT-PLATFORM-015, TXT-PLATFORM-018, TXT-STATE-FINANCE-001, TXT-ERR-FINANCE-001. Dynamic values come from the canonical projection; audience translation follows Phase 3. Do not copy canonical error strings into code as a second source of truth.
+
+#### 22. Accessibility contract
+
+every amount announces with its currency and its state, so an
+unconfirmed assertion is never heard as a settled fact. The derived position announces as derived. A
+confirm or dispute announces the resulting state and moves focus to the appended response.
+
+Profile-specific runtime checks remain mandatory after implementation; documentation coverage is not conformance evidence.
+
+#### 23. RTL / bidi
+
+events run top to bottom; amounts, currencies, dates and event identifiers are
+bidirectionally isolated per cell. An amount is never reordered.
+
+Amounts, currencies, dates/times, phone numbers, codes/IDs, email/URL, Latin names and version identifiers are isolated as required; machine identifiers are never visually reversed.
+
+#### 24. Responsive behavior
+
+Profile C stacks one event per reading-column block, amount and state together. Profile
+A keeps the ledger in the primary region and degrades to `reading-list` at
+`profile-a.content-width.narrow` rather than truncating an amount column. Text/content rule: a dispute reason wraps in full. **No amount, currency, state or date
+truncates at any size.** At the largest text sizes each event stacks with its amount adjacent to its
+state.
+
+Profile C uses its native size-class model; Profile A uses content-width/reflow rules. The two breakpoint systems are never merged.
+
+#### 25. Immutability / historical safety
+
+Financial terms snapshots are immutable and financial events append-only. Correction/refund/dispute facts append a new event; never edit/delete the original.
+
+#### 26. Framework defaults to disable
+
+Disable generic edit/delete/bulk mutation of financial history. Do not label a recorded external event as a platform transaction or payment execution.
+
+#### 27. Prohibitions
+
+any pay, wallet, balance, transfer, capture, settle or platform-refund affordance;
+wording that implies custody, collection, holding, settlement or execution by the platform; an
+unconfirmed assertion presented as a settled fact; editing or deleting any event; a resolution that
+overwrites rather than appends; recomputing an agreed amount from a later exchange rate or currency
+policy; presenting an entitlement decision as an execution.
+
+Treat each prohibition as a negative implementation test.
+
+#### 28. Definition of Done
+
+- Canonical API/SDC projection and command boundaries are preserved.
+- Every applicable Phase 4 data state is implemented without optimistic clinical/financial/authorization truth.
+- Permission checks are enforced server-side and UI availability matches canonical authority/state.
+- Semantic/component tokens only; canonical TXT ownership is preserved.
+- Applicable A11Y and RTL/bidi assertions are implemented.
+- Historical/immutable entities expose no prohibited mutation.
+- The Phase 4 Prohibited list has negative coverage.
+- Patient code, when applicable, waits for `TASK-PLATFORM-008` to establish real repository paths and verified commands.
+- No unrelated WGT contract or upstream UX behavior is changed.
+
+#### 29. Verification
+
+**Tier A — repository/code verification once implemented**
+
+- Run `python docs/scripts/validate_docs.py` and `python docs/ux/scripts/validate_ux_docs.py --phase 5`.
+- For Laravel/Filament work, run the repository's verified Composer lint/type/test scripts applicable to the changed area.
+- Verify API/SDC, permission, idempotency, immutable-history and negative-prohibition tests named by the owning TASK/TESTING_STRATEGY entries.
+
+**Tier B — rendered design QA**
+
+- Verify hierarchy, token use, Arabic/RTL layout, long-content behavior, state distinction and rendered contrast against the Phase 4 spec and build manifest.
+- Status: not run in this documentation session.
+
+**Tier C — runtime QA**
+
+- Verify keyboard/focus, screen-reader announcements, touch/target behavior, text scaling/reflow, reduced motion and real permission/error transitions on the implemented runtime.
+- Profile C commands remain unresolved until `TASK-PLATFORM-008` records the actual client scripts.
+- Status: not run — requires implementation.
+
+
+
+### WGT-OPS-002 — Implementation Contract
+
+#### 1. Identity
+
+- **WGT ID:** `WGT-OPS-002`
+- **Name:** Operational metric and reporting block
+- **Build order:** 23
+- **Platforms:** A
+- **Runtime:** Filament
+- **Phase 4 realization:** Profile C `n/a`; Profile A `Extended`
+- **Screen reach:** 5 documented screen placements
+- **Source specification:** `docs/ux/04-specs/WIDGET_SPECS_DOMAIN.md`
+- **Purpose:** render an operational figure that **declares its population, its window, its status rules and when it was last refreshed**, carries a comparison basis, keeps provisional and disputed data visibly distinct from confirmed fact, and always has a non-visual equivalent.
+- **User intent:** see how the operation is doing, and be able to trust the number enough to act on it.
+
+#### 2. Implements
+
+- `FR-OPS-002`
+- `FR-OPS-001`
+- `FR-AUDIT-002`
+
+No requirement is broadened by this contract; canonical acceptance criteria remain in `docs/PRD.md`.
+
+#### 3. Used by
+
+- `SCR-PLATFORM-004`
+- `SCR-PLATFORM-008`
+- `SCR-OPS-004`
+- `SCR-OPS-005`
+- `SCR-OPS-006`
+
+The Phase 4 screen specification remains the owner of each screen's exact composition.
+
+#### 4. Widget dependencies
+
+- **Required predecessors:** `WGT-PLATFORM-001`
+- Build order is not evidence of any additional dependency. Co-occurrence on a screen does not create one.
+
+#### 5. Component dependencies
+
+- **Mandatory core:** `CMP-PLATFORM-006`
+- **Conditional:** `CMP-PLATFORM-002`, `CMP-PLATFORM-001`, `CMP-PLATFORM-007`, `CMP-PLATFORM-013`
+- Mandatory components must be implemented from their Phase 3 contracts before this widget.
+
+#### 6. Interaction dependencies
+
+- `IX-PLATFORM-009`
+- `IX-PLATFORM-014`
+- `IX-PLATFORM-016`
+- `IX-PLATFORM-003`
+- `IX-PLATFORM-015`
+
+#### 7. Content dependencies
+
+- `TXT-PLATFORM-008`
+- `TXT-PLATFORM-010`
+- `TXT-PLATFORM-013`
+- `TXT-PLATFORM-018`
+- `TXT-PLATFORM-019`
+
+Canonical copy remains owned by the Phase 3 content system and error catalog.
+
+#### 8. Accessibility dependencies
+
+- `A11Y-PLATFORM-015`
+- `A11Y-PLATFORM-012`
+- `A11Y-PLATFORM-009`
+- `A11Y-PLATFORM-023`
+- `A11Y-PLATFORM-036`
+- `A11Y-FINANCE-001`
+
+These IDs are implementation assertions, not a Phase 5 claim that rendered/runtime accessibility has passed.
+
+#### 9. Canonical data/action contracts
+
+- **Profile C API:** n/a
+- **Profile A SDC:** `SDC-OPS-002`, `SDC-OPS-001`
+- Use the projection and command semantics exactly as declared by the canonical owner; do not invent an endpoint for Filament or an in-process command for Patient.
+
+#### 10. Shared application-layer prerequisites
+
+- `TASK-OPS-003`
+- `TASK-OPS-004`
+- `TASK-AUDIT-002`
+- Cross-cutting authorization/audit/idempotency prerequisites from `docs/IMPLEMENTATION_PLAN.md` apply where the canonical command requires them.
+
+#### 11. Data model prerequisites
+
+| Entity / table | Status |
+|---|---|
+| `work_items` | Proposed |
+| `audit_events` | Proposed |
+| `integrity_exceptions` | Proposed |
+
+
+
+
+#### 12. Target files
+
+| Target area | Path / owner | Status |
+|---|---|---|
+| Admin panel registration context | `UberTip-Backend/app/Providers/Filament/AdminPanelProvider.php` | Existing |
+| Admin widget area | `UberTip-Backend/app/Filament/Widgets/` | Proposed |
+
+A conventional path is not upgraded to Existing unless it is present in the repository.
+
+#### 13. Data/view-model mapping
+
+Map only the fields/projections declared by `SDC-OPS-002`, `SDC-OPS-001`. The adapter may normalize presentation shape, but identifiers, lifecycle state, authority, provenance, amounts and timestamps remain server truth. Every figure declares population, window, unit, freshness and comparison basis. Do not invent refresh intervals, thresholds or cache TTLs.
+
+#### 14. Refresh / caching / polling
+
+Authoritative state is read on entry/refocus/explicit refresh and after the widget's own successful mutations where the platform contract calls for it. Preserve usable content during refresh when Phase 4 requires that. Do not invent cache TTLs, polling intervals, retry counts or timers.
+
+#### 15. Idempotency / correlation
+
+Read-only reporting; idempotency is n/a.
+
+#### 16. Permission gate
+
+Canonical permission source: `docs/domain/PERMISSIONS_MATRIX.md`. Scope every metric and drill-down server-side to the actor's permitted operational population. UI hiding/disablement is never the authorization boundary; server-side policy/scope enforcement occurs before any protected read or mutation.
+
+#### 17. Props / configuration
+
+| Name | Type | Required | Default | Source | Notes |
+|---|---|---:|---|---|---|
+| `projection` | canonical view model | yes | none | API/SDC projection | No client-created business truth |
+| `authorityContext` | scope/grant context | yes when protected | none | authenticated server context | Re-evaluate after authority loss |
+| `variant` | Phase 4 variant | when more than one exists | source-defined | WGT specification | Never invent a new product variant |
+| `readOnly` | boolean | when historical/oversight variant applies | source-defined | lifecycle/permission | Read-only is not disabled |
+| `onCommit` | command adapter | only on committing variants | none | canonical action contract | Must return/reconcile authoritative result |
+
+#### 18. State rendering
+
+| State | Behaviour |
+|---|---|
+| `loading-initial` | Skeleton at figure height. No figure is rendered before its population and window resolve, because a number without its definition is not usable |
+| `loading-refresh` | The figure stays with its previous last-refreshed time until the new read lands |
+| `empty-no-data` | A genuinely zero population: stated as zero of a declared population, never as a blank tile |
+| `empty-filtered` | The window or scope filter excluded everything: named as the cause |
+| `partial` | A figure whose contributing source failed is **not rendered**; the block says which source is missing. A metric silently computed over fewer sources is a wrong metric |
+| `stale` | The last-refreshed time is always present, so staleness is visible by construction. A figure past its freshness expectation says so |
+| `error-fetch` | Last figure preserved with its as-of time and retry |
+| `error-permission` | Drill-down and export carry the same or stricter authorization as the source data; a denial states that rather than returning fewer rows |
+| `success` | The figure with its full declaration |
+| Offline / unstable | Rare on this profile; last figure with as-of time |
+
+The structural precedence is still owned by `WGT-PLATFORM-001`; this widget does not redefine it.
+
+#### 19. Lifecycle/state semantics
+
+Every figure declares population, window, unit, freshness and comparison basis. Do not invent refresh intervals, thresholds or cache TTLs. Lifecycle labels and meanings come from `CONTENT_GUIDE_STATES.md` / `semantic.state.json`. Where a status is rendered, consume tone, icon and emphasis together; color alone never carries state.
+
+#### 20. Tokens
+
+- Mandatory component-token groups: component.platform-006
+- Shared state and surface values come from semantic/component token references only.
+- No raw visual or timing value is owned by this contract.
+
+#### 21. Content
+
+Bound content families: TXT-PLATFORM-008, TXT-PLATFORM-010, TXT-PLATFORM-013, TXT-PLATFORM-018, TXT-PLATFORM-019. Dynamic values come from the canonical projection; audience translation follows Phase 3. Do not copy canonical error strings into code as a second source of truth.
+
+#### 22. Accessibility contract
+
+the figure announces with its unit, population, window,
+comparison basis and freshness — the whole declaration, not the bare number. The table equivalent is in
+the accessibility tree at all times and is not gated behind a control. A `signal` announces its
+threshold state as a label, never as a colour. Drill-down is keyboard reachable and returns focus to the
+figure.
+
+Profile-specific runtime checks remain mandatory after implementation; documentation coverage is not conformance evidence.
+
+#### 23. RTL / bidi
+
+the figure, its unit and its comparison sit in logical order. Figures, percentages,
+dates and windows are bidirectionally isolated.
+
+Amounts, currencies, dates/times, phone numbers, codes/IDs, email/URL, Latin names and version identifiers are isolated as required; machine identifiers are never visually reversed.
+
+#### 24. Responsive behavior
+
+Profile A only. Tiles reflow across the content grid; at
+`profile-a.content-width.narrow` tiles stack one per row and a `series` renders as its table rather than
+compressing to an unreadable chart. Text/content rule: the population and window statements wrap in full. The figure and its
+unit never truncate. At the largest text sizes a `series` degrades to its table.
+
+Profile C uses its native size-class model; Profile A uses content-width/reflow rules. The two breakpoint systems are never merged.
+
+#### 25. Immutability / historical safety
+
+Metrics are derived projections. They never mutate or replace their source records; drill-down resolves to canonical records/history.
+
+#### 26. Framework defaults to disable
+
+Provide a non-visual/table equivalent and do not let a chart/metric hide population, window, freshness or disputed/provisional status.
+
+#### 27. Prohibitions
+
+a figure with no comparison basis; a chart with no table equivalent; a threshold state
+by colour alone; provisional or disputed data presented as confirmed; a metric computed over a partial
+source set; delayed background work presented as a completed business outcome; a drill-down or export
+that widens the actor's effective scope; an unaudited sensitive export.
+
+Treat each prohibition as a negative implementation test.
+
+#### 28. Definition of Done
+
+- Canonical API/SDC projection and command boundaries are preserved.
+- Every applicable Phase 4 data state is implemented without optimistic clinical/financial/authorization truth.
+- Permission checks are enforced server-side and UI availability matches canonical authority/state.
+- Semantic/component tokens only; canonical TXT ownership is preserved.
+- Applicable A11Y and RTL/bidi assertions are implemented.
+- Historical/immutable entities expose no prohibited mutation.
+- The Phase 4 Prohibited list has negative coverage.
+- Patient code, when applicable, waits for `TASK-PLATFORM-008` to establish real repository paths and verified commands.
+- No unrelated WGT contract or upstream UX behavior is changed.
+
+#### 29. Verification
+
+**Tier A — repository/code verification once implemented**
+
+- Run `python docs/scripts/validate_docs.py` and `python docs/ux/scripts/validate_ux_docs.py --phase 5`.
+- For Laravel/Filament work, run the repository's verified Composer lint/type/test scripts applicable to the changed area.
+- Verify API/SDC, permission, idempotency, immutable-history and negative-prohibition tests named by the owning TASK/TESTING_STRATEGY entries.
+
+**Tier B — rendered design QA**
+
+- Verify hierarchy, token use, Arabic/RTL layout, long-content behavior, state distinction and rendered contrast against the Phase 4 spec and build manifest.
+- Status: not run in this documentation session.
+
+**Tier C — runtime QA**
+
+- Verify keyboard/focus, screen-reader announcements, touch/target behavior, text scaling/reflow, reduced motion and real permission/error transitions on the implemented runtime.
+- Profile C commands remain unresolved until `TASK-PLATFORM-008` records the actual client scripts.
+- Status: not run — requires implementation.
+
+
+
+### WGT-BOOKING-001 — Implementation Contract
+
+#### 1. Identity
+
+- **WGT ID:** `WGT-BOOKING-001`
+- **Name:** Slot and capacity selector
+- **Build order:** 24
+- **Platforms:** C, A
+- **Runtime:** React Native + Filament
+- **Phase 4 realization:** Profile C `Native`; Profile A `Extended`
+- **Screen reach:** 4 documented screen placements
+- **Source specification:** `docs/ux/04-specs/WIDGET_SPECS_DOMAIN.md`
+- **Purpose:** offer a time from advisory availability while making it structurally clear that capacity is resolved atomically at commit — so a slot disappearing between display and submit is a designed path, not an anomaly the interface has to apologise for.
+- **User intent:** pick a time that will actually hold.
+
+#### 2. Implements
+
+- `FR-BOOKING-001`
+- `FR-BOOKING-004`
+- `FR-ELIG-006`
+
+No requirement is broadened by this contract; canonical acceptance criteria remain in `docs/PRD.md`.
+
+#### 3. Used by
+
+- `SCR-BOOKING-001`
+- `SCR-BOOKING-007`
+- `SCR-BOOKING-010`
+- `SCR-BOOKING-016`
+
+The Phase 4 screen specification remains the owner of each screen's exact composition.
+
+#### 4. Widget dependencies
+
+- **Required predecessors:** `WGT-PLATFORM-001`
+- Build order is not evidence of any additional dependency. Co-occurrence on a screen does not create one.
+
+#### 5. Component dependencies
+
+- **Mandatory core:** `CMP-PLATFORM-001`
+- **Conditional:** `CMP-PLATFORM-006`, `CMP-PLATFORM-005`, `CMP-PLATFORM-004`, `CMP-ELIG-001`
+- Mandatory components must be implemented from their Phase 3 contracts before this widget.
+
+#### 6. Interaction dependencies
+
+- `IX-ELIG-001`
+- `IX-PLATFORM-001`
+- `IX-PLATFORM-012`
+- `IX-PLATFORM-003`
+
+#### 7. Content dependencies
+
+- `TXT-PLATFORM-004`
+- `TXT-PLATFORM-008`
+- `TXT-PLATFORM-020`
+- `TXT-ERR-BOOKING-001`
+
+Canonical copy remains owned by the Phase 3 content system and error catalog.
+
+#### 8. Accessibility dependencies
+
+- `A11Y-PLATFORM-013`
+- `A11Y-PLATFORM-012`
+- `A11Y-PLATFORM-003`
+- `A11Y-PLATFORM-015`
+- `A11Y-PLATFORM-019`
+- `A11Y-PLATFORM-030`
+
+These IDs are implementation assertions, not a Phase 5 claim that rendered/runtime accessibility has passed.
+
+#### 9. Canonical data/action contracts
+
+- **Profile C API:** `API-ELIG-001`, `API-BOOKING-001`
+- **Profile A SDC:** `SDC-BOOKING-001`, `SDC-BOOKING-002`
+- Use the projection and command semantics exactly as declared by the canonical owner; do not invent an endpoint for Filament or an in-process command for Patient.
+
+#### 10. Shared application-layer prerequisites
+
+- `TASK-BOOKING-001`
+- `TASK-BOOKING-002`
+- `TASK-BOOKING-003`
+- `TASK-BOOKING-006`
+- `TASK-BOOKING-007`
+- `TASK-PLATFORM-008`
+- Cross-cutting authorization/audit/idempotency prerequisites from `docs/IMPLEMENTATION_PLAN.md` apply where the canonical command requires them.
+
+#### 11. Data model prerequisites
+
+| Entity / table | Status |
+|---|---|
+| `appointment_slots` | Proposed |
+| `bookings` | Proposed |
+| `booking_events` | Proposed |
+| `eligibility_decisions` | Proposed |
+
+
+
+
+#### 12. Target files
+
+| Target area | Path / owner | Status |
+|---|---|---|
+| Patient implementation area | Patient React Native project / feature area owned by `TASK-PLATFORM-008` | Proposed, path unverified |
+| Admin panel registration context | `UberTip-Backend/app/Providers/Filament/AdminPanelProvider.php` | Existing |
+| Admin Filament resource area | `UberTip-Backend/app/Filament/Resources/` | Proposed |
+| Clinic panel/provider area | `UberTip-Backend/app/Providers/Filament/ClinicPanelProvider.php` and `app/Filament/Clinic/*` | Proposed |
+
+A conventional path is not upgraded to Existing unless it is present in the repository.
+
+#### 13. Data/view-model mapping
+
+Map only the fields/projections declared by `API-ELIG-001`, `API-BOOKING-001`, `SDC-BOOKING-001`, `SDC-BOOKING-002`. The adapter may normalize presentation shape, but identifiers, lifecycle state, authority, provenance, amounts and timestamps remain server truth. Availability shown before commit is advisory. Capacity resolves atomically at commit; a disappearing slot is a designed conflict path, not corruption.
+
+#### 14. Refresh / caching / polling
+
+Authoritative state is read on entry/refocus/explicit refresh and after the widget's own successful mutations where the platform contract calls for it. Preserve usable content during refresh when Phase 4 requires that. Do not invent cache TTLs, polling intervals, retry counts or timers.
+
+#### 15. Idempotency / correlation
+
+Booking commit is idempotent/correlated as defined by API/SDC and NFR-AUDIT-002. A lost response becomes unknown outcome and is reconciled before another command.
+
+#### 16. Permission gate
+
+Canonical permission source: `docs/domain/PERMISSIONS_MATRIX.md`. Server revalidates eligibility, scope and capacity at commit; UI availability is not authorization or reservation. UI hiding/disablement is never the authorization boundary; server-side policy/scope enforcement occurs before any protected read or mutation.
+
+#### 17. Props / configuration
+
+| Name | Type | Required | Default | Source | Notes |
+|---|---|---:|---|---|---|
+| `projection` | canonical view model | yes | none | API/SDC projection | No client-created business truth |
+| `authorityContext` | scope/grant context | yes when protected | none | authenticated server context | Re-evaluate after authority loss |
+| `variant` | Phase 4 variant | when more than one exists | source-defined | WGT specification | Never invent a new product variant |
+| `readOnly` | boolean | when historical/oversight variant applies | source-defined | lifecycle/permission | Read-only is not disabled |
+| `onCommit` | command adapter | only on committing variants | none | canonical action contract | Must return/reconcile authoritative result |
+
+#### 18. State rendering
+
+| State | Behaviour |
+|---|---|
+| `loading-initial` | Slot skeletons per day group; no day is rendered as having no slots until its read completes |
+| `loading-refresh` | Slots refresh without moving the actor's current selection; a selected slot that disappeared is marked unavailable in place |
+| `empty-no-data` | No availability published for this scope: stated as no times currently offered, with the route to the provider's other branches where they exist |
+| `empty-filtered` | A date-range filter excluded everything: the range is named as the cause |
+| `partial` | Some day groups loaded and some did not; an unloaded day says so rather than appearing empty |
+| `stale` | Availability carries its as-of time. This surface is the clearest case where stale-and-labelled beats blank |
+| `error-fetch` | The chosen option and any selection are preserved; retry in place |
+| `error-permission` | On the `configure` variant, branch scope loss removes authoring controls structurally |
+| `success` | Slots, with the advisory notice |
+| Offline / unstable | Last known availability with as-of time; selecting is allowed, committing states that it needs a connection |
+
+The structural precedence is still owned by `WGT-PLATFORM-001`; this widget does not redefine it.
+
+#### 19. Lifecycle/state semantics
+
+Availability shown before commit is advisory. Capacity resolves atomically at commit; a disappearing slot is a designed conflict path, not corruption. Lifecycle labels and meanings come from `CONTENT_GUIDE_STATES.md` / `semantic.state.json`. Where a status is rendered, consume tone, icon and emphasis together; color alone never carries state.
+
+#### 20. Tokens
+
+- Mandatory component-token groups: component.platform-001
+- Shared state and surface values come from semantic/component token references only.
+- No raw visual or timing value is owned by this contract.
+
+#### 21. Content
+
+Bound content families: TXT-PLATFORM-004, TXT-PLATFORM-008, TXT-PLATFORM-020, TXT-ERR-BOOKING-001. Dynamic values come from the canonical projection; audience translation follows Phase 3. Do not copy canonical error strings into code as a second source of truth.
+
+#### 22. Accessibility contract
+
+slots are a selectable list, not a canvas. Each slot announces
+its day, time and availability. Selection is announced. On Profile A every slot is keyboard reachable
+and the `configure` variant is fully operable without a pointer. No gesture is required anywhere; every
+gesture has a control equivalent.
+
+Profile-specific runtime checks remain mandatory after implementation; documentation coverage is not conformance evidence.
+
+#### 23. RTL / bidi
+
+day groups and slots flow start to end and mirror. Times, dates and durations are
+bidirectionally isolated; Arabic-Indic or Western digits follow the numeral rule in
+`TXT-PLATFORM-020` and never mix within one value.
+
+Amounts, currencies, dates/times, phone numbers, codes/IDs, email/URL, Latin names and version identifiers are isolated as required; machine identifiers are never visually reversed.
+
+#### 24. Responsive behavior
+
+Profile C groups slots by day within the reading column; a grid that requires horizontal
+scrolling is not used, because the target floor and one reading column together forbid it. Profile A
+keeps a day-by-slot layout at `profile-a.content-width.wide` and stacks by day at `narrow`. Text/content rule: a slot label never truncates. At the largest text size slots stack
+one per row rather than shrinking below the target floor.
+
+Profile C uses its native size-class model; Profile A uses content-width/reflow rules. The two breakpoint systems are never merged.
+
+#### 25. Immutability / historical safety
+
+Availability is live/advisory; committed booking history is appended through booking events. Never rewrite prior history to make a slot conflict disappear.
+
+#### 26. Framework defaults to disable
+
+Extended Profile A selection may use framework inputs/listing but must not imply a displayed slot is held before authoritative commit.
+
+#### 27. Prohibitions
+
+presenting advisory availability as a held reservation; treating a lost slot as an error
+the patient caused; reducing capacity below existing confirmed bookings without an explicit answer;
+a gesture-only slot picker; a slot control below the target floor at any density; mixing numeral systems
+within one time value.
+
+Treat each prohibition as a negative implementation test.
+
+#### 28. Definition of Done
+
+- Canonical API/SDC projection and command boundaries are preserved.
+- Every applicable Phase 4 data state is implemented without optimistic clinical/financial/authorization truth.
+- Permission checks are enforced server-side and UI availability matches canonical authority/state.
+- Semantic/component tokens only; canonical TXT ownership is preserved.
+- Applicable A11Y and RTL/bidi assertions are implemented.
+- Historical/immutable entities expose no prohibited mutation.
+- The Phase 4 Prohibited list has negative coverage.
+- Patient code, when applicable, waits for `TASK-PLATFORM-008` to establish real repository paths and verified commands.
+- No unrelated WGT contract or upstream UX behavior is changed.
+
+#### 29. Verification
+
+**Tier A — repository/code verification once implemented**
+
+- Run `python docs/scripts/validate_docs.py` and `python docs/ux/scripts/validate_ux_docs.py --phase 5`.
+- For Laravel/Filament work, run the repository's verified Composer lint/type/test scripts applicable to the changed area.
+- Verify API/SDC, permission, idempotency, immutable-history and negative-prohibition tests named by the owning TASK/TESTING_STRATEGY entries.
+
+**Tier B — rendered design QA**
+
+- Verify hierarchy, token use, Arabic/RTL layout, long-content behavior, state distinction and rendered contrast against the Phase 4 spec and build manifest.
+- Status: not run in this documentation session.
+
+**Tier C — runtime QA**
+
+- Verify keyboard/focus, screen-reader announcements, touch/target behavior, text scaling/reflow, reduced motion and real permission/error transitions on the implemented runtime.
+- Profile C commands remain unresolved until `TASK-PLATFORM-008` records the actual client scripts.
+- Status: not run — requires implementation.
+
+
+
+### WGT-BOOKING-002 — Implementation Contract
+
+#### 1. Identity
+
+- **WGT ID:** `WGT-BOOKING-002`
+- **Name:** Proposal without displacement
+- **Build order:** 25
+- **Platforms:** C, A
+- **Runtime:** React Native + Filament
+- **Phase 4 realization:** Profile C `Native`; Profile A `Custom`
+- **Screen reach:** 4 documented screen placements
+- **Source specification:** `docs/ux/04-specs/WIDGET_SPECS_DOMAIN.md`
+- **Purpose:** keep the original confirmed appointment authoritative while a proposal is pending. Showing the proposed time as though it were the appointment is the specific failure this widget exists to prevent, and it is a failure that sends a patient to a clinic on the wrong day.
+- **User intent:** understand which appointment currently holds, and decide about the other one.
+
+#### 2. Implements
+
+- `FR-BOOKING-003`
+- `FR-BOOKING-004`
+- `FR-BOOKING-002`
+
+No requirement is broadened by this contract; canonical acceptance criteria remain in `docs/PRD.md`.
+
+#### 3. Used by
+
+- `SCR-BOOKING-005`
+- `SCR-BOOKING-010`
+- `SCR-BOOKING-016`
+- `SCR-BOOKING-017`
+
+The Phase 4 screen specification remains the owner of each screen's exact composition.
+
+#### 4. Widget dependencies
+
+- **Required predecessors:** `WGT-PLATFORM-001`
+- Build order is not evidence of any additional dependency. Co-occurrence on a screen does not create one.
+
+#### 5. Component dependencies
+
+- **Mandatory core:** `CMP-PLATFORM-001`, `CMP-PLATFORM-005`
+- **Conditional:** `CMP-PLATFORM-002`, `CMP-PLATFORM-004`, `CMP-PLATFORM-006`, `CMP-PLATFORM-011`
+- Mandatory components must be implemented from their Phase 3 contracts before this widget.
+
+#### 6. Interaction dependencies
+
+- `IX-BOOKING-002`
+- `IX-BOOKING-001`
+- `IX-ELIG-001`
+- `IX-PLATFORM-001`
+
+#### 7. Content dependencies
+
+- `TXT-PLATFORM-010`
+- `TXT-PLATFORM-011`
+- `TXT-PLATFORM-018`
+- `TXT-STATE-BOOKING-001`
+- `TXT-STATE-BOOKING-002`
+- `TXT-ERR-BOOKING-003`
+
+Canonical copy remains owned by the Phase 3 content system and error catalog.
+
+#### 8. Accessibility dependencies
+
+- `A11Y-PLATFORM-015`
+- `A11Y-PLATFORM-011`
+- `A11Y-PLATFORM-006`
+- `A11Y-PLATFORM-014`
+- `A11Y-PLATFORM-023`
+- `A11Y-PLATFORM-030`
+
+These IDs are implementation assertions, not a Phase 5 claim that rendered/runtime accessibility has passed.
+
+#### 9. Canonical data/action contracts
+
+- **Profile C API:** `API-BOOKING-003`, `API-BOOKING-004`, `API-BOOKING-006`, `API-BOOKING-007`
+- **Profile A SDC:** `SDC-BOOKING-001`, `SDC-BOOKING-002`
+- Use the projection and command semantics exactly as declared by the canonical owner; do not invent an endpoint for Filament or an in-process command for Patient.
+
+#### 10. Shared application-layer prerequisites
+
+- `TASK-BOOKING-011`
+- `TASK-BOOKING-006`
+- `TASK-BOOKING-007`
+- `TASK-AUDIT-001`
+- Cross-cutting authorization/audit/idempotency prerequisites from `docs/IMPLEMENTATION_PLAN.md` apply where the canonical command requires them.
+
+#### 11. Data model prerequisites
+
+| Entity / table | Status |
+|---|---|
+| `bookings` | Proposed |
+| `booking_alternatives` | Proposed |
+| `booking_events` | Proposed |
+| `audit_events` | Proposed |
+
+
+
+
+#### 12. Target files
+
+| Target area | Path / owner | Status |
+|---|---|---|
+| Patient implementation area | Patient React Native project / feature area owned by `TASK-PLATFORM-008` | Proposed, path unverified |
+| Admin panel registration context | `UberTip-Backend/app/Providers/Filament/AdminPanelProvider.php` | Existing |
+| Admin Filament resource area | `UberTip-Backend/app/Filament/Resources/` | Proposed |
+| Clinic panel/provider area | `UberTip-Backend/app/Providers/Filament/ClinicPanelProvider.php` and `app/Filament/Clinic/*` | Proposed |
+
+A conventional path is not upgraded to Existing unless it is present in the repository.
+
+#### 13. Data/view-model mapping
+
+Map only the fields/projections declared by `API-BOOKING-003`, `API-BOOKING-004`, `API-BOOKING-006`, `API-BOOKING-007`, `SDC-BOOKING-001`, `SDC-BOOKING-002`. The adapter may normalize presentation shape, but identifiers, lifecycle state, authority, provenance, amounts and timestamps remain server truth. Decline or expiry of an alternative is not cancellation of the confirmed appointment and must not inherit cancellation-penalty wording.
+
+#### 14. Refresh / caching / polling
+
+Authoritative state is read on entry/refocus/explicit refresh and after the widget's own successful mutations where the platform contract calls for it. Preserve usable content during refresh when Phase 4 requires that. Do not invent cache TTLs, polling intervals, retry counts or timers.
+
+#### 15. Idempotency / correlation
+
+Proposal create/accept/decline commands are committing and require canonical idempotency/correlation. Re-read booking state after any uncertain outcome.
+
+#### 16. Permission gate
+
+Canonical permission source: `docs/domain/PERMISSIONS_MATRIX.md`. Only authorized counterparties may propose/respond. Server state determines whether a response is still valid. UI hiding/disablement is never the authorization boundary; server-side policy/scope enforcement occurs before any protected read or mutation.
+
+#### 17. Props / configuration
+
+| Name | Type | Required | Default | Source | Notes |
+|---|---|---:|---|---|---|
+| `projection` | canonical view model | yes | none | API/SDC projection | No client-created business truth |
+| `authorityContext` | scope/grant context | yes when protected | none | authenticated server context | Re-evaluate after authority loss |
+| `variant` | Phase 4 variant | when more than one exists | source-defined | WGT specification | Never invent a new product variant |
+| `readOnly` | boolean | when historical/oversight variant applies | source-defined | lifecycle/permission | Read-only is not disabled |
+| `onCommit` | command adapter | only on committing variants | none | canonical action contract | Must return/reconcile authoritative result |
+
+#### 18. State rendering
+
+| State | Behaviour |
+|---|---|
+| `loading-initial` | Neither side renders until both resolve. A proposal shown without its original is the failure mode itself |
+| `loading-refresh` | An accepted or expired proposal refreshes into the new authoritative pair and announces |
+| `empty-no-data` | No proposal outstanding: only the appointment renders, with no proposal region at all |
+| `empty-filtered` | On the clinic list, a state filter that excludes everything names itself as the cause |
+| `partial` | If the proposal loaded and the original did not, **no decision control is offered** and the surface says the current appointment could not be read |
+| `stale` | Both sides carry the as-of time; accept is withdrawn against a stale read because acceptance revalidates capacity and eligibility |
+| `error-fetch` | Both sides preserved from the last good read, retry in place |
+| `error-permission` | Booking scope lost: decision controls removed structurally |
+| `success` | The pair, with the deadline running |
+| Offline / unstable | Both sides readable with as-of time. Accept and decline are withdrawn, because both revalidate server-side |
+
+The structural precedence is still owned by `WGT-PLATFORM-001`; this widget does not redefine it.
+
+#### 19. Lifecycle/state semantics
+
+Decline or expiry of an alternative is not cancellation of the confirmed appointment and must not inherit cancellation-penalty wording. Lifecycle labels and meanings come from `CONTENT_GUIDE_STATES.md` / `semantic.state.json`. Where a status is rendered, consume tone, icon and emphasis together; color alone never carries state.
+
+#### 20. Tokens
+
+- Mandatory component-token groups: component.platform-001, component.platform-005
+- Shared state and surface values come from semantic/component token references only.
+- No raw visual or timing value is owned by this contract.
+
+#### 21. Content
+
+Bound content families: TXT-PLATFORM-010, TXT-PLATFORM-011, TXT-PLATFORM-018, TXT-STATE-BOOKING-001, TXT-STATE-BOOKING-002, TXT-ERR-BOOKING-003. Dynamic values come from the canonical projection; audience translation follows Phase 3. Do not copy canonical error strings into code as a second source of truth.
+
+#### 22. Accessibility contract
+
+the pair announces as original-then-proposal with each labelled.
+Accepting moves focus to the updated booking state summary and announces which appointment now holds.
+Declining is a single action with no second confirmation, because declining an unwanted proposal is not
+destructive. The deadline is announced when it enters its approaching window.
+
+Profile-specific runtime checks remain mandatory after implementation; documentation coverage is not conformance evidence.
+
+#### 23. RTL / bidi
+
+the original occupies the logical `start` position in both directions. Times, dates
+and durations are bidirectionally isolated.
+
+Amounts, currencies, dates/times, phone numbers, codes/IDs, email/URL, Latin names and version identifiers are isolated as required; machine identifiers are never visually reversed.
+
+#### 24. Responsive behavior
+
+Profile C stacks the pair in the reading column, original first, at every size class.
+Profile A may place them side by side at `profile-a.content-width.wide` with the original at the logical
+start, and stacks at `narrow`. Front-desk work is interruption-heavy, so on the clinic list the pending
+proposal, its deadline and the still-authoritative original are all readable without opening anything. Text/content rule: neither appointment's time, date or location truncates. At the
+largest text size the two blocks stack with the original first and their labels intact.
+
+Profile C uses its native size-class model; Profile A uses content-width/reflow rules. The two breakpoint systems are never merged.
+
+#### 25. Immutability / historical safety
+
+The original confirmed booking remains authoritative while a proposal is pending. Proposal history appends; acceptance changes authority prospectively and never erases the prior confirmed history.
+
+#### 26. Framework defaults to disable
+
+Custom Profile A composition. Never let a form's proposed date overwrite the confirmed appointment field before accepted/revalidated commit.
+
+#### 27. Prohibitions
+
+displaying the proposal as the appointment; replacing the original before acceptance
+commits; a generic edit of date, provider or service anywhere on these surfaces; a party responding to
+its own proposal; punitive cancellation language on an alternative that expired or was declined; a
+second confirmation on decline; offering accept without revalidation.
+
+Treat each prohibition as a negative implementation test.
+
+#### 28. Definition of Done
+
+- Canonical API/SDC projection and command boundaries are preserved.
+- Every applicable Phase 4 data state is implemented without optimistic clinical/financial/authorization truth.
+- Permission checks are enforced server-side and UI availability matches canonical authority/state.
+- Semantic/component tokens only; canonical TXT ownership is preserved.
+- Applicable A11Y and RTL/bidi assertions are implemented.
+- Historical/immutable entities expose no prohibited mutation.
+- The Phase 4 Prohibited list has negative coverage.
+- Patient code, when applicable, waits for `TASK-PLATFORM-008` to establish real repository paths and verified commands.
+- No unrelated WGT contract or upstream UX behavior is changed.
+
+#### 29. Verification
+
+**Tier A — repository/code verification once implemented**
+
+- Run `python docs/scripts/validate_docs.py` and `python docs/ux/scripts/validate_ux_docs.py --phase 5`.
+- For Laravel/Filament work, run the repository's verified Composer lint/type/test scripts applicable to the changed area.
+- Verify API/SDC, permission, idempotency, immutable-history and negative-prohibition tests named by the owning TASK/TESTING_STRATEGY entries.
+
+**Tier B — rendered design QA**
+
+- Verify hierarchy, token use, Arabic/RTL layout, long-content behavior, state distinction and rendered contrast against the Phase 4 spec and build manifest.
+- Status: not run in this documentation session.
+
+**Tier C — runtime QA**
+
+- Verify keyboard/focus, screen-reader announcements, touch/target behavior, text scaling/reflow, reduced motion and real permission/error transitions on the implemented runtime.
+- Profile C commands remain unresolved until `TASK-PLATFORM-008` records the actual client scripts.
+- Status: not run — requires implementation.
+
+
+
+### WGT-CATALOG-001 — Implementation Contract
+
+#### 1. Identity
+
+- **WGT ID:** `WGT-CATALOG-001`
+- **Name:** Launch gate panel
+- **Build order:** 26
+- **Platforms:** A
+- **Runtime:** Filament
+- **Phase 4 realization:** Profile C `n/a`; Profile A `Custom`
+- **Screen reach:** 4 documented screen placements
+- **Source specification:** `docs/ux/04-specs/WIDGET_SPECS_DOMAIN.md`
+- **Purpose:** render the four accountable launch gates so that each owner sees only their own gate as actionable, and so that **`expired` reads as a lapse needing re-approval rather than as a decision against the content** — conflating the two wastes the rarest actors' time and fails production readiness in the wrong direction.
+- **User intent:** see what still blocks this from being publishable, and record my own decision.
+
+#### 2. Implements
+
+- `FR-CATALOG-003`
+- `FR-CATALOG-001`
+- `FR-OPS-003`
+- `FR-AUDIT-001`
+
+No requirement is broadened by this contract; canonical acceptance criteria remain in `docs/PRD.md`.
+
+#### 3. Used by
+
+- `SCR-CATALOG-006`
+- `SCR-CATALOG-007`
+- `SCR-CATALOG-008`
+- `SCR-CATALOG-009`
+- `SCR-OPS-006`
+
+The Phase 4 screen specification remains the owner of each screen's exact composition.
+
+#### 4. Widget dependencies
+
+- **Required predecessors:** `WGT-PLATFORM-001`
+- Build order is not evidence of any additional dependency. Co-occurrence on a screen does not create one.
+
+#### 5. Component dependencies
+
+- **Mandatory core:** `CMP-POLICY-001`
+- **Conditional:** `CMP-PLATFORM-013`, `CMP-PLATFORM-005`, `CMP-PLATFORM-014`, `CMP-PLATFORM-008`, `CMP-PLATFORM-001`
+- Mandatory components must be implemented from their Phase 3 contracts before this widget.
+
+#### 6. Interaction dependencies
+
+- `IX-POLICY-001`
+- `IX-AUDIT-001`
+- `IX-PLATFORM-001`
+- `IX-PLATFORM-008`
+
+#### 7. Content dependencies
+
+- `TXT-PLATFORM-010`
+- `TXT-PLATFORM-012`
+- `TXT-PLATFORM-014`
+- `TXT-STATE-CATALOG-002`
+- `TXT-STATE-CLINICAL-003`
+
+Canonical copy remains owned by the Phase 3 content system and error catalog.
+
+#### 8. Accessibility dependencies
+
+- `A11Y-POLICY-001`
+- `A11Y-AUDIT-001`
+- `A11Y-PLATFORM-015`
+- `A11Y-PLATFORM-012`
+- `A11Y-PLATFORM-016`
+- `A11Y-PLATFORM-011`
+
+These IDs are implementation assertions, not a Phase 5 claim that rendered/runtime accessibility has passed.
+
+#### 9. Canonical data/action contracts
+
+- **Profile C API:** n/a
+- **Profile A SDC:** `SDC-CATALOG-001`, `SDC-CATALOG-003`
+- Use the projection and command semantics exactly as declared by the canonical owner; do not invent an endpoint for Filament or an in-process command for Patient.
+
+#### 10. Shared application-layer prerequisites
+
+- `TASK-CATALOG-001`
+- `TASK-CATALOG-002`
+- `TASK-CATALOG-003`
+- `TASK-CATALOG-004`
+- `TASK-OPS-003`
+- `TASK-AUDIT-001`
+- Cross-cutting authorization/audit/idempotency prerequisites from `docs/IMPLEMENTATION_PLAN.md` apply where the canonical command requires them.
+
+#### 11. Data model prerequisites
+
+| Entity / table | Status |
+|---|---|
+| `service_definitions` | Existing |
+| `clinical_reviewer_credentials` | Existing |
+| `service_launch_gates` | Existing |
+| `procedure_item_versions` | Proposed |
+| `audit_events` | Proposed |
+
+
+
+
+#### 12. Target files
+
+| Target area | Path / owner | Status |
+|---|---|---|
+| Admin panel registration context | `UberTip-Backend/app/Providers/Filament/AdminPanelProvider.php` | Existing |
+| Admin Filament resource area | `UberTip-Backend/app/Filament/Resources/` | Proposed |
+
+A conventional path is not upgraded to Existing unless it is present in the repository.
+
+#### 13. Data/view-model mapping
+
+Map only the fields/projections declared by `SDC-CATALOG-001`, `SDC-CATALOG-003`. The adapter may normalize presentation shape, but identifiers, lifecycle state, authority, provenance, amounts and timestamps remain server truth. Expired means a lapse requiring reapproval, not a rejection of content. Q-CATALOG-001 remains a production clinical-content gate.
+
+#### 14. Refresh / caching / polling
+
+Authoritative state is read on entry/refocus/explicit refresh and after the widget's own successful mutations where the platform contract calls for it. Preserve usable content during refresh when Phase 4 requires that. Do not invent cache TTLs, polling intervals, retry counts or timers.
+
+#### 15. Idempotency / correlation
+
+Gate decisions are authoritative committing actions and require canonical idempotency/correlation. Read-only gate inspection is n/a.
+
+#### 16. Permission gate
+
+Canonical permission source: `docs/domain/PERMISSIONS_MATRIX.md`. Each gate is actionable only by its accountable role and required competence. Medical approval requires licensed clinical authority. UI hiding/disablement is never the authorization boundary; server-side policy/scope enforcement occurs before any protected read or mutation.
+
+#### 17. Props / configuration
+
+| Name | Type | Required | Default | Source | Notes |
+|---|---|---:|---|---|---|
+| `projection` | canonical view model | yes | none | API/SDC projection | No client-created business truth |
+| `authorityContext` | scope/grant context | yes when protected | none | authenticated server context | Re-evaluate after authority loss |
+| `variant` | Phase 4 variant | when more than one exists | source-defined | WGT specification | Never invent a new product variant |
+| `readOnly` | boolean | when historical/oversight variant applies | source-defined | lifecycle/permission | Read-only is not disabled |
+| `onCommit` | command adapter | only on committing variants | none | canonical action contract | Must return/reconcile authoritative result |
+
+#### 18. State rendering
+
+| State | Behaviour |
+|---|---|
+| `loading-initial` | All four gates resolve before publication readiness is stated. Readiness computed from three of four gates is a wrong readiness |
+| `loading-refresh` | A gate decided elsewhere refreshes in and the blocking statement recomputes |
+| `empty-no-data` | No gate decisions yet: all four render as pending, which is a real state and not an absence |
+| `empty-filtered` | n/a. The gate set is fixed at four |
+| `partial` | A gate whose state did not load blocks readiness and says so. **Readiness fails closed** |
+| `stale` | Gate states carry their as-of time; a decision is not recorded against a stale content hash |
+| `error-fetch` | Known gate states preserved with retry; the readiness statement is withheld rather than guessed |
+| `error-permission` | An owner sees other gates read-only and their own as actionable; a non-owner sees the set read-only |
+| `success` | Four gates with their states and the readiness statement |
+| Offline / unstable | Rare on this profile; read-only, and no decision is queued |
+
+The structural precedence is still owned by `WGT-PLATFORM-001`; this widget does not redefine it.
+
+#### 19. Lifecycle/state semantics
+
+Expired means a lapse requiring reapproval, not a rejection of content. Q-CATALOG-001 remains a production clinical-content gate. Lifecycle labels and meanings come from `CONTENT_GUIDE_STATES.md` / `semantic.state.json`. Where a status is rendered, consume tone, icon and emphasis together; color alone never carries state.
+
+#### 20. Tokens
+
+- Mandatory component-token groups: component.policy-001
+- Shared state and surface values come from semantic/component token references only.
+- No raw visual or timing value is owned by this contract.
+
+#### 21. Content
+
+Bound content families: TXT-PLATFORM-010, TXT-PLATFORM-012, TXT-PLATFORM-014, TXT-STATE-CATALOG-002, TXT-STATE-CLINICAL-003. Dynamic values come from the canonical projection; audience translation follows Phase 3. Do not copy canonical error strings into code as a second source of truth.
+
+#### 22. Accessibility contract
+
+each gate announces as gate type, state, owner and expiry, so
+`expired` and `rejected` are distinguishable without sight or colour. A gate the actor does not own is
+present and read-only rather than hidden, because an owner needs to see the whole set. Recording a
+decision announces the recomputed readiness.
+
+Profile-specific runtime checks remain mandatory after implementation; documentation coverage is not conformance evidence.
+
+#### 23. RTL / bidi
+
+gates flow start to end. Content hashes, version identifiers and expiry dates are
+bidirectionally isolated.
+
+Amounts, currencies, dates/times, phone numbers, codes/IDs, email/URL, Latin names and version identifiers are isolated as required; machine identifiers are never visually reversed.
+
+#### 24. Responsive behavior
+
+Profile A only. Four gate rows at `profile-a.content-width.wide`; at `narrow` each gate
+stacks with its state, owner and expiry, and the blocking statement stays above them. Text/content rule: a decision reason and an evidence reference wrap in full. An expiry
+date never truncates.
+
+Profile C uses its native size-class model; Profile A uses content-width/reflow rules. The two breakpoint systems are never merged.
+
+#### 25. Immutability / historical safety
+
+service_launch_gates are append-only; activated/terminal definition history is protected. A new gate decision or reapproval appends history.
+
+#### 26. Framework defaults to disable
+
+Custom Profile A surface. Disable generic edit/delete of gate history and do not expose another role's gate as actionable.
+
+#### 27. Prohibitions
+
+`expired` styled or worded the same as `rejected`; readiness asserted while any gate is
+unknown; a clinical credential used on a non-medical gate; an expired or revoked credential supporting a
+medical approval; editing a prior decision; a decision not bound to the exact content hash; direct
+activation bypassing gates.
+
+Treat each prohibition as a negative implementation test.
+
+#### 28. Definition of Done
+
+- Canonical API/SDC projection and command boundaries are preserved.
+- Every applicable Phase 4 data state is implemented without optimistic clinical/financial/authorization truth.
+- Permission checks are enforced server-side and UI availability matches canonical authority/state.
+- Semantic/component tokens only; canonical TXT ownership is preserved.
+- Applicable A11Y and RTL/bidi assertions are implemented.
+- Historical/immutable entities expose no prohibited mutation.
+- The Phase 4 Prohibited list has negative coverage.
+- Patient code, when applicable, waits for `TASK-PLATFORM-008` to establish real repository paths and verified commands.
+- No unrelated WGT contract or upstream UX behavior is changed.
+
+#### 29. Verification
+
+**Tier A — repository/code verification once implemented**
+
+- Run `python docs/scripts/validate_docs.py` and `python docs/ux/scripts/validate_ux_docs.py --phase 5`.
+- For Laravel/Filament work, run the repository's verified Composer lint/type/test scripts applicable to the changed area.
+- Verify API/SDC, permission, idempotency, immutable-history and negative-prohibition tests named by the owning TASK/TESTING_STRATEGY entries.
+
+**Tier B — rendered design QA**
+
+- Verify hierarchy, token use, Arabic/RTL layout, long-content behavior, state distinction and rendered contrast against the Phase 4 spec and build manifest.
+- Status: not run in this documentation session.
+
+**Tier C — runtime QA**
+
+- Verify keyboard/focus, screen-reader announcements, touch/target behavior, text scaling/reflow, reduced motion and real permission/error transitions on the implemented runtime.
+- Profile C commands remain unresolved until `TASK-PLATFORM-008` records the actual client scripts.
+- Status: not run — requires implementation.
+
+
+
+### WGT-CLAIMS-001 — Implementation Contract
+
+#### 1. Identity
+
+- **WGT ID:** `WGT-CLAIMS-001`
+- **Name:** Claim evidence and deadline panel
+- **Build order:** 27
+- **Platforms:** C, A
+- **Runtime:** React Native + Filament
+- **Phase 4 realization:** Profile C `Native`; Profile A `Extended`
+- **Screen reach:** 4 documented screen placements
+- **Source specification:** `docs/ux/04-specs/WIDGET_SPECS_DOMAIN.md`
+- **Purpose:** show which claim requirements are satisfied and which are not, with a reason per item, and render an **effective deadline whose history is appended rather than replaced** — because a pause or an extension that silently overwrites the original destroys the record of why the window moved.
+- **User intent:** know what this claim still needs from me and by when.
+
+#### 2. Implements
+
+- `FR-CLAIMS-002`
+- `FR-CLAIMS-003`
+- `FR-CLAIMS-004`
+
+No requirement is broadened by this contract; canonical acceptance criteria remain in `docs/PRD.md`.
+
+#### 3. Used by
+
+- `SCR-CLAIMS-003`
+- `SCR-CLAIMS-004`
+- `SCR-CLAIMS-007`
+- `SCR-CLAIMS-011`
+
+The Phase 4 screen specification remains the owner of each screen's exact composition.
+
+#### 4. Widget dependencies
+
+- **Required predecessors:** `WGT-PLATFORM-001`, `WGT-PLATFORM-008`
+- Build order is not evidence of any additional dependency. Co-occurrence on a screen does not create one.
+
+#### 5. Component dependencies
+
+- **Mandatory core:** `CMP-PLATFORM-005`, `CMP-PLATFORM-006`
+- **Conditional:** `CMP-PLATFORM-012`, `CMP-CLINICAL-002`, `CMP-PLATFORM-001`, `CMP-PLATFORM-013`, `CMP-PLATFORM-008`
+- Mandatory components must be implemented from their Phase 3 contracts before this widget.
+
+#### 6. Interaction dependencies
+
+- `IX-PLATFORM-006`
+- `IX-BOOKING-001`
+- `IX-AUDIT-001`
+- `IX-PLATFORM-018`
+- `IX-PLATFORM-008`
+
+#### 7. Content dependencies
+
+- `TXT-PLATFORM-011`
+- `TXT-PLATFORM-015`
+- `TXT-PLATFORM-018`
+- `TXT-STATE-CLAIMS-001`
+- `TXT-ERR-CLAIMS-002`
+
+Canonical copy remains owned by the Phase 3 content system and error catalog.
+
+#### 8. Accessibility dependencies
+
+- `A11Y-PLATFORM-034`
+- `A11Y-PLATFORM-012`
+- `A11Y-PLATFORM-015`
+- `A11Y-PLATFORM-011`
+- `A11Y-PLATFORM-023`
+- `A11Y-AUDIT-001`
+
+These IDs are implementation assertions, not a Phase 5 claim that rendered/runtime accessibility has passed.
+
+#### 9. Canonical data/action contracts
+
+- **Profile C API:** `API-CLAIMS-002`, `API-CLAIMS-004`
+- **Profile A SDC:** `SDC-CLAIMS-001`
+- Use the projection and command semantics exactly as declared by the canonical owner; do not invent an endpoint for Filament or an in-process command for Patient.
+
+#### 10. Shared application-layer prerequisites
+
+- `TASK-CLAIMS-001`
+- `TASK-CLAIMS-002`
+- `TASK-CLAIMS-003`
+- `TASK-CLAIMS-004`
+- `TASK-CLAIMS-007`
+- `TASK-CLAIMS-008`
+- `TASK-CLAIMS-009`
+- `TASK-AUDIT-001`
+- Cross-cutting authorization/audit/idempotency prerequisites from `docs/IMPLEMENTATION_PLAN.md` apply where the canonical command requires them.
+
+#### 11. Data model prerequisites
+
+| Entity / table | Status |
+|---|---|
+| `claims` | Proposed |
+| `claim_deadline_events` | Proposed |
+| `claim_decisions` | Proposed |
+| `claim_appeals` | Proposed |
+| `evidence_items` | Proposed |
+| `evidence_bindings` | Proposed |
+
+
+
+
+#### 12. Target files
+
+| Target area | Path / owner | Status |
+|---|---|---|
+| Patient implementation area | Patient React Native project / feature area owned by `TASK-PLATFORM-008` | Proposed, path unverified |
+| Admin panel registration context | `UberTip-Backend/app/Providers/Filament/AdminPanelProvider.php` | Existing |
+| Admin Filament resource area | `UberTip-Backend/app/Filament/Resources/` | Proposed |
+| Clinic panel/provider area | `UberTip-Backend/app/Providers/Filament/ClinicPanelProvider.php` and `app/Filament/Clinic/*` | Proposed |
+
+A conventional path is not upgraded to Existing unless it is present in the repository.
+
+#### 13. Data/view-model mapping
+
+Map only the fields/projections declared by `API-CLAIMS-002`, `API-CLAIMS-004`, `SDC-CLAIMS-001`. The adapter may normalize presentation shape, but identifiers, lifecycle state, authority, provenance, amounts and timestamps remain server truth. Show original deadline + effective deadline + why it moved. FAILED_RETRYABLE remains transport failure; REJECTED remains authoritative review outcome.
+
+#### 14. Refresh / caching / polling
+
+Authoritative state is read on entry/refocus/explicit refresh and after the widget's own successful mutations where the platform contract calls for it. Preserve usable content during refresh when Phase 4 requires that. Do not invent cache TTLs, polling intervals, retry counts or timers.
+
+#### 15. Idempotency / correlation
+
+Evidence/appeal/decision commands use canonical idempotency/correlation. Evidence transport itself follows WGT-PLATFORM-008; reads are n/a.
+
+#### 16. Permission gate
+
+Canonical permission source: `docs/domain/PERMISSIONS_MATRIX.md`. Evidence and decisions are filtered by party, assignment, competence and scope. Human/clinical judgement cannot be granted by UI role alone. UI hiding/disablement is never the authorization boundary; server-side policy/scope enforcement occurs before any protected read or mutation.
+
+#### 17. Props / configuration
+
+| Name | Type | Required | Default | Source | Notes |
+|---|---|---:|---|---|---|
+| `projection` | canonical view model | yes | none | API/SDC projection | No client-created business truth |
+| `authorityContext` | scope/grant context | yes when protected | none | authenticated server context | Re-evaluate after authority loss |
+| `variant` | Phase 4 variant | when more than one exists | source-defined | WGT specification | Never invent a new product variant |
+| `readOnly` | boolean | when historical/oversight variant applies | source-defined | lifecycle/permission | Read-only is not disabled |
+| `onCommit` | command adapter | only on committing variants | none | canonical action contract | Must return/reconcile authoritative result |
+
+#### 18. State rendering
+
+| State | Behaviour |
+|---|---|
+| `loading-initial` | Requirements resolve from the versioned policy snapshot governing this claim, not from current configuration |
+| `loading-refresh` | A requirement satisfied by the counterparty refreshes in and announces |
+| `empty-no-data` | No outstanding requirement: stated as complete, with the deadline still visible because it still governs |
+| `empty-filtered` | Where requirements are filtered by party, the filter is named as the cause |
+| `partial` | An unresolved requirement is never counted as satisfied and the remaining count says it is provisional |
+| `stale` | Requirement states and the effective deadline carry the as-of time. A deadline read as further away than it is, is the worst failure on this surface |
+| `error-fetch` | Known requirements preserved with retry; the deadline stays visible |
+| `error-permission` | A party sees only their own assigned requirements; the boundary is stated rather than shown as a shorter list |
+| `success` | Requirements, states and both deadlines |
+| Offline / unstable | Readable with as-of time; supplying evidence resumes from its interruption point under `WGT-PLATFORM-008` |
+
+The structural precedence is still owned by `WGT-PLATFORM-001`; this widget does not redefine it.
+
+#### 19. Lifecycle/state semantics
+
+Show original deadline + effective deadline + why it moved. FAILED_RETRYABLE remains transport failure; REJECTED remains authoritative review outcome. Lifecycle labels and meanings come from `CONTENT_GUIDE_STATES.md` / `semantic.state.json`. Where a status is rendered, consume tone, icon and emphasis together; color alone never carries state.
+
+#### 20. Tokens
+
+- Mandatory component-token groups: component.platform-005, component.platform-006
+- Shared state and surface values come from semantic/component token references only.
+- No raw visual or timing value is owned by this contract.
+
+#### 21. Content
+
+Bound content families: TXT-PLATFORM-011, TXT-PLATFORM-015, TXT-PLATFORM-018, TXT-STATE-CLAIMS-001, TXT-ERR-CLAIMS-002. Dynamic values come from the canonical projection; audience translation follows Phase 3. Do not copy canonical error strings into code as a second source of truth.
+
+#### 22. Accessibility contract
+
+the deadline pair announces as original and effective, with what
+moved it available without a hover. Each requirement announces as requirement, state and reason. An
+approaching unrecoverable deadline announces when it enters its approaching window, not when it lapses.
+
+Profile-specific runtime checks remain mandatory after implementation; documentation coverage is not conformance evidence.
+
+#### 23. RTL / bidi
+
+requirements flow start to end. Deadlines, claim identifiers and evidence identifiers
+are bidirectionally isolated.
+
+Amounts, currencies, dates/times, phone numbers, codes/IDs, email/URL, Latin names and version identifiers are isolated as required; machine identifiers are never visually reversed.
+
+#### 24. Responsive behavior
+
+Profile C stacks the deadline pair above the requirement list in the reading column.
+Profile A keeps them together in the primary region; at `profile-a.content-width.narrow` each
+requirement stacks with its state and reason. Text/content rule: a rejection reason wraps in full and never truncates, because it is
+what the actor must act on. Both deadlines and the remaining time never truncate.
+
+Profile C uses its native size-class model; Profile A uses content-width/reflow rules. The two breakpoint systems are never merged.
+
+#### 25. Immutability / historical safety
+
+Claim deadline events and decisions append history; original/effective deadline and prior decisions remain readable. Appeals are separate lifecycle/history.
+
+#### 26. Framework defaults to disable
+
+Extended Profile A panel must not overwrite the original deadline, expose bulk decision, or collapse evidence transfer failure into evidence rejection.
+
+#### 27. Prohibitions
+
+showing only the effective deadline; replacing an original deadline; a silent deadline
+change; a generic incomplete-evidence message where a per-item reason exists; a clinic surface showing
+the patient's private evidence; promising or implying a monetary outcome, insurance or a guaranteed
+result; an approved remedy presented as a payment.
+
+Treat each prohibition as a negative implementation test.
+
+#### 28. Definition of Done
+
+- Canonical API/SDC projection and command boundaries are preserved.
+- Every applicable Phase 4 data state is implemented without optimistic clinical/financial/authorization truth.
+- Permission checks are enforced server-side and UI availability matches canonical authority/state.
+- Semantic/component tokens only; canonical TXT ownership is preserved.
+- Applicable A11Y and RTL/bidi assertions are implemented.
+- Historical/immutable entities expose no prohibited mutation.
+- The Phase 4 Prohibited list has negative coverage.
+- Patient code, when applicable, waits for `TASK-PLATFORM-008` to establish real repository paths and verified commands.
+- No unrelated WGT contract or upstream UX behavior is changed.
+
+#### 29. Verification
+
+**Tier A — repository/code verification once implemented**
+
+- Run `python docs/scripts/validate_docs.py` and `python docs/ux/scripts/validate_ux_docs.py --phase 5`.
+- For Laravel/Filament work, run the repository's verified Composer lint/type/test scripts applicable to the changed area.
+- Verify API/SDC, permission, idempotency, immutable-history and negative-prohibition tests named by the owning TASK/TESTING_STRATEGY entries.
+
+**Tier B — rendered design QA**
+
+- Verify hierarchy, token use, Arabic/RTL layout, long-content behavior, state distinction and rendered contrast against the Phase 4 spec and build manifest.
+- Status: not run in this documentation session.
+
+**Tier C — runtime QA**
+
+- Verify keyboard/focus, screen-reader announcements, touch/target behavior, text scaling/reflow, reduced motion and real permission/error transitions on the implemented runtime.
+- Profile C commands remain unresolved until `TASK-PLATFORM-008` records the actual client scripts.
+- Status: not run — requires implementation.
+
+
+
+### WGT-CLINICAL-003 — Implementation Contract
+
+#### 1. Identity
+
+- **WGT ID:** `WGT-CLINICAL-003`
+- **Name:** Stage execution panel
+- **Build order:** 28
+- **Platforms:** C, A
+- **Runtime:** React Native + Filament
+- **Phase 4 realization:** Profile C `Native`; Profile A `Extended`
+- **Screen reach:** 4 documented screen placements
+- **Source specification:** `docs/ux/04-specs/WIDGET_SPECS_DOMAIN.md`
+- **Purpose:** render one treatment stage with the requirements that resolve **from the accepted snapshot** rather than from a generic template, and make a reopening read as a recorded correction with its reason rather than as an erasure of history.
+- **User intent:** know what this stage still needs, or what happened in it.
+
+#### 2. Implements
+
+- `FR-CLINICAL-003`
+- `FR-CLINICAL-004`
+- `FR-CLINICAL-005`
+
+No requirement is broadened by this contract; canonical acceptance criteria remain in `docs/PRD.md`.
+
+#### 3. Used by
+
+- `SCR-CLINICAL-006`
+- `SCR-CLINICAL-014`
+- `SCR-CLINICAL-015`
+- `SCR-CLINICAL-016`
+
+The Phase 4 screen specification remains the owner of each screen's exact composition.
+
+#### 4. Widget dependencies
+
+- **Required predecessors:** `WGT-PLATFORM-001`
+- Build order is not evidence of any additional dependency. Co-occurrence on a screen does not create one.
+
+#### 5. Component dependencies
+
+- **Mandatory core:** `CMP-PLATFORM-001`
+- **Conditional:** `CMP-PLATFORM-002`, `CMP-PLATFORM-012`, `CMP-PLATFORM-006`, `CMP-PLATFORM-013`, `CMP-PLATFORM-014`, `CMP-PLATFORM-004`
+- Mandatory components must be implemented from their Phase 3 contracts before this widget.
+
+#### 6. Interaction dependencies
+
+- `IX-PLATFORM-006`
+- `IX-PLATFORM-001`
+- `IX-PLATFORM-008`
+- `IX-AUDIT-001`
+- `IX-PLATFORM-018`
+
+#### 7. Content dependencies
+
+- `TXT-PLATFORM-010`
+- `TXT-PLATFORM-011`
+- `TXT-PLATFORM-014`
+- `TXT-STATE-CLINICAL-002`
+
+Canonical copy remains owned by the Phase 3 content system and error catalog.
+
+#### 8. Accessibility dependencies
+
+- `A11Y-CLINICAL-001`
+- `A11Y-PLATFORM-034`
+- `A11Y-PLATFORM-012`
+- `A11Y-PLATFORM-011`
+- `A11Y-PLATFORM-015`
+- `A11Y-PLATFORM-006`
+
+These IDs are implementation assertions, not a Phase 5 claim that rendered/runtime accessibility has passed.
+
+#### 9. Canonical data/action contracts
+
+- **Profile C API:** `API-CLINICAL-004`
+- **Profile A SDC:** `SDC-CLINICAL-001`
+- Use the projection and command semantics exactly as declared by the canonical owner; do not invent an endpoint for Filament or an in-process command for Patient.
+
+#### 10. Shared application-layer prerequisites
+
+- `TASK-CLINICAL-005`
+- `TASK-CLINICAL-006`
+- `TASK-CLINICAL-009`
+- `TASK-AUDIT-001`
+- Cross-cutting authorization/audit/idempotency prerequisites from `docs/IMPLEMENTATION_PLAN.md` apply where the canonical command requires them.
+
+#### 11. Data model prerequisites
+
+| Entity / table | Status |
+|---|---|
+| `accepted_treatment_snapshots` | Proposed |
+| `case_treatment_stages` | Proposed |
+| `evidence_items` | Proposed |
+| `evidence_bindings` | Proposed |
+| `audit_events` | Proposed |
+
+Engineering note: canonical state/cross-platform documents require append-only completion/reopening history, while the current ERD only gives `case_treatment_stages` current-state/timestamp fields. The implementation owner must resolve that persistence representation before coding the mutation; this contract does not invent a new table.
+
+
+#### 12. Target files
+
+| Target area | Path / owner | Status |
+|---|---|---|
+| Patient implementation area | Patient React Native project / feature area owned by `TASK-PLATFORM-008` | Proposed, path unverified |
+| Admin panel registration context | `UberTip-Backend/app/Providers/Filament/AdminPanelProvider.php` | Existing |
+| Admin Filament resource area | `UberTip-Backend/app/Filament/Resources/` | Proposed |
+| Clinic panel/provider area | `UberTip-Backend/app/Providers/Filament/ClinicPanelProvider.php` and `app/Filament/Clinic/*` | Proposed |
+
+A conventional path is not upgraded to Existing unless it is present in the repository.
+
+#### 13. Data/view-model mapping
+
+Map only the fields/projections declared by `API-CLINICAL-004`, `SDC-CLINICAL-001`. The adapter may normalize presentation shape, but identifiers, lifecycle state, authority, provenance, amounts and timestamps remain server truth. Requirements resolve from the accepted snapshot, never mutable current templates. Reopening is a recorded correction with reason, actor and time, not erasure.
+
+#### 14. Refresh / caching / polling
+
+Authoritative state is read on entry/refocus/explicit refresh and after the widget's own successful mutations where the platform contract calls for it. Preserve usable content during refresh when Phase 4 requires that. Do not invent cache TTLs, polling intervals, retry counts or timers.
+
+#### 15. Idempotency / correlation
+
+Complete/reopen are committing transitions and require canonical idempotency/correlation. Patient projection is read-only.
+
+#### 16. Permission gate
+
+Canonical permission source: `docs/domain/PERMISSIONS_MATRIX.md`. Treating/authorized clinician and competence/scope checks are server-side. Patient has read projection only. UI hiding/disablement is never the authorization boundary; server-side policy/scope enforcement occurs before any protected read or mutation.
+
+#### 17. Props / configuration
+
+| Name | Type | Required | Default | Source | Notes |
+|---|---|---:|---|---|---|
+| `projection` | canonical view model | yes | none | API/SDC projection | No client-created business truth |
+| `authorityContext` | scope/grant context | yes when protected | none | authenticated server context | Re-evaluate after authority loss |
+| `variant` | Phase 4 variant | when more than one exists | source-defined | WGT specification | Never invent a new product variant |
+| `readOnly` | boolean | when historical/oversight variant applies | source-defined | lifecycle/permission | Read-only is not disabled |
+| `onCommit` | command adapter | only on committing variants | none | canonical action contract | Must return/reconcile authoritative result |
+
+#### 18. State rendering
+
+| State | Behaviour |
+|---|---|
+| `loading-initial` | Requirements resolve from the accepted snapshot before any completion control is offered |
+| `loading-refresh` | A requirement satisfied elsewhere refreshes into the set and announces |
+| `empty-no-data` | A stage with no requirements: stated, so an empty requirement list is not read as an unloaded one |
+| `empty-filtered` | n/a. The requirement set is governed, not filtered |
+| `partial` | An unresolved requirement is never counted as satisfied, and completion stays unavailable naming it |
+| `stale` | Requirement states carry the as-of time; completion is withdrawn against a stale read, because completion is authoritative or it did not happen |
+| `error-fetch` | The known requirement set is preserved with retry |
+| `error-permission` | Only a treating dentist for the exact case and stage may complete; loss removes the control structurally and leaves the stage readable |
+| `success` | The stage with its requirements and history |
+| Offline / unstable | Readable. Completion is withdrawn: it is never local-only |
+
+The structural precedence is still owned by `WGT-PLATFORM-001`; this widget does not redefine it.
+
+#### 19. Lifecycle/state semantics
+
+Requirements resolve from the accepted snapshot, never mutable current templates. Reopening is a recorded correction with reason, actor and time, not erasure. Lifecycle labels and meanings come from `CONTENT_GUIDE_STATES.md` / `semantic.state.json`. Where a status is rendered, consume tone, icon and emphasis together; color alone never carries state.
+
+#### 20. Tokens
+
+- Mandatory component-token groups: component.platform-001
+- Shared state and surface values come from semantic/component token references only.
+- No raw visual or timing value is owned by this contract.
+
+#### 21. Content
+
+Bound content families: TXT-PLATFORM-010, TXT-PLATFORM-011, TXT-PLATFORM-014, TXT-STATE-CLINICAL-002. Dynamic values come from the canonical projection; audience translation follows Phase 3. Do not copy canonical error strings into code as a second source of truth.
+
+#### 22. Accessibility contract
+
+the requirement set is exposed as a list with satisfied and
+outstanding announced per item. Completion announces the resulting state and moves focus to the state
+summary. A reopening announces as a correction, with its reason, and never as a reversal of history.
+
+Profile-specific runtime checks remain mandatory after implementation; documentation coverage is not conformance evidence.
+
+#### 23. RTL / bidi
+
+requirements flow start to end. Stage identifiers, dates and evidence identifiers are
+bidirectionally isolated.
+
+Amounts, currencies, dates/times, phone numbers, codes/IDs, email/URL, Latin names and version identifiers are isolated as required; machine identifiers are never visually reversed.
+
+#### 24. Responsive behavior
+
+Profile C stacks stage, state, requirements and history in the reading column. Profile A
+keeps the requirement set in the primary region; at `profile-a.content-width.narrow` each requirement
+stacks with its state. Text/content rule: a requirement description and a reopening reason wrap in full and
+never truncate.
+
+Profile C uses its native size-class model; Profile A uses content-width/reflow rules. The two breakpoint systems are never merged.
+
+#### 25. Immutability / historical safety
+
+Canonical behavior requires completion/reopening history to append and prior completion to remain historical. `case_treatment_stages` stores current state but the ERD does not yet model a dedicated repeated transition history; implementation must resolve that persistence gap before coding the mutation.
+
+#### 26. Framework defaults to disable
+
+Extended Profile A actions must be lifecycle-gated; disable generic edit/delete and never reopen by overwriting/deleting the prior completion.
+
+#### 27. Prohibitions
+
+a generic requirement set not resolved from the accepted snapshot; completion while a
+mandatory field, acknowledgment or evidence item is absent or invalid; local-only completion; erasing a
+prior completion on reopening; exposing private clinical evidence, storage paths or signed links to a
+patient; a reopening reason that is not safe to surface to the patient who will see the state.
+
+Treat each prohibition as a negative implementation test.
+
+#### 28. Definition of Done
+
+- Canonical API/SDC projection and command boundaries are preserved.
+- Every applicable Phase 4 data state is implemented without optimistic clinical/financial/authorization truth.
+- Permission checks are enforced server-side and UI availability matches canonical authority/state.
+- Semantic/component tokens only; canonical TXT ownership is preserved.
+- Applicable A11Y and RTL/bidi assertions are implemented.
+- Historical/immutable entities expose no prohibited mutation.
+- The Phase 4 Prohibited list has negative coverage.
+- Patient code, when applicable, waits for `TASK-PLATFORM-008` to establish real repository paths and verified commands.
+- No unrelated WGT contract or upstream UX behavior is changed.
+
+#### 29. Verification
+
+**Tier A — repository/code verification once implemented**
+
+- Run `python docs/scripts/validate_docs.py` and `python docs/ux/scripts/validate_ux_docs.py --phase 5`.
+- For Laravel/Filament work, run the repository's verified Composer lint/type/test scripts applicable to the changed area.
+- Verify API/SDC, permission, idempotency, immutable-history and negative-prohibition tests named by the owning TASK/TESTING_STRATEGY entries.
+
+**Tier B — rendered design QA**
+
+- Verify hierarchy, token use, Arabic/RTL layout, long-content behavior, state distinction and rendered contrast against the Phase 4 spec and build manifest.
+- Status: not run in this documentation session.
+
+**Tier C — runtime QA**
+
+- Verify keyboard/focus, screen-reader announcements, touch/target behavior, text scaling/reflow, reduced motion and real permission/error transitions on the implemented runtime.
+- Profile C commands remain unresolved until `TASK-PLATFORM-008` records the actual client scripts.
+- Status: not run — requires implementation.
+
+
+
+### WGT-CLINICAL-001 — Implementation Contract
+
+#### 1. Identity
+
+- **WGT ID:** `WGT-CLINICAL-001`
+- **Name:** Treatment plan authoring section
+- **Build order:** 29
+- **Platforms:** A
+- **Runtime:** Filament
+- **Phase 4 realization:** Profile C `n/a`; Profile A `Custom`
+- **Screen reach:** 2 documented screen placements
+- **Source specification:** `docs/ux/04-specs/WIDGET_SPECS_DOMAIN.md`
+- **Purpose:** let a treating dentist author structured treatment lines quickly while keeping every required structure intact — and hold the rule that there is **no free-text surcharge field**, so an uncategorized charge cannot be created rather than being rejected later.
+- **User intent:** compose an accurate plan without retyping what the system already knows.
+
+#### 2. Implements
+
+- `FR-CLINICAL-001`
+- `FR-CLINICAL-006`
+- `FR-CLINICAL-002`
+- `FR-CATALOG-002`
+
+No requirement is broadened by this contract; canonical acceptance criteria remain in `docs/PRD.md`.
+
+#### 3. Used by
+
+- `SCR-CLINICAL-010`
+- `SCR-CLINICAL-011`
+
+The Phase 4 screen specification remains the owner of each screen's exact composition.
+
+#### 4. Widget dependencies
+
+- **Required predecessors:** `WGT-PLATFORM-001`
+- Build order is not evidence of any additional dependency. Co-occurrence on a screen does not create one.
+
+#### 5. Component dependencies
+
+- **Mandatory core:** `CMP-CLINICAL-001`, `CMP-ELIG-002`, `CMP-PLATFORM-007`
+- **Conditional:** `CMP-PLATFORM-006`, `CMP-PLATFORM-011`, `CMP-PLATFORM-001`
+- Mandatory components must be implemented from their Phase 3 contracts before this widget.
+
+#### 6. Interaction dependencies
+
+- `IX-PLATFORM-005`
+- `IX-PLATFORM-008`
+- `IX-PLATFORM-018`
+- `IX-PLATFORM-011`
+- `IX-PLATFORM-012`
+- `IX-CLINICAL-001`
+
+#### 7. Content dependencies
+
+- `TXT-PLATFORM-003`
+- `TXT-PLATFORM-005`
+- `TXT-PLATFORM-013`
+- `TXT-PLATFORM-018`
+- `TXT-ERR-CLINICAL-002`
+
+Canonical copy remains owned by the Phase 3 content system and error catalog.
+
+#### 8. Accessibility dependencies
+
+- `A11Y-CLINICAL-001`
+- `A11Y-FINANCE-001`
+- `A11Y-PLATFORM-001`
+- `A11Y-PLATFORM-026`
+- `A11Y-PLATFORM-027`
+- `A11Y-PLATFORM-012`
+- `A11Y-PLATFORM-023`
+
+These IDs are implementation assertions, not a Phase 5 claim that rendered/runtime accessibility has passed.
+
+#### 9. Canonical data/action contracts
+
+- **Profile C API:** n/a
+- **Profile A SDC:** `SDC-CLINICAL-001`, `SDC-POLICY-002`, `SDC-CATALOG-002`
+- Use the projection and command semantics exactly as declared by the canonical owner; do not invent an endpoint for Filament or an in-process command for Patient.
+
+#### 10. Shared application-layer prerequisites
+
+- `TASK-CLINICAL-001`
+- `TASK-CLINICAL-002`
+- `TASK-CLINICAL-004`
+- `TASK-CLINICAL-007`
+- `TASK-CLINICAL-012`
+- `TASK-CATALOG-002`
+- Cross-cutting authorization/audit/idempotency prerequisites from `docs/IMPLEMENTATION_PLAN.md` apply where the canonical command requires them.
+
+#### 11. Data model prerequisites
+
+| Entity / table | Status |
+|---|---|
+| `treatment_plan_versions` | Proposed |
+| `treatment_plan_stages` | Proposed |
+| `treatment_plan_lines` | Proposed |
+| `treatment_line_modifiers` | Proposed |
+| `procedure_items` | Proposed |
+| `procedure_item_versions` | Proposed |
+| `commercial_options` | Proposed |
+
+
+Draft note: the canonical server draft is the `treatment_plan_versions` row in `DRAFT` state; no generic `drafts` table is required by this contract.
+
+#### 12. Target files
+
+| Target area | Path / owner | Status |
+|---|---|---|
+| Admin panel registration context | `UberTip-Backend/app/Providers/Filament/AdminPanelProvider.php` | Existing |
+| Clinic Filament feature area | `UberTip-Backend/app/Filament/Clinic/Resources/` | Proposed |
+| Clinic panel/provider area | `UberTip-Backend/app/Providers/Filament/ClinicPanelProvider.php` and `app/Filament/Clinic/*` | Proposed |
+
+A conventional path is not upgraded to Existing unless it is present in the repository.
+
+#### 13. Data/view-model mapping
+
+Map only the fields/projections declared by `SDC-CLINICAL-001`, `SDC-POLICY-002`, `SDC-CATALOG-002`. The adapter may normalize presentation shape, but identifiers, lifecycle state, authority, provenance, amounts and timestamps remain server truth. Preserve procedure search/recent, provider-price defaults, automatic unit/inclusion, quantity defaults, duplicate/quick-add and progressive disclosure while retaining every required structured line field.
+
+#### 14. Refresh / caching / polling
+
+Authoritative state is read on entry/refocus/explicit refresh and after the widget's own successful mutations where the platform contract calls for it. Preserve usable content during refresh when Phase 4 requires that. Do not invent cache TTLs, polling intervals, retry counts or timers.
+
+#### 15. Idempotency / correlation
+
+Draft save and propose are committing operations using canonical correlation/idempotency. The DRAFT treatment_plan_version is the owning server draft; no generic drafts table is required.
+
+#### 16. Permission gate
+
+Canonical permission source: `docs/domain/PERMISSIONS_MATRIX.md`. Only the treating dentist within exact case/scope may author/propose clinical treatment content; other roles receive safe read/oversight projections. UI hiding/disablement is never the authorization boundary; server-side policy/scope enforcement occurs before any protected read or mutation.
+
+#### 17. Props / configuration
+
+| Name | Type | Required | Default | Source | Notes |
+|---|---|---:|---|---|---|
+| `projection` | canonical view model | yes | none | API/SDC projection | No client-created business truth |
+| `authorityContext` | scope/grant context | yes when protected | none | authenticated server context | Re-evaluate after authority loss |
+| `variant` | Phase 4 variant | when more than one exists | source-defined | WGT specification | Never invent a new product variant |
+| `readOnly` | boolean | when historical/oversight variant applies | source-defined | lifecycle/permission | Read-only is not disabled |
+| `onCommit` | command adapter | only on committing variants | none | canonical action contract | Must return/reconcile authoritative result |
+
+#### 18. State rendering
+
+| State | Behaviour |
+|---|---|
+| `loading-initial` | The procedure catalog and the governed option set load before any line control is offered. A modifier picker with an unloaded option set would be a free-text field in disguise |
+| `loading-refresh` | A catalog version change while authoring is stated; an active version is never swapped under an authored line silently |
+| `empty-no-data` | A plan with no lines yet: stated, with procedure search as the one action |
+| `empty-filtered` | Procedure search with no match: the search term is named as the cause, and no line can be created from a non-match |
+| `partial` | If the governed option set failed to load, modifiers are unavailable with the reason and proposal is blocked. Authoring lines continues |
+| `stale` | The draft carries its last-saved time; proposal is withdrawn against a stale catalog read |
+| `error-fetch` | Every authored line is preserved. Nothing is cleared |
+| `error-permission` | Only a treating dentist for the exact case may author; loss of that relationship removes authoring controls structurally and leaves the draft readable |
+| `success` | The line set with its derived total and completeness |
+| Offline / unstable | Rare on this profile; edits are held and the last-saved state is stated honestly rather than shown as saved |
+
+The structural precedence is still owned by `WGT-PLATFORM-001`; this widget does not redefine it.
+
+#### 19. Lifecycle/state semantics
+
+Preserve procedure search/recent, provider-price defaults, automatic unit/inclusion, quantity defaults, duplicate/quick-add and progressive disclosure while retaining every required structured line field. Lifecycle labels and meanings come from `CONTENT_GUIDE_STATES.md` / `semantic.state.json`. Where a status is rendered, consume tone, icon and emphasis together; color alone never carries state.
+
+#### 20. Tokens
+
+- Mandatory component-token groups: component.clinical-001, component.elig-002, component.platform-007
+- Shared state and surface values come from semantic/component token references only.
+- No raw visual or timing value is owned by this contract.
+
+#### 21. Content
+
+Bound content families: TXT-PLATFORM-003, TXT-PLATFORM-005, TXT-PLATFORM-013, TXT-PLATFORM-018, TXT-ERR-CLINICAL-002. Dynamic values come from the canonical projection; audience translation follows Phase 3. Do not copy canonical error strings into code as a second source of truth.
+
+#### 22. Accessibility contract
+
+the whole section is keyboard operable, including procedure
+search, quantity, modifier selection, duplicate and remove. Adding a line moves focus into the new
+line's first field. Duplicating a line announces and focuses the copy. The derived total is announced
+when it changes, once per change, not per keystroke. Each amount announces with its currency and its
+category.
+
+Profile-specific runtime checks remain mandatory after implementation; documentation coverage is not conformance evidence.
+
+#### 23. RTL / bidi
+
+the line reads start to end in logical order. Procedure codes, quantities, units and
+amounts are bidirectionally isolated. A numeric column aligns by logical property.
+
+Amounts, currencies, dates/times, phone numbers, codes/IDs, email/URL, Latin names and version identifiers are isolated as required; machine identifiers are never visually reversed.
+
+#### 24. Responsive behavior
+
+Profile A only. `dense` at `profile-a.content-width.wide`, where repeated structured
+entry earns the density. At `narrow` each line stacks and the derived total stays visible. Text/content rule: an inclusion or exclusion list wraps in full; an amount, a quantity
+and a unit never truncate. At the largest text size a line stacks with its amount directly beneath its
+procedure, and the workspace leaves `dense` for `operational` spacing rather than shrinking type.
+
+Profile C uses its native size-class model; Profile A uses content-width/reflow rules. The two breakpoint systems are never merged.
+
+#### 25. Immutability / historical safety
+
+Draft versions may be revised; proposed/viewed/accepted history is versioned. Accepted snapshots are immutable and amendments create superseding versions.
+
+#### 26. Framework defaults to disable
+
+Custom Profile A workspace. Do not enable generic delete/edit over proposed/accepted history; no free-text surcharge field; do not replace structured lines with a generic rich-text form.
+
+#### 27. Prohibitions
+
+a free-text surcharge, extra, adjustment or other field; a modifier with no governed
+category; a charge for a component the governing definition marks as included; a typed unit; an
+independently editable total; editing an accepted version or any of its lines; a platform-generated
+diagnosis or plan suggestion; proposing a superseding version without its change summary; a duplicate
+included component.
+
+Treat each prohibition as a negative implementation test.
+
+#### 28. Definition of Done
+
+- Canonical API/SDC projection and command boundaries are preserved.
+- Every applicable Phase 4 data state is implemented without optimistic clinical/financial/authorization truth.
+- Permission checks are enforced server-side and UI availability matches canonical authority/state.
+- Semantic/component tokens only; canonical TXT ownership is preserved.
+- Applicable A11Y and RTL/bidi assertions are implemented.
+- Historical/immutable entities expose no prohibited mutation.
+- The Phase 4 Prohibited list has negative coverage.
+- Patient code, when applicable, waits for `TASK-PLATFORM-008` to establish real repository paths and verified commands.
+- No unrelated WGT contract or upstream UX behavior is changed.
+
+#### 29. Verification
+
+**Tier A — repository/code verification once implemented**
+
+- Run `python docs/scripts/validate_docs.py` and `python docs/ux/scripts/validate_ux_docs.py --phase 5`.
+- For Laravel/Filament work, run the repository's verified Composer lint/type/test scripts applicable to the changed area.
+- Verify API/SDC, permission, idempotency, immutable-history and negative-prohibition tests named by the owning TASK/TESTING_STRATEGY entries.
+
+**Tier B — rendered design QA**
+
+- Verify hierarchy, token use, Arabic/RTL layout, long-content behavior, state distinction and rendered contrast against the Phase 4 spec and build manifest.
+- Status: not run in this documentation session.
+
+**Tier C — runtime QA**
+
+- Verify keyboard/focus, screen-reader announcements, touch/target behavior, text scaling/reflow, reduced motion and real permission/error transitions on the implemented runtime.
+- Profile C commands remain unresolved until `TASK-PLATFORM-008` records the actual client scripts.
+- Status: not run — requires implementation.
+
+
+
+### WGT-POLICY-002 — Implementation Contract
+
+#### 1. Identity
+
+- **WGT ID:** `WGT-POLICY-002`
+- **Name:** Market observation entry grid
+- **Build order:** 30
+- **Platforms:** A
+- **Runtime:** Filament
+- **Phase 4 realization:** Profile C `n/a`; Profile A `Custom`
+- **Screen reach:** 1 documented screen placements
+- **Source specification:** `docs/ux/04-specs/WIDGET_SPECS_DOMAIN.md`
+- **Purpose:** record price observations at speed while keeping **every provenance field** — because an unattributed number cannot be judged later — and keep the calibration state internal on every surface and in every export.
+- **User intent:** enter many observations quickly without losing the attribution that makes them usable.
+
+#### 2. Implements
+
+- `FR-ELIG-019`
+- `FR-POLICY-001`
+- `FR-POLICY-002`
+
+No requirement is broadened by this contract; canonical acceptance criteria remain in `docs/PRD.md`.
+
+#### 3. Used by
+
+- `SCR-ELIG-023`
+
+The Phase 4 screen specification remains the owner of each screen's exact composition.
+
+#### 4. Widget dependencies
+
+- **Required predecessors:** `WGT-PLATFORM-001`
+- Build order is not evidence of any additional dependency. Co-occurrence on a screen does not create one.
+
+#### 5. Component dependencies
+
+- **Mandatory core:** `CMP-PLATFORM-006`, `CMP-POLICY-001`
+- **Conditional:** `CMP-ELIG-002`, `CMP-PLATFORM-007`, `CMP-PLATFORM-001`, `CMP-PLATFORM-004`
+- Mandatory components must be implemented from their Phase 3 contracts before this widget.
+
+#### 6. Interaction dependencies
+
+- `IX-PLATFORM-012`
+- `IX-PLATFORM-005`
+- `IX-PLATFORM-014`
+- `IX-PLATFORM-018`
+- `IX-POLICY-001`
+- `IX-PLATFORM-016`
+
+#### 7. Content dependencies
+
+- `TXT-PLATFORM-013`
+- `TXT-PLATFORM-018`
+- `TXT-PLATFORM-014`
+- `TXT-STATE-POLICY-001`
+
+Canonical copy remains owned by the Phase 3 content system and error catalog.
+
+#### 8. Accessibility dependencies
+
+- `A11Y-PLATFORM-001`
+- `A11Y-PLATFORM-012`
+- `A11Y-PLATFORM-026`
+- `A11Y-PLATFORM-027`
+- `A11Y-FINANCE-001`
+- `A11Y-PLATFORM-036`
+- `A11Y-PLATFORM-023`
+
+These IDs are implementation assertions, not a Phase 5 claim that rendered/runtime accessibility has passed.
+
+#### 9. Canonical data/action contracts
+
+- **Profile C API:** n/a
+- **Profile A SDC:** `SDC-POLICY-002`
+- Use the projection and command semantics exactly as declared by the canonical owner; do not invent an endpoint for Filament or an in-process command for Patient.
+
+#### 10. Shared application-layer prerequisites
+
+- `TASK-POLICY-001`
+- `TASK-POLICY-002`
+- `TASK-ELIG-011`
+- `TASK-AUDIT-001`
+- Cross-cutting authorization/audit/idempotency prerequisites from `docs/IMPLEMENTATION_PLAN.md` apply where the canonical command requires them.
+
+#### 11. Data model prerequisites
+
+| Entity / table | Status |
+|---|---|
+| `market_price_observations` | Proposed |
+| `policy_versions` | Proposed |
+| `currency_normalizations` | Proposed |
+| `audit_events` | Proposed |
+
+
+
+
+#### 12. Target files
+
+| Target area | Path / owner | Status |
+|---|---|---|
+| Admin panel registration context | `UberTip-Backend/app/Providers/Filament/AdminPanelProvider.php` | Existing |
+| Admin Filament resource area | `UberTip-Backend/app/Filament/Resources/` | Proposed |
+
+A conventional path is not upgraded to Existing unless it is present in the repository.
+
+#### 13. Data/view-model mapping
+
+Map only the fields/projections declared by `SDC-POLICY-002`. The adapter may normalize presentation shape, but identifiers, lifecycle state, authority, provenance, amounts and timestamps remain server truth. Keep sticky defaults, source reuse, duplicate row and batch import without dropping provenance. Calibration state, sample counts, confidence and internal P-class outputs remain internal.
+
+#### 14. Refresh / caching / polling
+
+Authoritative state is read on entry/refocus/explicit refresh and after the widget's own successful mutations where the platform contract calls for it. Preserve usable content during refresh when Phase 4 requires that. Do not invent cache TTLs, polling intervals, retry counts or timers.
+
+#### 15. Idempotency / correlation
+
+Each observation/batch-import commit uses canonical idempotency/correlation where supported. Rows are append-only facts; do not treat local grid edits as committed until the server confirms.
+
+#### 16. Permission gate
+
+Canonical permission source: `docs/domain/PERMISSIONS_MATRIX.md`. Only authorized policy/operations roles may enter/inspect the internal corpus. Provider and Patient projections must never expose calibration corpus/state. UI hiding/disablement is never the authorization boundary; server-side policy/scope enforcement occurs before any protected read or mutation.
+
+#### 17. Props / configuration
+
+| Name | Type | Required | Default | Source | Notes |
+|---|---|---:|---|---|---|
+| `projection` | canonical view model | yes | none | API/SDC projection | No client-created business truth |
+| `authorityContext` | scope/grant context | yes when protected | none | authenticated server context | Re-evaluate after authority loss |
+| `variant` | Phase 4 variant | when more than one exists | source-defined | WGT specification | Never invent a new product variant |
+| `readOnly` | boolean | when historical/oversight variant applies | source-defined | lifecycle/permission | Read-only is not disabled |
+| `onCommit` | command adapter | only on committing variants | none | canonical action contract | Must return/reconcile authoritative result |
+
+#### 18. State rendering
+
+| State | Behaviour |
+|---|---|
+| `loading-initial` | The effective policy's window, locality scope, minimum sample and confidence rules load before the grid, because the calibration statement is meaningless without them |
+| `loading-refresh` | A newly effective policy version restates the calibration against the same sample rather than silently changing the verdict |
+| `empty-no-data` | No observations for this scope: stated, with the sample count against the minimum, so the reader sees why no class is produced |
+| `empty-filtered` | A scope or locality filter excluded everything: named as the cause, with the unfiltered count visible |
+| `partial` | Some scopes' calibration resolved and some did not; an unresolved scope reads as unknown, never as `FINAL` |
+| `stale` | The calibration carries its as-of time |
+| `error-fetch` | Entered rows are preserved; nothing typed is lost to a failed read |
+| `error-permission` | Only the commercial and pricing administrator within owned scope may enter; policy and audit staff are read-only, and the entry controls are absent for them |
+| `success` | The grid with its honest calibration statement per scope |
+| Offline / unstable | Rare on this profile. Rows are held and the grid states plainly that they have not committed |
+
+The structural precedence is still owned by `WGT-PLATFORM-001`; this widget does not redefine it.
+
+#### 19. Lifecycle/state semantics
+
+Keep sticky defaults, source reuse, duplicate row and batch import without dropping provenance. Calibration state, sample counts, confidence and internal P-class outputs remain internal. Lifecycle labels and meanings come from `CONTENT_GUIDE_STATES.md` / `semantic.state.json`. Where a status is rendered, consume tone, icon and emphasis together; color alone never carries state.
+
+#### 20. Tokens
+
+- Mandatory component-token groups: component.platform-006, component.policy-001
+- Shared state and surface values come from semantic/component token references only.
+- No raw visual or timing value is owned by this contract.
+
+#### 21. Content
+
+Bound content families: TXT-PLATFORM-013, TXT-PLATFORM-018, TXT-PLATFORM-014, TXT-STATE-POLICY-001. Dynamic values come from the canonical projection; audience translation follows Phase 3. Do not copy canonical error strings into code as a second source of truth.
+
+#### 22. Accessibility contract
+
+entry is keyboard-first. Moving between cells, committing a row,
+duplicating a row and applying sticky defaults are all keyboard operations, and none requires a pointer.
+A committed row announces once. The sample count against the minimum is announced when it crosses the
+threshold. Each cell has a persistent visible column label exposed to assistive technology.
+
+Profile-specific runtime checks remain mandatory after implementation; documentation coverage is not conformance evidence.
+
+#### 23. RTL / bidi
+
+columns mirror. Amounts, currencies, dates, source references and scope identifiers
+are bidirectionally isolated per cell; a reordered amount is a wrong amount and this is the surface where
+that would corrupt a classification basis.
+
+Amounts, currencies, dates/times, phone numbers, codes/IDs, email/URL, Latin names and version identifiers are isolated as required; machine identifiers are never visually reversed.
+
+#### 24. Responsive behavior
+
+Profile A only, `dense`, at `profile-a.content-width.wide` and above. At `narrow` the
+grid keeps a **bounded internal horizontal scroll** — permitted for a data table by
+`A11Y-PLATFORM-036` — while the page itself never scrolls horizontally. Text/content rule: a source reference wraps or elides with the full value reachable on
+the same surface; an amount, a currency, a date and a verification state never truncate. At the largest
+text sizes the grid degrades to `reading-list` rather than relying on horizontal scroll indefinitely.
+
+Profile C uses its native size-class model; Profile A uses content-width/reflow rules. The two breakpoint systems are never merged.
+
+#### 25. Immutability / historical safety
+
+Market observations are append-only provenance-bearing facts. Corrections append/supersede according to policy; never rewrite evidence corpus history.
+
+#### 26. Framework defaults to disable
+
+Custom dense Profile A grid. Do not enable generic bulk delete/edit that can erase provenance; batch import must validate the same canonical fields as manual entry.
+
+#### 27. Prohibitions
+
+an in-place edit of an observation — a correction is a new observation superseding the
+earlier one with a reason; dropping any provenance field to speed entry; labelling anything here a market
+average, a city average or a tariff; showing a provider where their price sits relative to the corpus;
+producing a class from a sample below the effective minimum; suppressing or altering a provider's own
+price for any calibration reason; letting a threshold or window change take effect other than as a
+versioned prospective policy change. **Production calibration minimums require licensed clinical
+approval under `Q-ELIG-001`, so current values are provisional and the surface says so.**
+
+Treat each prohibition as a negative implementation test.
+
+#### 28. Definition of Done
+
+- Canonical API/SDC projection and command boundaries are preserved.
+- Every applicable Phase 4 data state is implemented without optimistic clinical/financial/authorization truth.
+- Permission checks are enforced server-side and UI availability matches canonical authority/state.
+- Semantic/component tokens only; canonical TXT ownership is preserved.
+- Applicable A11Y and RTL/bidi assertions are implemented.
+- Historical/immutable entities expose no prohibited mutation.
+- The Phase 4 Prohibited list has negative coverage.
+- Patient code, when applicable, waits for `TASK-PLATFORM-008` to establish real repository paths and verified commands.
+- No unrelated WGT contract or upstream UX behavior is changed.
+
+#### 29. Verification
+
+**Tier A — repository/code verification once implemented**
+
+- Run `python docs/scripts/validate_docs.py` and `python docs/ux/scripts/validate_ux_docs.py --phase 5`.
+- For Laravel/Filament work, run the repository's verified Composer lint/type/test scripts applicable to the changed area.
+- Verify API/SDC, permission, idempotency, immutable-history and negative-prohibition tests named by the owning TASK/TESTING_STRATEGY entries.
+
+**Tier B — rendered design QA**
+
+- Verify hierarchy, token use, Arabic/RTL layout, long-content behavior, state distinction and rendered contrast against the Phase 4 spec and build manifest.
+- Status: not run in this documentation session.
+
+**Tier C — runtime QA**
+
+- Verify keyboard/focus, screen-reader announcements, touch/target behavior, text scaling/reflow, reduced motion and real permission/error transitions on the implemented runtime.
+- Profile C commands remain unresolved until `TASK-PLATFORM-008` records the actual client scripts.
+- Status: not run — requires implementation.

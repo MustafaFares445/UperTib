@@ -43,15 +43,47 @@ jobs:
           python docs/scripts/validate_docs.py > engineering-validation-output.txt 2>&1
           engineering_status=$?
 
-          python docs/ux/scripts/validate_ux_docs.py --phase 4 > ux-validation-output.txt 2>&1
-          ux_status=$?
+          python docs/ux/scripts/validate_ux_docs.py --phase 5 > ux-validation-output.txt 2>&1
+          ux_phase_status=$?
+
+          python docs/ux/scripts/validate_ux_tokens.py > ux-token-output.txt 2>&1
+          token_status=$?
+
+          python scripts/check_no_emoji.py > emoji-root-output.txt 2>&1
+          emoji_root_status=$?
+
+          python scripts/check_no_emoji.py docs > emoji-docs-output.txt 2>&1
+          emoji_docs_status=$?
+
+          python docs/ux/scripts/build_component_tokens.py > component-token-output.txt 2>&1
+          component_build_status=$?
+          git diff --exit-code -- docs/ux/03-system/design_tokens/component.json > component-token-diff.txt 2>&1
+          component_diff_status=$?
+
+          ux_status=0
+          if [ "$ux_phase_status" -ne 0 ] || [ "$token_status" -ne 0 ] ||              [ "$emoji_root_status" -ne 0 ] || [ "$emoji_docs_status" -ne 0 ] ||              [ "$component_build_status" -ne 0 ] || [ "$component_diff_status" -ne 0 ]; then
+            ux_status=1
+          fi
 
           {
             echo '=== Engineering documentation ==='
             cat engineering-validation-output.txt
             echo
-            echo '=== UX Phase 4 ==='
+            echo '=== UX Phase 5 ==='
             cat ux-validation-output.txt
+            echo
+            echo '=== UX token validation ==='
+            cat ux-token-output.txt
+            echo
+            echo '=== Emoji gate — repository ==='
+            cat emoji-root-output.txt
+            echo
+            echo '=== Emoji gate — docs ==='
+            cat emoji-docs-output.txt
+            echo
+            echo '=== Component token regeneration ==='
+            cat component-token-output.txt
+            cat component-token-diff.txt
           } | tee validation-output.txt
 
           status=0
@@ -76,28 +108,21 @@ jobs:
           {
             echo '# Documentation Validation Report'
             echo
-            echo "- Commit: \`$GITHUB_SHA\`"
-            echo "- Combined exit code: \`$VALIDATOR_STATUS\`"
-            echo "- Engineering validator: \`$ENGINEERING_STATUS\`"
-            echo "- UX Phase 4 validator: \`$UX_STATUS\`"
-            echo "- Workflow: \`Documentation Validation\`"
+            echo "- Commit: `$GITHUB_SHA`"
+            echo "- Combined exit code: `$VALIDATOR_STATUS`"
+            echo "- Engineering validator: `$ENGINEERING_STATUS`"
+            echo "- UX Phase 5 validator and UX gates: `$UX_STATUS`"
+            echo "- Workflow: `Documentation Validation`"
             echo
             echo '```text'
             cat validation-output.txt
             echo '```'
           } > issue-body.md
 
-          issue_number=$(gh issue list \
-            --state all \
-            --search 'Documentation Validation Report in:title' \
-            --json number,title \
-            --jq '.[] | select(.title == "Documentation Validation Report") | .number' \
-            | head -n 1)
+          issue_number=$(gh issue list             --state all             --search 'Documentation Validation Report in:title'             --json number,title             --jq '.[] | select(.title == "Documentation Validation Report") | .number'             | head -n 1)
 
           if [ -z "$issue_number" ]; then
-            gh issue create \
-              --title 'Documentation Validation Report' \
-              --body-file issue-body.md >/dev/null
+            gh issue create               --title 'Documentation Validation Report'               --body-file issue-body.md >/dev/null
           else
             gh issue edit "$issue_number" --body-file issue-body.md >/dev/null
             gh issue reopen "$issue_number" >/dev/null 2>&1 || true

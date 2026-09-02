@@ -1,12 +1,12 @@
 # UberTib UX Documentation — Start Here
 
-**Chain phase:** 4 of 5 complete — Widget and Screen Specifications  
+**Chain phase:** 5 of 5 candidate complete — Build and Handoff (remote Phase 5 CI pending)  
 **Baseline:** 2026-09-01  
 **Phase 1 baseline:** 19 UI-bearing actors · 69 JTBDs · 165 screens · 103 flows  
 **Phase 2 baseline:** 165/165 screens mapped to `WF-*` wireframes — Patient 47 · Clinic 56 · Admin 62  
 **Phase 3 baseline:** 22 `CMP-*` · 26 `IX-*` · 60 `TXT-*` · 40 `A11Y-*` · 18 lifecycle machines / 82 statuses · 21/21 `ERR-*`  
 **Phase 4 baseline:** 30 `WGT-*` · 165/165 screens specified · every `CMP-*`, `IX-*`, `TXT-*` and `A11Y-*` placed  
-**Validator:** `python docs/ux/scripts/validate_ux_docs.py --phase 4`
+**Validator:** `python docs/ux/scripts/validate_ux_docs.py --phase 5`
 
 ## Authority chain
 
@@ -56,6 +56,11 @@ Patient UX is Arabic-first/RTL, smartphone-first and resilient to weak connectiv
 24. `04-specs/SCREEN_SPEC_MAP.md`
 25. platform screen-spec files under `04-specs/`
 26. `PHASE_04_HANDOFF.md`
+27. `05-build/PHASE_05_IMPLEMENTATION_PLAN.md`
+28. `05-build/figma/BUILD_MANIFEST.json` and `05-build/figma/NAMING.md`
+29. `05-build/IMPLEMENTATION_CONTRACTS.md`
+30. `05-build/DESIGN_TRACEABILITY.md` and `05-build/FULL_CHAIN_VERIFICATION.md`
+31. `PHASE_05_HANDOFF.md`
 
 Coding agents must not treat Phase 3 as screen specifications or implementation contracts. Phase 3 defines the system; Phase 4 places it on screens; Phase 5 remains the coding handoff owner. A Phase 4 specification says what a screen must do and what it must never do — it is not an implementation contract and carries no framework decision.
 
@@ -64,10 +69,10 @@ Coding agents must not treat Phase 3 as screen specifications or implementation 
 | Phase | Artifacts | Status |
 |---|---|---|
 | 1 — Discovery, IA, Flows | `01-foundation/*` | Complete |
-| 2 — Wireframes | `02-wireframes/*`, `PHASE_02_HANDOFF.md` | **Complete — awaiting gate approval** |
+| 2 — Wireframes | `02-wireframes/*`, `PHASE_02_HANDOFF.md` | **Complete — gate passed** |
 | 3 — Design System | `03-system/*`, `PHASE_03_HANDOFF.md` | **Complete — final gate passed.** Architecture, direction, tokens, the 22 `CMP-*`, the 26 `IX-*`, all 165 `WF-*` component bindings, the 60 `TXT-*` content system, 18 lifecycle-status families / 82 statuses, 21/21 `ERR-*` recovery families, the 40 `A11Y-*` accessibility / RTL / data-state obligations, the integration and traceability audit (`TRACEABILITY_AUDIT.md`), and the Session 7 senior product/architecture gate are all complete. Every local gate is green, CI is promoted to `--phase 3`, and the promoted job passed on the gate commit (`749785c`, Documentation Validation run 59, UX Phase 3 validator exit `0`). See `PHASE_03_HANDOFF.md`. |
 | 4 — Widget and Screen Specs | `04-specs/*`, `PHASE_04_HANDOFF.md` | **Complete — final gate passed.** 30 `WGT-*` allocated across 14 platform-level and 16 domain-level widgets; all 165 `SCR-*` specified against the same thirteen-section schema; every `CMP-*`, `IX-*`, `TXT-*` and `A11Y-*` placed on a widget or screen with none unplaced; all 21 `ERR-*` surfaced with their `TXT-ERR-*` copy rule; all 18 lifecycle machines bound to the screens that render them; every declared data source resolved to a canonical `API-*` or `SDC-*` owner. Every local gate is green, each new Phase 4 check was negative-tested, CI is promoted to `--phase 4`, and the promoted job passed on the gate commit (`f3f52cc`, Documentation Validation run 61, UX Phase 4 validator exit `0`). See `PHASE_04_HANDOFF.md`. |
-| 5 — Build and Handoff | `05-build/*` | Not started |
+| 5 — Build and Handoff | `05-build/*`, `PHASE_05_HANDOFF.md` | **Candidate complete — 30/30 WGT implementation contracts, 509-frame build manifest, design traceability and full-chain verification authored; remote promoted Phase 5 CI pending. Rendered visual QA and runtime accessibility QA remain later evidence, not documentation claims.** |
 
 ## Phase 2 coverage and IDs
 
@@ -122,11 +127,11 @@ Phase 4's own must-not-re-decide list is in `PHASE_03_HANDOFF.md` section 17.
 
 ## Verification
 
-Run cumulative validation at the current gate:
+Run cumulative validation at the current Phase 5 gate:
 
 ```bash
 python docs/scripts/validate_docs.py
-python docs/ux/scripts/validate_ux_docs.py --phase 4
+python docs/ux/scripts/validate_ux_docs.py --phase 5
 python docs/ux/scripts/validate_ux_tokens.py
 python scripts/check_no_emoji.py
 python scripts/check_no_emoji.py docs

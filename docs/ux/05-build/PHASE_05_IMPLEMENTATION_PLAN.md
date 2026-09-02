@@ -1,16 +1,15 @@
 # UX Phase 5 Implementation Plan — Build and Handoff
 
 **Phase:** UX 5 — Build and Handoff
-**Session:** 1 of 7 — preflight audit, build architecture, contract dependency plan
+**Execution status:** Sessions 1–6 artifacts complete; Session 7 completion gate prepared, remote Phase 5 CI pending
 **Input gate:** `docs/ux/PHASE_04_HANDOFF.md`, complete and passed on CI
 **Owns:** the Phase 5 artifact architecture, the widget implementation classification, the build
 dependency order, the target-path analysis, the manifest and frame-coverage strategy, the
 implementation-contract schema, and the verification strategy.
-**Validator at this gate:** `python docs/ux/scripts/validate_ux_docs.py --phase 4` — unchanged.
-CI is **not** promoted by this session.
+**Validator at completion gate:** `python docs/ux/scripts/validate_ux_docs.py --phase 5`.
+The completion run promotes CI only after the manifest, all 30 contracts, traceability, verification and handoff exist.
 
-This session produced this file and one upstream synchronization line. It produced no
-`BUILD_MANIFEST.json`, no implementation contract, no Figma output and no production code.
+This file began as the Session 1 plan. Later sessions produced the manifest, all implementation contracts, traceability and handoff without production code or an actual Figma render.
 
 ---
 
@@ -938,13 +937,13 @@ repository evidence for each change is stated.
 
 | # | Session | Produces | Gate |
 |---:|---|---|---|
-| 1 | Preflight, architecture, dependency order | This file, and the `SCR-ELIG-010` synchronization | **Complete.** Stop for approval |
-| 2 | Manifest and naming | `05-build/figma/BUILD_MANIFEST.json`, `05-build/figma/NAMING.md`, and the measured frame and suppression counts | Manifest parses, every frame id resolves, no raw value, every component resolves |
-| 3 | Foundation contracts, build order 1 to 7 | Contracts for `WGT-PLATFORM-001`, `-003`, `-002`, `-004`, `-005`, `-010`, `-007` | Every contract self-sufficient; schema complete; 706 of 885 placements covered |
-| 4 | Remaining platform contracts, build order 8 to 14 | Contracts for `WGT-PLATFORM-006`, `-014`, `-011`, `-008`, `-013`, `-009`, `-012` | Same |
-| 5 | Domain contracts, build order 15 to 30 | The 16 domain contracts; the dependency graph re-derived mechanically | Same, plus the graph check |
-| 6 | Traceability and full-chain verification | `05-build/DESIGN_TRACEABILITY.md`, `05-build/FULL_CHAIN_VERIFICATION.md`, the `AGENTS.md` UI section | Forward and reverse chain unbroken; every `FR-*` realized or explicitly `None (background/system behavior)` |
-| 7 | Final gate, handoff, CI promotion | `PHASE_05_HANDOFF.md`; validator promoted to `--phase 5` **only after** every local gate is green and every new check is negative-tested | Release gate |
+| 1 | Preflight, architecture, dependency order | This file, and the `SCR-ELIG-010` synchronization | **Complete** |
+| 2 | Manifest and naming | `05-build/figma/BUILD_MANIFEST.json`, `05-build/figma/NAMING.md` | **Complete — 509 manifest frames** |
+| 3 | Foundation contracts, build order 1 to 7 | First seven platform contracts | **Complete** |
+| 4 | Remaining platform contracts, build order 8 to 14 | Remaining seven platform contracts | **Complete** |
+| 5 | Domain contracts, build order 15 to 30 | Sixteen domain contracts | **Complete — 30/30 contracts** |
+| 6 | Traceability and full-chain verification | `05-build/DESIGN_TRACEABILITY.md`, `05-build/FULL_CHAIN_VERIFICATION.md`, `AGENTS.md` pointer | **Complete — rendered/runtime QA explicitly deferred** |
+| 7 | Final gate, handoff, CI promotion | `PHASE_05_HANDOFF.md`; CI promoted to `--phase 5` | **Candidate complete — remote CI result pending** |
 
 **Why seven rather than five.**
 
@@ -957,10 +956,7 @@ repository evidence for each change is stated.
    Phase 3 and Phase 4 both promoted CI only after their gates were green and every new check was
    negative-tested; Phase 5 keeps that discipline.
 
-CI stays at `--phase 4` for sessions 1 through 6. It is promoted in session 7 and not before, so
-that a not-yet-authored Phase 5 obligation cannot turn an unrelated documentation change into a red
-build — the same reason the validator was pinned at `--phase 2` through Phase 3 and at `--phase 3`
-through Phase 4.
+CI stayed at `--phase 4` through authoring. The completion gate promotes it to `--phase 5` only after all required Phase 5 artifacts and validator invariants exist.
 
 ## 16. Stop condition
 
@@ -992,23 +988,21 @@ gap. Translation is itself a check: anything underspecified surfaces immediately
 cannot be emitted for a state nobody described. Session 1 found no such blocker — section 17 records
 what it did find.
 
-## 17. Findings raised, not applied
+## 17. Session 1 findings — resolution record
 
-Session 1 changed exactly one line outside this file. Everything else it found is recorded here for
-its owner.
+All six mechanical findings raised by Session 1 are now resolved without changing product behavior:
 
-| # | Finding | Owner | Why it was not applied here |
-|---:|---|---|---|
-| 1 | `FLOW-ELIG-008` and `FLOW-ELIG-011` list `SDC-ELIG-001` without `SDC-ELIG-005`, the same staleness the `SCR-ELIG-010` correction resolved | Phase 1 | The correction mandate for this session is explicitly limited to the `SCR-ELIG-010` contract line and explicitly forbids modifying its `FLOW-*` |
-| 2 | `docs/README.md` still records `WGT-*` as "not yet allocated" and its registry snapshot still reads `0 WGT-*`; Phase 4 allocated 30 | Engineering documentation | It is an engineering-README change, and that file is at exactly its 200-line budget, so the correction needs headroom decided by its owner |
-| 3 | `AGENTS.md` is at 149 lines against a hard budget of 150, leaving one line for the Phase 5 UI section | Engineering documentation | Session 6 plans a pointer that fits, or the owner raises the budget. Phase 5 does not silently raise a gate threshold |
-| 4 | `WGT-PLATFORM-011` declares `Platforms: C, A` in its header line, while its own data-source note, its Realization table and its measured placement all say Profile A only | Phase 4 | It is a header-line inconsistency inside Phase 4, not a design question. The three agreeing sources are unambiguous and Phase 5 uses them. Correcting it is a Phase 4 edit |
-| 5 | `WIDGET_SPECS.md` section 9 points at `ACCESSIBILITY.md` section 20 for the rendered-QA obligation list; that list is section 25. Section 20 is treatment and governance accessibility | Phase 4 | A reference defect in Phase 4 prose. Phase 5 uses section 25, which is the list that actually exists |
-| 6 | `docs/ux/03-system/design_tokens/README.md` describes `component.json` as having "no entries yet, by design"; it carries 23 component groups | Phase 3 | Stale narrative in a Phase 3 file. The token gate reads the JSON, not the README, so nothing downstream is wrong |
+1. `FLOW-ELIG-008` / `FLOW-ELIG-011` were synchronized to the provider-price contract where the price branch requires it.
+2. `docs/README.md` now records the allocated Phase 4 WGT baseline.
+3. `AGENTS.md` uses its remaining line-budget slot for the Phase 5 implementation-contract pointer.
+4. `WGT-PLATFORM-011` is correctly Profile A only.
+5. The rendered-QA cross-reference points to the actual accessibility obligation section.
+6. The design-token README now reflects the real 22 allocated component groups.
 
-None of the six is a translation blocker. None requires a new design or product decision. None
-blocks Session 2.
+The later ERD count drift was also corrected to 54 business tables: 6 Existing and 48 Proposed.
+
+The completion run surfaced implementation prerequisites rather than UX blockers: repeated clinical-stage transition history needs an explicit persistence representation before mutation code, `TASK-PLATFORM-013` owns the durable Patient attention-entry model, and `TASK-PLATFORM-008` still owns the unverified Patient repository/path/scripts.
 
 ---
 
-**Session 1 status: complete. Session 2 has not started. CI remains at `--phase 4`.**
+**Phase 5 plan status:** all non-rendered documentation/handoff artifacts are authored. Remote promoted Phase 5 CI remains the final mechanical gate; actual Figma rendering and runtime QA are deliberately outside this documentation completion claim.

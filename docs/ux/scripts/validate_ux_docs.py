@@ -295,13 +295,36 @@ if PHASE >= 4:
                 fail.append(f"P4 {rid} is defined by phase 3 but placed on no widget or screen")
 
 # ---------- Phase 5 ----------
+PHASE_5_REQUIRED = [
+    "05-build/PHASE_05_IMPLEMENTATION_PLAN.md",
+    "05-build/figma/BUILD_MANIFEST.json",
+    "05-build/figma/NAMING.md",
+    "05-build/IMPLEMENTATION_CONTRACTS.md",
+    "05-build/DESIGN_TRACEABILITY.md",
+    "05-build/FULL_CHAIN_VERIFICATION.md",
+    "PHASE_05_HANDOFF.md",
+]
 if PHASE >= 5:
+    for rel in PHASE_5_REQUIRED:
+        if not (UX / rel).is_file():
+            fail.append(f"P5 required artifact missing at canonical path: docs/ux/{rel}")
     known = set(screens) | set(widgets) | set(comps)
     mani = UX / "05-build" / "figma" / "BUILD_MANIFEST.json"
     if mani.exists():
         data = json.loads(mani.read_text(encoding="utf-8"))
         declared = {c["id"] for c in data.get("components", [])}
+        manifest_widgets = {w["id"] for w in data.get("widgets", [])}
         widget_mandatory = {w["id"]: w.get("mandatoryComponents", []) for w in data.get("widgets", [])}
+        if declared != set(comps):
+            for cid in sorted(set(comps) - declared):
+                fail.append(f"P5 manifest omits allocated component {cid}")
+            for cid in sorted(declared - set(comps)):
+                fail.append(f"P5 manifest declares unallocated component {cid}")
+        if manifest_widgets != set(widgets):
+            for wid in sorted(set(widgets) - manifest_widgets):
+                fail.append(f"P5 manifest omits allocated widget {wid}")
+            for wid in sorted(manifest_widgets - set(widgets)):
+                fail.append(f"P5 manifest declares unallocated widget {wid}")
         def walk(node, frame):
             for k, v in node.items():
                 if isinstance(v, str) and RAW.search(v) and not v.startswith("{"):
@@ -313,9 +336,11 @@ if PHASE >= 5:
             for c in node.get("children", []):
                 walk(c, frame)
         frame_keys = []
+        frame_ids = set()
         for page in data.get("pages", []):
             for f in page.get("frames", []):
                 fid = f.get("id", "?")
+                frame_ids.add(fid)
                 if fid not in known:
                     fail.append(f"P5 manifest frame {fid} matches no documented ID")
                 if not f.get("layout"):
@@ -338,6 +363,12 @@ if PHASE >= 5:
                     elif f["profile"] == "A" and not f.get("contentWidth"):
                         fail.append(f"P5 manifest frame {fid} ({fkey}) is profile A but declares no contentWidth")
                 walk(f, fid)
+        for cid in sorted(set(comps) - frame_ids):
+            fail.append(f"P5 manifest has no frame for allocated component {cid}")
+        for wid in sorted(set(widgets) - frame_ids):
+            fail.append(f"P5 manifest has no frame for allocated widget {wid}")
+        for sid in sorted(set(screens) - frame_ids):
+            fail.append(f"P5 manifest has no frame for documented screen {sid}")
         dupes = {k for k in frame_keys if frame_keys.count(k) > 1}
         for k in sorted(dupes):
             fail.append(f"P5 manifest frameKey {k!r} is not unique")
@@ -432,6 +463,18 @@ if PHASE >= 5:
             fail.append(f"P5 {wid} contract appears to document an unverified Patient "
                         f"command as if it existed: {cmd_m.group(0)!r}")
 
+        section_nums = [int(x) for x in re.findall(r'^####\s+(\d+)\.', b, flags=re.M)]
+        expected_sections = list(range(1, 30))
+        if sorted(section_nums) != expected_sections:
+            missing = [n for n in expected_sections if n not in section_nums]
+            dupes_sec = sorted({n for n in section_nums if section_nums.count(n) > 1})
+            extra = [n for n in section_nums if n not in expected_sections]
+            fail.append(f"P5 {wid} contract section schema mismatch "
+                        f"(missing={missing}, duplicate={dupes_sec}, extra={extra})")
+        impl_m = re.search(r'####\s+2\. Implements\n(.*?)(?=\n####\s+3\.)', b, flags=re.S)
+        if not impl_m or not re.search(r'\b(?:FR|NFR)-[A-Z]{3,10}-\d{3}\b', impl_m.group(1)):
+            fail.append(f"P5 {wid} contract Implements section resolves no FR/NFR")
+
     # Build order is a total order across every contract actually authored so far - duplicated only
     # when two different widgets claim the same slot, which a later session appending more contracts
     # would otherwise be free to do by accident.
@@ -444,6 +487,14 @@ if PHASE >= 5:
         if len(wids) > 1:
             fail.append(f"P5 build order {order} is claimed by more than one contract: "
                         f"{', '.join(sorted(wids))}")
+
+    if set(contract_map) == set(widgets):
+        expected_orders = set(range(1, len(widgets) + 1))
+        actual_orders = set(build_orders)
+        if actual_orders != expected_orders:
+            fail.append(f"P5 build orders are not a total 1..{len(widgets)} sequence "
+                        f"(missing={sorted(expected_orders - actual_orders)}, "
+                        f"extra={sorted(actual_orders - expected_orders)})")
 
 print(f"phase {PHASE} | {len(screens)} screens, {len(flows)} flows, {len(wfs)} wireframes, "
       f"{len(comps)} components, {len(widgets)} widgets")
