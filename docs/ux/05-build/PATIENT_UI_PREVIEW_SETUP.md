@@ -80,7 +80,7 @@ The preview does not own a token copy. Storybook resolves `@ux-tokens` directly 
 
 ## Prepared browser-review sizes
 
-Playwright includes 320px, 390px, and 414px Patient projects. They are review viewports, not a new canonical breakpoint scale.
+Playwright includes the `patient-320`, `patient-390`, and `patient-414` Patient projects. Their numeric browser viewport values live in the preview test configuration; they are not a new canonical breakpoint scale.
 
 ## Initial smoke story
 
