@@ -23,7 +23,7 @@ The Phase 5 contracts remain authoritative.
 Use Node 24 where possible. From this directory:
 
 ```bash
-npm install
+npm ci
 npm run playwright:install
 npm run verify
 npm run storybook
@@ -35,7 +35,7 @@ Storybook runs at:
 http://127.0.0.1:6006
 ```
 
-After the first successful `npm install`, commit the generated `package-lock.json` before substantive Patient UI work so CI and other agents use the same dependency graph.
+The committed `package-lock.json` is authoritative for this preview scaffold. Use `npm ci` locally and in CI.
 
 ## Canonical design inputs
 
