@@ -3,8 +3,9 @@ import { expect, test, type Page, type TestInfo } from '@playwright/test';
 
 /**
  * Slice 1 coverage: every SCR-* default story loads, the Flow story reaches a submitted booking
- * request, RTL/bidi holds, no horizontal overflow at the Patient review widths, and a
- * representative set of pending/retry/error variants render. This does not assert exact DOM
+ * request, RTL/bidi holds, no serious/critical accessibility finding remains, no horizontal
+ * overflow exists at the Patient review widths, and representative pending/retry/error variants
+ * render. This does not assert exact DOM
  * structure — it uses accessible roles/names so it does not overfit to implementation markup.
  *
  * Functional assertions (flow completion, error/empty copy) run once, on `patient-390` — the
@@ -24,6 +25,7 @@ const SCREEN_STORIES = [
   'patient-screens-scr-elig-001-provider-search--default',
   'patient-screens-scr-elig-002-provider-results--default',
   'patient-screens-scr-elig-003-provider-decision-card--default',
+  'patient-screens-scr-elig-005-provider-comparison--two-options',
   'patient-screens-scr-booking-001-slot-selection--default',
   'patient-screens-scr-booking-002-request-review-and-submit--default',
   'patient-screens-scr-booking-004-booking-detail--requested',
@@ -50,6 +52,18 @@ async function expectNoHorizontalOverflow(page: Page, label: string) {
   expect(overflow, `${label} overflows horizontally`).toBe(false);
 }
 
+async function expectNoSeriousAccessibilityViolations(page: Page, label: string) {
+  const results = await new AxeBuilder({ page })
+    .analyze()
+    .catch(async (error) => {
+      if (!String(error).includes('Axe is already running')) throw error;
+      await page.waitForTimeout(1000);
+      return new AxeBuilder({ page }).analyze();
+    });
+  const serious = results.violations.filter((violation) => violation.impact === 'serious' || violation.impact === 'critical');
+  expect(serious, `${label}: ${JSON.stringify(serious, null, 2)}`).toEqual([]);
+}
+
 test.describe('every Slice 1 screen loads, in RTL, on the primary review width', () => {
   test.setTimeout(60_000);
   for (const id of SCREEN_STORIES) {
@@ -59,6 +73,7 @@ test.describe('every Slice 1 screen loads, in RTL, on the primary review width',
       await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
       await expect(page.locator('html')).toHaveAttribute('lang', 'ar');
       await expectNoHorizontalOverflow(page, id);
+      await expectNoSeriousAccessibilityViolations(page, id);
       await page.screenshot({ path: `artifacts/screenshots/${id}.png`, fullPage: true });
     });
   }
@@ -69,7 +84,10 @@ test.describe('no horizontal overflow at 320/390/414 on the highest-risk screens
   const HIGH_RISK = [
     'patient-screens-scr-identity-001-patient-entry--default',
     'patient-screens-scr-elig-002-provider-results--default',
+    'patient-screens-scr-elig-005-provider-comparison--two-options',
     'patient-screens-scr-booking-002-request-review-and-submit--default',
+    'patient-screens-scr-booking-004-booking-detail--requested',
+    'patient-screens-scr-booking-004-booking-detail--alternative-proposed',
   ];
   for (const id of HIGH_RISK) {
     test(id, async ({ page }) => {
@@ -77,23 +95,6 @@ test.describe('no horizontal overflow at 320/390/414 on the highest-risk screens
       await expectNoHorizontalOverflow(page, id);
     });
   }
-});
-
-test('the axe scan on the booking review screen finds no serious/critical violations', async ({ page }, testInfo) => {
-  onlyOnPrimaryProject(testInfo);
-  test.setTimeout(60_000);
-  await gotoStory(page, 'patient-screens-scr-booking-002-request-review-and-submit--default');
-  // @storybook/addon-a11y also runs its own axe pass inside this iframe (the `a11y.test` story
-  // parameter). Retry once if it collides with ours ("Axe is already running").
-  const results = await new AxeBuilder({ page })
-    .analyze()
-    .catch(async (error) => {
-      if (!String(error).includes('Axe is already running')) throw error;
-      await page.waitForTimeout(1000);
-      return new AxeBuilder({ page }).analyze();
-    });
-  const serious = results.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
-  expect(serious, JSON.stringify(serious, null, 2)).toEqual([]);
 });
 
 test('key pending/retry/error variants render distinguishable content', async ({ page }, testInfo) => {
@@ -114,6 +115,27 @@ test('key pending/retry/error variants render distinguishable content', async ({
   await expect(page.getByText('انتهت المحاولات المتاحة. اطلب رمزًا جديدًا للمتابعة.')).toBeVisible();
 });
 
+const BOOKING_STATE_STORIES = [
+  ['requested', 'بانتظار تأكيد العيادة', 'إلغاء الطلب'],
+  ['alternative-proposed', 'عرضت العيادة موعدًا بديلًا', 'قبول الموعد البديل'],
+  ['confirmed', 'الموعد مؤكَّد', 'طلب تغيير الموعد'],
+  ['eligibility-review', 'الموعد قيد مراجعة الأهلية', 'العودة إلى الخدمات'],
+  ['rejected', 'لم توافق العيادة على الطلب', 'البحث عن خيار آخر'],
+  ['cancelled', 'لم يتم تأكيد الحجز', 'البحث عن خيار آخر'],
+] as const;
+
+test.describe('Booking Detail projects the meaning, next step, and allowed action for every Slice 1 state', () => {
+  for (const [story, label, action] of BOOKING_STATE_STORIES) {
+    test(story, async ({ page }, testInfo) => {
+      onlyOnPrimaryProject(testInfo);
+      await gotoStory(page, `patient-screens-scr-booking-004-booking-detail--${story}`);
+      await expect(page.getByText(label)).toBeVisible();
+      await expect(page.getByText('الخطوة التالية')).toBeVisible();
+      await expect(page.getByRole('button', { name: action })).toBeVisible();
+    });
+  }
+});
+
 test('the Flow story reaches a submitted booking request (REQUESTED)', async ({ page }, testInfo) => {
   onlyOnPrimaryProject(testInfo);
   test.setTimeout(60_000);
@@ -127,10 +149,13 @@ test('the Flow story reaches a submitted booking request (REQUESTED)', async ({ 
 
   await expect(page.getByText('3 نتيجة متاحة')).toBeVisible();
   await page.screenshot({ path: 'artifacts/screenshots/flow-provider-results.png', fullPage: true });
-  await page.getByRole('button', { name: /د\. رنا الحلبي/ }).first().click();
-  await page.screenshot({ path: 'artifacts/screenshots/flow-provider-decision.png', fullPage: true });
-
-  await page.getByRole('button', { name: 'حجز هذا الخيار' }).click();
+  await page.getByRole('checkbox').nth(0).click();
+  await page.getByRole('checkbox').nth(1).click();
+  await page.getByRole('button', { name: 'مقارنة الخيارات المختارة' }).click();
+  await expect(page.getByText('قارن التفاصيل نفسها')).toBeVisible();
+  await page.screenshot({ path: 'artifacts/screenshots/flow-provider-comparison.png', fullPage: true });
+  await page.getByRole('radio').first().click();
+  await page.getByRole('button', { name: 'متابعة لحجز الخيار المحدد' }).click();
 
   // Unauthenticated: gates to phone verification, then the demo OTP.
   await page.getByLabel('رقم الهاتف').fill('0912345678');
@@ -139,17 +164,17 @@ test('the Flow story reaches a submitted booking request (REQUESTED)', async ({ 
   await page.getByRole('button', { name: 'تحقّق' }).click();
 
   // Returns to the slot selector with the option context intact.
-  await expect(page.getByText('اختيار الموعد')).toBeVisible();
+  await expect(page.getByText('اختر موعدًا متاحًا')).toBeVisible();
   await page.screenshot({ path: 'artifacts/screenshots/flow-slot-selection.png', fullPage: true });
   await page.getByRole('radio').first().click();
   await page.getByRole('button', { name: 'متابعة إلى المراجعة' }).click();
 
-  await expect(page.getByText('مراجعة طلب الحجز')).toBeVisible();
+  await expect(page.getByText('راجع طلب الحجز')).toBeVisible();
   await page.screenshot({ path: 'artifacts/screenshots/flow-booking-review.png', fullPage: true });
   await page.getByRole('button', { name: 'إرسال طلب الحجز' }).click();
 
   await expect(page.getByText('بانتظار تأكيد العيادة')).toBeVisible();
-  await expect(page.getByText('تم إرسال طلب الحجز وهو بانتظار رد العيادة ضمن المهلة المحددة.')).toBeVisible();
+  await expect(page.getByText('وصل طلبك إلى العيادة، لكنه ليس موعدًا مؤكَّدًا بعد.')).toBeVisible();
 
   await page.screenshot({ path: 'artifacts/screenshots/flow-booking-detail-requested.png', fullPage: true });
 });

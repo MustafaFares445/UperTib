@@ -23,6 +23,10 @@ export interface BookingRecord {
   slotIso: string;
   requestedAtIso: string;
   responseDeadlineIso: string;
+  alternativeSlotIso?: string;
+  alternativeResponseDeadlineIso?: string;
+  stateReason?: string;
+  allowedActions: Array<'cancel' | 'respond-alternative' | 'reschedule'>;
   history: { id: string; atIso: string; description: string }[];
 }
 
@@ -49,6 +53,7 @@ export function submitBooking(optionId: string, slotIso: string, idempotencyKey:
     slotIso,
     requestedAtIso,
     responseDeadlineIso,
+    allowedActions: ['cancel'],
     history: [{ id: 'evt-1', atIso: requestedAtIso, description: 'تم إرسال طلب الحجز إلى العيادة.' }],
   };
   committed.set(idempotencyKey, record);

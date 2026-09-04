@@ -1,12 +1,15 @@
 import { useState } from 'react';
-import { Screen, Stack } from '../foundations/Screen';
-import { Body, Heading2, Helper } from '../foundations/Text';
+import { View } from 'react-native';
+import { Screen, ScreenHeader, Stack } from '../foundations/Screen';
+import { Bdi } from '../foundations/Bdi';
+import { Body, BodyStrong, Heading4, Helper } from '../foundations/Text';
 import { ActionBar } from '../components/ActionBar';
-import { ProviderDecisionCard, type ProviderOption } from '../components/ProviderDecisionCard';
-import { SubjectContextHeader } from '../components/SubjectContextHeader';
+import type { ProviderOption } from '../components/ProviderDecisionCard';
+import { PriceDisplay } from '../components/PriceDisplay';
 import { SubmissionStateIndicator } from '../components/SubmissionStateIndicator';
 import { formatDateTime } from '../foundations/format';
 import { submitBooking, type BookingRecord, type Slot } from '../mocks/booking';
+import { color, radius, space } from '../theme/tokens';
 
 export interface BookingReviewScreenProps {
   option: ProviderOption;
@@ -67,15 +70,23 @@ export function BookingReviewScreen({ option, slot, onSubmitted, onChangeTime, o
       }
     >
       <Stack gap="stack-lg">
-        <SubjectContextHeader subject="مراجعة طلب الحجز" authority="لحسابك" />
-        <ProviderDecisionCard option={option} variant="chosen" />
-        <Body>
-          الوقت المختار: {slot.dayLabel} — {formatDateTime(slot.timeIso)}
-        </Body>
-        <Helper>
-          بعد الإرسال، تحصل العيادة على مهلة للرد على الطلب. سيصلك إشعار فور صدور الرد، وتبقى قادرًا على متابعة حالة
-          الطلب في أي وقت.
-        </Helper>
+        <ScreenHeader
+          eyebrow="الخطوة الأخيرة"
+          title="راجع طلب الحجز"
+          description="تأكد من الطبيب والفرع والموعد قبل الإرسال. إرسال الطلب لا يعني أن الموعد تأكد بعد."
+        />
+        <View style={{ gap: space('stack-sm'), padding: space('inset-md'), borderRadius: radius('surface'), backgroundColor: color('surface.subtle') }}>
+          <Helper>الموعد المطلوب</Helper>
+          <Heading4>{slot.dayLabel}</Heading4>
+          <BodyStrong><Bdi>{formatDateTime(slot.timeIso)}</Bdi></BodyStrong>
+        </View>
+        <View style={{ gap: space('stack-xs') }}>
+          <Helper>مقدّم الخدمة</Helper>
+          <Heading4>{option.providerName}</Heading4>
+          <Body tone="secondary">{option.branchName} · {option.serviceLabel}</Body>
+          <PriceDisplay price={option.price} compact />
+        </View>
+        <Helper>بعد الإرسال، تراجع العيادة الطلب ضمن المهلة. سيصلك إشعار عند الرد ويمكنك متابعة الحالة من تفاصيل الحجز.</Helper>
       </Stack>
     </Screen>
   );

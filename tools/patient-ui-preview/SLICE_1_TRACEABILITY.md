@@ -9,7 +9,7 @@ prompt's conceptual six-stage list.
 
 `FLOW-IDENTITY-001` → `FLOW-CATALOG-001` → `FLOW-ELIG-001` → `FLOW-BOOKING-001` (mandatory chain).
 
-## Screens implemented (11)
+## Screens implemented (12)
 
 | SCR | Screen file | Story |
 |---|---|---|
@@ -21,6 +21,7 @@ prompt's conceptual six-stage list.
 | `SCR-ELIG-001` | `src/screens/ProviderSearchScreen.tsx` | `Patient/Screens/SCR-ELIG-001 Provider search` |
 | `SCR-ELIG-002` | `src/screens/ProviderResultsScreen.tsx` | `Patient/Screens/SCR-ELIG-002 Provider results` |
 | `SCR-ELIG-003` | `src/screens/ProviderDecisionScreen.tsx` | `Patient/Screens/SCR-ELIG-003 Provider decision card` |
+| `SCR-ELIG-005` | `src/screens/ProviderComparisonScreen.tsx` | `Patient/Screens/SCR-ELIG-005 Provider comparison` |
 | `SCR-BOOKING-001` | `src/screens/SlotSelectionScreen.tsx` | `Patient/Screens/SCR-BOOKING-001 Slot selection` |
 | `SCR-BOOKING-002` | `src/screens/BookingReviewScreen.tsx` | `Patient/Screens/SCR-BOOKING-002 Request review and submit` |
 | `SCR-BOOKING-004` | `src/screens/BookingDetailScreen.tsx` | `Patient/Screens/SCR-BOOKING-004 Booking detail` |
@@ -35,7 +36,7 @@ prompt's conceptual six-stage list.
 
 ## Components implemented
 
-`CMP-PLATFORM-001` StateChip · `CMP-PLATFORM-003` SubjectContextHeader · `CMP-PLATFORM-004` ActionBar
+`CMP-PLATFORM-001` StateChip · `CMP-PLATFORM-002` StateSummary · `CMP-PLATFORM-003` SubjectContextHeader · `CMP-PLATFORM-004` ActionBar
 · `CMP-PLATFORM-005` DeadlineIndicator · `CMP-PLATFORM-007` FilterSearchBar · `CMP-PLATFORM-008`
 EventTimeline · `CMP-PLATFORM-009` EmptyState · `CMP-PLATFORM-010` RecoveryState ·
 `CMP-PLATFORM-011` SubmissionStateIndicator · `CMP-ELIG-001` ProviderDecisionCard · `CMP-ELIG-002`
@@ -43,17 +44,19 @@ PriceDisplay · (WGT-PLATFORM-010 realized as) ValidationField.
 
 ## Deferred beyond Slice 1 (documented scope decisions, not gaps)
 
-- `SCR-ELIG-004` (eligibility explanation) and `SCR-ELIG-005` (provider comparison) — real,
-  documented screens reachable as optional branches from `SCR-ELIG-002/003`, not part of the
-  mandatory `FLOW-BOOKING-001` chain. `SCR-ELIG-003`'s "why is this available" affordance is
+- `SCR-ELIG-004` (eligibility explanation) — a real documented screen reachable as an optional
+  branch from `SCR-ELIG-003`, but not part of the mandatory `FLOW-BOOKING-001` chain.
+  `SCR-ELIG-003`'s "why is this available" affordance is
   composed inline (the same `TXT-STATE-ELIG-001` practical-meaning copy) instead of a dedicated
-  screen, to avoid a screen build that duplicates existing widget-level state coverage.
+  screen, to avoid a screen build that duplicates existing widget-level state coverage. Provider
+  comparison is implemented as canonical `SCR-ELIG-005`: a transient, same-service 2–3 option path
+  reached from the persistent comparison region on `SCR-ELIG-002`.
 - `WGT-ELIG-002` (eligibility decision block) — its only binding is `SCR-ELIG-004`; not required by
   the core chain.
-- `WGT-BOOKING-002` (proposal without displacement), `SCR-BOOKING-005`, `SCR-PLATFORM-001` — these
-  belong to `FLOW-BOOKING-006/007` (patient responding to a clinic-proposed alternative), which is
-  gated on a Clinic-platform action (`FLOW-BOOKING-003/004/005`) not simulated in this Patient-only
-  preview.
+- `WGT-BOOKING-002` (the dedicated proposal-without-displacement widget), `SCR-BOOKING-005`, and
+  `SCR-PLATFORM-001` remain outside the mandatory chain. `SCR-BOOKING-004` does render and test its
+  `ALTERNATIVE_PROPOSED` projection and response actions, but the Clinic-origin transition that
+  creates the proposal (`FLOW-BOOKING-003/004/005`) is not simulated in this Patient-only preview.
 - `SCR-BOOKING-004`'s CONFIRMED state is real product behaviour but is reached only after the
   clinic accepts the request; the Slice 1 flow correctly stops at `REQUESTED`.
 

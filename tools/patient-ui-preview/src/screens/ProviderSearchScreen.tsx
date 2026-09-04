@@ -1,9 +1,11 @@
 import { useState } from 'react';
-import { Screen, Stack } from '../foundations/Screen';
-import { Body, Heading2 } from '../foundations/Text';
+import { View } from 'react-native';
+import { Screen, ScreenHeader, Stack } from '../foundations/Screen';
+import { BodyStrong, Helper } from '../foundations/Text';
 import { ActionBar } from '../components/ActionBar';
 import { FilterSearchBar } from '../components/FilterSearchBar';
 import type { ServiceFamily } from '../mocks/catalog';
+import { color, radius, space } from '../theme/tokens';
 
 export interface ProviderSearchScreenProps {
   family: ServiceFamily;
@@ -20,6 +22,7 @@ export function ProviderSearchScreen({ family, onSearch, onChangeService }: Prov
 
   return (
     <Screen
+      centerContent
       footer={
         <ActionBar
           actions={[
@@ -30,9 +33,22 @@ export function ProviderSearchScreen({ family, onSearch, onChangeService }: Prov
       }
     >
       <Stack gap="stack-lg">
-        <Heading2>البحث عن مقدّمي الخدمة</Heading2>
-        <Body tone="secondary">الخدمة المختارة: {family.name}</Body>
-        <FilterSearchBar label="المنطقة داخل حلب (اختياري)" value={area} onChangeText={setArea} placeholder="مثال: حلب الجديدة" />
+        <ScreenHeader
+          eyebrow="البحث عن مقدّمي الخدمة"
+          title="حدّد المنطقة إن رغبت"
+          description="سنبحث عن الخيارات المتاحة لهذه الخدمة في حلب. ترك المنطقة فارغة يعرض كل المناطق."
+        />
+        <View style={{ gap: space('stack-xs'), padding: space('inset-sm'), borderRadius: radius('surface'), backgroundColor: color('surface.subtle') }}>
+          <Helper>الخدمة المختارة</Helper>
+          <BodyStrong>{family.name}</BodyStrong>
+        </View>
+        <FilterSearchBar
+          label="المنطقة داخل حلب (اختياري)"
+          value={area}
+          onChangeText={setArea}
+          onClear={() => setArea('')}
+          placeholder="مثال: حلب الجديدة"
+        />
       </Stack>
     </Screen>
   );

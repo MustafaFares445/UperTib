@@ -17,6 +17,14 @@ export const Running: Story = {
   },
 };
 
+export const Approaching: Story = {
+  args: {
+    obligation: 'الرد على طلب الحجز',
+    deadlineIso: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
+    state: 'approaching',
+  },
+};
+
 export const Lapsed: Story = {
   args: {
     obligation: 'الرد على طلب الحجز',

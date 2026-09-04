@@ -1,6 +1,9 @@
+import { useMemo, useState } from 'react';
 import { Pressable, View } from 'react-native';
-import { Screen, Stack } from '../foundations/Screen';
+import { Screen, ScreenHeader, Stack } from '../foundations/Screen';
 import { BodyStrong, Heading2, Heading3, Helper } from '../foundations/Text';
+import { EmptyState } from '../components/EmptyState';
+import { FilterSearchBar } from '../components/FilterSearchBar';
 import { useFocusRing } from '../foundations/useFocusRing';
 import { serviceCatalog, type ServiceFamily } from '../mocks/catalog';
 import { color, space } from '../theme/tokens';
@@ -44,11 +47,41 @@ function FamilyRow({ family, onPress, first }: { family: ServiceFamily; onPress:
  * carries its service code forward without ever displaying that code to the patient.
  */
 export function ServiceGroupsScreen({ onChooseFamily }: ServiceGroupsScreenProps) {
+  const [query, setQuery] = useState('');
+  const groups = useMemo(() => {
+    const normalized = query.trim();
+    if (!normalized) return serviceCatalog;
+    return serviceCatalog
+      .map((group) => ({
+        ...group,
+        families: group.families.filter((family) => `${family.name} ${family.summary}`.includes(normalized)),
+      }))
+      .filter((group) => group.families.length > 0);
+  }, [query]);
+
   return (
     <Screen>
       <Stack gap="stack-lg">
-        <Heading2>تصفّح الخدمات</Heading2>
-        {serviceCatalog.map((group) => (
+        <ScreenHeader
+          eyebrow="الخدمات المتاحة في حلب"
+          title="ما الخدمة التي تبحث عنها؟"
+          description="اختر خدمة مفهومة أولًا، ثم سنعرض مقدّمي الخدمة المتاحين لها."
+        />
+        <FilterSearchBar
+          label="البحث في الخدمات"
+          value={query}
+          onChangeText={setQuery}
+          onClear={() => setQuery('')}
+          placeholder="مثال: تنظيف أو حشوات"
+        />
+        {groups.length === 0 ? (
+          <EmptyState
+            variant="filtered-empty"
+            icon="magnifying-glass"
+            statement="لا توجد خدمة تطابق كلمات البحث."
+            reason="جرّب اسمًا أبسط مثل تنظيف أو حشوات، أو امسح البحث."
+          />
+        ) : groups.map((group) => (
           <Stack key={group.id} gap="stack-sm">
             <Heading3>{group.name}</Heading3>
             <View>

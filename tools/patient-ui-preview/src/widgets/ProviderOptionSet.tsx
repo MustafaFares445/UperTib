@@ -13,6 +13,8 @@ interface ProviderOptionSetProps {
   onChoose: (option: ProviderOption) => void;
   onRetry?: () => void;
   onClearFilter?: () => void;
+  selectedIds?: string[];
+  onToggleCompare?: (option: ProviderOption) => void;
 }
 
 function Skeleton() {
@@ -37,7 +39,15 @@ function Skeleton() {
  * combination as a full decision card. No composite ranking is ever assembled: cards render in
  * the order the read returned them, never re-sorted by an internal score.
  */
-export function ProviderOptionSet({ state, options, onChoose, onRetry, onClearFilter }: ProviderOptionSetProps) {
+export function ProviderOptionSet({
+  state,
+  options,
+  onChoose,
+  onRetry,
+  onClearFilter,
+  selectedIds = [],
+  onToggleCompare,
+}: ProviderOptionSetProps) {
   if (state === 'loading-initial') {
     return <Skeleton />;
   }
@@ -78,7 +88,15 @@ export function ProviderOptionSet({ state, options, onChoose, onRetry, onClearFi
     <View style={{ gap: space('stack-sm') }}>
       <Helper>{options.length} نتيجة متاحة</Helper>
       {options.map((option) => (
-        <ProviderDecisionCard key={option.id} option={option} variant="row" onPress={() => onChoose(option)} />
+        <ProviderDecisionCard
+          key={option.id}
+          option={option}
+          variant="row"
+          onPress={() => onChoose(option)}
+          selected={selectedIds.includes(option.id)}
+          compareDisabled={selectedIds.length >= 3}
+          onCompareToggle={onToggleCompare ? () => onToggleCompare(option) : undefined}
+        />
       ))}
     </View>
   );

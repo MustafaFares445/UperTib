@@ -28,7 +28,8 @@ export type IconName =
   | 'arrow-path'
   | 'lock-closed'
   | 'stop-circle'
-  | 'document-text';
+  | 'document-text'
+  | 'plus-circle';
 
 const PATHS: Record<IconName, string> = {
   'check-circle': 'M8 12.5l2.5 2.5L16 9M20.5 12a8.5 8.5 0 11-17 0 8.5 8.5 0 0117 0z',
@@ -50,6 +51,7 @@ const PATHS: Record<IconName, string> = {
   'lock-closed': 'M7 10.5V8a5 5 0 0110 0v2.5M5.5 10.5h13v9h-13v-9z',
   'stop-circle': 'M9 9h6v6H9zM20.5 12a8.5 8.5 0 11-17 0 8.5 8.5 0 0117 0z',
   'document-text': 'M7 3.5h7l3.5 3.5v13.5h-10.5v-17zM14 3.5V7h3.5M9 12h6M9 15.5h6M9 8.5h2',
+  'plus-circle': 'M12 8v8M8 12h8M20.5 12a8.5 8.5 0 11-17 0 8.5 8.5 0 0117 0z',
 };
 
 export interface IconProps {

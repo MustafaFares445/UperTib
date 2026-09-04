@@ -1,7 +1,7 @@
 import { Pressable, View } from 'react-native';
 import { Body, Helper } from '../foundations/Text';
 import { useFocusRing } from '../foundations/useFocusRing';
-import { color, radius, size, space } from '../theme/tokens';
+import { borderWidth, color, radius, size, space } from '../theme/tokens';
 
 export type ActionRole = 'primary' | 'secondary' | 'destructive';
 
@@ -48,14 +48,14 @@ function roleColors(role: ActionRole) {
   }
 }
 
-function ActionControl({ action }: { action: ActionSpec }) {
+function ActionControl({ action, wide = false }: { action: ActionSpec; wide?: boolean }) {
   const ring = useFocusRing();
   const palette = roleColors(action.role);
   const inert = action.availability.status === 'disabled' || action.availability.status === 'loading';
   const reason = action.availability.status === 'disabled' ? action.availability.reason : undefined;
 
   return (
-    <View style={{ gap: space('stack-xs') }}>
+    <View style={{ gap: space('stack-xs'), flexGrow: 1, flexBasis: wide ? '100%' : 0 }}>
       <Pressable
         accessibilityRole="button"
         accessibilityState={{ disabled: inert }}
@@ -65,13 +65,14 @@ function ActionControl({ action }: { action: ActionSpec }) {
         onBlur={ring.onBlur}
         onPress={action.onPress}
         style={({ pressed }) => ({
+          flexGrow: 1,
           minHeight: size('target-primary'),
           paddingHorizontal: space('inset-lg'),
           borderRadius: radius('control'),
           alignItems: 'center',
           justifyContent: 'center',
           backgroundColor: palette.bg,
-          borderWidth: action.role === 'secondary' ? 1 : 0,
+          borderWidth: action.role === 'secondary' ? borderWidth('hairline') : 0,
           borderColor: palette.border,
           opacity: inert ? 0.45 : pressed ? 0.9 : 1,
           ...ring.ringStyle,
@@ -91,24 +92,30 @@ function ActionControl({ action }: { action: ActionSpec }) {
  * uses `action.destructive`, never `action.primary` (token-by-intent, non-negotiable). A removed
  * action is absent-and-explained rather than a disabled control implying an override exists.
  */
-export function ActionBar({ actions, sticky = false }: { actions: ActionSpec[]; sticky?: boolean }) {
+export function ActionBar({ actions }: { actions: ActionSpec[] }) {
   const visible = actions.filter((a) => a.availability.status !== 'absent');
   const absent = actions.filter(
     (a): a is ActionSpec & { availability: { status: 'absent'; reason: string } } =>
       a.availability.status === 'absent',
   );
   const primaries = visible.filter((a) => a.role === 'primary');
+  const supporting = visible.filter((a) => a.role !== 'primary');
   if (primaries.length > 1) {
     throw new Error('ActionBar: exactly one primary action, or none. Two primaries is an undecided surface.');
   }
 
   return (
     <View style={{ gap: space('stack-sm') }}>
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space('inline-md') }}>
-        {visible.map((action) => (
-          <ActionControl key={action.key} action={action} />
-        ))}
-      </View>
+      {primaries.map((action) => (
+        <ActionControl key={action.key} action={action} wide />
+      ))}
+      {supporting.length ? (
+        <View style={{ flexDirection: 'row', gap: space('inline-sm') }}>
+          {supporting.map((action) => (
+            <ActionControl key={action.key} action={action} />
+          ))}
+        </View>
+      ) : null}
       {absent.map((action) => (
         <Helper key={action.key}>{action.availability.reason}</Helper>
       ))}
