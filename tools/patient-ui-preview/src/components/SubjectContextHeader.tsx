@@ -14,6 +14,7 @@ interface SubjectContextHeaderProps {
  * the actor acts. Under representation both the acting and the subject identity are evident.
  */
 export function SubjectContextHeader({ subject, authority }: SubjectContextHeaderProps) {
+  const representedAuthority = authority && authority !== 'لحسابك' ? authority : undefined;
   return (
     <View
       style={{
@@ -24,7 +25,7 @@ export function SubjectContextHeader({ subject, authority }: SubjectContextHeade
       }}
     >
       <Heading3>{subject}</Heading3>
-      {authority ? <Body tone="secondary">{authority}</Body> : null}
+      {representedAuthority ? <Body tone="secondary">{representedAuthority}</Body> : null}
     </View>
   );
 }

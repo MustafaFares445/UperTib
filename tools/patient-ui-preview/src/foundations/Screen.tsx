@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { ScrollView, View } from 'react-native';
-import { color, resolve, space } from '../theme/tokens';
+import { Heading2, Helper } from './Text';
+import { borderWidth, color, resolve, space } from '../theme/tokens';
 
 interface ScreenProps {
   children: ReactNode;
@@ -51,7 +52,7 @@ export function Screen({ children, footer, centerContent = false }: ScreenProps)
           style={{
             width: '100%',
             backgroundColor: color('surface.default'),
-            borderTopWidth: 1,
+            borderTopWidth: borderWidth('hairline'),
             borderTopColor: color('border.subtle'),
             paddingHorizontal: space('gutter'),
             paddingVertical: space('inset-md'),
@@ -61,6 +62,23 @@ export function Screen({ children, footer, centerContent = false }: ScreenProps)
           <View style={{ width: '100%', maxWidth: readingColumnMax }}>{footer}</View>
         </View>
       ) : null}
+    </View>
+  );
+}
+
+interface ScreenHeaderProps {
+  title: string;
+  eyebrow?: string;
+  description?: string;
+}
+
+/** A consistent, compact Patient page header: context first, task title second, help only when useful. */
+export function ScreenHeader({ title, eyebrow, description }: ScreenHeaderProps) {
+  return (
+    <View accessibilityRole="header" style={{ gap: space('stack-xs') }}>
+      {eyebrow ? <Helper tone="link">{eyebrow}</Helper> : null}
+      <Heading2>{title}</Heading2>
+      {description ? <Helper>{description}</Helper> : null}
     </View>
   );
 }

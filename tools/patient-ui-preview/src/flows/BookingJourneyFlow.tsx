@@ -7,6 +7,7 @@ import { ServiceDetailScreen } from '../screens/ServiceDetailScreen';
 import { ProviderSearchScreen } from '../screens/ProviderSearchScreen';
 import { ProviderResultsScreen } from '../screens/ProviderResultsScreen';
 import { ProviderDecisionScreen } from '../screens/ProviderDecisionScreen';
+import { ProviderComparisonScreen } from '../screens/ProviderComparisonScreen';
 import { SlotSelectionScreen } from '../screens/SlotSelectionScreen';
 import { BookingReviewScreen } from '../screens/BookingReviewScreen';
 import { BookingDetailScreen } from '../screens/BookingDetailScreen';
@@ -24,6 +25,7 @@ type Step =
   | 'serviceDetail'
   | 'search'
   | 'results'
+  | 'comparison'
   | 'decision'
   | 'slot'
   | 'review'
@@ -36,6 +38,7 @@ interface JourneyState {
   family?: ServiceFamily;
   area: string;
   option?: ProviderOption;
+  comparisonOptions?: ProviderOption[];
   slot?: Slot;
   booking?: BookingRecord;
   /** Where verification should return to once the patient is identified (IX-PLATFORM gate-and-return). */
@@ -116,6 +119,24 @@ export function BookingJourneyFlow() {
           onRetry={() => setS({ ...s })}
           onClearFilter={() => setS({ ...s, area: '' })}
           onChangeSearch={() => setS({ ...s, step: 'search' })}
+          onCompare={(comparisonOptions) => setS({ ...s, comparisonOptions, step: 'comparison' })}
+        />
+      );
+
+    case 'comparison':
+      return (
+        <ProviderComparisonScreen
+          options={s.comparisonOptions!}
+          onBook={(option) =>
+            setS({
+              ...s,
+              option,
+              step: s.challenge ? 'slot' : 'phone',
+              returnTo: s.challenge ? undefined : 'slot',
+            })
+          }
+          onOpen={(option) => setS({ ...s, option, step: 'decision' })}
+          onBack={() => setS({ ...s, step: 'results' })}
         />
       );
 
@@ -158,6 +179,7 @@ export function BookingJourneyFlow() {
           option={s.option!}
           onCancelled={() => {}}
           onDone={() => setS(INITIAL)}
+          onFindAlternative={() => setS({ ...s, step: 'results' })}
         />
       );
 

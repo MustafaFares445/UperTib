@@ -1,7 +1,9 @@
-import { Screen, Stack } from '../foundations/Screen';
-import { Body, Heading2, Heading4 } from '../foundations/Text';
+import { View } from 'react-native';
+import { Screen, ScreenHeader, Stack } from '../foundations/Screen';
+import { Body, Heading4, Helper } from '../foundations/Text';
 import { ActionBar } from '../components/ActionBar';
 import type { ServiceFamily } from '../mocks/catalog';
+import { borderWidth, color, space } from '../theme/tokens';
 
 export interface ServiceDetailScreenProps {
   family: ServiceFamily;
@@ -17,6 +19,7 @@ export interface ServiceDetailScreenProps {
 export function ServiceDetailScreen({ family, onFindProviders, onBack }: ServiceDetailScreenProps) {
   return (
     <Screen
+      centerContent
       footer={
         <ActionBar
           actions={[
@@ -27,12 +30,19 @@ export function ServiceDetailScreen({ family, onFindProviders, onBack }: Service
       }
     >
       <Stack gap="stack-lg">
-        <Heading2>{family.name}</Heading2>
-        <Body>{family.summary}</Body>
-        <Stack gap="stack-xs">
+        <ScreenHeader eyebrow="تفاصيل الخدمة" title={family.name} description={family.summary} />
+        <View
+          style={{
+            gap: space('stack-xs'),
+            paddingTop: space('stack-md'),
+            borderTopWidth: borderWidth('hairline'),
+            borderTopColor: color('border.subtle'),
+          }}
+        >
           <Heading4>ماذا تشمل هذه الخدمة عادةً؟</Heading4>
           <Body tone="secondary">{family.covers}</Body>
-        </Stack>
+          <Helper>يحدّد الطبيب ما يناسب حالتك بعد الفحص؛ هذه المعلومات لا تُعدّ تشخيصًا.</Helper>
+        </View>
       </Stack>
     </Screen>
   );

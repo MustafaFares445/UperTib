@@ -13,11 +13,12 @@ type Story = StoryObj<typeof meta>;
 
 const base = {
   serviceName: 'حشوات الأسنان',
-  area: 'حلب الجديدة',
+  area: '',
   onOpen: () => {},
   onRetry: () => {},
   onClearFilter: () => {},
   onChangeSearch: () => {},
+  onCompare: () => {},
 };
 
 export const Default: Story = { args: { ...base, state: 'success', options: optionsFor('svc-filling') } };

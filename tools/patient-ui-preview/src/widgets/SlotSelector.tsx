@@ -2,9 +2,10 @@ import { Pressable, View } from 'react-native';
 import { Bdi } from '../foundations/Bdi';
 import { formatTime } from '../foundations/format';
 import { Body, Heading4, Helper } from '../foundations/Text';
+import { Icon } from '../foundations/Icon';
 import { useFocusRing } from '../foundations/useFocusRing';
 import type { Slot } from '../mocks/booking';
-import { color, radius, size, space } from '../theme/tokens';
+import { borderWidth, color, radius, size, space } from '../theme/tokens';
 
 interface SlotSelectorProps {
   slots: Slot[];
@@ -17,7 +18,8 @@ function SlotControl({ slot, selected, onSelect }: { slot: Slot; selected: boole
   return (
     <Pressable
       accessibilityRole="radio"
-      accessibilityState={{ selected, disabled: !slot.available }}
+      aria-checked={selected}
+      accessibilityState={{ disabled: !slot.available }}
       accessibilityLabel={`${slot.dayLabel}، ${formatTime(slot.timeIso)}${slot.available ? '' : '، لم يعد متاحًا'}`}
       disabled={!slot.available}
       onFocus={ring.onFocus}
@@ -30,7 +32,7 @@ function SlotControl({ slot, selected, onSelect }: { slot: Slot; selected: boole
         alignItems: 'center',
         justifyContent: 'center',
         borderRadius: radius('control'),
-        borderWidth: 1,
+        borderWidth: borderWidth(selected ? 'emphasis' : 'hairline'),
         borderColor: selected ? color('state.selected.border') : color('border.strong'),
         backgroundColor: !slot.available
           ? color('surface.subtle')
@@ -41,9 +43,10 @@ function SlotControl({ slot, selected, onSelect }: { slot: Slot; selected: boole
         ...ring.ringStyle,
       })}
     >
-      <Body>
-        <Bdi>{formatTime(slot.timeIso)}</Bdi>
-      </Body>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: space('inline-xs') }}>
+        {selected ? <Icon name="check-circle" color={color('action.primary')} scale="sm" /> : null}
+        <Body tone={selected ? 'link' : 'primary'}><Bdi>{formatTime(slot.timeIso)}</Bdi></Body>
+      </View>
       {!slot.available ? <Helper>لم يعد متاحًا</Helper> : null}
     </Pressable>
   );
@@ -58,7 +61,7 @@ function SlotControl({ slot, selected, onSelect }: { slot: Slot; selected: boole
 export function SlotSelector({ slots, selectedId, onSelect }: SlotSelectorProps) {
   const days = Array.from(new Set(slots.map((s) => s.dayLabel)));
   return (
-    <View style={{ gap: space('stack-md') }}>
+    <View accessibilityRole="radiogroup" style={{ gap: space('stack-md') }}>
       {days.map((day) => (
         <View key={day} style={{ gap: space('stack-xs') }}>
           <Heading4>{day}</Heading4>

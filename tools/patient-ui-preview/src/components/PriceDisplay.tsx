@@ -28,7 +28,7 @@ const MODE_LABEL: Record<PriceMode, string> = {
  * is part of the anatomy, not an appended qualifier: a starting point reads as a starting point,
  * a range as a range, a free price as genuinely free — never a market/city average or a tariff.
  */
-export function PriceDisplay({ price }: { price: PriceFact }) {
+export function PriceDisplay({ price, compact = false }: { price: PriceFact; compact?: boolean }) {
   if (price.mode === 'free') {
     return (
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: space('inline-xs') }}>
@@ -53,7 +53,7 @@ export function PriceDisplay({ price }: { price: PriceFact }) {
       <NumericStrong>
         <Bdi>{amountText}</Bdi>
       </NumericStrong>
-      <Helper>{MODE_LABEL[price.mode]}</Helper>
+      {!compact ? <Helper>{MODE_LABEL[price.mode]}</Helper> : null}
     </View>
   );
 }

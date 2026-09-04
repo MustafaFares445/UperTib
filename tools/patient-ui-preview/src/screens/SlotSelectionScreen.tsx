@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { View } from 'react-native';
-import { Screen, Stack } from '../foundations/Screen';
-import { Body, Heading2, Heading4 } from '../foundations/Text';
+import { Screen, ScreenHeader, Stack } from '../foundations/Screen';
+import { Body, Heading4, Helper } from '../foundations/Text';
 import { ActionBar } from '../components/ActionBar';
 import { PriceDisplay } from '../components/PriceDisplay';
 import { ProviderDecisionCard, type ProviderOption } from '../components/ProviderDecisionCard';
@@ -29,14 +29,13 @@ function ChosenOptionSummary({ option }: { option: ProviderOption }) {
         gap: space('stack-xs'),
         padding: space('inset-sm'),
         borderRadius: radius('surface'),
-        borderWidth: 1,
-        borderColor: color('border.subtle'),
         backgroundColor: color('surface.subtle'),
       }}
     >
+      <Helper>الخيار المختار</Helper>
       <Heading4>{option.providerName}</Heading4>
-      <Body tone="secondary">{option.serviceLabel}</Body>
-      <PriceDisplay price={option.price} />
+      <Body tone="secondary">{option.branchName} · {option.serviceLabel}</Body>
+      <PriceDisplay price={option.price} compact />
     </View>
   );
 }
@@ -74,7 +73,11 @@ export function SlotSelectionScreen({ option, slots, onContinue, onChangeOption 
       }
     >
       <Stack gap="stack-lg">
-        <Heading2>اختيار الموعد</Heading2>
+        <ScreenHeader
+          eyebrow={`${option.providerName} · ${option.areaLabel}`}
+          title="اختر موعدًا متاحًا"
+          description="اختر وقتًا واحدًا الآن. يبقى التوقيت إرشاديًا حتى ترسل طلب الحجز."
+        />
         {showFullOption ? <ProviderDecisionCard option={option} variant="chosen" /> : <ChosenOptionSummary option={option} />}
         <SlotSelector slots={slots} selectedId={selected?.id ?? null} onSelect={setSelected} />
       </Stack>

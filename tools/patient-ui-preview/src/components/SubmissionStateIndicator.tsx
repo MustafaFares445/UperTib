@@ -1,6 +1,7 @@
 import { View } from 'react-native';
+import { Icon, type IconName } from '../foundations/Icon';
 import { Body } from '../foundations/Text';
-import { chipVisual, space } from '../theme/tokens';
+import { borderWidth, chipVisual, radius, space } from '../theme/tokens';
 
 export type SubmissionStatus = 'pending' | 'failed' | 'retrying' | 'completed';
 
@@ -9,6 +10,13 @@ const COPY: Record<SubmissionStatus, string> = {
   retrying: 'جارٍ إعادة المحاولة…',
   failed: 'تعذر الإرسال. لم يُعرف ما إذا وصل الطلب أم لا.',
   completed: 'تم الإرسال بنجاح.',
+};
+
+const ICON: Record<SubmissionStatus, IconName> = {
+  pending: 'clock',
+  retrying: 'arrow-path',
+  failed: 'exclamation-triangle',
+  completed: 'check-circle',
 };
 
 /**
@@ -26,11 +34,14 @@ export function SubmissionStateIndicator({ status }: { status: SubmissionStatus 
         flexDirection: 'row',
         alignItems: 'center',
         gap: space('inline-xs'),
-        paddingHorizontal: space('inset-sm'),
-        paddingVertical: space('inset-xs'),
+        padding: space('inset-sm'),
+        borderRadius: radius('surface'),
+        borderWidth: borderWidth('hairline'),
+        borderColor: visual.border,
         backgroundColor: visual.background,
       }}
     >
+      <Icon name={ICON[status]} color={visual.icon} scale="sm" />
       <Body style={{ color: visual.text }}>{COPY[status]}</Body>
     </View>
   );

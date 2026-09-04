@@ -1,5 +1,5 @@
-import { Screen, Stack } from '../foundations/Screen';
-import { BodyStrong, Heading1, Helper } from '../foundations/Text';
+import { Screen, ScreenHeader, Stack } from '../foundations/Screen';
+import { BodyStrong, Helper } from '../foundations/Text';
 import { ActionBar } from '../components/ActionBar';
 
 export interface IdentityEntryScreenProps {
@@ -19,21 +19,21 @@ export function IdentityEntryScreen({ onVerify, onBrowse }: IdentityEntryScreenP
       footer={
         <ActionBar
           actions={[
-            { key: 'verify', label: 'تحقق من رقمي', role: 'primary', availability: { status: 'available' }, onPress: onVerify },
+            { key: 'verify', label: 'ابدأ بالتحقق من رقمك', role: 'primary', availability: { status: 'available' }, onPress: onVerify },
             { key: 'browse', label: 'تصفّح الخدمات', role: 'secondary', availability: { status: 'available' }, onPress: onBrowse },
           ]}
         />
       }
     >
-      <Stack gap="stack-lg">
-        <Stack gap="stack-sm">
-          <Heading1>UberTib</Heading1>
-          <BodyStrong>
-            يساعدك UberTib على العثور على طبيب أسنان مناسب في حلب وحجز موعد معه، بحسب توفّره الحالي.
-          </BodyStrong>
-        </Stack>
+      <Stack gap="stack-xl">
+        <ScreenHeader
+          eyebrow="UberTib · رعاية أسنان أوضح"
+          title="اعثر على موعد يناسب احتياجك"
+          description="تصفّح خدمات الأسنان في حلب، قارن الخيارات المتاحة، ثم أرسل طلب الحجز."
+        />
+        <BodyStrong>سترى السعر المتوقع وأقرب موعد وحالة التوفر قبل اختيار الطبيب.</BodyStrong>
         <Helper>
-          هذه المنصّة لا تُشخّص حالتك ولا تقدّم علاجًا، ولا تتولّى الدفع أو حفظ الأموال نيابة عنك.
+          لا تُشخّص المنصّة حالتك ولا تقدّم علاجًا، ولا تتولّى الدفع أو حفظ الأموال نيابة عنك.
         </Helper>
       </Stack>
     </Screen>

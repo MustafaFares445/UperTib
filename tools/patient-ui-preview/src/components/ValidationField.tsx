@@ -51,7 +51,7 @@ export function ValidationField({
         onFocus={ring.onFocus}
         onBlur={ring.onBlur}
         accessibilityLabel={label}
-        accessibilityHint={helper}
+        accessibilityHint={[helper, error].filter(Boolean).join(' ') || undefined}
         style={{
           minHeight: size('control-lg'),
           paddingHorizontal: space('inset-md'),
@@ -67,8 +67,12 @@ export function ValidationField({
           ...ring.ringStyle,
         }}
       />
-      {helper && !error ? <Helper>{helper}</Helper> : null}
-      {error ? <Helper tone="secondary" style={{ color: color('tone.danger.text') }}>{error}</Helper> : null}
+      {helper ? <Helper>{helper}</Helper> : null}
+      {error ? (
+        <Helper accessibilityRole="alert" tone="secondary" style={{ color: color('tone.danger.text') }}>
+          {error}
+        </Helper>
+      ) : null}
     </View>
   );
 }

@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Screen, Stack } from '../foundations/Screen';
+import { Screen, ScreenHeader, Stack } from '../foundations/Screen';
 import { Bdi } from '../foundations/Bdi';
-import { Body, Heading2, Helper } from '../foundations/Text';
+import { Body, Helper } from '../foundations/Text';
 import { ActionBar } from '../components/ActionBar';
 import { SubmissionStateIndicator } from '../components/SubmissionStateIndicator';
 import { ValidationField } from '../components/ValidationField';
@@ -66,6 +66,7 @@ export function CodeVerificationScreen({ phone, challenge, onVerified, onChangeN
 
   return (
     <Screen
+      centerContent
       footer={
         <Stack gap="stack-sm">
           {submitting ? <SubmissionStateIndicator status="pending" /> : null}
@@ -97,9 +98,13 @@ export function CodeVerificationScreen({ phone, challenge, onVerified, onChangeN
       }
     >
       <Stack gap="stack-lg">
-        <Heading2>أدخل رمز التحقق</Heading2>
+        <ScreenHeader
+          eyebrow="التحقق · الخطوة 2 من 2"
+          title="أدخل رمز التحقق"
+          description="أدخل الرمز كما ورد في الرسالة. يمكنك طلب رمز جديد إذا انتهت صلاحيته."
+        />
         <Body tone="secondary">
-          أُرسل الرمز إلى <Bdi>{phone}</Bdi>
+          أُرسل إلى <Bdi>{phone}</Bdi>
         </Body>
         <ValidationField
           label="رمز التحقق"
@@ -109,9 +114,10 @@ export function CodeVerificationScreen({ phone, challenge, onVerified, onChangeN
           keyboardType="number-pad"
           maxLength={6}
           error={error}
+          helper={!attemptsExhausted ? `المحاولات المتبقية: ${current.attemptsRemaining}` : undefined}
           autoFocus
         />
-        {!attemptsExhausted ? <Helper>المحاولات المتبقية: {current.attemptsRemaining}</Helper> : null}
+        {attemptsExhausted ? <Helper>اطلب رمزًا جديدًا للمتابعة دون تغيير رقم الهاتف.</Helper> : null}
       </Stack>
     </Screen>
   );

@@ -1,8 +1,11 @@
 import { useState } from 'react';
-import { Screen, Stack } from '../foundations/Screen';
-import { Body, Heading2 } from '../foundations/Text';
+import { Pressable, View } from 'react-native';
+import { Screen, ScreenHeader, Stack } from '../foundations/Screen';
+import { Body, BodyStrong, Helper } from '../foundations/Text';
+import { Icon } from '../foundations/Icon';
 import { ActionBar } from '../components/ActionBar';
 import { ProviderDecisionCard, type ProviderOption } from '../components/ProviderDecisionCard';
+import { borderWidth, color, radius, size, space } from '../theme/tokens';
 
 export interface ProviderDecisionScreenProps {
   option: ProviderOption;
@@ -41,22 +44,55 @@ export function ProviderDecisionScreen({ option, onBook, onBackToResults }: Prov
                 : { status: 'absent', reason: 'هذا الخيار لم يعد متاحًا للحجز حاليًا.' },
               onPress: onBook,
             },
-            {
-              key: 'why',
-              label: showWhy ? 'إخفاء السبب' : 'لماذا هذا الخيار متاح؟',
-              role: 'secondary',
-              availability: { status: 'available' },
-              onPress: () => setShowWhy((v) => !v),
-            },
             { key: 'back', label: 'رجوع إلى النتائج', role: 'secondary', availability: { status: 'available' }, onPress: onBackToResults },
           ]}
         />
       }
     >
       <Stack gap="stack-lg">
-        <Heading2>تفاصيل الخيار</Heading2>
+        <ScreenHeader
+          eyebrow={`${option.serviceLabel} · ${option.areaLabel}`}
+          title="راجع الخيار قبل المتابعة"
+          description="السعر والموعد والتقييم هنا تخص هذا الطبيب وهذه الخدمة وهذا الفرع فقط."
+        />
         <ProviderDecisionCard option={option} variant="card" />
-        {showWhy ? <Body tone="secondary">{ELIGIBILITY_MEANING[option.eligibility]}</Body> : null}
+        <View>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ expanded: showWhy }}
+            accessibilityLabel={showWhy ? 'إخفاء معنى حالة التوفر' : 'عرض معنى حالة التوفر'}
+            onPress={() => setShowWhy((value) => !value)}
+            style={({ pressed }) => ({
+              minHeight: size('target-primary'),
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: space('inline-sm'),
+              paddingVertical: space('inset-sm'),
+              borderTopWidth: borderWidth('hairline'),
+              borderBottomWidth: borderWidth('hairline'),
+              borderColor: color('border.subtle'),
+              backgroundColor: pressed ? color('action.secondary-hover') : 'transparent',
+            })}
+          >
+            <BodyStrong>ما معنى حالة التوفر؟</BodyStrong>
+            <Icon name={showWhy ? 'minus-circle' : 'plus-circle'} color={color('text.secondary')} />
+          </Pressable>
+          {showWhy ? (
+            <View
+              style={{
+                gap: space('stack-xs'),
+                padding: space('inset-sm'),
+                borderBottomLeftRadius: radius('surface'),
+                borderBottomRightRadius: radius('surface'),
+                backgroundColor: color('surface.subtle'),
+              }}
+            >
+              <Body>{ELIGIBILITY_MEANING[option.eligibility]}</Body>
+              <Helper>تُراجع حالة التوفر مرة أخرى عند تأكيد الحجز؛ لا تمثل ترتيبًا أو تقييمًا عامًا للطبيب.</Helper>
+            </View>
+          ) : null}
+        </View>
       </Stack>
     </Screen>
   );

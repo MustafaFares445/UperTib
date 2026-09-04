@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { Screen, Stack } from '../foundations/Screen';
-import { Body, Heading2 } from '../foundations/Text';
+import { Screen, ScreenHeader, Stack } from '../foundations/Screen';
 import { ActionBar } from '../components/ActionBar';
 import { SubmissionStateIndicator } from '../components/SubmissionStateIndicator';
 import { ValidationField } from '../components/ValidationField';
@@ -41,6 +40,7 @@ export function PhoneEntryScreen({ onCodeRequested, onBack }: PhoneEntryScreenPr
 
   return (
     <Screen
+      centerContent
       footer={
         <Stack gap="stack-sm">
           {submitting ? <SubmissionStateIndicator status="pending" /> : null}
@@ -63,8 +63,11 @@ export function PhoneEntryScreen({ onCodeRequested, onBack }: PhoneEntryScreenPr
       }
     >
       <Stack gap="stack-lg">
-        <Heading2>تحقّق من رقم هاتفك</Heading2>
-        <Body tone="secondary">سنرسل رمز تحقق مكوّنًا من 6 أرقام عبر رسالة نصية إلى هذا الرقم.</Body>
+        <ScreenHeader
+          eyebrow="التحقق · الخطوة 1 من 2"
+          title="أدخل رقم هاتفك"
+          description="سنرسل رمزًا من 6 أرقام عبر رسالة نصية. لن نستخدم الرقم لتمييز حساب موجود من حساب جديد."
+        />
         <ValidationField
           label="رقم الهاتف"
           value={phone}
@@ -73,6 +76,7 @@ export function PhoneEntryScreen({ onCodeRequested, onBack }: PhoneEntryScreenPr
           keyboardType="phone-pad"
           maxLength={10}
           error={error}
+          helper="استخدم رقمًا سوريًا يبدأ بـ 09."
           autoFocus
         />
       </Stack>
