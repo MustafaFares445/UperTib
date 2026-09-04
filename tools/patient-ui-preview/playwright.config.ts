@@ -18,10 +18,16 @@ export default defineConfig({
     video: 'retain-on-failure',
   },
   webServer: {
-    command: 'npm run storybook',
+    // Serves the built static output (scripts/static-server.mjs), not the Vite dev server: no
+    // on-demand compilation, no HMR websocket, deterministic and fast under parallel workers.
+    // `npm run storybook` remains the right choice for interactive/manual work. The build itself
+    // is a separate, explicit step (see the test:e2e/test:smoke scripts) rather than chained here
+    // with `&&` — nesting npm -> npm -> cmd -> npx that deep reproducibly crashes Node's process
+    // spawn on Windows (a libuv UV_HANDLE_CLOSING assertion), unrelated to this project's code.
+    command: 'node scripts/static-server.mjs',
     url: 'http://127.0.0.1:6006',
     reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
+    timeout: 60_000,
   },
   projects: [
     { name: 'patient-320', use: { viewport: { width: 320, height: 780 }, hasTouch: true, isMobile: true } },

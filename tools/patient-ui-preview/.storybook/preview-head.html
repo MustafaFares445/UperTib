@@ -4,6 +4,14 @@
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <style>
-  html, body, #storybook-root { min-height: 100%; margin: 0; }
+  /*
+    height (not min-height) so the percentage-height chain RN Web's `minHeight: '100%'` relies on
+    actually resolves; without it #storybook-root collapses to its content height and the OS's
+    dark-mode UA background (transparent html/body over a dark canvas) shows through as a black
+    band below the fold. The colour below is `semantic.color.surface.canvas` (color.neutral.50)
+    resolved ahead of time: this file loads before the token-driven JS runtime exists to resolve it
+    itself, and it is technical preview scaffolding, not product UI.
+  */
+  html, body, #storybook-root { height: 100%; margin: 0; background: #F8FAFC; }
   body { direction: rtl; }
 </style>
