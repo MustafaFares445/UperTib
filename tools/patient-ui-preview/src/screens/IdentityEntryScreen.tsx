@@ -1,5 +1,5 @@
 import { Screen, Stack } from '../foundations/Screen';
-import { Body, Heading1 } from '../foundations/Text';
+import { BodyStrong, Heading1, Helper } from '../foundations/Text';
 import { ActionBar } from '../components/ActionBar';
 
 export interface IdentityEntryScreenProps {
@@ -15,6 +15,7 @@ export interface IdentityEntryScreenProps {
 export function IdentityEntryScreen({ onVerify, onBrowse }: IdentityEntryScreenProps) {
   return (
     <Screen
+      centerContent
       footer={
         <ActionBar
           actions={[
@@ -25,13 +26,15 @@ export function IdentityEntryScreen({ onVerify, onBrowse }: IdentityEntryScreenP
       }
     >
       <Stack gap="stack-lg">
-        <Heading1>UberTib</Heading1>
-        <Body>
-          يساعدك UberTib على العثور على طبيب أسنان مناسب في حلب وحجز موعد معه، بحسب توفّره الحالي.
-        </Body>
-        <Body tone="secondary">
+        <Stack gap="stack-sm">
+          <Heading1>UberTib</Heading1>
+          <BodyStrong>
+            يساعدك UberTib على العثور على طبيب أسنان مناسب في حلب وحجز موعد معه، بحسب توفّره الحالي.
+          </BodyStrong>
+        </Stack>
+        <Helper>
           هذه المنصّة لا تُشخّص حالتك ولا تقدّم علاجًا، ولا تتولّى الدفع أو حفظ الأموال نيابة عنك.
-        </Body>
+        </Helper>
       </Stack>
     </Screen>
   );

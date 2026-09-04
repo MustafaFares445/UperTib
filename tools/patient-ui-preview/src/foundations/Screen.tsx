@@ -6,6 +6,12 @@ interface ScreenProps {
   children: ReactNode;
   /** A sticky action bar rendered outside the scrolling reading column (CMP-PLATFORM-004 `sticky`). */
   footer?: ReactNode;
+  /**
+   * Vertically centres the reading column instead of pinning it to the top. For a screen whose
+   * content is short relative to the viewport (e.g. SCR-IDENTITY-001) so it never reads as a title
+   * stranded above dead space. Content still scrolls normally if it overflows the viewport.
+   */
+  centerContent?: boolean;
 }
 
 /** profile-c.reading-column-max, in characters — see breakpoints.json. Not a pixel value. */
@@ -17,10 +23,11 @@ const readingColumnMax = `${resolve('profile-c.reading-column-max')}ch` as unkno
  * centred so a wider device produces whitespace rather than a second pane. See
  * SCREEN_SPECS_PATIENT_01.md "Responsive" — repeated verbatim on every Slice 1 screen.
  */
-export function Screen({ children, footer }: ScreenProps) {
+export function Screen({ children, footer, centerContent = false }: ScreenProps) {
   return (
     <View style={{ minHeight: '100%', backgroundColor: color('surface.canvas') }}>
       <ScrollView
+        style={{ flex: 1 }}
         contentContainerStyle={{
           flexGrow: 1,
           alignItems: 'center',
@@ -29,7 +36,15 @@ export function Screen({ children, footer }: ScreenProps) {
           paddingBottom: footer ? space('stack-xl') : space('stack-lg'),
         }}
       >
-        <View style={{ width: '100%', maxWidth: readingColumnMax }}>{children}</View>
+        <View
+          style={
+            centerContent
+              ? { width: '100%', maxWidth: readingColumnMax, flex: 1, justifyContent: 'center' }
+              : { width: '100%', maxWidth: readingColumnMax }
+          }
+        >
+          {children}
+        </View>
       </ScrollView>
       {footer ? (
         <View

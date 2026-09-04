@@ -1,15 +1,20 @@
 import { Pressable, View } from 'react-native';
 import { Screen, Stack } from '../foundations/Screen';
-import { Body, Heading2, Heading3 } from '../foundations/Text';
+import { BodyStrong, Heading2, Heading3, Helper } from '../foundations/Text';
 import { useFocusRing } from '../foundations/useFocusRing';
 import { serviceCatalog, type ServiceFamily } from '../mocks/catalog';
-import { color, radius, space } from '../theme/tokens';
+import { color, space } from '../theme/tokens';
 
 export interface ServiceGroupsScreenProps {
   onChooseFamily: (family: ServiceFamily) => void;
 }
 
-function FamilyRow({ family, onPress }: { family: ServiceFamily; onPress: () => void }) {
+/**
+ * A plain list row, not a bounded card: a service family is a navigable list item, not an
+ * independently comparable/selectable unit (DESIGN_DIRECTION.md "cards are a container of last
+ * resort"). Separation between families comes from a hairline divider, not a border box.
+ */
+function FamilyRow({ family, onPress, first }: { family: ServiceFamily; onPress: () => void; first: boolean }) {
   const ring = useFocusRing();
   return (
     <Pressable
@@ -19,16 +24,16 @@ function FamilyRow({ family, onPress }: { family: ServiceFamily; onPress: () => 
       onBlur={ring.onBlur}
       onPress={onPress}
       style={({ pressed }) => ({
-        padding: space('inset-md'),
-        borderRadius: radius('surface'),
-        borderWidth: 1,
-        borderColor: color('border.subtle'),
-        backgroundColor: pressed ? color('action.secondary-hover') : color('surface.default'),
+        gap: space('stack-xs'),
+        paddingVertical: space('inset-sm'),
+        borderTopWidth: first ? 0 : 1,
+        borderTopColor: color('border.subtle'),
+        backgroundColor: pressed ? color('action.secondary-hover') : 'transparent',
         ...ring.ringStyle,
       })}
     >
-      <Body style={{ fontWeight: '600' }}>{family.name}</Body>
-      <Body tone="secondary">{family.summary}</Body>
+      <BodyStrong>{family.name}</BodyStrong>
+      <Helper>{family.summary}</Helper>
     </Pressable>
   );
 }
@@ -46,9 +51,14 @@ export function ServiceGroupsScreen({ onChooseFamily }: ServiceGroupsScreenProps
         {serviceCatalog.map((group) => (
           <Stack key={group.id} gap="stack-sm">
             <Heading3>{group.name}</Heading3>
-            <View style={{ gap: space('stack-xs') }}>
-              {group.families.map((family) => (
-                <FamilyRow key={family.code} family={family} onPress={() => onChooseFamily(family)} />
+            <View>
+              {group.families.map((family, index) => (
+                <FamilyRow
+                  key={family.code}
+                  family={family}
+                  first={index === 0}
+                  onPress={() => onChooseFamily(family)}
+                />
               ))}
             </View>
           </Stack>

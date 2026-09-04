@@ -5,7 +5,7 @@ import { Body, Heading4, Helper } from '../foundations/Text';
 import { useFocusRing } from '../foundations/useFocusRing';
 import { PriceDisplay, type PriceFact } from './PriceDisplay';
 import { StateChip } from './StateChip';
-import { componentColor, radius, space } from '../theme/tokens';
+import { color, componentColor, radius, space } from '../theme/tokens';
 
 export type EligibilityStatus = 'PENDING_EVALUATION' | 'ELIGIBLE' | 'SUSPENDED' | 'NOT_ELIGIBLE';
 
@@ -46,6 +46,9 @@ interface ProviderDecisionCardProps {
 export function ProviderDecisionCard({ option, variant = 'card', onPress, selected = false }: ProviderDecisionCardProps) {
   const ring = useFocusRing();
   const isCard = variant !== 'row';
+  /** The chosen echo is read-only context (already decided), not a comparable decision surface —
+   * it renders the same full attribute set, quieted rather than shortened (CMP-ELIG-001 `chosen`). */
+  const isChosenEcho = variant === 'chosen';
 
   return (
     <Pressable
@@ -56,11 +59,19 @@ export function ProviderDecisionCard({ option, variant = 'card', onPress, select
       onPress={onPress}
       style={({ pressed }) => ({
         gap: space('stack-sm'),
-        padding: space('inset-md'),
+        padding: isChosenEcho ? space('inset-sm') : space('inset-md'),
         borderRadius: radius('surface'),
         borderWidth: 1,
-        borderColor: selected ? componentColor('elig-001.border-selected') : componentColor('elig-001.border'),
-        backgroundColor: selected ? componentColor('elig-001.fill-selected') : componentColor('elig-001.surface'),
+        borderColor: isChosenEcho
+          ? color('border.subtle')
+          : selected
+            ? componentColor('elig-001.border-selected')
+            : componentColor('elig-001.border'),
+        backgroundColor: isChosenEcho
+          ? color('surface.subtle')
+          : selected
+            ? componentColor('elig-001.fill-selected')
+            : componentColor('elig-001.surface'),
         opacity: pressed ? 0.92 : 1,
         ...ring.ringStyle,
       })}
@@ -69,35 +80,31 @@ export function ProviderDecisionCard({ option, variant = 'card', onPress, select
         <View style={{ gap: space('stack-xs'), flexShrink: 1 }}>
           <Heading4>{option.providerName}</Heading4>
           <Body tone="secondary">
-            {option.branchName} · {option.areaLabel}
+            {option.branchName} · {option.areaLabel} · {option.serviceLabel}
           </Body>
         </View>
         <StateChip machine="eligibility-outcome" status={option.eligibility} label={ELIGIBILITY_LABEL[option.eligibility]} />
       </View>
 
-      <Body>{option.serviceLabel}</Body>
-
       <PriceDisplay price={option.price} />
       {option.priceIncludes ? <Helper>{option.priceIncludes}</Helper> : null}
 
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space('inline-md') }}>
-        <Helper>{option.fundedProtection ? 'يشمل حماية ممولة عند الحاجة' : 'بدون حماية ممولة'}</Helper>
-        {option.ratingLabel ? <Helper>{option.ratingLabel}</Helper> : <Helper>التقييم غير متوفر</Helper>}
-      </View>
-
-      {isCard ? (
-        <Helper>
-          {option.nearestAppointmentIso ? (
-            <>
-              أقرب موعد متاح: <Bdi>{formatDateTime(option.nearestAppointmentIso)}</Bdi>
-            </>
-          ) : (
-            'أقرب موعد متاح: غير متوفر حاليًا'
-          )}
-        </Helper>
-      ) : null}
-
       <Helper>
+        {option.fundedProtection ? 'يشمل حماية ممولة عند الحاجة' : 'بدون حماية ممولة'}
+        {'  ·  '}
+        {option.ratingLabel ?? 'التقييم غير متوفر'}
+        {isCard ? (
+          <>
+            {'  ·  '}
+            أقرب موعد متاح:{' '}
+            {option.nearestAppointmentIso ? (
+              <Bdi>{formatDateTime(option.nearestAppointmentIso)}</Bdi>
+            ) : (
+              'غير متوفر حاليًا'
+            )}
+          </>
+        ) : null}
+        {'  ·  '}
         وقت التقييم: <Bdi>{formatDateTime(option.assessedAtIso)}</Bdi>
       </Helper>
     </Pressable>

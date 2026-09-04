@@ -6,6 +6,12 @@
             "runtimeExecutable": "php",
             "runtimeArgs": ["artisan", "serve", "--port=8000"],
             "port": 8000
+        },
+        {
+            "name": "storybook",
+            "runtimeExecutable": "node",
+            "runtimeArgs": ["../tools/patient-ui-preview/scripts/static-server.mjs"],
+            "port": 6006
         }
     ]
 }
