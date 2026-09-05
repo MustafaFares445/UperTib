@@ -18,7 +18,9 @@ export function formatDate(iso: string): string {
 }
 
 export function formatTime(iso: string): string {
-  return new Intl.DateTimeFormat(LOCALE, { hour: 'numeric', minute: '2-digit' }).format(new Date(iso));
+  return new Intl.DateTimeFormat(LOCALE, { hour: 'numeric', minute: '2-digit' })
+    .format(new Date(iso))
+    .replace(/ (?=[صم]$)/u, '\u00a0');
 }
 
 export function formatDateTime(iso: string): string {

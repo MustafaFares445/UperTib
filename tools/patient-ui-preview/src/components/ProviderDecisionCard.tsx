@@ -1,12 +1,13 @@
 import type { ReactNode } from 'react';
 import { Pressable, View } from 'react-native';
-import { Bdi } from '../foundations/Bdi';
 import { formatDateTime } from '../foundations/format';
 import { Body, BodyStrong, Heading4, Helper } from '../foundations/Text';
 import { Icon } from '../foundations/Icon';
 import { useFocusRing } from '../foundations/useFocusRing';
+import { webSpaceActivationProps } from '../foundations/webKeyboardActivation';
 import { PriceDisplay, type PriceFact } from './PriceDisplay';
 import { StateChip } from './StateChip';
+import { ProviderIdentity } from './ProviderIdentity';
 import { borderWidth, color, componentColor, radius, size, space } from '../theme/tokens';
 
 export type EligibilityStatus = 'PENDING_EVALUATION' | 'ELIGIBLE' | 'SUSPENDED' | 'NOT_ELIGIBLE';
@@ -42,11 +43,20 @@ interface ProviderDecisionCardProps {
   compareDisabled?: boolean;
 }
 
-function Fact({ label, detail }: { label: string; detail: ReactNode }) {
+function Fact({ label, detail, wide = false }: { label: string; detail: ReactNode; wide?: boolean }) {
   return (
-    <View style={{ gap: space('stack-xs'), flexGrow: 1, flexBasis: 132 }}>
+    <View
+      style={{
+        gap: space('stack-xs'),
+        flexGrow: 1,
+        flexBasis: wide ? '100%' : '46%',
+        padding: space('inset-sm'),
+        borderRadius: radius('control'),
+        backgroundColor: color('surface.subtle'),
+      }}
+    >
       <Helper>{label}</Helper>
-      <BodyStrong>{detail}</BodyStrong>
+      {typeof detail === 'string' || typeof detail === 'number' ? <BodyStrong>{detail}</BodyStrong> : detail}
     </View>
   );
 }
@@ -65,9 +75,9 @@ export function ProviderDecisionCard({
   compareDisabled = false,
 }: ProviderDecisionCardProps) {
   const ring = useFocusRing();
+  const compareRing = useFocusRing();
   const isCompact = variant === 'row' || variant === 'chosen';
-  /** The chosen echo is read-only context (already decided), not a comparable decision surface —
-   * it renders the same full attribute set, quieted rather than shortened (CMP-ELIG-001 `chosen`). */
+  /** The chosen echo is read-only task context, not another decision surface. */
   const isChosenEcho = variant === 'chosen';
 
   return (
@@ -99,37 +109,47 @@ export function ProviderDecisionCard({
         disabled={!onPress}
         style={({ pressed }) => ({ gap: space('stack-sm'), opacity: pressed ? 0.88 : 1, ...ring.ringStyle })}
       >
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: space('inline-sm') }}>
-          <View style={{ gap: space('stack-xs'), flexShrink: 1 }}>
-            <Heading4>{option.providerName}</Heading4>
-            <Body tone="secondary">{option.branchName} · {option.areaLabel}</Body>
-            {!isChosenEcho ? <Helper>{option.serviceLabel}</Helper> : null}
-          </View>
-          <StateChip machine="eligibility-outcome" status={option.eligibility} label={ELIGIBILITY_LABEL[option.eligibility]} />
-        </View>
+        <ProviderIdentity
+          name={option.providerName}
+          branch={option.branchName}
+          area={option.areaLabel}
+          compact={isCompact}
+        />
 
-        <PriceDisplay price={option.price} compact={isCompact} />
-        {!isCompact && option.priceIncludes ? <Helper>{option.priceIncludes}</Helper> : null}
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: space('inline-sm') }}>
+          <StateChip machine="eligibility-outcome" status={option.eligibility} label={ELIGIBILITY_LABEL[option.eligibility]} />
+          {!isChosenEcho ? <Helper>{option.serviceLabel}</Helper> : null}
+        </View>
 
         {!isChosenEcho ? (
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space('stack-sm') }}>
+            <Fact label="السعر" detail={<PriceDisplay price={option.price} compact />} wide={!isCompact} />
             <Fact label="التقييم الموثّق" detail={option.ratingLabel?.replace('تقييم موثّق: ', '') ?? 'غير متوفر'} />
             <Fact
               label="أقرب موعد"
               detail={
-                option.nearestAppointmentIso ? <Bdi>{formatDateTime(option.nearestAppointmentIso)}</Bdi> : 'غير متوفر حاليًا'
+                option.nearestAppointmentIso ? <BodyStrong>{formatDateTime(option.nearestAppointmentIso)}</BodyStrong> : 'غير متوفر حاليًا'
               }
             />
           </View>
-        ) : null}
+        ) : <PriceDisplay price={option.price} compact />}
+
+        {!isCompact && option.priceIncludes ? <Helper>{option.priceIncludes}</Helper> : null}
 
         {!isCompact ? (
           <StackFacts>
             <Helper>{option.fundedProtection ? 'تتوفر حماية مالية ممولة عند الحاجة.' : 'لا تشمل حماية مالية ممولة.'}</Helper>
             <Helper>
-              آخر تقييم للتوفر: <Bdi>{formatDateTime(option.assessedAtIso)}</Bdi>
+              آخر تقييم للتوفر: {formatDateTime(option.assessedAtIso)}
             </Helper>
           </StackFacts>
+        ) : null}
+
+        {variant === 'row' && onPress ? (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: space('inline-xs') }}>
+            <Icon name="magnifying-glass" color={color('action.primary')} scale="sm" />
+            <Body tone="link">عرض تفاصيل الطبيب</Body>
+          </View>
         ) : null}
       </Pressable>
 
@@ -140,6 +160,9 @@ export function ProviderDecisionCard({
           accessibilityState={{ disabled: compareDisabled && !selected }}
           accessibilityLabel={`${selected ? 'إزالة' : 'إضافة'} ${option.providerName} ${selected ? 'من' : 'إلى'} المقارنة`}
           disabled={compareDisabled && !selected}
+          {...webSpaceActivationProps(onCompareToggle)}
+          onFocus={compareRing.onFocus}
+          onBlur={compareRing.onBlur}
           onPress={onCompareToggle}
           style={({ pressed }) => ({
             minHeight: size('target-floor'),
@@ -151,6 +174,7 @@ export function ProviderDecisionCard({
             borderRadius: radius('control'),
             backgroundColor: selected ? color('state.selected.surface') : pressed ? color('action.secondary-hover') : 'transparent',
             opacity: compareDisabled && !selected ? 0.45 : 1,
+            ...compareRing.ringStyle,
           })}
         >
           <Icon

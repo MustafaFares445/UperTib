@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { View } from 'react-native';
 import { Screen, ScreenHeader, Stack } from '../foundations/Screen';
-import { Body, Heading4, Helper } from '../foundations/Text';
+import { Bdi } from '../foundations/Bdi';
+import { formatTime } from '../foundations/format';
+import { Body, BodyStrong, Heading4, Helper, NumericStrong } from '../foundations/Text';
 import { ActionBar } from '../components/ActionBar';
 import { PriceDisplay } from '../components/PriceDisplay';
 import { ProviderDecisionCard, type ProviderOption } from '../components/ProviderDecisionCard';
@@ -75,11 +77,35 @@ export function SlotSelectionScreen({ option, slots, onContinue, onChangeOption 
       <Stack gap="stack-lg">
         <ScreenHeader
           eyebrow={`${option.providerName} · ${option.areaLabel}`}
-          title="اختر موعدًا متاحًا"
-          description="اختر وقتًا واحدًا الآن. يبقى التوقيت إرشاديًا حتى ترسل طلب الحجز."
+          title="اختر التاريخ والوقت"
+          description="اختر التاريخ أولًا، ثم اختر وقتًا واحدًا. يبقى التوفر إرشاديًا حتى ترسل طلب الحجز."
         />
         {showFullOption ? <ProviderDecisionCard option={option} variant="chosen" /> : <ChosenOptionSummary option={option} />}
-        <SlotSelector slots={slots} selectedId={selected?.id ?? null} onSelect={setSelected} />
+        <SlotSelector
+          slots={slots}
+          selectedId={selected?.id ?? null}
+          onSelect={setSelected}
+          onClearSelection={() => setSelected(null)}
+        />
+        {selected ? (
+          <View
+            accessible
+            accessibilityLabel={`الموعد المختار، ${selected.dayLabel}، ${formatTime(selected.timeIso)}، ${option.providerName}`}
+            style={{
+              gap: space('stack-xs'),
+              padding: space('inset-md'),
+              borderRadius: radius('surface'),
+              backgroundColor: color('state.selected.surface'),
+            }}
+          >
+            <Helper>الموعد المختار</Helper>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', gap: space('inline-sm') }}>
+              <BodyStrong>{selected.dayLabel}</BodyStrong>
+              <NumericStrong><Bdi>{formatTime(selected.timeIso)}</Bdi></NumericStrong>
+            </View>
+            <Body tone="secondary">{option.providerName} · {option.branchName}</Body>
+          </View>
+        ) : null}
       </Stack>
     </Screen>
   );

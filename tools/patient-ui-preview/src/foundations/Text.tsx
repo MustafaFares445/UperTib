@@ -54,10 +54,10 @@ export function AppText({ variant = 'body', tone = 'primary', style, ...rest }: 
   );
 }
 
-export const Heading1 = (props: Props) => <AppText {...props} variant="heading-1" />;
-export const Heading2 = (props: Props) => <AppText {...props} variant="heading-2" />;
-export const Heading3 = (props: Props) => <AppText {...props} variant="heading-3" />;
-export const Heading4 = (props: Props) => <AppText {...props} variant="heading-4" />;
+export const Heading1 = (props: Props) => <AppText accessibilityRole="header" aria-level={1} {...props} variant="heading-1" />;
+export const Heading2 = (props: Props) => <AppText accessibilityRole="header" aria-level={2} {...props} variant="heading-2" />;
+export const Heading3 = (props: Props) => <AppText accessibilityRole="header" aria-level={2} {...props} variant="heading-3" />;
+export const Heading4 = (props: Props) => <AppText accessibilityRole="header" aria-level={2} {...props} variant="heading-4" />;
 export const Body = (props: Props) => <AppText {...props} variant="body" />;
 export const BodyStrong = (props: Props) => <AppText {...props} variant="body-strong" />;
 export const Label = (props: Props) => <AppText {...props} variant="label" />;

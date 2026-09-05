@@ -75,9 +75,9 @@ interface ScreenHeaderProps {
 /** A consistent, compact Patient page header: context first, task title second, help only when useful. */
 export function ScreenHeader({ title, eyebrow, description }: ScreenHeaderProps) {
   return (
-    <View accessibilityRole="header" style={{ gap: space('stack-xs') }}>
+    <View style={{ gap: space('stack-xs') }}>
       {eyebrow ? <Helper tone="link">{eyebrow}</Helper> : null}
-      <Heading2>{title}</Heading2>
+      <Heading2 aria-level={1}>{title}</Heading2>
       {description ? <Helper>{description}</Helper> : null}
     </View>
   );
