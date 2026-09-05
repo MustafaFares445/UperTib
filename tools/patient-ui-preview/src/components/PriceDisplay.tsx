@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { Bdi } from '../foundations/Bdi';
 import { formatCurrency } from '../foundations/format';
@@ -24,6 +25,36 @@ const MODE_LABEL: Record<PriceMode, string> = {
 };
 
 /**
+ * Keep one formatted amount + currency abbreviation as an atomic visual run. At narrow widths the
+ * surrounding prefix or range half may move to another line, but `45,000 ل.س.` must never split
+ * internally. The Bdi still owns the governed LTR isolation for the mixed Arabic/numeric content.
+ */
+function CurrencyRun({ amount, currency, prefix = '' }: { amount: number; currency: string; prefix?: string }) {
+  return (
+    <View testID="price-currency-run" style={{ flexShrink: 0, alignSelf: 'flex-start' }}>
+      <NumericStrong style={{ flexShrink: 0 }}>
+        <Bdi>{`${prefix}${formatCurrency(amount, currency)}`}</Bdi>
+      </NumericStrong>
+    </View>
+  );
+}
+
+function WrappedPriceLine({ children }: { children: ReactNode }) {
+  return (
+    <View
+      style={{
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        alignItems: 'baseline',
+        gap: space('inline-xs'),
+      }}
+    >
+      {children}
+    </View>
+  );
+}
+
+/**
  * CMP-ELIG-002 — Price display. The provider's own recorded price in its governed mode. The mode
  * is part of the anatomy, not an appended qualifier: a starting point reads as a starting point,
  * a range as a range, a free price as genuinely free — never a market/city average or a tariff.
@@ -41,18 +72,25 @@ export function PriceDisplay({ price, compact = false }: { price: PriceFact; com
     return <Helper>{MODE_LABEL['requires-plan']}</Helper>;
   }
 
-  const amountText =
-    price.mode === 'range'
-      ? `${formatCurrency(price.amount_min ?? 0, price.currency)} – ${formatCurrency(price.amount_max ?? 0, price.currency)}`
-      : price.mode === 'from'
-        ? `يبدأ من ${formatCurrency(price.amount_min ?? price.amount ?? 0, price.currency)}`
-        : formatCurrency(price.amount ?? 0, price.currency);
+  const amount = price.amount ?? 0;
+  const amountMin = price.amount_min ?? amount;
+  const amountMax = price.amount_max ?? amountMin;
 
   return (
     <View style={{ gap: space('stack-xs') }}>
-      <NumericStrong>
-        <Bdi>{amountText}</Bdi>
-      </NumericStrong>
+      {price.mode === 'range' ? (
+        <WrappedPriceLine>
+          <CurrencyRun amount={amountMin} currency={price.currency} />
+          <CurrencyRun amount={amountMax} currency={price.currency} prefix="– " />
+        </WrappedPriceLine>
+      ) : price.mode === 'from' ? (
+        <WrappedPriceLine>
+          <NumericStrong style={{ flexShrink: 0 }}>يبدأ من</NumericStrong>
+          <CurrencyRun amount={amountMin} currency={price.currency} />
+        </WrappedPriceLine>
+      ) : (
+        <CurrencyRun amount={amount} currency={price.currency} />
+      )}
       {!compact ? <Helper>{MODE_LABEL[price.mode]}</Helper> : null}
     </View>
   );

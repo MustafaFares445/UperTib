@@ -78,7 +78,7 @@ export function SlotSelectionScreen({ option, slots, onContinue, onChangeOption 
         <ScreenHeader
           eyebrow={`${option.providerName} · ${option.areaLabel}`}
           title="اختر التاريخ والوقت"
-          description="اختر التاريخ أولًا، ثم اختر وقتًا واحدًا. يبقى التوفر إرشاديًا حتى ترسل طلب الحجز."
+          description="اختر التاريخ أولًا، ثم وقتًا واحدًا. التوفر إرشادي الآن؛ لا يُحجز الوقت فعليًا إلا عند إرسال طلب الحجز وإعادة التحقق."
         />
         {showFullOption ? <ProviderDecisionCard option={option} variant="chosen" /> : <ChosenOptionSummary option={option} />}
         <SlotSelector
