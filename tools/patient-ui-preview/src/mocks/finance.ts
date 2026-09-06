@@ -1,4 +1,5 @@
 export type FinancialEventState = 'REPORTED_UNCONFIRMED' | 'CONFIRMED' | 'DISPUTED';
+export type FinancialEventDecision = 'confirm' | 'dispute';
 
 export interface AcceptedFinancialLine {
   id: string;
@@ -44,6 +45,8 @@ export interface FinancialEventProjection {
   attribution: string;
   externalMethodLabel?: string;
   response?: FinancialEventResponse;
+  /** Projection-only actionability fact. Authorization is still server-side in production. */
+  awaitingResponseByPatient?: boolean;
 }
 
 export interface FinancialPositionProjection {
@@ -63,6 +66,13 @@ export interface FinancialLedgerProjection {
   position: FinancialPositionProjection;
   completeHistory: boolean;
   gapLabel?: string;
+}
+
+export interface ExternalPaymentReportDraft {
+  amount: number;
+  currency: string;
+  externalMethodCategory: string;
+  occurredAtIso: string;
 }
 
 export const acceptedFinancialTerms: AcceptedFinancialTermsSnapshot = {
@@ -154,6 +164,21 @@ export const financialEvents: FinancialEventProjection[] = [
   },
 ];
 
+/** A payment assertion from the clinic that is waiting for the Patient counterparty. */
+export const awaitingPatientResponseEvent: FinancialEventProjection = {
+  id: 'fin-event-awaiting-patient-001',
+  title: 'واقعة مالية أبلغت عنها العيادة',
+  summary: 'أبلغت العيادة أن مبلغًا دُفع لها خارج UberTib. يحتاج السجل إلى ردك على دقة هذه الواقعة.',
+  amount: 20000,
+  currency: 'SYP',
+  status: 'REPORTED_UNCONFIRMED',
+  occurredAtIso: '2026-09-06T15:20:00+03:00',
+  recordedAtIso: '2026-09-06T15:28:00+03:00',
+  attribution: 'العيادة',
+  externalMethodLabel: 'نقدًا خارج المنصة',
+  awaitingResponseByPatient: true,
+};
+
 export const financialPosition: FinancialPositionProjection = {
   currency: 'SYP',
   agreed: 150000,
@@ -170,6 +195,15 @@ export const financialLedger: FinancialLedgerProjection = {
   events: financialEvents,
   position: financialPosition,
   completeHistory: true,
+};
+
+export const actionableFinancialLedger: FinancialLedgerProjection = {
+  ...financialLedger,
+  events: [...financialEvents, awaitingPatientResponseEvent],
+  position: {
+    ...financialPosition,
+    reported: financialPosition.reported + awaitingPatientResponseEvent.amount,
+  },
 };
 
 export const partialFinancialLedger: FinancialLedgerProjection = {
@@ -191,3 +225,74 @@ export const emptyFinancialLedger: FinancialLedgerProjection = {
     pendingExternalExecution: 0,
   },
 };
+
+/**
+ * Prototype-only projection helper for API-FINANCE-002. A deterministic event id makes a repeated
+ * identical simulated command idempotent: the second invocation returns the same ledger instead of
+ * appending a duplicate assertion.
+ */
+export function appendPatientPaymentReport(
+  ledger: FinancialLedgerProjection,
+  draft: ExternalPaymentReportDraft,
+): FinancialLedgerProjection {
+  const id = 'fin-event-patient-report-001';
+  if (ledger.events.some((event) => event.id === id)) return ledger;
+
+  const event: FinancialEventProjection = {
+    id,
+    title: 'سُجّلت واقعة مالية خارجية',
+    summary: 'أبلغ المريض عن مبلغ دفعه للعيادة خارج UberTib.',
+    amount: draft.amount,
+    currency: draft.currency,
+    status: 'REPORTED_UNCONFIRMED',
+    occurredAtIso: draft.occurredAtIso,
+    recordedAtIso: '2026-09-06T18:30:00+03:00',
+    attribution: 'المريض',
+    externalMethodLabel: draft.externalMethodCategory,
+  };
+
+  return {
+    ...ledger,
+    events: [...ledger.events, event],
+    position: {
+      ...ledger.position,
+      reported: ledger.position.reported + draft.amount,
+      asOfIso: event.recordedAtIso,
+    },
+  };
+}
+
+/** Prototype-only projection helper for API-FINANCE-003. The assertion stays present and a response is appended. */
+export function appendPatientFinancialResponse(
+  ledger: FinancialLedgerProjection,
+  eventId: string,
+  decision: FinancialEventDecision,
+  reason?: string,
+): FinancialLedgerProjection {
+  const target = ledger.events.find((event) => event.id === eventId);
+  if (!target || target.response || !target.awaitingResponseByPatient) return ledger;
+
+  const confirmed = decision === 'confirm';
+  return {
+    ...ledger,
+    events: ledger.events.map((event) => event.id !== eventId ? event : {
+      ...event,
+      status: confirmed ? 'CONFIRMED' : 'DISPUTED',
+      awaitingResponseByPatient: false,
+      response: {
+        label: confirmed ? 'تأكيد مسجَّل لاحقًا' : 'اعتراض مسجَّل لاحقًا',
+        atIso: '2026-09-06T18:35:00+03:00',
+        attribution: 'المريض',
+        summary: confirmed
+          ? 'أكد المريض دقة الواقعة كما سُجّلت. هذا يؤكد السجل فقط ولا ينفّذ أي دفع داخل UberTib.'
+          : `اعترض المريض على دقة الواقعة. سبب الاعتراض: ${reason ?? ''}`,
+      },
+    }),
+    position: {
+      ...ledger.position,
+      confirmed: ledger.position.confirmed + (confirmed ? target.amount : 0),
+      disputed: ledger.position.disputed + (confirmed ? 0 : target.amount),
+      asOfIso: '2026-09-06T18:35:00+03:00',
+    },
+  };
+}
