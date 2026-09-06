@@ -20,7 +20,13 @@ async function expectNoHorizontalOverflow(page: Page, label: string) {
 }
 
 async function expectNoSeriousAccessibilityViolations(page: Page, label: string) {
-  const results = await new AxeBuilder({ page }).analyze();
+  const results = await new AxeBuilder({ page })
+    .analyze()
+    .catch(async (error) => {
+      if (!String(error).includes('Axe is already running')) throw error;
+      await page.waitForTimeout(1000);
+      return new AxeBuilder({ page }).analyze();
+    });
   const serious = results.violations.filter((violation) => violation.impact === 'serious' || violation.impact === 'critical');
   expect(serious, `${label}: ${JSON.stringify(serious, null, 2)}`).toEqual([]);
 }
