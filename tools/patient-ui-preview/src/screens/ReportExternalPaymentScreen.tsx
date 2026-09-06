@@ -49,9 +49,16 @@ export function ReportExternalPaymentScreen({
   const currencyValid = currency.trim().length > 0;
   const methodValid = method.trim().length > 0;
   const occurredAtValid = occurredAt.trim().length > 0;
-  const complete = amountValid && currencyValid && methodValid && occurredAtValid;
+  const fieldsComplete = amountValid && currencyValid && methodValid && occurredAtValid;
+  const domainReady = snapshot.complete && state !== 'mismatch';
+  const complete = fieldsComplete && domainReady;
   const submitting = state === 'submitting';
   const submitted = state === 'submitted';
+  const disabledReason = !snapshot.complete
+    ? 'بيانات الشروط المقبولة غير مكتملة، لذلك لا يمكن تسجيل واقعة مالية الآن.'
+    : state === 'mismatch'
+      ? 'تحتاج تفاصيل الواقعة إلى المراجعة وفق الشروط والسجل الحاليين قبل التسجيل.'
+      : 'أكمل المبلغ والعملة وطريقة السداد ووقت حدوث الواقعة أولًا.';
 
   const submit = () => {
     setAttempted(true);
@@ -84,7 +91,7 @@ export function ReportExternalPaymentScreen({
               ? { status: 'loading' }
               : complete
                 ? { status: 'available' }
-                : { status: 'disabled', reason: 'أكمل المبلغ والعملة وطريقة السداد ووقت حدوث الواقعة أولًا.' },
+                : { status: 'disabled', reason: disabledReason },
             onPress: submit,
           },
           ...(!submitting ? [{
