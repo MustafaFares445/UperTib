@@ -47,6 +47,7 @@ function Progress({ value }: { value: number }) {
     <View
       accessible
       accessibilityRole="progressbar"
+      accessibilityLabel="تقدّم رفع الملف"
       accessibilityValue={{ min: 0, max: 100, now: percent, text: `${percent}%` }}
       style={{ gap: space('stack-xs') }}
     >
