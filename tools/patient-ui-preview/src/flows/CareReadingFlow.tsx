@@ -1,13 +1,22 @@
 import { useState } from 'react';
 import { acceptedTreatmentPlan, caseTimeline, patientCases, proposedTreatmentPlan, type PatientCase } from '../mocks/clinical';
-import { acceptedFinancialTerms, financialLedger } from '../mocks/finance';
+import {
+  acceptedFinancialTerms,
+  actionableFinancialLedger,
+  appendPatientFinancialResponse,
+  appendPatientPaymentReport,
+  type FinancialEventProjection,
+  type FinancialLedgerProjection,
+} from '../mocks/finance';
 import { reopenedPatientStage } from '../mocks/stages';
 import { AcceptedFinancialTermsScreen } from '../screens/AcceptedFinancialTermsScreen';
 import { CaseSummaryScreen } from '../screens/CaseSummaryScreen';
 import { CaseTimelineScreen } from '../screens/CaseTimelineScreen';
+import { FinancialEventResponseScreen, type FinancialEventResponseState } from '../screens/FinancialEventResponseScreen';
 import { FinancialTimelineScreen } from '../screens/FinancialTimelineScreen';
 import { MyCasesScreen } from '../screens/MyCasesScreen';
 import { PlanAcceptanceScreen } from '../screens/PlanAcceptanceScreen';
+import { ReportExternalPaymentScreen, type ReportExternalPaymentState } from '../screens/ReportExternalPaymentScreen';
 import { StageDetailScreen } from '../screens/StageDetailScreen';
 import { TreatmentPlanScreen } from '../screens/TreatmentPlanScreen';
 
@@ -20,12 +29,21 @@ type Step =
   | 'timeline'
   | 'stage'
   | 'financial-terms'
-  | 'financial-timeline';
+  | 'financial-timeline'
+  | 'financial-report'
+  | 'financial-response';
 
-/** FLOW-CLINICAL-008 plus case-scoped plan, stage and financial-history reading branches. Local navigation state only. */
+/**
+ * FLOW-CLINICAL-008 plus the case-scoped Patient reading branches and the canonical
+ * FLOW-FINANCE-002 / FLOW-FINANCE-004 prototype paths. Local navigation and projection state only.
+ */
 export function CareReadingFlow() {
   const [step, setStep] = useState<Step>('cases');
   const [selectedCase, setSelectedCase] = useState<PatientCase>(patientCases[0]);
+  const [ledger, setLedger] = useState<FinancialLedgerProjection>(actionableFinancialLedger);
+  const [selectedFinancialEvent, setSelectedFinancialEvent] = useState<FinancialEventProjection | null>(null);
+  const [reportState, setReportState] = useState<ReportExternalPaymentState>('editing');
+  const [responseState, setResponseState] = useState<FinancialEventResponseState>('ready');
 
   if (step === 'cases') {
     return (
@@ -99,12 +117,68 @@ export function CareReadingFlow() {
     );
   }
 
+  if (step === 'financial-report') {
+    return (
+      <ReportExternalPaymentScreen
+        snapshot={acceptedFinancialTerms}
+        state={reportState}
+        initialAmount="20000"
+        initialCurrency="SYP"
+        initialMethod="نقدًا خارج المنصة"
+        initialOccurredAt="2026-09-06T17:20:00+03:00"
+        onSubmit={(draft) => {
+          setLedger((current) => appendPatientPaymentReport(current, draft));
+          setReportState('submitted');
+        }}
+        onCancel={() => {
+          setReportState('editing');
+          setStep('financial-timeline');
+        }}
+        onOpenTimeline={() => {
+          setReportState('editing');
+          setStep('financial-timeline');
+        }}
+      />
+    );
+  }
+
+  if (step === 'financial-response' && selectedFinancialEvent) {
+    return (
+      <FinancialEventResponseScreen
+        event={selectedFinancialEvent}
+        state={responseState}
+        onConfirm={() => {
+          setLedger((current) => appendPatientFinancialResponse(current, selectedFinancialEvent.id, 'confirm'));
+          setResponseState('responded-confirmed');
+        }}
+        onDispute={(reason) => {
+          setLedger((current) => appendPatientFinancialResponse(current, selectedFinancialEvent.id, 'dispute', reason));
+          setResponseState('responded-disputed');
+        }}
+        onBackToTimeline={() => {
+          setSelectedFinancialEvent(null);
+          setResponseState('ready');
+          setStep('financial-timeline');
+        }}
+      />
+    );
+  }
+
   if (step === 'financial-timeline') {
     return (
       <FinancialTimelineScreen
-        ledger={financialLedger}
+        ledger={ledger}
         onOpenTerms={() => setStep('financial-terms')}
         onBackToCase={() => setStep('summary')}
+        onReportPayment={() => {
+          setReportState('editing');
+          setStep('financial-report');
+        }}
+        onRespondToEvent={(event) => {
+          setSelectedFinancialEvent(event);
+          setResponseState('ready');
+          setStep('financial-response');
+        }}
       />
     );
   }
