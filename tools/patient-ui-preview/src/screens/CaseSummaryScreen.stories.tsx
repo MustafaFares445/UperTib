@@ -14,3 +14,6 @@ type Story = StoryObj<typeof meta>;
 const handlers = { onOpenPlan: () => {}, onOpenTimeline: () => {}, onActOutstanding: () => {} };
 export const OutstandingAction: Story = { args: { item: patientCases[0], ...handlers } };
 export const UpToDate: Story = { args: { item: patientCases[1], onOpenPlan: () => {}, onOpenTimeline: () => {} } };
+export const FinancialHistoryAvailable: Story = {
+  args: { item: patientCases[1], onOpenPlan: () => {}, onOpenTimeline: () => {}, onOpenFinance: () => {} },
+};
