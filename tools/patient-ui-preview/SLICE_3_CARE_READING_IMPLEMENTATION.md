@@ -134,7 +134,17 @@ This slice does **not**:
 
 ## Verification status
 
-Pending the branch pull-request CI run. The report should be updated only from measured GitHub Actions evidence; no local success is claimed here.
+GitHub Actions **Patient UI Preview run 25** (`34048149705`) completed successfully on the pre-report-update Slice 3 head. Measured job evidence:
+
+- preview dependency install: passed;
+- dependency audit: passed;
+- Chromium install: passed;
+- TypeScript typecheck: passed;
+- Storybook production build: passed;
+- readiness + Slice 2 + Slice 3 smoke gate: passed;
+- artifact upload: passed.
+
+The report update itself is documentation-only inside the preview path, so the PR CI reruns once more against the final head. Final PR status should be taken from that latest run rather than treating run 25 as evidence for a later code change.
 
 ## Next slice after this one
 
