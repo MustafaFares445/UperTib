@@ -55,7 +55,7 @@ export function ReportExternalPaymentScreen({
   const submitting = state === 'submitting';
   const submitted = state === 'submitted';
   const disabledReason = !snapshot.complete
-    ? 'بيانات الشروط المقبولة غير مكتملة، لذلك لا يمكن تسجيل واقعة مالية الآن.'
+    ? 'لا يمكن المتابعة لأن لقطة الشروط المقبولة غير مكتملة.'
     : state === 'mismatch'
       ? 'تحتاج تفاصيل الواقعة إلى المراجعة وفق الشروط والسجل الحاليين قبل التسجيل.'
       : 'أكمل المبلغ والعملة وطريقة السداد ووقت حدوث الواقعة أولًا.';
