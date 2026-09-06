@@ -157,7 +157,20 @@ Added stories for:
 
 ## Verification status
 
-Pending the pull-request `Patient UI Preview` CI run. This section must be updated only from measured GitHub Actions evidence.
+Measured on GitHub Actions **Patient UI Preview run #31** (`34051340109`) at head `27bcaead784b13c6e8196fd77dc4632cf74d9a27`:
+
+- dependency install: passed;
+- dependency audit: passed;
+- Chromium install: passed;
+- TypeScript typecheck: passed;
+- Storybook production build: passed;
+- readiness + Slice 2 + Slice 3 + Slice 4 + Slice 5 smoke suites: passed;
+- serious/critical axe checks on the high-risk Slice 5 surfaces: passed;
+- artifact upload: passed.
+
+The first Slice 5 run correctly exposed one brittle Playwright strict-mode assertion because the canonical phrase `محل اعتراض` appears both as a lifecycle chip and as a derived-position label. The test was corrected to assert the first semantic occurrence instead of requiring the UI to contain only one copy. No accessibility, business-rule, or rendering gate was removed or waived.
+
+The documentation-only commit that records this result triggers one final CI run; the pull request should be considered verified only when that final head is green as well.
 
 ## Deferred financial write surfaces
 
