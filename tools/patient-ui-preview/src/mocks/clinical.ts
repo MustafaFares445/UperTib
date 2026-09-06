@@ -203,6 +203,7 @@ export const caseTimeline: PatientTimelineEvent[] = [
     attribution: 'د. رنا الحلبي',
     sourceLabel: 'المرحلة العلاجية',
     details: ['يبقى سجل الإكمال ظاهرًا حتى لو ظهرت لاحقًا حاجة لتصحيح أو إعادة فتح.'],
+    owningRecordLabel: 'فتح تفاصيل المرحلة',
   },
   {
     id: 'evt-stage-reopened',
@@ -213,6 +214,7 @@ export const caseTimeline: PatientTimelineEvent[] = [
     sourceLabel: 'المرحلة العلاجية',
     correctionOf: 'evt-stage-complete',
     details: ['سبب إعادة الفتح: احتاجت المرحلة إلى متابعة إضافية قبل اعتبارها منتهية.'],
+    owningRecordLabel: 'فتح تفاصيل المرحلة',
   },
   {
     id: 'evt-plan-v2',
