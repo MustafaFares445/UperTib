@@ -13,12 +13,12 @@
     "storybook:build": "storybook build",
     "typecheck": "tsc --noEmit",
     "playwright:install": "playwright install chromium",
-    "test:smoke": "npm run storybook:build && playwright test playwright/smoke.spec.ts playwright/slice2-discovery.spec.ts --project=patient-390",
+    "test:smoke": "npm run storybook:build && playwright test playwright/smoke.spec.ts playwright/slice2-discovery.spec.ts playwright/slice3-care.spec.ts --project=patient-390",
     "test:e2e": "npm run storybook:build && playwright test",
     "test:e2e:headed": "npm run storybook:build && playwright test --headed",
     "test:e2e:ui": "npm run storybook:build && playwright test --ui",
     "test:e2e:update": "npm run storybook:build && playwright test --update-snapshots",
-    "verify": "npm run typecheck && npm run storybook:build && playwright test playwright/smoke.spec.ts playwright/slice2-discovery.spec.ts --project=patient-390"
+    "verify": "npm run typecheck && npm run storybook:build && playwright test playwright/smoke.spec.ts playwright/slice2-discovery.spec.ts playwright/slice3-care.spec.ts --project=patient-390"
   },
   "dependencies": {
     "react": "19.2.8",
