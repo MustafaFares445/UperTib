@@ -214,4 +214,17 @@ This slice does **not**:
 
 ## Verification status
 
-Pending the pull-request `Patient UI Preview` CI run. Update this section only from measured GitHub Actions evidence.
+Measured on GitHub Actions **Patient UI Preview run #40** (`34054222976`) at head `d9e3c4cebbebcd47d72f06fcb06906d03a9559b5`:
+
+- dependency install and audit: passed;
+- Chromium install: passed;
+- TypeScript typecheck: passed;
+- Storybook production build: passed;
+- readiness + Slice 2 + Slice 3 + Slice 4 + Slice 5 + Slice 6 + Slice 7 smoke suites: passed;
+- serious/critical Axe checks on the high-risk Slice 7 surfaces: passed;
+- refund decision amount/currency matching, missing-decision, append-only, duplicate-decision, timeline action hierarchy, and integrated-flow checks: passed;
+- artifact upload: passed.
+
+Run #39 had one failed Playwright assertion because a broad `/SYP/` selector legitimately matched two currency helper texts on the same screen. The product UI, TypeScript build, Storybook build, accessibility checks, and all other assertions passed. The selector was narrowed to the intended exact helper text without removing or weakening the currency verification, and run #40 passed.
+
+This documentation-only verification update triggers one final pull-request CI run. Treat the pull request as final-green only after that new head also completes successfully.
