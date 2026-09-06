@@ -48,8 +48,6 @@ export function ProviderSearchScreen({ family, onSearch, onChangeService }: Prov
         />
 
         <View
-          accessible
-          accessibilityLabel={`الخدمة المختارة: ${family.name}`}
           style={{
             gap: space('stack-sm'),
             padding: space('inset-md'),
