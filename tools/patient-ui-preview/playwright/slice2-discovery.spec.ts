@@ -60,7 +60,8 @@ test.describe('eligibility explanation stays patient-safe and responsive', () =>
       if (testInfo.project.name === PRIMARY_PROJECT) {
         await expect(page.getByText('ماذا تعني حالة هذا الخيار؟')).toBeVisible();
         await expect(page.getByText('حشوات الأسنان', { exact: true })).toBeVisible();
-        await expect(page.getByText('عيادة الشهباء لطب الأسنان', { exact: true })).toBeVisible();
+        await expect(page.getByText(/عيادة الشهباء لطب الأسنان/)).toBeVisible();
+        await expect(page.getByText(/حلب الجديدة/)).toBeVisible();
         await expect(page.getByText('آخر تقييم لهذه الخدمة في هذا الفرع')).toBeVisible();
         await expect(page.getByText(/درجات المخاطر الداخلية/)).toBeVisible();
         await expect(page.getByText(/ترتيبًا عامًا للطبيب/)).toBeVisible();
