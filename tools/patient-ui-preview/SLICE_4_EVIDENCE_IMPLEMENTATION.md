@@ -129,7 +129,13 @@ This slice does **not**:
 
 ## Verification status
 
-Pending the branch pull-request CI run. This section must be updated only from measured GitHub Actions evidence.
+Measured GitHub Actions evidence on implementation head `841503f427c0a271a6d76347a24452c84018d0f7` is green in **Patient UI Preview run 28** (`34049127269`).
+
+The run passed dependency install/audit, Chromium installation, TypeScript typecheck, Storybook production build, the readiness + Slice 2 + Slice 3 + Slice 4 smoke suite, and artifact upload.
+
+The first Slice 4 run (`34048995919`) correctly failed its accessibility gate because the determinate evidence upload progress bar lacked an accessible name. That defect was fixed by giving the progressbar the explicit Arabic accessible name `تقدّم رفع الملف`; run 28 then passed the same serious/critical axe checks. No failed gate was waived or removed.
+
+This file records web-preview verification only. Native screen-reader behavior, real-device reflow and actual resumable binary transfer remain outside what this preview can prove.
 
 ## Next slice after this one
 
