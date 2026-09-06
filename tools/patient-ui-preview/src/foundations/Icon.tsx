@@ -3,13 +3,12 @@ import { size as tokenSize } from '../theme/tokens';
 
 /**
  * Governed icon vocabulary (semantic.state.json "icon-set": heroicons-2-outline-24), restricted to
- * the subset this Slice 1 journey actually renders. Every name here is one from the canonical
- * icon-vocabulary list; no other icon set is introduced.
+ * the subset the implemented Patient slices actually render. Every name here is one from the
+ * canonical icon-vocabulary list; no other icon set is introduced.
  *
- * The concrete Patient icon package (e.g. vendoring the Heroicons React Native port) is a
- * production-stack decision this preview intentionally defers per PATIENT_UI_PREVIEW_SETUP.md.
- * These are simplified outline glyphs drawn in the same 24x24 / 1.5-stroke language as Heroicons
- * Outline so the preview reads correctly without vendoring a production dependency for it.
+ * The concrete Patient icon package is a production-stack decision this preview intentionally
+ * defers. These are simplified outline glyphs drawn in the same 24x24 / 1.5-stroke language as
+ * Heroicons Outline so the preview reads correctly without selecting a production dependency.
  */
 export type IconName =
   | 'check-circle'
@@ -29,6 +28,7 @@ export type IconName =
   | 'lock-closed'
   | 'stop-circle'
   | 'document-text'
+  | 'document-check'
   | 'plus-circle';
 
 const PATHS: Record<IconName, string> = {
@@ -51,6 +51,7 @@ const PATHS: Record<IconName, string> = {
   'lock-closed': 'M7 10.5V8a5 5 0 0110 0v2.5M5.5 10.5h13v9h-13v-9z',
   'stop-circle': 'M9 9h6v6H9zM20.5 12a8.5 8.5 0 11-17 0 8.5 8.5 0 0117 0z',
   'document-text': 'M7 3.5h7l3.5 3.5v13.5h-10.5v-17zM14 3.5V7h3.5M9 12h6M9 15.5h6M9 8.5h2',
+  'document-check': 'M7 3.5h7l3.5 3.5v13.5h-10.5v-17zM14 3.5V7h3.5M9 13l2 2 4-5',
   'plus-circle': 'M12 8v8M8 12h8M20.5 12a8.5 8.5 0 11-17 0 8.5 8.5 0 0117 0z',
 };
 
