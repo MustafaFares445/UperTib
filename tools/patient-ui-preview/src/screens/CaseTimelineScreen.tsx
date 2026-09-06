@@ -27,7 +27,7 @@ export function CaseTimelineScreen({
     <Screen>
       <Stack gap="stack-lg">
         <ScreenHeader
-          eyebrow="سجل الحالة"
+          eyebrow={`${item.serviceLabel} · ${item.providerName}`}
           title="ما الذي حدث في هذه الحالة؟"
           description="الأحداث تبقى بالترتيب. أي تصحيح يظهر كحدث لاحق بدل حذف ما سبقه."
         />
