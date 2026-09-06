@@ -5,6 +5,10 @@ import {
   actionableFinancialLedger,
   appendPatientFinancialResponse,
   appendPatientPaymentReport,
+  appendPatientRefundExecution,
+  approvedRefundDecision,
+  refundExecutionEvidenceIds,
+  refundExecutionEvidenceSummary,
   type FinancialEventProjection,
   type FinancialLedgerProjection,
 } from '../mocks/finance';
@@ -17,6 +21,7 @@ import { FinancialTimelineScreen } from '../screens/FinancialTimelineScreen';
 import { MyCasesScreen } from '../screens/MyCasesScreen';
 import { PlanAcceptanceScreen } from '../screens/PlanAcceptanceScreen';
 import { ReportExternalPaymentScreen, type ReportExternalPaymentState } from '../screens/ReportExternalPaymentScreen';
+import { ReportRefundExecutionScreen, type ReportRefundExecutionState } from '../screens/ReportRefundExecutionScreen';
 import { StageDetailScreen } from '../screens/StageDetailScreen';
 import { TreatmentPlanScreen } from '../screens/TreatmentPlanScreen';
 
@@ -31,11 +36,12 @@ type Step =
   | 'financial-terms'
   | 'financial-timeline'
   | 'financial-report'
-  | 'financial-response';
+  | 'financial-response'
+  | 'refund-execution';
 
 /**
- * FLOW-CLINICAL-008 plus the case-scoped Patient reading branches and the canonical
- * FLOW-FINANCE-002 / FLOW-FINANCE-004 prototype paths. Local navigation and projection state only.
+ * FLOW-CLINICAL-008 plus the case-scoped Patient reading branches and canonical Patient finance
+ * prototype paths. Local navigation and projection state only; no production persistence or money movement.
  */
 export function CareReadingFlow() {
   const [step, setStep] = useState<Step>('cases');
@@ -44,6 +50,7 @@ export function CareReadingFlow() {
   const [selectedFinancialEvent, setSelectedFinancialEvent] = useState<FinancialEventProjection | null>(null);
   const [reportState, setReportState] = useState<ReportExternalPaymentState>('editing');
   const [responseState, setResponseState] = useState<FinancialEventResponseState>('ready');
+  const [refundExecutionState, setRefundExecutionState] = useState<ReportRefundExecutionState>('editing');
 
   if (step === 'cases') {
     return (
@@ -164,7 +171,34 @@ export function CareReadingFlow() {
     );
   }
 
+  if (step === 'refund-execution') {
+    return (
+      <ReportRefundExecutionScreen
+        decision={approvedRefundDecision}
+        state={refundExecutionState}
+        initialAmount={String(approvedRefundDecision.amount)}
+        initialCurrency={approvedRefundDecision.currency}
+        initialOccurredAt="2026-09-06T18:50:00+03:00"
+        evidenceIds={refundExecutionEvidenceIds}
+        evidenceSummary={refundExecutionEvidenceSummary}
+        onSubmit={(draft) => {
+          setLedger((current) => appendPatientRefundExecution(current, approvedRefundDecision, draft));
+          setRefundExecutionState('submitted');
+        }}
+        onCancel={() => {
+          setRefundExecutionState('editing');
+          setStep('financial-timeline');
+        }}
+        onOpenTimeline={() => {
+          setRefundExecutionState('editing');
+          setStep('financial-timeline');
+        }}
+      />
+    );
+  }
+
   if (step === 'financial-timeline') {
+    const refundDecisionAvailable = selectedCase.id === approvedRefundDecision.caseId;
     return (
       <FinancialTimelineScreen
         ledger={ledger}
@@ -179,6 +213,10 @@ export function CareReadingFlow() {
           setResponseState('ready');
           setStep('financial-response');
         }}
+        onReportRefundExecution={refundDecisionAvailable ? () => {
+          setRefundExecutionState('editing');
+          setStep('refund-execution');
+        } : undefined}
       />
     );
   }
