@@ -33,6 +33,8 @@ export type IconName =
   | 'stop-circle'
   | 'document-text'
   | 'document-check'
+  | 'banknotes'
+  | 'hand-raised'
   | 'plus-circle';
 
 const PATHS: Record<IconName, string> = {
@@ -60,6 +62,8 @@ const PATHS: Record<IconName, string> = {
   'stop-circle': 'M9 9h6v6H9zM20.5 12a8.5 8.5 0 11-17 0 8.5 8.5 0 0117 0z',
   'document-text': 'M7 3.5h7l3.5 3.5v13.5h-10.5v-17zM14 3.5V7h3.5M9 12h6M9 15.5h6M9 8.5h2',
   'document-check': 'M7 3.5h7l3.5 3.5v13.5h-10.5v-17zM14 3.5V7h3.5M9 13l2 2 4-5',
+  banknotes: 'M4 8.5h16v9H4v-9zM7 6.5h10M8 13a4 3 0 118 0 4 3 0 01-8 0zM5.5 11h1M17.5 15h1',
+  'hand-raised': 'M6.5 12V8.5a1 1 0 012 0V12m0 0V6.5a1 1 0 012 0V12m0 0V5.5a1 1 0 012 0V12m0 0V7a1 1 0 012 0v6.5l1-1.5a1.6 1.6 0 012.6 1.9l-2.7 4.1A4 4 0 0114 20H10a4 4 0 01-3.5-2.1L5 15.3A2 2 0 016.5 12z',
   'plus-circle': 'M12 8v8M8 12h8M20.5 12a8.5 8.5 0 11-17 0 8.5 8.5 0 0117 0z',
 };
 
