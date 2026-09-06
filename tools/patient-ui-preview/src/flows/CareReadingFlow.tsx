@@ -1,14 +1,16 @@
 import { useState } from 'react';
 import { acceptedTreatmentPlan, caseTimeline, patientCases, proposedTreatmentPlan, type PatientCase } from '../mocks/clinical';
+import { reopenedPatientStage } from '../mocks/stages';
 import { CaseSummaryScreen } from '../screens/CaseSummaryScreen';
 import { CaseTimelineScreen } from '../screens/CaseTimelineScreen';
 import { MyCasesScreen } from '../screens/MyCasesScreen';
 import { PlanAcceptanceScreen } from '../screens/PlanAcceptanceScreen';
+import { StageDetailScreen } from '../screens/StageDetailScreen';
 import { TreatmentPlanScreen } from '../screens/TreatmentPlanScreen';
 
-type Step = 'cases' | 'summary' | 'plan' | 'acceptance' | 'accepted-plan' | 'timeline';
+type Step = 'cases' | 'summary' | 'plan' | 'acceptance' | 'accepted-plan' | 'timeline' | 'stage';
 
-/** FLOW-CLINICAL-008 plus the case-scoped plan-reading branch. Local navigation state only. */
+/** FLOW-CLINICAL-008 plus the case-scoped plan and stage-reading branches. Local navigation state only. */
 export function CareReadingFlow() {
   const [step, setStep] = useState<Step>('cases');
   const [selectedCase, setSelectedCase] = useState<PatientCase>(patientCases[0]);
@@ -70,6 +72,10 @@ export function CareReadingFlow() {
     );
   }
 
+  if (step === 'stage') {
+    return <StageDetailScreen stage={reopenedPatientStage} onBackToTimeline={() => setStep('timeline')} />;
+  }
+
   return (
     <CaseTimelineScreen
       item={selectedCase}
@@ -78,6 +84,7 @@ export function CareReadingFlow() {
       onLoadOlder={() => {}}
       onOpenRecord={(event) => {
         if (event.id === 'evt-plan-v2') setStep('plan');
+        if (event.id === 'evt-stage-complete' || event.id === 'evt-stage-reopened') setStep('stage');
       }}
     />
   );
