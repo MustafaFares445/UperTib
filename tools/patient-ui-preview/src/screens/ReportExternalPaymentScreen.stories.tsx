@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { acceptedFinancialTerms } from '../mocks/finance';
+import { acceptedFinancialTerms, partialAcceptedFinancialTerms } from '../mocks/finance';
 import { ReportExternalPaymentScreen } from './ReportExternalPaymentScreen';
 
 const meta = {
@@ -23,6 +23,7 @@ const filled = {
 
 export const Default: Story = { args: filled };
 export const EmptyFields: Story = { args: { snapshot: acceptedFinancialTerms, ...handlers } };
+export const IncompleteTerms: Story = { args: { ...filled, snapshot: partialAcceptedFinancialTerms } };
 export const Submitting: Story = { args: { ...filled, state: 'submitting' } };
 export const Submitted: Story = { args: { ...filled, state: 'submitted' } };
 export const TermsMismatch: Story = { args: { ...filled, state: 'mismatch', initialCurrency: 'USD' } };
