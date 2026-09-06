@@ -15,8 +15,22 @@ const handlers = { onOpenTerms: () => {}, onBackToCase: () => {} };
 
 export const Default: Story = { args: { ledger: financialLedger, ...handlers } };
 export const ReportPaymentAvailable: Story = { args: { ledger: financialLedger, onReportPayment: () => {}, ...handlers } };
+export const RefundExecutionAvailable: Story = {
+  args: {
+    ledger: financialLedger,
+    onReportPayment: () => {},
+    onReportRefundExecution: () => {},
+    ...handlers,
+  },
+};
 export const ResponseRequired: Story = {
-  args: { ledger: actionableFinancialLedger, onReportPayment: () => {}, onRespondToEvent: () => {}, ...handlers },
+  args: {
+    ledger: actionableFinancialLedger,
+    onReportPayment: () => {},
+    onRespondToEvent: () => {},
+    onReportRefundExecution: () => {},
+    ...handlers,
+  },
 };
 export const PartialHistory: Story = { args: { ledger: partialFinancialLedger, ...handlers } };
 export const NoEventsYet: Story = { args: { ledger: emptyFinancialLedger, ...handlers } };
