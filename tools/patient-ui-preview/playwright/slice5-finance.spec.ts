@@ -79,7 +79,10 @@ test('financial timeline distinguishes all six required financial meanings witho
     'استرداد خارجي مسجَّل',
     'بانتظار تنفيذ خارجي',
   ]) {
-    await expect(page.getByText(label, { exact: true })).toBeVisible();
+    // A lifecycle chip and a derived-position fact may intentionally share the same governed label
+    // (for example "محل اعتراض"). The assertion verifies the meaning is present without requiring
+    // the DOM to contain only one semantic occurrence.
+    await expect(page.getByText(label, { exact: true }).first()).toBeVisible();
   }
 
   await expect(page.getByText('مُبلَّغ عنه — غير مؤكَّد', { exact: true })).toBeVisible();
