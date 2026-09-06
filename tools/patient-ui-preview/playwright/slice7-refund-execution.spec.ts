@@ -60,7 +60,7 @@ test('refund execution shows the approved decision amount and currency before re
 
   await expect(page.getByText('قرار الاسترداد المعتمد', { exact: true })).toBeVisible();
   await expect(page.getByText(/20,000/)).toBeVisible();
-  await expect(page.getByText(/SYP/)).toBeVisible();
+  await expect(page.getByText('العملة المعتمدة: SYP.', { exact: true })).toBeVisible();
   await expect(page.getByLabel('مبلغ الاسترداد المنفّذ خارج المنصة')).toHaveValue('20000');
   await expect(page.getByLabel('عملة الاسترداد')).toHaveValue('SYP');
   await expect(page.getByRole('button', { name: 'تسجيل تنفيذ الاسترداد الخارجي' })).toBeEnabled();
