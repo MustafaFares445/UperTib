@@ -106,10 +106,6 @@ export function ProviderResultsScreen({
 
         {state === 'success' ? (
           <View
-            accessible
-            accessibilityLabel={area
-              ? `${formatArabicCount(options.length, { one: 'خيار واحد', two: 'خياران', few: 'خيارات', many: 'خيارًا' })} في منطقة ${area}`
-              : `${formatArabicCount(options.length, { one: 'خيار واحد', two: 'خياران', few: 'خيارات', many: 'خيارًا' })} في جميع مناطق حلب`}
             style={{
               flexDirection: 'row',
               flexWrap: 'wrap',
