@@ -7,13 +7,14 @@ import { ServiceDetailScreen } from '../screens/ServiceDetailScreen';
 import { ProviderSearchScreen } from '../screens/ProviderSearchScreen';
 import { ProviderResultsScreen } from '../screens/ProviderResultsScreen';
 import { ProviderDecisionScreen } from '../screens/ProviderDecisionScreen';
+import { EligibilityExplanationScreen } from '../screens/EligibilityExplanationScreen';
 import { ProviderComparisonScreen } from '../screens/ProviderComparisonScreen';
 import { SlotSelectionScreen } from '../screens/SlotSelectionScreen';
 import { BookingReviewScreen } from '../screens/BookingReviewScreen';
 import { BookingDetailScreen } from '../screens/BookingDetailScreen';
 import type { ProviderOption } from '../components/ProviderDecisionCard';
 import type { ServiceFamily } from '../mocks/catalog';
-import { optionsFor } from '../mocks/eligibility';
+import { explanationFor, optionsFor } from '../mocks/eligibility';
 import { slotsFor, type BookingRecord, type Slot } from '../mocks/booking';
 import type { Challenge } from '../mocks/identity';
 
@@ -27,6 +28,7 @@ type Step =
   | 'results'
   | 'comparison'
   | 'decision'
+  | 'eligibilityExplanation'
   | 'slot'
   | 'review'
   | 'detail';
@@ -147,7 +149,17 @@ export function BookingJourneyFlow() {
           onBook={() =>
             setS({ ...s, step: s.challenge ? 'slot' : 'phone', returnTo: s.challenge ? undefined : 'slot' })
           }
+          onExplainEligibility={() => setS({ ...s, step: 'eligibilityExplanation' })}
           onBackToResults={() => setS({ ...s, step: 'results' })}
+        />
+      );
+
+    case 'eligibilityExplanation':
+      return (
+        <EligibilityExplanationScreen
+          explanation={explanationFor(s.option!)}
+          onBack={() => setS({ ...s, step: 'decision' })}
+          onFindAlternatives={() => setS({ ...s, step: 'results' })}
         />
       );
 
