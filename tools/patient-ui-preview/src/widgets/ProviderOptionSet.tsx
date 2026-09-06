@@ -4,6 +4,7 @@ import { EmptyState } from '../components/EmptyState';
 import { ProviderDecisionCard, type ProviderOption } from '../components/ProviderDecisionCard';
 import { RecoveryState } from '../components/RecoveryState';
 import { color, radius, space } from '../theme/tokens';
+import { formatArabicCount } from '../foundations/format';
 
 export type ProviderOptionSetState = 'loading-initial' | 'empty-no-data' | 'empty-filtered' | 'error-fetch' | 'success';
 
@@ -86,7 +87,7 @@ export function ProviderOptionSet({
 
   return (
     <View style={{ gap: space('stack-sm') }}>
-      <Helper>{options.length} نتيجة متاحة</Helper>
+      <Helper>{`${formatArabicCount(options.length, { one: 'نتيجة واحدة', two: 'نتيجتان', few: 'نتائج', many: 'نتيجة' })} متاحة`}</Helper>
       {options.map((option) => (
         <ProviderDecisionCard
           key={option.id}

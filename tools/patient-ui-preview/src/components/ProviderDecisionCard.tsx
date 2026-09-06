@@ -12,9 +12,15 @@ import { borderWidth, color, componentColor, radius, size, space } from '../them
 
 export type EligibilityStatus = 'PENDING_EVALUATION' | 'ELIGIBLE' | 'SUSPENDED' | 'NOT_ELIGIBLE';
 
+/**
+ * Eligibility only. This chip is projected from the eligibility machine, which does not know
+ * whether the provider currently has a bookable time — that is `nearestAppointmentIso`. Labelling
+ * `ELIGIBLE` as "متاح للحجز" made the card's loudest element assert bookability that the card's own
+ * appointment fact could contradict on the same row.
+ */
 const ELIGIBILITY_LABEL: Record<EligibilityStatus, string> = {
   PENDING_EVALUATION: 'قيد التقييم',
-  ELIGIBLE: 'متاح للحجز',
+  ELIGIBLE: 'مؤهّل لهذه الخدمة',
   SUSPENDED: 'معلَّق مؤقتًا',
   NOT_ELIGIBLE: 'غير مؤهَّل حاليًا',
 };
@@ -43,7 +49,18 @@ interface ProviderDecisionCardProps {
   compareDisabled?: boolean;
 }
 
-function Fact({ label, detail, wide = false }: { label: string; detail: ReactNode; wide?: boolean }) {
+function Fact({
+  label,
+  detail,
+  wide = false,
+  note,
+}: {
+  label: string;
+  detail: ReactNode;
+  wide?: boolean;
+  /** Qualifier that must travel with the value itself, not with the screen. */
+  note?: string;
+}) {
   return (
     <View
       style={{
@@ -57,6 +74,7 @@ function Fact({ label, detail, wide = false }: { label: string; detail: ReactNod
     >
       <Helper>{label}</Helper>
       {typeof detail === 'string' || typeof detail === 'number' ? <BodyStrong>{detail}</BodyStrong> : detail}
+      {note ? <Helper>{note}</Helper> : null}
     </View>
   );
 }
@@ -130,6 +148,7 @@ export function ProviderDecisionCard({
               detail={
                 option.nearestAppointmentIso ? <BodyStrong>{formatDateTime(option.nearestAppointmentIso)}</BodyStrong> : 'غير متوفر حاليًا'
               }
+              note={option.nearestAppointmentIso ? 'إرشادي — يُعاد التحقق عند إرسال الطلب' : undefined}
             />
           </View>
         ) : <PriceDisplay price={option.price} compact />}

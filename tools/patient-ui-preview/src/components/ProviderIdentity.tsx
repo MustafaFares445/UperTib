@@ -2,14 +2,15 @@ import { View } from 'react-native';
 import { Body, BodyStrong, Heading4 } from '../foundations/Text';
 import { borderWidth, color, radius, size, space } from '../theme/tokens';
 
+/**
+ * Arabic personal names do not reduce to initials the way Latin ones do. Taking the first letter of
+ * each of the first two tokens of "رنا الحلبي" yields "را", whose second glyph is the alef of the
+ * definite article "ال" rather than any name initial — a meaningless monogram. Use the opening of
+ * the given name instead, which stays recognisable.
+ */
 function initials(name: string) {
-  return name
-    .replace(/^د\.\s*/, '')
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part.charAt(0))
-    .join('');
+  const given = name.replace(/^د\.\s*/, '').split(/\s+/).filter(Boolean)[0] ?? '';
+  return given.slice(0, 2);
 }
 
 export function ProviderAvatar({ name, compact = false }: { name: string; compact?: boolean }) {
@@ -46,7 +47,7 @@ export function ProviderIdentity({
   compact?: boolean;
 }) {
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: space('inline-sm'), minWidth: 0 }}>
+    <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: space('inline-sm'), minWidth: 0 }}>
       <ProviderAvatar name={name} compact={compact} />
       <View style={{ flex: 1, minWidth: 0, gap: space('stack-xs') }}>
         {compact ? <BodyStrong>{name}</BodyStrong> : <Heading4>{name}</Heading4>}

@@ -71,14 +71,18 @@ function ActionControl({ action, wide = false }: { action: ActionSpec; wide?: bo
           borderRadius: radius('control'),
           alignItems: 'center',
           justifyContent: 'center',
-          backgroundColor: palette.bg,
-          borderWidth: action.role === 'secondary' ? borderWidth('hairline') : 0,
-          borderColor: palette.border,
-          opacity: inert ? 0.45 : pressed ? 0.9 : 1,
+          // Inert controls use the governed disabled tokens rather than a blanket opacity. Washing a
+          // saturated primary fill out to 0.45 dropped its label to ~2:1 — less legible than the
+          // enabled secondary actions beside it, which inverted the footer's own hierarchy and hid
+          // the label that says what is blocked.
+          backgroundColor: inert ? color('state.disabled.surface') : palette.bg,
+          borderWidth: action.role === 'secondary' || inert ? borderWidth('hairline') : 0,
+          borderColor: inert ? color('state.disabled.border') : palette.border,
+          opacity: pressed && !inert ? 0.9 : 1,
           ...ring.ringStyle,
         })}
       >
-        <Body style={{ color: palette.text, fontWeight: '600' }}>
+        <Body style={{ color: inert ? color('state.disabled.text') : palette.text, fontWeight: '600' }}>
           {action.availability.status === 'loading' ? 'جارٍ التنفيذ…' : action.label}
         </Body>
       </Pressable>

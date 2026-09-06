@@ -11,6 +11,7 @@ import { Body, BodyStrong, Heading4, Helper } from '../foundations/Text';
 import { useFocusRing } from '../foundations/useFocusRing';
 import { webRadioKeyboardProps } from '../foundations/webKeyboardActivation';
 import { borderWidth, color, radius, size, space } from '../theme/tokens';
+import { formatArabicCount } from '../foundations/format';
 
 export interface ProviderComparisonScreenProps {
   options: ProviderOption[];
@@ -21,7 +22,7 @@ export interface ProviderComparisonScreenProps {
 
 const ELIGIBILITY_LABEL: Record<ProviderOption['eligibility'], string> = {
   PENDING_EVALUATION: 'قيد التقييم',
-  ELIGIBLE: 'متاح للحجز',
+  ELIGIBLE: 'مؤهّل لهذه الخدمة',
   SUSPENDED: 'معلَّق مؤقتًا',
   NOT_ELIGIBLE: 'غير مؤهَّل حاليًا',
 };
@@ -142,7 +143,7 @@ export function ProviderComparisonScreen({ options, onBook, onOpen, onBack }: Pr
     >
       <Stack gap="stack-lg">
         <ScreenHeader
-          eyebrow={`${visibleOptions[0].serviceLabel} · ${visibleOptions.length} خيارات`}
+          eyebrow={`${visibleOptions[0].serviceLabel} · ${formatArabicCount(visibleOptions.length, { one: 'خيار واحد', two: 'خياران', few: 'خيارات', many: 'خيارًا' })}`}
           title="قارن كل معلومة جنبًا إلى جنب"
           description="لا يوجد ترتيب أو خيار موصى به. اختر وفق المعلومات التي تهمك."
         />

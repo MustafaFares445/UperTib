@@ -27,12 +27,16 @@ function EditControl({ label, onPress }: { label: string; onPress: () => void })
       onBlur={ring.onBlur}
       onPress={onPress}
       style={({ pressed }) => ({
-        minHeight: size('target-floor'),
+        // These are the only way to correct a wrong date or doctor before submitting, so they get
+        // the comfortable patient target, not the 24px absolute floor. Without vertical padding the
+        // height was purely line-box driven and measured 30px at every width.
+        minHeight: size('target-primary'),
         flexGrow: 1,
         flexBasis: 132,
         alignItems: 'center',
         justifyContent: 'center',
         paddingHorizontal: space('inset-sm'),
+        paddingVertical: space('inset-sm'),
         borderRadius: radius('control'),
         borderWidth: borderWidth('hairline'),
         borderColor: color('action.secondary-border'),

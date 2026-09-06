@@ -53,6 +53,29 @@ async function expectNoHorizontalOverflow(page: Page, label: string) {
   expect(overflow, `${label} overflows horizontally`).toBe(false);
 }
 
+/**
+ * Every governed Icon must stay decorative to assistive technology (A11Y-PLATFORM-010): the
+ * adjacent label already carries the meaning.
+ *
+ * Scoped to `#storybook-root` on purpose. A document-wide `svg` query also matches Storybook's own
+ * `#storybook-a11y-vision-filters` <defs> element, which the a11y addon injects into <body>
+ * asynchronously and which is not Patient UI. Asserting against the whole document therefore makes
+ * this check both wrong (it fails on preview tooling) and timing-dependent (it passes or fails on
+ * whether the addon has injected yet). The count assertion keeps the check from passing vacuously
+ * on a render that happens to contain no icons at all.
+ */
+async function expectDecorativeIconsAreHidden(page: Page, label: string) {
+  const icons = await page.evaluate(() => {
+    const root = document.getElementById('storybook-root');
+    return {
+      total: root?.querySelectorAll('svg').length ?? 0,
+      exposed: root?.querySelectorAll('svg:not([aria-hidden="true"])').length ?? 0,
+    };
+  });
+  expect(icons.total, `${label} renders no icon, so the decorative-icon rule is untested here`).toBeGreaterThan(0);
+  expect(icons.exposed, `${label} exposes a decorative icon to the accessibility tree`).toBe(0);
+}
+
 async function expectNoSeriousAccessibilityViolations(page: Page, label: string) {
   const results = await new AxeBuilder({ page })
     .analyze()
@@ -227,7 +250,15 @@ test('screen headings are navigable and decorative icons stay out of the accessi
 
   await expect(page.getByRole('heading', { level: 1, name: 'راجع طلب الحجز' })).toBeVisible();
   await expect(page.getByRole('heading', { level: 2 })).toBeVisible();
-  await expect(page.locator('svg:not([aria-hidden="true"])')).toHaveCount(0);
+  await expectDecorativeIconsAreHidden(page, 'request review');
+
+  // The governed Icon vocabulary is exercised far more heavily on the lifecycle and discovery
+  // surfaces, so assert the rule where the icons actually are — not only where one happens to render.
+  await gotoStory(page, 'patient-screens-scr-booking-004-booking-detail--requested');
+  await expectDecorativeIconsAreHidden(page, 'booking detail requested');
+
+  await gotoStory(page, 'patient-screens-scr-elig-002-provider-results--default');
+  await expectDecorativeIconsAreHidden(page, 'provider results');
 });
 
 test('expanded booking history keeps valid list semantics and accessibility', async ({ page }, testInfo) => {
@@ -259,7 +290,9 @@ test('alternative proposal preserves original-first reading order and no-penalty
   await expect(proposed).toBeVisible();
   const [originalBox, proposedBox] = await Promise.all([original.boundingBox(), proposed.boundingBox()]);
   expect(originalBox?.y).toBeLessThan(proposedBox?.y ?? 0);
-  await expect(page.getByText('الرفض لا يفرض عقوبة.')).toBeVisible();
+  // Declining closes the request — IMPLEMENTATION_CONTRACTS prohibits a second confirmation on
+  // decline, so the outcome has to be stated in the copy, and stated without penalty language.
+  await expect(page.getByText(/الرفض ينهي هذا الطلب دون أي عقوبة/)).toBeVisible();
 });
 
 test('key pending/retry/error variants render distinguishable content', async ({ page }, testInfo) => {
@@ -312,7 +345,7 @@ test('the Flow story reaches a submitted booking request (REQUESTED)', async ({ 
   await page.getByRole('button', { name: 'البحث عن مقدّمي الخدمة' }).click();
   await page.getByRole('button', { name: 'بحث' }).click();
 
-  await expect(page.getByText('3 نتيجة متاحة')).toBeVisible();
+  await expect(page.getByText('3 نتائج متاحة')).toBeVisible();
   await page.screenshot({ path: 'artifacts/screenshots/flow-provider-results.png', fullPage: true });
   await page.getByRole('checkbox').nth(0).click();
   await page.getByRole('checkbox').nth(1).click();

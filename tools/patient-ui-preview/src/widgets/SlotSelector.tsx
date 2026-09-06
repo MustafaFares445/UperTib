@@ -40,7 +40,10 @@ function RadioControl({ label, detail, selected, disabled = false, tabbable, onS
       accessibilityRole="radio"
       aria-checked={selected}
       accessibilityState={{ selected, disabled }}
-      accessibilityLabel={`${label}${detail ? `، ${detail}` : ''}${disabled ? '، لم يعد متاحًا' : ''}`}
+      // Mirror exactly what is rendered: one reason, never two. A day that already says
+      // "لا أوقات متاحة" in `detail` must not also have "غير متاح" appended, which is what made a
+      // screen reader announce the same fact twice.
+      accessibilityLabel={`${label}${detail ? `، ${detail}` : disabled ? '، غير متاح' : ''}`}
       disabled={disabled}
       {...webRadioKeyboardProps(onSelect, tabbable)}
       onFocus={ring.onFocus}
@@ -48,8 +51,12 @@ function RadioControl({ label, detail, selected, disabled = false, tabbable, onS
       onPress={onSelect}
       style={({ pressed }) => ({
         minHeight: size('target-primary'),
+        // A fixed two-up track. With `flexGrow: 1` and a min width, adding the selection icon grew
+        // the chosen control past the two-up threshold, so tapping a date reflowed the whole grid
+        // at 320 and every other date jumped to a new position under the patient's finger.
+        flexGrow: 0,
+        flexBasis: '48%',
         minWidth: size('target-primary') * 2,
-        flexGrow: 1,
         paddingHorizontal: space('inset-md'),
         paddingVertical: space('inset-sm'),
         alignItems: 'center',
@@ -62,16 +69,23 @@ function RadioControl({ label, detail, selected, disabled = false, tabbable, onS
           : selected
             ? color('state.selected.surface')
             : color('surface.default'),
-        opacity: disabled ? 0.6 : pressed ? 0.9 : 1,
+        // Dimming the whole control also dimmed the unavailability reason, which is the only
+        // non-colour carrier of the disabled meaning. The surface and border carry the dimming;
+        // the text stays at full strength.
+        opacity: pressed && !disabled ? 0.9 : 1,
         ...ring.ringStyle,
       })}
     >
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: space('inline-xs') }}>
         {selected ? <Icon name="check-circle" color={color('action.primary')} scale="sm" /> : null}
-        <Body tone={selected ? 'link' : 'primary'}>{label}</Body>
+        {disabled ? <Icon name="minus-circle" color={color('text.secondary')} scale="sm" /> : null}
+        <Body tone={selected ? 'link' : 'primary'}>
+          <Bdi>{label}</Bdi>
+        </Body>
       </View>
+      {/* One reason, never two. A day with no times already says so in `detail`. */}
       {detail ? <Helper>{detail}</Helper> : null}
-      {disabled ? <Helper>لم يعد متاحًا</Helper> : null}
+      {disabled && !detail ? <Helper>غير متاح</Helper> : null}
     </Pressable>
   );
 }
@@ -100,10 +114,7 @@ export function SlotSelector({ slots, selectedId, onSelect, onClearSelection }: 
   return (
     <View style={{ gap: space('stack-lg') }}>
       <View accessibilityRole="radiogroup" accessibilityLabel="اختر التاريخ" style={{ gap: space('stack-sm') }}>
-        <View style={{ gap: space('stack-xs') }}>
-          <Heading4>اختر التاريخ</Heading4>
-          <Helper>اختر يومًا أولًا لعرض أوقاته.</Helper>
-        </View>
+        <Heading4>اختر التاريخ</Heading4>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space('inline-sm') }}>
           {days.map((day) => {
             const availableCount = slots.filter((slot) => slot.dayLabel === day && slot.available).length;

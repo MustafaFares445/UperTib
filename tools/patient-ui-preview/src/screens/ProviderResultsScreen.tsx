@@ -80,7 +80,7 @@ export function ProviderResultsScreen({
               ...(state === 'success' && selected.length
                 ? [{
                     key: 'compare',
-                    label: selected.length >= 2 ? 'مقارنة الخيارات' : 'اختر طبيبًا آخر',
+                    label: 'مقارنة الخيارات',
                     role: 'primary' as const,
                     availability: selected.length >= 2 && onCompare
                       ? { status: 'available' as const }

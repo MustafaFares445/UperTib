@@ -64,7 +64,7 @@ export function SlotSelectionScreen({ option, slots, onContinue, onChangeOption 
             },
             {
               key: 'details',
-              label: showFullOption ? 'إخفاء تفاصيل الخيار' : 'عرض تفاصيل الخيار الكاملة',
+              label: showFullOption ? 'إخفاء التفاصيل' : 'تفاصيل الخيار',
               role: 'secondary',
               availability: { status: 'available' },
               onPress: () => setShowFullOption((v) => !v),
@@ -78,7 +78,7 @@ export function SlotSelectionScreen({ option, slots, onContinue, onChangeOption 
         <ScreenHeader
           eyebrow={`${option.providerName} · ${option.areaLabel}`}
           title="اختر التاريخ والوقت"
-          description="اختر التاريخ أولًا، ثم وقتًا واحدًا. التوفر إرشادي الآن؛ لا يُحجز الوقت فعليًا إلا عند إرسال طلب الحجز وإعادة التحقق."
+          description="التوفر إرشادي الآن؛ لا يُحجز الوقت فعليًا إلا عند إرسال طلب الحجز وإعادة التحقق."
         />
         {showFullOption ? <ProviderDecisionCard option={option} variant="chosen" /> : <ChosenOptionSummary option={option} />}
         <SlotSelector
@@ -101,9 +101,16 @@ export function SlotSelectionScreen({ option, slots, onContinue, onChangeOption 
             <Helper>الموعد المختار</Helper>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', gap: space('inline-sm') }}>
               <BodyStrong>{selected.dayLabel}</BodyStrong>
+              {/* Without a separator the flex gap alone let the date and time run together as one
+                  ambiguous mixed Arabic/numeral line. */}
+              <BodyStrong>·</BodyStrong>
               <NumericStrong><Bdi>{formatTime(selected.timeIso)}</Bdi></NumericStrong>
             </View>
             <Body tone="secondary">{option.providerName} · {option.branchName}</Body>
+            {/* This tinted card is the last thing read before Continue, and a tinted card carrying a
+                bold date and time is the visual language of a booked slot. State the status inside
+                the object making the claim, not only in the header above it. */}
+            <Helper>لم يُحجز بعد — يُرسل الطلب في الخطوة التالية</Helper>
           </View>
         ) : null}
       </Stack>
