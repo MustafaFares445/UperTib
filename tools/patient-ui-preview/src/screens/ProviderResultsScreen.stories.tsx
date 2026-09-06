@@ -22,5 +22,13 @@ const base = {
 };
 
 export const Default: Story = { args: { ...base, state: 'success', options: optionsFor('svc-filling') } };
+export const AreaFiltered: Story = {
+  args: {
+    ...base,
+    area: 'حلب الجديدة',
+    state: 'success',
+    options: optionsFor('svc-filling').slice(0, 1),
+  },
+};
 export const EmptyFiltered: Story = { args: { ...base, state: 'empty-filtered', options: [] } };
 export const ErrorFetch: Story = { args: { ...base, state: 'error-fetch', options: [] } };
