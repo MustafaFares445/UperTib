@@ -363,7 +363,8 @@ function refundExecutionCommandId(
 /**
  * Prototype-only projection helper for API-FINANCE-004. It appends an assertion only when the
  * approved decision belongs to this case and the reported amount/currency match that decision exactly.
- * The event remains REPORTED_UNCONFIRMED until the counterparty responds through API-FINANCE-003.
+ * One approved decision can own only one execution assertion; retries or changed duplicate attempts
+ * remain no-ops in this local projection. The event remains REPORTED_UNCONFIRMED until counterparty response.
  */
 export function appendPatientRefundExecution(
   ledger: FinancialLedgerProjection,
@@ -377,6 +378,7 @@ export function appendPatientRefundExecution(
     && normalizedCurrency === decisionCurrency
     && draft.occurredAtIso.trim().length > 0;
   if (!valid) return ledger;
+  if (ledger.events.some((event) => event.approvedRefundDecisionId === decision.id)) return ledger;
 
   const id = refundExecutionCommandId(decision, draft);
   if (ledger.events.some((event) => event.id === id)) return ledger;
