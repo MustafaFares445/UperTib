@@ -226,16 +226,27 @@ export const emptyFinancialLedger: FinancialLedgerProjection = {
   },
 };
 
+function paymentReportCommandId(ledger: FinancialLedgerProjection, draft: ExternalPaymentReportDraft) {
+  const commandKey = [
+    ledger.snapshot.id,
+    String(draft.amount),
+    draft.currency.trim().toUpperCase(),
+    draft.externalMethodCategory.trim(),
+    draft.occurredAtIso.trim(),
+  ].join('|');
+  return `fin-event-patient-report:${encodeURIComponent(commandKey)}`;
+}
+
 /**
- * Prototype-only projection helper for API-FINANCE-002. A deterministic event id makes a repeated
- * identical simulated command idempotent: the second invocation returns the same ledger instead of
- * appending a duplicate assertion.
+ * Prototype-only projection helper for API-FINANCE-002. The deterministic event id is scoped to the
+ * governing snapshot plus the complete normalized draft, so only an identical simulated command is
+ * deduplicated while a materially different report remains a new append-only event.
  */
 export function appendPatientPaymentReport(
   ledger: FinancialLedgerProjection,
   draft: ExternalPaymentReportDraft,
 ): FinancialLedgerProjection {
-  const id = 'fin-event-patient-report-001';
+  const id = paymentReportCommandId(ledger, draft);
   if (ledger.events.some((event) => event.id === id)) return ledger;
 
   const event: FinancialEventProjection = {
@@ -243,12 +254,12 @@ export function appendPatientPaymentReport(
     title: 'سُجّلت واقعة مالية خارجية',
     summary: 'أبلغ المريض عن مبلغ دفعه للعيادة خارج UberTib.',
     amount: draft.amount,
-    currency: draft.currency,
+    currency: draft.currency.trim().toUpperCase(),
     status: 'REPORTED_UNCONFIRMED',
-    occurredAtIso: draft.occurredAtIso,
+    occurredAtIso: draft.occurredAtIso.trim(),
     recordedAtIso: '2026-09-06T18:30:00+03:00',
     attribution: 'المريض',
-    externalMethodLabel: draft.externalMethodCategory,
+    externalMethodLabel: draft.externalMethodCategory.trim(),
   };
 
   return {
@@ -272,6 +283,9 @@ export function appendPatientFinancialResponse(
   const target = ledger.events.find((event) => event.id === eventId);
   if (!target || target.response || !target.awaitingResponseByPatient) return ledger;
 
+  const normalizedReason = reason?.trim();
+  if (decision === 'dispute' && !normalizedReason) return ledger;
+
   const confirmed = decision === 'confirm';
   return {
     ...ledger,
@@ -285,7 +299,7 @@ export function appendPatientFinancialResponse(
         attribution: 'المريض',
         summary: confirmed
           ? 'أكد المريض دقة الواقعة كما سُجّلت. هذا يؤكد السجل فقط ولا ينفّذ أي دفع داخل UberTib.'
-          : `اعترض المريض على دقة الواقعة. سبب الاعتراض: ${reason ?? ''}`,
+          : `اعترض المريض على دقة الواقعة. سبب الاعتراض: ${normalizedReason}`,
       },
     }),
     position: {
