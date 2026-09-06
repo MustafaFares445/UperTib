@@ -343,7 +343,7 @@ test('the Flow story reaches a submitted booking request (REQUESTED)', async ({ 
   await page.getByRole('button', { name: 'تصفّح الخدمات' }).click();
   await page.getByRole('link', { name: 'حشوات الأسنان' }).click();
   await page.getByRole('button', { name: 'البحث عن مقدّمي الخدمة' }).click();
-  await page.getByRole('button', { name: 'بحث' }).click();
+  await page.getByRole('button', { name: 'عرض الأطباء' }).click();
 
   await expect(page.getByText('3 نتائج متاحة')).toBeVisible();
   await page.screenshot({ path: 'artifacts/screenshots/flow-provider-results.png', fullPage: true });
