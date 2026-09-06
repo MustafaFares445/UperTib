@@ -13,6 +13,7 @@ export function FinancialTimelineScreen({
   onBackToCase,
   onReportPayment,
   onRespondToEvent,
+  onReportRefundExecution,
 }: {
   ledger: FinancialLedgerProjection;
   subject?: string;
@@ -21,6 +22,8 @@ export function FinancialTimelineScreen({
   onBackToCase?: () => void;
   onReportPayment?: () => void;
   onRespondToEvent?: (event: FinancialEventProjection) => void;
+  /** Secondary only and supplied only when an approved refund decision is actually available. */
+  onReportRefundExecution?: () => void;
 }) {
   const awaitingResponse = ledger.events.find(
     (event) => event.awaitingResponseByPatient && event.status === 'REPORTED_UNCONFIRMED' && !event.response,
@@ -63,6 +66,15 @@ export function FinancialTimelineScreen({
       role: 'secondary',
       availability: { status: 'available' },
       onPress: onOpenTerms,
+    });
+  }
+  if (onReportRefundExecution) {
+    supporting.push({
+      key: 'report-refund-execution',
+      label: 'تسجيل تنفيذ استرداد خارجي',
+      role: 'secondary',
+      availability: { status: 'available' },
+      onPress: onReportRefundExecution,
     });
   }
   if (onBackToCase) {
