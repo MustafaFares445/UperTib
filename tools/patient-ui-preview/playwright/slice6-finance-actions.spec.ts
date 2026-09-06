@@ -1,5 +1,10 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page, type TestInfo } from '@playwright/test';
+import {
+  actionableFinancialLedger,
+  appendPatientFinancialResponse,
+  appendPatientPaymentReport,
+} from '../src/mocks/finance';
 
 const PRIMARY_PROJECT = 'patient-390';
 
@@ -62,7 +67,7 @@ test('report screen records an external fact and never asks the Patient to ident
   await expect(page.getByRole('button', { name: /ادفع الآن|سداد الآن|تحويل داخل المنصة|محفظة/ })).toHaveCount(0);
 });
 
-test('governing-terms mismatch is not described as a failed payment and preserves entered fields', async ({ page }, testInfo) => {
+test('governing-terms mismatch is not described as a failed payment, preserves fields, and cannot submit', async ({ page }, testInfo) => {
   onlyOnPrimaryProject(testInfo);
   await gotoStory(page, 'patient-screens-scr-finance-003-report-external-payment--terms-mismatch');
 
@@ -70,7 +75,17 @@ test('governing-terms mismatch is not described as a failed payment and preserve
   await expect(page.getByText(/لم تتم محاولة دفع داخل UberTib/)).toBeVisible();
   await expect(page.getByLabel('المبلغ الذي دفعته خارج المنصة')).toHaveValue('20000');
   await expect(page.getByLabel('العملة')).toHaveValue('USD');
+  await expect(page.getByRole('button', { name: 'تسجيل هذه الواقعة' })).toBeDisabled();
   await expect(page.getByText(/فشل الدفع|تعذر الدفع|تم رفض الدفع/i)).toHaveCount(0);
+});
+
+test('incomplete governing terms structurally block financial reporting even when fields are filled', async ({ page }, testInfo) => {
+  onlyOnPrimaryProject(testInfo);
+  await gotoStory(page, 'patient-screens-scr-finance-003-report-external-payment--incomplete-terms');
+
+  await expect(page.getByText('لا يمكن تسجيل واقعة مالية بينما بيانات الشروط المقبولة غير مكتملة.', { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'تسجيل هذه الواقعة' })).toBeDisabled();
+  await expect(page.getByText(/بيانات الشروط المقبولة غير مكتملة/)).toBeVisible();
 });
 
 test('successful external report becomes reported-unconfirmed rather than paid or settled', async ({ page }, testInfo) => {
@@ -81,6 +96,25 @@ test('successful external report becomes reported-unconfirmed rather than paid o
   await expect(page.getByText('تمت إضافة سجل واحد لهذه المحاولة.', { exact: true })).toBeVisible();
   await expect(page.getByText(/لا يعني ذلك أن UberTib قبض المبلغ أو حوّله أو سوّاه/)).toBeVisible();
   await expect(page.getByRole('button', { name: 'عرض السجل المالي' })).toBeVisible();
+});
+
+test('payment-report projection deduplicates identical commands but allows materially different reports', async ({}, testInfo) => {
+  onlyOnPrimaryProject(testInfo);
+  const firstDraft = {
+    amount: 20000,
+    currency: 'SYP',
+    externalMethodCategory: 'نقدًا خارج المنصة',
+    occurredAtIso: '2026-09-06T17:20:00+03:00',
+  };
+  const secondDraft = { ...firstDraft, amount: 25000 };
+
+  const once = appendPatientPaymentReport(actionableFinancialLedger, firstDraft);
+  const identicalRetry = appendPatientPaymentReport(once, firstDraft);
+  const distinctReport = appendPatientPaymentReport(identicalRetry, secondDraft);
+
+  expect(identicalRetry.events).toHaveLength(once.events.length);
+  expect(distinctReport.events).toHaveLength(once.events.length + 1);
+  expect(distinctReport.position.reported).toBe(once.position.reported + secondDraft.amount);
 });
 
 test('dispute requires a reason while confirmation remains independently available', async ({ page }, testInfo) => {
@@ -95,6 +129,15 @@ test('dispute requires a reason while confirmation remains independently availab
 
   await page.getByLabel('سبب الاعتراض').fill('المبلغ المسجّل لا يطابق ما دفعته للعيادة.');
   await expect(page.getByRole('button', { name: 'الاعتراض على الواقعة' })).toBeEnabled();
+});
+
+test('projection refuses a blank dispute reason before changing event state or totals', async ({}, testInfo) => {
+  onlyOnPrimaryProject(testInfo);
+  const target = actionableFinancialLedger.events.find((event) => event.awaitingResponseByPatient);
+  expect(target).toBeTruthy();
+
+  const result = appendPatientFinancialResponse(actionableFinancialLedger, target!.id, 'dispute', '   ');
+  expect(result).toEqual(actionableFinancialLedger);
 });
 
 test('a dispute appends a response while the original assertion remains readable', async ({ page }, testInfo) => {
