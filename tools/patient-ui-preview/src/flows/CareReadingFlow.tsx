@@ -57,9 +57,14 @@ export function CareReadingFlow() {
   }
 
   if (step === 'accepted-plan') {
+    const acceptedCurrentVersion = {
+      ...proposedTreatmentPlan,
+      state: 'ACCEPTED' as const,
+      expiresAtIso: undefined,
+    };
     return (
       <TreatmentPlanScreen
-        plan={{ ...acceptedTreatmentPlan, versionLabel: proposedTreatmentPlan.versionLabel, total: proposedTreatmentPlan.total, lines: proposedTreatmentPlan.lines }}
+        plan={selectedCase.id === patientCases[0].id ? acceptedCurrentVersion : acceptedTreatmentPlan}
         onBackToCase={() => setStep('summary')}
       />
     );
