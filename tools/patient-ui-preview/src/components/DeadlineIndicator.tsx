@@ -1,5 +1,4 @@
 import { View } from 'react-native';
-import { Bdi } from '../foundations/Bdi';
 import { formatDateTime, formatRemaining } from '../foundations/format';
 import { Icon } from '../foundations/Icon';
 import { BodyStrong, Helper } from '../foundations/Text';
@@ -39,9 +38,9 @@ export function DeadlineIndicator({ deadlineIso, obligation, nowIso, state }: De
       <View style={{ flex: 1, gap: space('stack-xs') }}>
         <BodyStrong style={{ color: visual.text }}>{obligation}</BodyStrong>
         <Helper style={{ color: visual.text }}>
-          {resolvedState === 'lapsed' ? 'انتهت المهلة' : <Bdi style={{ color: visual.text }}>{formatRemaining(deadlineIso, nowIso)}</Bdi>}
+          {resolvedState === 'lapsed' ? 'انتهت المهلة' : formatRemaining(deadlineIso, nowIso)}
           {' · '}
-          حتى <Bdi style={{ color: visual.text }}>{formatDateTime(deadlineIso)}</Bdi>
+          حتى {formatDateTime(deadlineIso)}
         </Helper>
       </View>
     </View>

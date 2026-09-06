@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Pressable, View } from 'react-native';
-import { Bdi } from '../foundations/Bdi';
 import { formatDateTime } from '../foundations/format';
 import { Icon } from '../foundations/Icon';
 import { Body, BodyStrong, Helper } from '../foundations/Text';
@@ -49,6 +48,7 @@ export function EventTimeline({ events, defaultExpanded = false }: { events: Tim
           {events.map((event, index) => (
             <View
               key={event.id}
+              role="listitem"
               accessible
               style={{
                 paddingBottom: space('stack-sm'),
@@ -57,7 +57,7 @@ export function EventTimeline({ events, defaultExpanded = false }: { events: Tim
                 gap: space('stack-xs'),
               }}
             >
-              <Helper><Bdi>{formatDateTime(event.atIso)}</Bdi></Helper>
+              <Helper>{formatDateTime(event.atIso)}</Helper>
               <Body>{event.description}</Body>
             </View>
           ))}

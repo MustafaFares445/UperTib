@@ -1,15 +1,14 @@
 import { useState } from 'react';
-import { View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { Screen, ScreenHeader, Stack } from '../foundations/Screen';
-import { Bdi } from '../foundations/Bdi';
-import { Body, BodyStrong, Heading4, Helper } from '../foundations/Text';
+import { Body, Helper } from '../foundations/Text';
 import { ActionBar } from '../components/ActionBar';
+import { AppointmentObject } from '../components/AppointmentObject';
 import type { ProviderOption } from '../components/ProviderDecisionCard';
-import { PriceDisplay } from '../components/PriceDisplay';
 import { SubmissionStateIndicator } from '../components/SubmissionStateIndicator';
-import { formatDateTime } from '../foundations/format';
+import { useFocusRing } from '../foundations/useFocusRing';
 import { submitBooking, type BookingRecord, type Slot } from '../mocks/booking';
-import { color, radius, space } from '../theme/tokens';
+import { borderWidth, color, radius, size, space } from '../theme/tokens';
 
 export interface BookingReviewScreenProps {
   option: ProviderOption;
@@ -17,6 +16,37 @@ export interface BookingReviewScreenProps {
   onSubmitted: (booking: BookingRecord) => void;
   onChangeTime: () => void;
   onChangeOption: () => void;
+}
+
+function EditControl({ label, onPress }: { label: string; onPress: () => void }) {
+  const ring = useFocusRing();
+  return (
+    <Pressable
+      accessibilityRole="button"
+      onFocus={ring.onFocus}
+      onBlur={ring.onBlur}
+      onPress={onPress}
+      style={({ pressed }) => ({
+        // These are the only way to correct a wrong date or doctor before submitting, so they get
+        // the comfortable patient target, not the 24px absolute floor. Without vertical padding the
+        // height was purely line-box driven and measured 30px at every width.
+        minHeight: size('target-primary'),
+        flexGrow: 1,
+        flexBasis: 132,
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingHorizontal: space('inset-sm'),
+        paddingVertical: space('inset-sm'),
+        borderRadius: radius('control'),
+        borderWidth: borderWidth('hairline'),
+        borderColor: color('action.secondary-border'),
+        backgroundColor: pressed ? color('action.secondary-hover') : color('action.secondary-surface'),
+        ...ring.ringStyle,
+      })}
+    >
+      <Body tone="link">{label}</Body>
+    </Pressable>
+  );
 }
 
 /**
@@ -50,20 +80,6 @@ export function BookingReviewScreen({ option, slot, onSubmitted, onChangeTime, o
                 availability: submitting ? { status: 'disabled', reason: 'جارٍ إرسال الطلب…' } : { status: 'available' },
                 onPress: handleSubmit,
               },
-              {
-                key: 'time',
-                label: 'تغيير الوقت',
-                role: 'secondary',
-                availability: submitting ? { status: 'absent', reason: 'لا يمكن التعديل أثناء الإرسال.' } : { status: 'available' },
-                onPress: onChangeTime,
-              },
-              {
-                key: 'option',
-                label: 'تغيير الخيار',
-                role: 'secondary',
-                availability: submitting ? { status: 'absent', reason: 'لا يمكن التعديل أثناء الإرسال.' } : { status: 'available' },
-                onPress: onChangeOption,
-              },
             ]}
           />
         </Stack>
@@ -75,18 +91,15 @@ export function BookingReviewScreen({ option, slot, onSubmitted, onChangeTime, o
           title="راجع طلب الحجز"
           description="تأكد من الطبيب والفرع والموعد قبل الإرسال. إرسال الطلب لا يعني أن الموعد تأكد بعد."
         />
-        <View style={{ gap: space('stack-sm'), padding: space('inset-md'), borderRadius: radius('surface'), backgroundColor: color('surface.subtle') }}>
-          <Helper>الموعد المطلوب</Helper>
-          <Heading4>{slot.dayLabel}</Heading4>
-          <BodyStrong><Bdi>{formatDateTime(slot.timeIso)}</Bdi></BodyStrong>
+        <AppointmentObject iso={slot.timeIso} option={option} mode="request" dayLabel={slot.dayLabel} showPrice />
+        <View accessibilityLabel="تعديل تفاصيل الطلب" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space('inline-sm') }}>
+          <EditControl label="تعديل الموعد" onPress={onChangeTime} />
+          <EditControl label="تغيير الطبيب" onPress={onChangeOption} />
         </View>
-        <View style={{ gap: space('stack-xs') }}>
-          <Helper>مقدّم الخدمة</Helper>
-          <Heading4>{option.providerName}</Heading4>
-          <Body tone="secondary">{option.branchName} · {option.serviceLabel}</Body>
-          <PriceDisplay price={option.price} compact />
+        <View style={{ gap: space('stack-xs'), padding: space('inset-sm'), borderRadius: radius('surface'), backgroundColor: color('surface.subtle') }}>
+          <Helper>ماذا يحدث بعد الإرسال؟</Helper>
+          <Body tone="secondary">تراجع العيادة الطلب ضمن المهلة. سيصلك إشعار عند الرد ويمكنك متابعة الحالة من تفاصيل الحجز.</Body>
         </View>
-        <Helper>بعد الإرسال، تراجع العيادة الطلب ضمن المهلة. سيصلك إشعار عند الرد ويمكنك متابعة الحالة من تفاصيل الحجز.</Helper>
       </Stack>
     </Screen>
   );

@@ -75,7 +75,7 @@ export function Icon({ name, color, scale = 'md', accessibilityLabel }: IconProp
       importantForAccessibility={accessibilityLabel ? 'yes' : 'no-hide-descendants'}
       style={{ width: px, height: px }}
     >
-      <svg width={px} height={px} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <svg aria-hidden="true" focusable="false" width={px} height={px} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d={path} stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     </View>

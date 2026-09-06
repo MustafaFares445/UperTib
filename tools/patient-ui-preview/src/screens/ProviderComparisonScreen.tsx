@@ -1,11 +1,17 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Pressable, View } from 'react-native';
 import { ActionBar } from '../components/ActionBar';
-import { ProviderDecisionCard, type ProviderOption } from '../components/ProviderDecisionCard';
+import { PriceDisplay } from '../components/PriceDisplay';
+import type { ProviderOption } from '../components/ProviderDecisionCard';
+import { ProviderIdentity } from '../components/ProviderIdentity';
+import { formatDateTime } from '../foundations/format';
 import { Icon } from '../foundations/Icon';
 import { Screen, ScreenHeader, Stack } from '../foundations/Screen';
-import { Body, Helper } from '../foundations/Text';
+import { Body, BodyStrong, Heading4, Helper } from '../foundations/Text';
+import { useFocusRing } from '../foundations/useFocusRing';
+import { webRadioKeyboardProps } from '../foundations/webKeyboardActivation';
 import { borderWidth, color, radius, size, space } from '../theme/tokens';
+import { formatArabicCount } from '../foundations/format';
 
 export interface ProviderComparisonScreenProps {
   options: ProviderOption[];
@@ -14,12 +20,53 @@ export interface ProviderComparisonScreenProps {
   onBack: () => void;
 }
 
-function SelectionControl({ option, selected, onSelect }: { option: ProviderOption; selected: boolean; onSelect: () => void }) {
+const ELIGIBILITY_LABEL: Record<ProviderOption['eligibility'], string> = {
+  PENDING_EVALUATION: 'قيد التقييم',
+  ELIGIBLE: 'مؤهّل لهذه الخدمة',
+  SUSPENDED: 'معلَّق مؤقتًا',
+  NOT_ELIGIBLE: 'غير مؤهَّل حاليًا',
+};
+
+function OptionValue({ option, children }: { option: ProviderOption; children: ReactNode }) {
+  return (
+    <View style={{ flex: 1, minWidth: 0, gap: space('stack-xs') }}>
+      <Helper>{option.providerName}</Helper>
+      {typeof children === 'string' || typeof children === 'number' ? <BodyStrong>{children}</BodyStrong> : children}
+    </View>
+  );
+}
+
+function AttributeGroup({ label, options, renderValue }: { label: string; options: ProviderOption[]; renderValue: (option: ProviderOption) => ReactNode }) {
+  return (
+    <View
+      style={{
+        gap: space('stack-sm'),
+        padding: space('inset-md'),
+        borderRadius: radius('surface'),
+        borderWidth: borderWidth('hairline'),
+        borderColor: color('border.subtle'),
+        backgroundColor: color('surface.default'),
+      }}
+    >
+      <Heading4 aria-level={3}>{label}</Heading4>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space('stack-md') }}>
+        {options.map((option) => <OptionValue key={option.id} option={option}>{renderValue(option)}</OptionValue>)}
+      </View>
+    </View>
+  );
+}
+
+function SelectionControl({ option, selected, tabbable, onSelect }: { option: ProviderOption; selected: boolean; tabbable: boolean; onSelect: () => void }) {
+  const ring = useFocusRing();
   return (
     <Pressable
       accessibilityRole="radio"
+      accessibilityState={{ selected }}
       aria-checked={selected}
       accessibilityLabel={`اختيار ${option.providerName} للحجز`}
+      {...webRadioKeyboardProps(onSelect, tabbable)}
+      onFocus={ring.onFocus}
+      onBlur={ring.onBlur}
       onPress={onSelect}
       style={({ pressed }) => ({
         minHeight: size('target-primary'),
@@ -32,86 +79,98 @@ function SelectionControl({ option, selected, onSelect }: { option: ProviderOpti
         borderWidth: borderWidth(selected ? 'emphasis' : 'hairline'),
         borderColor: selected ? color('state.selected.border') : color('border.strong'),
         backgroundColor: selected ? color('state.selected.surface') : pressed ? color('action.secondary-hover') : color('surface.default'),
+        ...ring.ringStyle,
       })}
     >
       <Icon name={selected ? 'check-circle' : 'plus-circle'} color={selected ? color('action.primary') : color('text.secondary')} scale="sm" />
-      <Body tone={selected ? 'link' : 'primary'}>{selected ? 'الخيار المحدد للحجز' : 'اختيار هذا الخيار'}</Body>
+      <Body tone={selected ? 'link' : 'primary'}>{selected ? 'محدد للحجز' : 'اختيار للحجز'}</Body>
     </Pressable>
   );
 }
 
-/**
- * SCR-ELIG-005 — transient same-service comparison. Nothing is saved, ranked, recommended, or
- * compared across services. Compact widths stack options in selection order with identical fact
- * order so the comparison remains readable without horizontal scrolling.
- */
-export function ProviderComparisonScreen({ options, onBook, onOpen, onBack }: ProviderComparisonScreenProps) {
-  const [chosenId, setChosenId] = useState<string | null>(null);
-  const chosen = options.find((option) => option.id === chosenId);
-  const oneService = new Set(options.map((option) => option.serviceLabel)).size === 1;
+function InlineTextAction({ label, accessibilityLabel, tone = 'link', onPress }: { label: string; accessibilityLabel: string; tone?: 'link' | 'secondary'; onPress: () => void }) {
+  const ring = useFocusRing();
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
+      onFocus={ring.onFocus}
+      onBlur={ring.onBlur}
+      onPress={onPress}
+      style={({ pressed }) => ({
+        minHeight: size('target-floor'),
+        alignItems: 'center',
+        justifyContent: 'center',
+        opacity: pressed ? 0.8 : 1,
+        ...ring.ringStyle,
+      })}
+    >
+      <Body tone={tone}>{label}</Body>
+    </Pressable>
+  );
+}
 
-  if (options.length < 2 || options.length > 3 || !oneService) {
+/** SCR-ELIG-005 — transient, same-service, attribute-first comparison with no ranking. */
+export function ProviderComparisonScreen({ options, onBook, onOpen, onBack }: ProviderComparisonScreenProps) {
+  const [visibleOptions, setVisibleOptions] = useState(options);
+  const [chosenId, setChosenId] = useState<string | null>(null);
+  const chosen = visibleOptions.find((option) => option.id === chosenId);
+  const oneService = new Set(visibleOptions.map((option) => option.serviceLabel)).size === 1;
+
+  if (visibleOptions.length < 2 || visibleOptions.length > 3 || !oneService) {
     return (
-      <Screen
-        footer={
-          <ActionBar
-            actions={[{ key: 'back', label: 'رجوع إلى النتائج', role: 'primary', availability: { status: 'available' }, onPress: onBack }]}
-          />
-        }
-      >
-        <ScreenHeader
-          eyebrow="المقارنة"
-          title="تعذر فتح هذه المقارنة"
-          description="اختر خيارين أو ثلاثة للخدمة نفسها من نتائج البحث، ثم حاول مجددًا."
-        />
+      <Screen footer={<ActionBar actions={[{ key: 'back', label: 'رجوع إلى النتائج', role: 'primary', availability: { status: 'available' }, onPress: onBack }]} />}>
+        <ScreenHeader eyebrow="المقارنة" title="تعذر فتح هذه المقارنة" description="اختر خيارين أو ثلاثة للخدمة نفسها من نتائج البحث، ثم حاول مجددًا." />
       </Screen>
     );
   }
 
+  function removeOption(option: ProviderOption) {
+    setVisibleOptions((current) => current.filter((item) => item.id !== option.id));
+    if (chosenId === option.id) setChosenId(null);
+  }
+
   return (
     <Screen
-      footer={
-        <ActionBar
-          actions={[
-            {
-              key: 'book',
-              label: 'متابعة لحجز الخيار المحدد',
-              role: 'primary',
-              availability: chosen ? { status: 'available' } : { status: 'disabled', reason: 'اختر خيارًا واحدًا للمتابعة.' },
-              onPress: () => chosen && onBook(chosen),
-            },
-            { key: 'back', label: 'تعديل المقارنة', role: 'secondary', availability: { status: 'available' }, onPress: onBack },
-          ]}
-        />
-      }
+      footer={<ActionBar actions={[
+        {
+          key: 'book', label: 'متابعة لحجز الخيار المحدد', role: 'primary',
+          availability: chosen ? { status: 'available' } : { status: 'disabled', reason: 'اختر خيارًا واحدًا للمتابعة.' },
+          onPress: () => chosen && onBook(chosen),
+        },
+        { key: 'back', label: 'تعديل المقارنة', role: 'secondary', availability: { status: 'available' }, onPress: onBack },
+      ]} />}
     >
       <Stack gap="stack-lg">
         <ScreenHeader
-          eyebrow={`${options[0].serviceLabel} · ${options.length} خيارات`}
-          title="قارن التفاصيل نفسها"
-          description="لا يوجد خيار موصى به أو ترتيب. قارن ما يهمك ثم حدّد خيارًا واحدًا للحجز."
+          eyebrow={`${visibleOptions[0].serviceLabel} · ${formatArabicCount(visibleOptions.length, { one: 'خيار واحد', two: 'خياران', few: 'خيارات', many: 'خيارًا' })}`}
+          title="قارن كل معلومة جنبًا إلى جنب"
+          description="لا يوجد ترتيب أو خيار موصى به. اختر وفق المعلومات التي تهمك."
         />
-        <View accessibilityRole="radiogroup" style={{ gap: space('stack-lg') }}>
-          {options.map((option, index) => (
-            <View key={option.id} style={{ gap: space('stack-sm') }}>
-              <Helper>الخيار {index + 1}</Helper>
-              <ProviderDecisionCard option={option} variant="comparison" selected={chosenId === option.id} />
-              <SelectionControl option={option} selected={chosenId === option.id} onSelect={() => setChosenId(option.id)} />
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={`عرض التفاصيل الكاملة لـ ${option.providerName}`}
-                onPress={() => onOpen(option)}
-                style={({ pressed }) => ({
-                  minHeight: size('target-floor'),
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backgroundColor: pressed ? color('action.secondary-hover') : 'transparent',
-                })}
-              >
-                <Body tone="link">عرض التفاصيل الكاملة</Body>
-              </Pressable>
+
+        <View accessibilityRole="radiogroup" accessibilityLabel="اختيار مقدم الخدمة للحجز" style={{ gap: space('stack-md') }}>
+          {visibleOptions.map((option, index) => (
+            <View key={option.id} style={{ gap: space('stack-sm'), paddingBottom: space('stack-sm'), borderBottomWidth: borderWidth('hairline'), borderBottomColor: color('border.subtle') }}>
+              <ProviderIdentity name={option.providerName} branch={option.branchName} area={option.areaLabel} compact />
+              <SelectionControl option={option} selected={chosenId === option.id} tabbable={chosenId === option.id || (!chosenId && index === 0)} onSelect={() => setChosenId(option.id)} />
+              <InlineTextAction label="عرض التفاصيل الكاملة" accessibilityLabel={`عرض التفاصيل الكاملة لـ ${option.providerName}`} onPress={() => onOpen(option)} />
+              {visibleOptions.length > 2 ? (
+                <InlineTextAction label="إزالة من المقارنة" accessibilityLabel={`إزالة ${option.providerName} من المقارنة`} tone="secondary" onPress={() => removeOption(option)} />
+              ) : null}
             </View>
           ))}
+        </View>
+
+        <View style={{ gap: space('stack-sm') }}>
+          <Heading4>تفاصيل المقارنة</Heading4>
+          <AttributeGroup label="السعر" options={visibleOptions} renderValue={(option) => <PriceDisplay price={option.price} compact />} />
+          <AttributeGroup label="ما يشمله السعر" options={visibleOptions} renderValue={(option) => option.priceIncludes ?? 'لم تُذكر تفاصيل إضافية'} />
+          <AttributeGroup label="التقييم الموثّق" options={visibleOptions} renderValue={(option) => option.ratingLabel?.replace('تقييم موثّق: ', '') ?? 'غير متوفر'} />
+          <AttributeGroup label="أقرب موعد" options={visibleOptions} renderValue={(option) => option.nearestAppointmentIso ? <BodyStrong>{formatDateTime(option.nearestAppointmentIso)}</BodyStrong> : 'غير متوفر حاليًا'} />
+          <AttributeGroup label="الفرع والمنطقة" options={visibleOptions} renderValue={(option) => `${option.branchName} · ${option.areaLabel}`} />
+          <AttributeGroup label="حالة الأهلية" options={visibleOptions} renderValue={(option) => ELIGIBILITY_LABEL[option.eligibility]} />
+          <AttributeGroup label="الحماية الممولة" options={visibleOptions} renderValue={(option) => option.fundedProtection ? 'متوفرة عند الحاجة' : 'غير مشمولة'} />
+          <AttributeGroup label="آخر تقييم للتوفر" options={visibleOptions} renderValue={(option) => <BodyStrong>{formatDateTime(option.assessedAtIso)}</BodyStrong>} />
         </View>
       </Stack>
     </Screen>

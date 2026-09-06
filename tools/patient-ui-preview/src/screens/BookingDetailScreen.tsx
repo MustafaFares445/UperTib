@@ -1,16 +1,17 @@
 import { useState } from 'react';
-import { View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { ActionBar, type ActionSpec } from '../components/ActionBar';
+import { AppointmentObject } from '../components/AppointmentObject';
 import { DeadlineIndicator } from '../components/DeadlineIndicator';
 import { EventTimeline } from '../components/EventTimeline';
 import type { ProviderOption } from '../components/ProviderDecisionCard';
 import { StateSummary } from '../components/StateSummary';
-import { Bdi } from '../foundations/Bdi';
-import { formatDateTime } from '../foundations/format';
+import { Icon } from '../foundations/Icon';
 import { Screen, ScreenHeader, Stack } from '../foundations/Screen';
-import { Body, BodyStrong, Heading4, Helper } from '../foundations/Text';
+import { Body, BodyStrong, Helper } from '../foundations/Text';
+import { useFocusRing } from '../foundations/useFocusRing';
 import type { BookingRecord } from '../mocks/booking';
-import { borderWidth, color, radius, space } from '../theme/tokens';
+import { borderWidth, color, radius, size, space } from '../theme/tokens';
 
 export interface BookingDetailScreenProps {
   booking: BookingRecord;
@@ -42,48 +43,50 @@ const BOOKING_MEANING: Record<BookingRecord['state'], string> = {
 
 const NEXT_STEP: Record<BookingRecord['state'], string> = {
   REQUESTED: 'لا يلزمك إجراء الآن. انتظر رد العيادة ضمن المهلة الظاهرة أدناه.',
-  ALTERNATIVE_PROPOSED: 'راجع الوقت البديل ثم اقبله أو ارفضه قبل انتهاء المهلة. الرفض لا يفرض عقوبة.',
+  ALTERNATIVE_PROPOSED: 'راجع الوقت البديل ثم اقبله أو ارفضه قبل انتهاء المهلة. الرفض ينهي هذا الطلب دون أي عقوبة، ويمكنك طلب موعد جديد.',
   CONFIRMED: 'احتفظ بموعدك، أو اطلب تغييره إذا لم يعد مناسبًا وكانت السياسة تسمح بذلك.',
   ELIGIBILITY_REVIEW: 'انتظر نتيجة المراجعة ولا تتوجه إلى الموعد حتى تعود الحالة إلى مؤكَّد.',
   REJECTED: 'يمكنك العودة إلى النتائج واختيار طبيب أو موعد آخر.',
   CANCELLED: 'يمكنك العودة إلى النتائج وبدء طلب جديد عندما ترغب.',
 };
 
-function AppointmentSummary({ booking, option }: { booking: BookingRecord; option: ProviderOption }) {
+function AppointmentChange({ booking, option }: { booking: BookingRecord; option: ProviderOption }) {
+  if (!booking.alternativeSlotIso) return null;
+
   return (
-    <View
-      style={{
-        gap: space('stack-sm'),
-        paddingVertical: space('stack-md'),
-        borderTopWidth: borderWidth('hairline'),
-        borderBottomWidth: borderWidth('hairline'),
-        borderColor: color('border.subtle'),
-      }}
-    >
-      <Helper>الموعد المطلوب</Helper>
-      <BodyStrong><Bdi>{formatDateTime(booking.slotIso)}</Bdi></BodyStrong>
-      <Heading4>{option.providerName}</Heading4>
-      <Body tone="secondary">{option.branchName} · {option.areaLabel}</Body>
-      <Helper>{option.serviceLabel}</Helper>
+    <View accessibilityLabel="مقارنة الموعد الأصلي بالموعد البديل" style={{ gap: space('stack-md') }}>
+      <AppointmentObject iso={booking.slotIso} option={option} mode="summary" />
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space('inline-sm') }}>
+        <Icon name="arrows-right-left" color={color('action.primary')} scale="md" />
+        <BodyStrong>من الموعد الأصلي إلى الموعد المقترح</BodyStrong>
+      </View>
+      <AppointmentObject iso={booking.alternativeSlotIso} option={option} mode="proposed" />
     </View>
   );
 }
 
-function AlternativeProposal({ booking }: { booking: BookingRecord }) {
-  if (!booking.alternativeSlotIso) return null;
+function QuietDestructiveAction({ label, onPress }: { label: string; onPress: () => void }) {
+  const ring = useFocusRing();
   return (
-    <View
-      style={{
-        gap: space('stack-xs'),
-        padding: space('inset-md'),
-        borderRadius: radius('surface'),
-        backgroundColor: color('action.primary-subtle'),
-      }}
+    <Pressable
+      accessibilityRole="button"
+      onFocus={ring.onFocus}
+      onBlur={ring.onBlur}
+      onPress={onPress}
+      style={({ pressed }) => ({
+        minHeight: size('target-primary'),
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingHorizontal: space('inset-md'),
+        borderRadius: radius('control'),
+        borderWidth: borderWidth('hairline'),
+        borderColor: color('action.destructive'),
+        backgroundColor: pressed ? color('action.destructive-subtle') : color('surface.default'),
+        ...ring.ringStyle,
+      })}
     >
-      <Helper>الموعد البديل المقترح</Helper>
-      <BodyStrong><Bdi>{formatDateTime(booking.alternativeSlotIso)}</Bdi></BodyStrong>
-      <Body tone="secondary">لن يحل هذا الوقت محل طلبك الأصلي إلا بعد قبولك وإعادة التحقق من التوفر.</Body>
-    </View>
+      <Body style={{ color: color('action.destructive'), fontWeight: '600' }}>{label}</Body>
+    </Pressable>
   );
 }
 
@@ -137,36 +140,44 @@ export function BookingDetailScreen({
     ];
   }
 
-  function projectedActions(): ActionSpec[] {
+  function footerActions(): ActionSpec[] {
     if (confirmCancellation) return cancellationActions();
     if (state === 'REJECTED' || state === 'CANCELLED') return terminalActions();
     if (allowed.includes('respond-alternative')) return alternativeActions();
-
-    const actionList: ActionSpec[] = allowed.includes('reschedule')
-      ? [{
-          key: 'reschedule', label: 'طلب تغيير الموعد', role: 'secondary', onPress: onReschedule,
-          availability: onReschedule ? { status: 'available' } : { status: 'absent', reason: 'تغيير الموعد غير متاح من هذه المعاينة.' },
-        }]
-      : [{ key: 'done', label: 'العودة إلى الخدمات', role: 'secondary', availability: { status: 'available' }, onPress: onDone }];
-    if (allowed.includes('cancel')) {
-      actionList.push({
-        key: 'cancel', label: state === 'CONFIRMED' ? 'إلغاء الحجز' : 'إلغاء الطلب', role: 'destructive',
-        availability: { status: 'available' }, onPress: () => setConfirmCancellation(true),
-      });
+    if (allowed.includes('reschedule')) {
+      return [{
+        key: 'reschedule', label: 'طلب تغيير الموعد', role: 'secondary', onPress: onReschedule,
+        availability: onReschedule ? { status: 'available' } : { status: 'absent', reason: 'تغيير الموعد غير متاح من هذه المعاينة.' },
+      }];
     }
-    return actionList;
+    if (state === 'ELIGIBILITY_REVIEW') {
+      return [{ key: 'done', label: 'العودة إلى الخدمات', role: 'secondary', availability: { status: 'available' }, onPress: onDone }];
+    }
+    return [];
   }
 
+  const actions = footerActions();
   const deadline =
     state === 'ALTERNATIVE_PROPOSED' ? booking.alternativeResponseDeadlineIso : state === 'REQUESTED' ? booking.responseDeadlineIso : undefined;
+  const cancellable = allowed.includes('cancel') && !confirmCancellation;
 
   return (
-    <Screen footer={<ActionBar actions={projectedActions()} />}>
+    <Screen footer={actions.length ? <ActionBar actions={actions} /> : undefined}>
       <Stack gap="stack-lg">
         <ScreenHeader eyebrow={`طلب الحجز ${booking.id}`} title="تفاصيل الحجز" description={`${option.providerName} · ${option.serviceLabel}`} />
-        <StateSummary machine="booking" status={state} label={BOOKING_LABEL[state]} meaning={BOOKING_MEANING[state]} nextStep={NEXT_STEP[state]} />
-        <AppointmentSummary booking={booking} option={option} />
-        {state === 'ALTERNATIVE_PROPOSED' ? <AlternativeProposal booking={booking} /> : null}
+        <StateSummary
+          machine="booking"
+          status={state}
+          label={BOOKING_LABEL[state]}
+          meaning={BOOKING_MEANING[state]}
+          nextStep={NEXT_STEP[state]}
+          variant="hero"
+        />
+        {state === 'ALTERNATIVE_PROPOSED' ? (
+          <AppointmentChange booking={booking} option={option} />
+        ) : (
+          <AppointmentObject iso={booking.slotIso} option={option} mode={state === 'CONFIRMED' ? 'confirmed' : 'summary'} />
+        )}
         {deadline ? (
           <DeadlineIndicator
             deadlineIso={deadline}
@@ -181,7 +192,17 @@ export function BookingDetailScreen({
           </View>
         ) : null}
         <EventTimeline events={booking.history} />
+        {cancellable ? (
+          <View style={{ gap: space('stack-sm'), paddingTop: space('stack-sm') }}>
+            <Helper>{state === 'CONFIRMED' ? 'إلغاء الحجز' : 'إلغاء الطلب'}</Helper>
+            <Body tone="secondary">استخدم الإلغاء فقط إذا لم تعد تريد متابعة هذا الحجز.</Body>
+            <QuietDestructiveAction
+              label={state === 'CONFIRMED' ? 'إلغاء الحجز' : 'إلغاء الطلب'}
+              onPress={() => setConfirmCancellation(true)}
+            />
+          </View>
+        ) : null}
       </Stack>
     </Screen>
-      );
+  );
 }
