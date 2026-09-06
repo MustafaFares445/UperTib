@@ -1,16 +1,28 @@
 import { useState } from 'react';
 import { acceptedTreatmentPlan, caseTimeline, patientCases, proposedTreatmentPlan, type PatientCase } from '../mocks/clinical';
+import { acceptedFinancialTerms, financialLedger } from '../mocks/finance';
 import { reopenedPatientStage } from '../mocks/stages';
+import { AcceptedFinancialTermsScreen } from '../screens/AcceptedFinancialTermsScreen';
 import { CaseSummaryScreen } from '../screens/CaseSummaryScreen';
 import { CaseTimelineScreen } from '../screens/CaseTimelineScreen';
+import { FinancialTimelineScreen } from '../screens/FinancialTimelineScreen';
 import { MyCasesScreen } from '../screens/MyCasesScreen';
 import { PlanAcceptanceScreen } from '../screens/PlanAcceptanceScreen';
 import { StageDetailScreen } from '../screens/StageDetailScreen';
 import { TreatmentPlanScreen } from '../screens/TreatmentPlanScreen';
 
-type Step = 'cases' | 'summary' | 'plan' | 'acceptance' | 'accepted-plan' | 'timeline' | 'stage';
+type Step =
+  | 'cases'
+  | 'summary'
+  | 'plan'
+  | 'acceptance'
+  | 'accepted-plan'
+  | 'timeline'
+  | 'stage'
+  | 'financial-terms'
+  | 'financial-timeline';
 
-/** FLOW-CLINICAL-008 plus the case-scoped plan and stage-reading branches. Local navigation state only. */
+/** FLOW-CLINICAL-008 plus case-scoped plan, stage and financial-history reading branches. Local navigation state only. */
 export function CareReadingFlow() {
   const [step, setStep] = useState<Step>('cases');
   const [selectedCase, setSelectedCase] = useState<PatientCase>(patientCases[0]);
@@ -34,6 +46,7 @@ export function CareReadingFlow() {
         onOpenPlan={selectedCase.id === patientCases[0].id ? () => setStep('plan') : () => setStep('accepted-plan')}
         onOpenTimeline={() => setStep('timeline')}
         onActOutstanding={selectedCase.outstandingAction ? () => setStep('plan') : undefined}
+        onOpenFinance={selectedCase.financialSnapshotAvailable ? () => setStep('financial-terms') : undefined}
       />
     );
   }
@@ -74,6 +87,26 @@ export function CareReadingFlow() {
 
   if (step === 'stage') {
     return <StageDetailScreen stage={reopenedPatientStage} onBackToTimeline={() => setStep('timeline')} />;
+  }
+
+  if (step === 'financial-terms') {
+    return (
+      <AcceptedFinancialTermsScreen
+        snapshot={acceptedFinancialTerms}
+        onOpenTimeline={() => setStep('financial-timeline')}
+        onBackToCase={() => setStep('summary')}
+      />
+    );
+  }
+
+  if (step === 'financial-timeline') {
+    return (
+      <FinancialTimelineScreen
+        ledger={financialLedger}
+        onOpenTerms={() => setStep('financial-terms')}
+        onBackToCase={() => setStep('summary')}
+      />
+    );
   }
 
   return (
