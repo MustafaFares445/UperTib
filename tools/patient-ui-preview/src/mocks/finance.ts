@@ -47,6 +47,10 @@ export interface FinancialEventProjection {
   response?: FinancialEventResponse;
   /** Projection-only actionability fact. Authorization is still server-side in production. */
   awaitingResponseByPatient?: boolean;
+  /** Links an external refund-execution assertion back to the approved decision it satisfies. */
+  approvedRefundDecisionId?: string;
+  /** Existing evidence references only; this preview never invents a transfer mechanism. */
+  evidenceIds?: string[];
 }
 
 export interface FinancialPositionProjection {
@@ -73,6 +77,23 @@ export interface ExternalPaymentReportDraft {
   currency: string;
   externalMethodCategory: string;
   occurredAtIso: string;
+}
+
+export interface ApprovedRefundDecisionProjection {
+  id: string;
+  caseId: string;
+  approvedAtIso: string;
+  amount: number;
+  currency: string;
+  sourceLabel: string;
+  reasonSummary: string;
+}
+
+export interface ExternalRefundExecutionDraft {
+  amount: number;
+  currency: string;
+  occurredAtIso: string;
+  evidenceIds: string[];
 }
 
 export const acceptedFinancialTerms: AcceptedFinancialTermsSnapshot = {
@@ -112,6 +133,20 @@ export const partialAcceptedFinancialTerms: AcceptedFinancialTermsSnapshot = {
   complete: false,
   missingLabel: 'تعذّر تحميل أحد البنود المقبولة؛ لن نعرض إجماليًا قد يكون ناقصًا.',
 };
+
+export const approvedRefundDecision: ApprovedRefundDecisionProjection = {
+  id: 'refund-decision-001',
+  caseId: 'case-cleaning-002',
+  approvedAtIso: '2026-09-05T10:00:00+03:00',
+  amount: 20000,
+  currency: 'SYP',
+  sourceLabel: 'قرار استرداد معتمد للحالة',
+  reasonSummary: 'أُقرّ استرداد هذا المبلغ، ويبقى التنفيذ الفعلي بين المريض والعيادة خارج UberTib.',
+};
+
+/** Existing evidence references supplied by the already-governed evidence boundary; no uploader is implied. */
+export const refundExecutionEvidenceIds = ['evidence-refund-execution-001'];
+export const refundExecutionEvidenceSummary = 'إثبات تنفيذ خارجي مرتبط بالسجل وجاهز كمرجع لهذه الواقعة.';
 
 export const financialEvents: FinancialEventProjection[] = [
   {
@@ -307,6 +342,69 @@ export function appendPatientFinancialResponse(
       confirmed: ledger.position.confirmed + (confirmed ? target.amount : 0),
       disputed: ledger.position.disputed + (confirmed ? 0 : target.amount),
       asOfIso: '2026-09-06T18:35:00+03:00',
+    },
+  };
+}
+
+function refundExecutionCommandId(
+  decision: ApprovedRefundDecisionProjection,
+  draft: ExternalRefundExecutionDraft,
+) {
+  const commandKey = [
+    decision.id,
+    String(draft.amount),
+    draft.currency.trim().toUpperCase(),
+    draft.occurredAtIso.trim(),
+    [...draft.evidenceIds].sort().join(','),
+  ].join('|');
+  return `fin-event-refund-execution:${encodeURIComponent(commandKey)}`;
+}
+
+/**
+ * Prototype-only projection helper for API-FINANCE-004. It appends an assertion only when the
+ * approved decision belongs to this case and the reported amount/currency match that decision exactly.
+ * The event remains REPORTED_UNCONFIRMED until the counterparty responds through API-FINANCE-003.
+ */
+export function appendPatientRefundExecution(
+  ledger: FinancialLedgerProjection,
+  decision: ApprovedRefundDecisionProjection,
+  draft: ExternalRefundExecutionDraft,
+): FinancialLedgerProjection {
+  const normalizedCurrency = draft.currency.trim().toUpperCase();
+  const decisionCurrency = decision.currency.trim().toUpperCase();
+  const valid = decision.caseId === ledger.snapshot.caseId
+    && draft.amount === decision.amount
+    && normalizedCurrency === decisionCurrency
+    && draft.occurredAtIso.trim().length > 0;
+  if (!valid) return ledger;
+
+  const id = refundExecutionCommandId(decision, draft);
+  if (ledger.events.some((event) => event.id === id)) return ledger;
+
+  const event: FinancialEventProjection = {
+    id,
+    title: 'أُبلغ عن تنفيذ استرداد خارج المنصة',
+    summary: 'أبلغ المريض أن الاسترداد المعتمد نُفّذ خارج UberTib. تبقى هذه واقعة غير مؤكدة حتى يرد الطرف الآخر.',
+    amount: draft.amount,
+    currency: normalizedCurrency,
+    status: 'REPORTED_UNCONFIRMED',
+    occurredAtIso: draft.occurredAtIso.trim(),
+    recordedAtIso: '2026-09-06T19:15:00+03:00',
+    attribution: 'المريض',
+    externalMethodLabel: 'تنفيذ استرداد خارجي',
+    approvedRefundDecisionId: decision.id,
+    evidenceIds: [...draft.evidenceIds],
+  };
+
+  return {
+    ...ledger,
+    events: [...ledger.events, event],
+    position: {
+      ...ledger.position,
+      reported: ledger.position.reported + draft.amount,
+      refunded: ledger.position.refunded + draft.amount,
+      pendingExternalExecution: Math.max(0, ledger.position.pendingExternalExecution - draft.amount),
+      asOfIso: event.recordedAtIso,
     },
   };
 }
