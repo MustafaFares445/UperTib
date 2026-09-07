@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { View } from 'react-native';
 import { ActionBar, type ActionSpec } from '../components/ActionBar';
 import { DeadlineIndicator } from '../components/DeadlineIndicator';
@@ -8,7 +9,6 @@ import { Screen, ScreenHeader, Stack } from '../foundations/Screen';
 import { Body, BodyStrong, Heading3, Helper } from '../foundations/Text';
 import { REVIEW_NOW_ISO, type ReviewSubmissionDraft, type ReviewableExperienceProjection } from '../mocks/reviews';
 import { borderWidth, color, radius, space } from '../theme/tokens';
-import { useState } from 'react';
 
 export type SubmitReviewState =
   | 'editing'
@@ -75,8 +75,6 @@ export function SubmitReviewScreen({
 }) {
   const [ratingValue, setRatingValue] = useState(initialRating);
   const [content, setContent] = useState(initialContent);
-  const ratingMissing = state === 'editing' && ratingValue.trim().length === 0;
-  const contentMissing = state === 'editing' && content.trim().length === 0;
   const fieldsComplete = ratingValue.trim().length > 0 && content.trim().length > 0;
   const domainReady = state === 'editing' && experience.verifiedCompleted && experience.reviewWindowState !== 'lapsed';
 
@@ -149,7 +147,6 @@ export function SubmitReviewScreen({
                 value={ratingValue}
                 onChangeText={setRatingValue}
                 helper="قيمة التقييم تتبع سياسة المنتج لهذه التجربة؛ هذه المعاينة لا تفترض مقياسًا رقميًا محددًا."
-                error={ratingMissing ? 'أدخل قيمة التقييم المطلوبة.' : undefined}
                 placeholder="أدخل تقييمك"
                 maxLength={40}
                 autoFocus
@@ -159,7 +156,6 @@ export function SubmitReviewScreen({
                 value={content}
                 onChangeText={setContent}
                 helper="اكتب ما يفيد الآخرين عن تجربتك الفعلية. هذا النص لا يغيّر الأهلية العلمية أو تصنيف الطبيب."
-                error={contentMissing ? 'اكتب نص التقييم قبل الإرسال.' : undefined}
                 placeholder="صف تجربتك"
                 maxLength={1000}
                 multiline
