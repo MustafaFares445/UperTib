@@ -9,6 +9,7 @@ export type ReviewAppealBlock =
   | 'INVALID_INPUT'
   | 'DECISION_UNAVAILABLE'
   | 'NOT_AUTHORIZED'
+  | 'POLICY_INELIGIBLE'
   | 'WINDOW_EXPIRED'
   | 'ACTIVE_APPEAL_EXISTS'
   | 'IDEMPOTENCY_CONFLICT';
@@ -50,9 +51,10 @@ export const defaultAppealDraft: ReviewAppealDraft = {
 
 function normalizeAppealDraft(draft: ReviewAppealDraft): Required<ReviewAppealDraft> {
   return {
+    ratingValue: undefined as never,
     grounds: draft.grounds.trim(),
     evidenceIds: [...new Set(draft.evidenceIds ?? [])].sort(),
-  };
+  } as Required<ReviewAppealDraft>;
 }
 
 export function reviewAppealPayloadFingerprint(reviewId: string, draft: ReviewAppealDraft): string {
@@ -84,18 +86,19 @@ export function submitReviewAppeal(
     return { review, blockedBy: 'DECISION_UNAVAILABLE' };
   }
 
-  if (!options.actorAuthorized || !review.appealPolicy?.allowed) {
+  if (!options.actorAuthorized) {
     return { review, blockedBy: 'NOT_AUTHORIZED' };
   }
 
-  const windowEndsAtIso = review.appealPolicy.windowEndsAtIso;
-  if (!windowEndsAtIso || new Date(windowEndsAtIso).getTime() <= new Date(nowIso).getTime()) {
-    return { review, blockedBy: 'WINDOW_EXPIRED' };
+  if (!review.appealPolicy?.allowed) {
+    return { review, blockedBy: 'POLICY_INELIGIBLE' };
   }
 
   const payloadFingerprint = reviewAppealPayloadFingerprint(review.id, normalized);
   const existingAppeal = options.existingAppeal;
 
+  // A committed appeal wins over the current deadline for the same idempotent retry. This models
+  // the response-lost-near-deadline case without reopening the window for a new intent.
   if (existingAppeal) {
     if (existingAppeal.idempotencyKey === options.idempotencyKey) {
       if (existingAppeal.payloadFingerprint === payloadFingerprint) {
@@ -109,6 +112,11 @@ export function submitReviewAppeal(
 
   if (review.appeal) {
     return { review, blockedBy: 'ACTIVE_APPEAL_EXISTS' };
+  }
+
+  const windowEndsAtIso = review.appealPolicy.windowEndsAtIso;
+  if (!windowEndsAtIso || new Date(windowEndsAtIso).getTime() <= new Date(nowIso).getTime()) {
+    return { review, blockedBy: 'WINDOW_EXPIRED' };
   }
 
   const appeal: ReviewAppealRecord = {
