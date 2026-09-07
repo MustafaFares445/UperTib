@@ -6,9 +6,7 @@ import { SubjectContextHeader } from '../components/SubjectContextHeader';
 import { ValidationField } from '../components/ValidationField';
 import { Screen, ScreenHeader, Stack } from '../foundations/Screen';
 import { Body, BodyStrong, Heading3, Helper } from '../foundations/Text';
-import {
-  CLAIMS_NOW_ISO,
-} from '../mocks/claims';
+import { CLAIMS_NOW_ISO } from '../mocks/claims';
 import {
   acceptedProtectionEvidenceIds,
   protectionEvidenceRequirements,
@@ -78,6 +76,21 @@ export function ProtectionClaimScreen({
   const requirements = useMemo(() => protectionEvidenceRequirements(entitlement), [entitlement]);
   const outstanding = requirements.filter((item) => item.state !== 'ACCEPTED');
   const acceptedEvidenceIds = useMemo(() => acceptedProtectionEvidenceIds(entitlement), [entitlement]);
+  const actionableEvidenceRequirement = entitlement.evidenceRequirements.find((requirement) =>
+    requirement.items.length === 0 || requirement.items.some((item) =>
+      item.state === 'SELECTED'
+      || item.state === 'PAUSED'
+      || item.state === 'FAILED_RETRYABLE'
+      || item.state === 'REJECTED',
+    ),
+  );
+  const evidencePendingValidation = entitlement.evidenceRequirements.some((requirement) =>
+    requirement.items.some((item) =>
+      item.state === 'UPLOADING'
+      || item.state === 'UPLOADED'
+      || item.state === 'VALIDATING_SCANNING',
+    ),
+  );
 
   const entitlementAvailable = entitlement.snapshotAvailable && entitlement.eligible && entitlement.activeProtection;
   const windowOpen = entitlement.claimWindowState !== 'lapsed'
@@ -86,10 +99,10 @@ export function ProtectionClaimScreen({
   const canSubmit = entitlementAvailable && windowOpen && outstanding.length === 0;
 
   const actions: ActionSpec[] = [];
-  if (entitlementAvailable && windowOpen && outstanding.length > 0 && onSupplyEvidence) {
+  if (entitlementAvailable && windowOpen && actionableEvidenceRequirement && onSupplyEvidence) {
     actions.push({
       key: 'supply-evidence',
-      label: `استكمال: ${outstanding[0].label}`,
+      label: `استكمال: ${actionableEvidenceRequirement.title}`,
       role: 'primary',
       availability: { status: 'available' },
       onPress: onSupplyEvidence,
@@ -194,8 +207,12 @@ export function ProtectionClaimScreen({
 
             {outstanding.length > 0 ? (
               <BlockedCard
-                title={`يلزم استكمال: ${outstanding[0].label}`}
-                body="لا يصبح زر تقديم المطالبة متاحًا قبل قبول كل متطلب. الملف قيد النقل أو الفحص لا يُحسب كمستند مقبول."
+                title={evidencePendingValidation && !actionableEvidenceRequirement
+                  ? 'المستند قيد النقل أو الفحص.'
+                  : `يلزم استكمال: ${outstanding[0].label}`}
+                body={evidencePendingValidation && !actionableEvidenceRequirement
+                  ? 'لا يلزم بدء رفع جديد الآن. ننتظر اكتمال النقل أو الفحص، ولا يصبح المتطلب مستوفيًا إلا بعد قبوله.'
+                  : 'لا يصبح زر تقديم المطالبة متاحًا قبل قبول كل متطلب. فشل النقل القابل لإعادة المحاولة يختلف عن رفض المستند بعد المراجعة.'}
               />
             ) : null}
 
