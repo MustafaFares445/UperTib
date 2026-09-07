@@ -5,7 +5,7 @@ import { StateChip } from '../components/StateChip';
 import { SubjectContextHeader } from '../components/SubjectContextHeader';
 import { formatDateTime } from '../foundations/format';
 import { Screen, ScreenHeader, Stack } from '../foundations/Screen';
-import { Body, BodyStrong, Heading3, Helper, NumericStrong } from '../foundations/Text';
+import { Body, BodyStrong, Heading3, Helper } from '../foundations/Text';
 import { REVIEW_NOW_ISO, type PatientReviewProjection } from '../mocks/reviews';
 import { borderWidth, color, radius, space } from '../theme/tokens';
 
@@ -53,7 +53,7 @@ export function MyReviewScreen({
         <ScreenHeader
           eyebrow="تقييمي"
           title={review.serviceLabel}
-          description="هنا ترى التقييم كما أرسلته وحالته الحالية. لا يمكن تعديل نص التقييم أو درجته من هذه الصفحة."
+          description="هنا ترى التقييم كما أرسلته وحالته الحالية. لا يمكن تعديل نص التقييم أو قيمته من هذه الصفحة."
         />
         <SubjectContextHeader subject={subject} authority={authority} />
 
@@ -77,7 +77,7 @@ export function MyReviewScreen({
           }}
         >
           <Helper>التقييم كما أرسلته</Helper>
-          <NumericStrong>{review.ratingValue}</NumericStrong>
+          <BodyStrong>{review.ratingValue}</BodyStrong>
           <Body>{review.content}</Body>
           <Helper>هذا تقييم تجربة موثّقة، وهو مستقل عن الأهلية العلمية للطبيب ولا يدخل في حسابها.</Helper>
         </View>
@@ -124,7 +124,7 @@ export function MyReviewScreen({
               nowIso={REVIEW_NOW_ISO}
               state={appeal.windowState}
             />
-            <Helper>مسار الاعتراض نفسه سيُنفّذ في الشريحة التالية؛ هذه الصفحة تعرض فقط ما إذا كانت السياسة تمنحك هذا الإجراء.</Helper>
+            <Helper>إذا كانت المهلة مفتوحة والسياسة تمنحك هذا الحق، يمكنك الاعتراض على أساس القرار دون تعديل نص تقييمك الأصلي.</Helper>
           </View>
         ) : null}
       </Stack>
