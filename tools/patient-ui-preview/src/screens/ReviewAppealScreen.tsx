@@ -164,7 +164,9 @@ export function ReviewAppealScreen({
     || review.appealPolicy?.windowState === 'lapsed'
     || new Date(deadlineIso).getTime() <= new Date(REVIEW_NOW_ISO).getTime();
   const existingAppeal = appealRecord;
-  const canAuthor = decisionAvailable && appealAllowed && actorAuthorized && !deadlineExpired && !existingAppeal;
+  const projectionAppeal = review.appeal;
+  const hasExistingAppeal = Boolean(existingAppeal || projectionAppeal);
+  const canAuthor = decisionAvailable && appealAllowed && actorAuthorized && !deadlineExpired && !hasExistingAppeal;
   const groundsComplete = grounds.trim().length > 0;
 
   const actions: ActionSpec[] = [];
@@ -274,21 +276,30 @@ export function ReviewAppealScreen({
 
         {existingAppeal ? <ExistingAppeal appeal={existingAppeal} /> : null}
 
-        {!existingAppeal && decisionAvailable && !appealAllowed ? (
+        {!existingAppeal && projectionAppeal ? (
+          <BlockedCard
+            title="يوجد اعتراض مسجّل بالفعل."
+            body={projectionAppeal.state === 'DECIDED'
+              ? 'صدر قرار لهذا الاعتراض. افتح سجل التقييم لقراءة النتيجة المسجّلة؛ لا يمكن إنشاء اعتراض ثانٍ على القرار نفسه.'
+              : 'تم تسجيل اعتراض على هذا القرار وهو قيد المراجعة. لا نعرض نموذجًا ثانيًا حتى لا تنشأ مطالبتان بالمعنى نفسه.'}
+          />
+        ) : null}
+
+        {!hasExistingAppeal && decisionAvailable && !appealAllowed ? (
           <BlockedCard
             title="لا يتضمن هذا القرار حق اعتراض من حسابك."
             body="لا نعرض نموذج إرسال عندما لا تمنح السياسة لهذا الطرف حق الاعتراض. يبقى القرار وسببه ظاهرين للقراءة."
           />
         ) : null}
 
-        {!existingAppeal && decisionAvailable && appealAllowed && !actorAuthorized ? (
+        {!hasExistingAppeal && decisionAvailable && appealAllowed && !actorAuthorized ? (
           <BlockedCard
             title="لا تملك صلاحية تقديم هذا الاعتراض."
             body="يمكن للمريض الذي كتب التقييم، أو وليّه ضمن نطاق تمثيل فعّال، تقديم الاعتراض. تغيير المريض المعروض لا يمنح هذه الصلاحية."
           />
         ) : null}
 
-        {!existingAppeal && decisionAvailable && appealAllowed && actorAuthorized && deadlineExpired ? (
+        {!hasExistingAppeal && decisionAvailable && appealAllowed && actorAuthorized && deadlineExpired ? (
           <BlockedCard
             title="انتهت مهلة تقديم هذا الاعتراض."
             body="انتهاء المهلة ليس خطأ إرسال، وإعادة المحاولة لا تعيد فتح نافذة الاعتراض."
