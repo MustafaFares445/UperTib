@@ -3,7 +3,9 @@ import {
   approachingReviewExperience,
   completedCleaningExperience,
   existingActiveReview,
+  expiredReviewExperience,
   retiredPatientReview,
+  unverifiedReviewExperience,
 } from '../mocks/reviews';
 import { ReviewableExperiencesScreen } from './ReviewableExperiencesScreen';
 
@@ -20,7 +22,14 @@ const handlers = { onWriteReview: () => {}, onOpenReview: () => {}, onBackToCase
 
 export const Default: Story = {
   args: {
-    reviewable: [completedCleaningExperience, approachingReviewExperience],
+    // Invalid candidates are intentionally present in the input so the screen-level structural
+    // filter is exercised: they must never become disabled/fake review opportunities.
+    reviewable: [
+      completedCleaningExperience,
+      approachingReviewExperience,
+      expiredReviewExperience,
+      unverifiedReviewExperience,
+    ],
     existingReviews: [],
     ...handlers,
   },
@@ -32,7 +41,9 @@ export const Empty: Story = {
 
 export const ExistingReviews: Story = {
   args: {
-    reviewable: [completedCleaningExperience],
+    // approachingReviewExperience is also supplied as a candidate, but its ACTIVE review below
+    // removes the duplicate write opportunity at the screen boundary.
+    reviewable: [completedCleaningExperience, approachingReviewExperience],
     existingReviews: [existingActiveReview, retiredPatientReview],
     ...handlers,
   },
