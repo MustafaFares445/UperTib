@@ -1,34 +1,33 @@
-import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { Screen, ScreenHeader, Stack } from '../foundations/Screen';
 import { Body, BodyStrong, Helper } from '../foundations/Text';
 import { Icon } from '../foundations/Icon';
+import { useFocusRing } from '../foundations/useFocusRing';
 import { ActionBar } from '../components/ActionBar';
 import { ProviderDecisionCard, type ProviderOption } from '../components/ProviderDecisionCard';
-import { borderWidth, color, radius, size, space } from '../theme/tokens';
+import { borderWidth, color, size, space } from '../theme/tokens';
 
 export interface ProviderDecisionScreenProps {
   option: ProviderOption;
   onBook: () => void;
+  onExplainEligibility: () => void;
   onBackToResults: () => void;
 }
 
-const ELIGIBILITY_MEANING: Record<ProviderOption['eligibility'], string> = {
-  PENDING_EVALUATION: 'هذا الخيار قيد التقييم حاليًا؛ لا حاجة لاتخاذ أي إجراء إضافي ما لم يُطلب منك ذلك صراحة.',
-  ELIGIBLE: 'هذا الخيار متاح للحجز حاليًا.',
-  SUSPENDED: 'هذا الخيار غير متاح للحجز حاليًا.',
-  NOT_ELIGIBLE: 'هذا الخيار غير متاح للحجز حاليًا؛ يمكن اختيار خيار آخر.',
-};
-
 /**
  * SCR-ELIG-003 — Provider decision card. Gives the patient the full decision card for one
- * provider/service/branch combination so they can commit to it. The eligibility explanation is
- * composed inline here (WGT-ELIG-002's controlling-reason content) rather than a separate screen —
- * see the Slice 1 traceability notes for why SCR-ELIG-004/005 were deferred beyond this slice.
+ * provider/service/branch combination so they can commit to it. The patient-safe eligibility
+ * explanation lives one navigation away on canonical SCR-ELIG-004 rather than expanding another
+ * paragraph on this already decision-heavy screen.
  */
-export function ProviderDecisionScreen({ option, onBook, onBackToResults }: ProviderDecisionScreenProps) {
-  const [showWhy, setShowWhy] = useState(false);
+export function ProviderDecisionScreen({
+  option,
+  onBook,
+  onExplainEligibility,
+  onBackToResults,
+}: ProviderDecisionScreenProps) {
   const bookable = option.eligibility === 'ELIGIBLE';
+  const explanationRing = useFocusRing();
 
   return (
     <Screen
@@ -56,42 +55,39 @@ export function ProviderDecisionScreen({ option, onBook, onBackToResults }: Prov
           description="السعر والموعد والتقييم هنا تخص هذا الطبيب وهذه الخدمة وهذا الفرع فقط."
         />
         <ProviderDecisionCard option={option} variant="card" />
-        <View>
+
+        <View
+          style={{
+            paddingTop: space('stack-sm'),
+            borderTopWidth: borderWidth('hairline'),
+            borderTopColor: color('border.subtle'),
+          }}
+        >
           <Pressable
-            accessibilityRole="button"
-            accessibilityState={{ expanded: showWhy }}
-            accessibilityLabel={showWhy ? 'إخفاء معنى حالة التوفر' : 'عرض معنى حالة التوفر'}
-            onPress={() => setShowWhy((value) => !value)}
+            accessibilityRole="link"
+            accessibilityLabel="لماذا هذا الخيار متاح لهذه الخدمة في هذا الفرع؟"
+            onFocus={explanationRing.onFocus}
+            onBlur={explanationRing.onBlur}
+            onPress={onExplainEligibility}
             style={({ pressed }) => ({
               minHeight: size('target-primary'),
               flexDirection: 'row',
               alignItems: 'center',
               justifyContent: 'space-between',
               gap: space('inline-sm'),
-              paddingVertical: space('inset-sm'),
-              borderTopWidth: borderWidth('hairline'),
-              borderBottomWidth: borderWidth('hairline'),
-              borderColor: color('border.subtle'),
-              backgroundColor: pressed ? color('action.secondary-hover') : 'transparent',
+              opacity: pressed ? 0.8 : 1,
+              ...explanationRing.ringStyle,
             })}
           >
-            <BodyStrong>ما معنى حالة التوفر؟</BodyStrong>
-            <Icon name={showWhy ? 'minus-circle' : 'plus-circle'} color={color('text.secondary')} />
-          </Pressable>
-          {showWhy ? (
-            <View
-              style={{
-                gap: space('stack-xs'),
-                padding: space('inset-sm'),
-                borderBottomLeftRadius: radius('surface'),
-                borderBottomRightRadius: radius('surface'),
-                backgroundColor: color('surface.subtle'),
-              }}
-            >
-              <Body>{ELIGIBILITY_MEANING[option.eligibility]}</Body>
-              <Helper>تُراجع حالة التوفر مرة أخرى عند تأكيد الحجز؛ لا تمثل ترتيبًا أو تقييمًا عامًا للطبيب.</Helper>
+            <View style={{ flex: 1, gap: space('stack-xs') }}>
+              <BodyStrong>لماذا هذا الخيار متاح؟</BodyStrong>
+              <Helper>شرح مختصر لحالة الأهلية الحالية، من دون درجات أو تفاصيل داخلية.</Helper>
             </View>
-          ) : null}
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: space('inline-xs') }}>
+              <Icon name="magnifying-glass" color={color('action.primary')} scale="sm" />
+              <Body tone="link">عرض الشرح</Body>
+            </View>
+          </Pressable>
         </View>
       </Stack>
     </Screen>

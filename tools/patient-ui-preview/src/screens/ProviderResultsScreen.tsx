@@ -1,12 +1,14 @@
 import { useState } from 'react';
-import { View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { Screen, ScreenHeader, Stack } from '../foundations/Screen';
-import { BodyStrong, Helper } from '../foundations/Text';
+import { Body, BodyStrong, Helper } from '../foundations/Text';
 import { ActionBar } from '../components/ActionBar';
 import type { ProviderOption } from '../components/ProviderDecisionCard';
 import { ProviderOptionSet, type ProviderOptionSetState } from '../widgets/ProviderOptionSet';
 import { ProviderAvatar } from '../components/ProviderIdentity';
-import { borderWidth, color, radius, space } from '../theme/tokens';
+import { formatArabicCount } from '../foundations/format';
+import { useFocusRing } from '../foundations/useFocusRing';
+import { borderWidth, color, radius, size, space } from '../theme/tokens';
 
 export interface ProviderResultsScreenProps {
   serviceName: string;
@@ -37,6 +39,7 @@ export function ProviderResultsScreen({
   onCompare,
 }: ProviderResultsScreenProps) {
   const [selected, setSelected] = useState<ProviderOption[]>([]);
+  const clearRing = useFocusRing();
 
   function toggleComparison(option: ProviderOption) {
     setSelected((current) =>
@@ -96,10 +99,50 @@ export function ProviderResultsScreen({
     >
       <Stack gap="stack-lg">
         <ScreenHeader
-          eyebrow={area ? `${serviceName} · ${area}` : serviceName}
+          eyebrow={serviceName}
           title="اختر طبيبك"
-          description="السعر والتقييم وأقرب موعد أمامك. يمكنك مقارنة حتى 3 خيارات."
+          description="قارن السعر والتقييم الموثّق وأقرب موعد. لا يوجد ترتيب أو طبيب موصى به من المنصة."
         />
+
+        {state === 'success' ? (
+          <View
+            style={{
+              flexDirection: 'row',
+              flexWrap: 'wrap',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: space('inline-sm'),
+              paddingVertical: space('inset-sm'),
+              borderTopWidth: borderWidth('hairline'),
+              borderBottomWidth: borderWidth('hairline'),
+              borderColor: color('border.subtle'),
+            }}
+          >
+            <View style={{ flex: 1, minWidth: 0, gap: space('stack-xs') }}>
+              <BodyStrong>{formatArabicCount(options.length, { one: 'خيار واحد', two: 'خياران', few: 'خيارات', many: 'خيارًا' })}</BodyStrong>
+              <Helper>{area ? `المنطقة: ${area}` : 'جميع مناطق حلب'}</Helper>
+            </View>
+            {area ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`إزالة فلتر المنطقة ${area}`}
+                onFocus={clearRing.onFocus}
+                onBlur={clearRing.onBlur}
+                onPress={onClearFilter}
+                style={({ pressed }) => ({
+                  minHeight: size('target-floor'),
+                  justifyContent: 'center',
+                  paddingHorizontal: space('inset-sm'),
+                  opacity: pressed ? 0.8 : 1,
+                  ...clearRing.ringStyle,
+                })}
+              >
+                <Body tone="link">إزالة فلتر المنطقة</Body>
+              </Pressable>
+            ) : null}
+          </View>
+        ) : null}
+
         <ProviderOptionSet
           state={state}
           options={options}

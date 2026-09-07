@@ -12,13 +12,19 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  args: { option: optionsFor('svc-filling')[0], onBook: () => {}, onBackToResults: () => {} },
+  args: {
+    option: optionsFor('svc-filling')[0],
+    onBook: () => {},
+    onExplainEligibility: () => {},
+    onBackToResults: () => {},
+  },
 };
 
 export const NoLongerEligible: Story = {
   args: {
     option: { ...optionsFor('svc-filling')[0], eligibility: 'SUSPENDED' },
     onBook: () => {},
+    onExplainEligibility: () => {},
     onBackToResults: () => {},
   },
 };

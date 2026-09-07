@@ -57,19 +57,13 @@ export const serviceCatalog: ServiceGroup[] = [
   },
   {
     id: 'group-cosmetic',
-    name: 'التقويم والتجميل',
+    name: 'تجميل الأسنان',
     families: [
       {
         code: 'svc-whitening',
         name: 'تبييض الأسنان',
         summary: 'تفتيح لون الأسنان بطريقة آمنة تحت إشراف طبي.',
         covers: 'يشمل الفحص المبدئي وجلسة التبييض.',
-      },
-      {
-        code: 'svc-orthodontics',
-        name: 'تقويم الأسنان',
-        summary: 'تصحيح ترتيب الأسنان وإطباقها على مراحل.',
-        covers: 'يشمل التقييم الأولي وخطة المتابعة مع الطبيب.',
       },
     ],
   },

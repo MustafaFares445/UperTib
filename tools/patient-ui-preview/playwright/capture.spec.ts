@@ -3,15 +3,9 @@ import { mkdir } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
 /**
- * Reproducible Slice 1 review-evidence capture.
+ * Reproducible Patient discovery/booking review-evidence capture.
  *
- * Review evidence used to be produced ad hoc, which meant a reviewer could not tell whether two
- * screenshots came from the same code, the same viewport, or the same interaction. This spec makes
- * the evidence set a deterministic artifact of the repository instead.
- *
- * It does NOT run in the normal suite — evidence generation is not a quality gate, and rendering
- * every screen at every width on every `playwright test` would slow the gate for no assertion
- * value. Run it explicitly:
+ * It does NOT run in the normal suite — evidence generation is not a quality gate. Run explicitly:
  *
  *     CAPTURE=1 npx playwright test playwright/capture.spec.ts
  *
@@ -28,8 +22,6 @@ async function gotoStory(page: Page, id: string) {
   await page.waitForFunction(() => (document.getElementById('storybook-root')?.childElementCount ?? 0) > 0, {
     timeout: 45_000,
   });
-  // Settle async preview tooling (the a11y addon injects into <body> after mount) and any
-  // token-driven transition so successive captures of the same state are byte-comparable.
   await page.waitForTimeout(400);
 }
 
@@ -39,10 +31,13 @@ async function capture(page: Page, testInfo: TestInfo, name: string) {
   await page.screenshot({ path, fullPage: true });
 }
 
-test.describe('Slice 1 review evidence', () => {
+test.describe('Patient review evidence', () => {
   test.skip(!CAPTURE_ENABLED, 'Evidence capture — run with CAPTURE=1.');
 
   test('discovery and comparison', async ({ page }, testInfo) => {
+    await gotoStory(page, 'patient-screens-scr-elig-001-provider-search--default');
+    await capture(page, testInfo, 'elig-001-search--default');
+
     await gotoStory(page, 'patient-screens-scr-elig-002-provider-results--default');
     await capture(page, testInfo, 'elig-002-results--default');
 
@@ -51,8 +46,17 @@ test.describe('Slice 1 review evidence', () => {
     await expect(comparisonChoice).toHaveAttribute('aria-checked', 'true');
     await capture(page, testInfo, 'elig-002-results--one-selected');
 
+    await gotoStory(page, 'patient-screens-scr-elig-002-provider-results--area-filtered');
+    await capture(page, testInfo, 'elig-002-results--area-filtered');
+
     await gotoStory(page, 'patient-screens-scr-elig-003-provider-decision-card--default');
     await capture(page, testInfo, 'elig-003-provider-detail--default');
+
+    await gotoStory(page, 'patient-screens-scr-elig-004-eligibility-explanation--eligible');
+    await capture(page, testInfo, 'elig-004-explanation--eligible');
+
+    await gotoStory(page, 'patient-screens-scr-elig-004-eligibility-explanation--pending-evaluation');
+    await capture(page, testInfo, 'elig-004-explanation--pending');
 
     await gotoStory(page, 'patient-screens-scr-elig-005-provider-comparison--two-options');
     await capture(page, testInfo, 'elig-005-comparison--default');

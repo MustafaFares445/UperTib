@@ -66,6 +66,51 @@ export const eligibilityResults: Record<string, ProviderOption[]> = {
   ],
 };
 
+/** Patient-safe deterministic projection of API-ELIG-002 for one exact option. */
+export interface EligibilityExplanation {
+  providerName: string;
+  branchName: string;
+  areaLabel: string;
+  serviceLabel: string;
+  eligibility: ProviderOption['eligibility'];
+  assessedAtIso: string;
+  reasonSummary: string;
+  nextStep: string;
+}
+
+const REASON_BY_STATUS: Record<ProviderOption['eligibility'], { reasonSummary: string; nextStep: string }> = {
+  ELIGIBLE: {
+    reasonSummary: 'هذا الطبيب وهذا الفرع مستوفيان حاليًا شروط إتاحة هذه الخدمة على UberTib.',
+    nextStep: 'يمكنك متابعة اختيار الموعد. يُعاد التحقق من الأهلية والتوفر عند إرسال طلب الحجز.',
+  },
+  PENDING_EVALUATION: {
+    reasonSummary: 'ما زال تقييم هذا الخيار قيد الاستكمال، لذلك لا يظهر كخيار جاهز للحجز الآن.',
+    nextStep: 'يمكنك العودة إلى النتائج واختيار خيار متاح حاليًا، أو التحقق من هذا الخيار لاحقًا.',
+  },
+  SUSPENDED: {
+    reasonSummary: 'هذا الخيار موقوف مؤقتًا ضمن هذا الفرع والخدمة، لذلك لا يمكن متابعته للحجز الآن.',
+    nextStep: 'ارجع إلى النتائج لاختيار طبيب أو فرع آخر متاح لهذه الخدمة.',
+  },
+  NOT_ELIGIBLE: {
+    reasonSummary: 'هذا الخيار لا يستوفي حاليًا شروط إتاحة هذه الخدمة في هذا الفرع.',
+    nextStep: 'ارجع إلى النتائج لاختيار خيار آخر متاح لهذه الخدمة.',
+  },
+};
+
+export function explanationFor(option: ProviderOption): EligibilityExplanation {
+  const copy = REASON_BY_STATUS[option.eligibility];
+  return {
+    providerName: option.providerName,
+    branchName: option.branchName,
+    areaLabel: option.areaLabel,
+    serviceLabel: option.serviceLabel,
+    eligibility: option.eligibility,
+    assessedAtIso: option.assessedAtIso,
+    reasonSummary: copy.reasonSummary,
+    nextStep: copy.nextStep,
+  };
+}
+
 export function optionsFor(serviceCode: string): ProviderOption[] {
   return eligibilityResults[serviceCode] ?? [];
 }
