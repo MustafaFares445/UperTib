@@ -12,6 +12,12 @@ import {
   type FinancialEventProjection,
   type FinancialLedgerProjection,
 } from '../mocks/finance';
+import {
+  completedCleaningExperience,
+  submitVerifiedReview,
+  type PatientReviewProjection,
+  type ReviewableExperienceProjection,
+} from '../mocks/reviews';
 import { reopenedPatientStage } from '../mocks/stages';
 import { AcceptedFinancialTermsScreen } from '../screens/AcceptedFinancialTermsScreen';
 import { CaseSummaryScreen } from '../screens/CaseSummaryScreen';
@@ -19,10 +25,13 @@ import { CaseTimelineScreen } from '../screens/CaseTimelineScreen';
 import { FinancialEventResponseScreen, type FinancialEventResponseState } from '../screens/FinancialEventResponseScreen';
 import { FinancialTimelineScreen } from '../screens/FinancialTimelineScreen';
 import { MyCasesScreen } from '../screens/MyCasesScreen';
+import { MyReviewScreen } from '../screens/MyReviewScreen';
 import { PlanAcceptanceScreen } from '../screens/PlanAcceptanceScreen';
 import { ReportExternalPaymentScreen, type ReportExternalPaymentState } from '../screens/ReportExternalPaymentScreen';
 import { ReportRefundExecutionScreen, type ReportRefundExecutionState } from '../screens/ReportRefundExecutionScreen';
+import { ReviewableExperiencesScreen } from '../screens/ReviewableExperiencesScreen';
 import { StageDetailScreen } from '../screens/StageDetailScreen';
+import { SubmitReviewScreen } from '../screens/SubmitReviewScreen';
 import { TreatmentPlanScreen } from '../screens/TreatmentPlanScreen';
 
 type Step =
@@ -37,11 +46,14 @@ type Step =
   | 'financial-timeline'
   | 'financial-report'
   | 'financial-response'
-  | 'refund-execution';
+  | 'refund-execution'
+  | 'reviews'
+  | 'review-submit'
+  | 'my-review';
 
 /**
- * FLOW-CLINICAL-008 plus the case-scoped Patient reading branches and canonical Patient finance
- * prototype paths. Local navigation and projection state only; no production persistence or money movement.
+ * FLOW-CLINICAL-008 plus the case-scoped Patient reading, finance and verified-review branches.
+ * Local navigation and projection state only; no production persistence or money movement.
  */
 export function CareReadingFlow() {
   const [step, setStep] = useState<Step>('cases');
@@ -51,6 +63,9 @@ export function CareReadingFlow() {
   const [reportState, setReportState] = useState<ReportExternalPaymentState>('editing');
   const [responseState, setResponseState] = useState<FinancialEventResponseState>('ready');
   const [refundExecutionState, setRefundExecutionState] = useState<ReportRefundExecutionState>('editing');
+  const [reviews, setReviews] = useState<PatientReviewProjection[]>([]);
+  const [selectedReviewExperience, setSelectedReviewExperience] = useState<ReviewableExperienceProjection>(completedCleaningExperience);
+  const [selectedReview, setSelectedReview] = useState<PatientReviewProjection | null>(null);
 
   if (step === 'cases') {
     return (
@@ -72,6 +87,7 @@ export function CareReadingFlow() {
         onOpenTimeline={() => setStep('timeline')}
         onActOutstanding={selectedCase.outstandingAction ? () => setStep('plan') : undefined}
         onOpenFinance={selectedCase.financialSnapshotAvailable ? () => setStep('financial-terms') : undefined}
+        onOpenReviews={selectedCase.id === completedCleaningExperience.caseId ? () => setStep('reviews') : undefined}
       />
     );
   }
@@ -112,6 +128,53 @@ export function CareReadingFlow() {
 
   if (step === 'stage') {
     return <StageDetailScreen stage={reopenedPatientStage} onBackToTimeline={() => setStep('timeline')} />;
+  }
+
+  if (step === 'reviews') {
+    const existingForExperience = reviews.filter((review) => review.experienceId === completedCleaningExperience.id);
+    const hasActive = existingForExperience.some((review) => review.state === 'ACTIVE');
+    return (
+      <ReviewableExperiencesScreen
+        reviewable={hasActive ? [] : [completedCleaningExperience]}
+        existingReviews={existingForExperience}
+        onWriteReview={(experience) => {
+          setSelectedReviewExperience(experience);
+          setStep('review-submit');
+        }}
+        onOpenReview={(review) => {
+          setSelectedReview(review);
+          setStep('my-review');
+        }}
+        onBackToCase={() => setStep('summary')}
+      />
+    );
+  }
+
+  if (step === 'review-submit') {
+    return (
+      <SubmitReviewScreen
+        experience={selectedReviewExperience}
+        initialRating="4"
+        initialContent="كانت التجربة واضحة، وتم شرح خطوات الزيارة بشكل جيد."
+        onSubmit={(draft) => {
+          const result = submitVerifiedReview(selectedReviewExperience, reviews, draft);
+          if (!result.review || result.blockedBy) return;
+          setReviews(result.reviews);
+          setSelectedReview(result.review);
+          setStep('my-review');
+        }}
+        onCancel={() => setStep('reviews')}
+      />
+    );
+  }
+
+  if (step === 'my-review' && selectedReview) {
+    return (
+      <MyReviewScreen
+        review={selectedReview}
+        onBackToExperiences={() => setStep('reviews')}
+      />
+    );
   }
 
   if (step === 'financial-terms') {
