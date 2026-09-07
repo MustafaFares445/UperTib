@@ -51,10 +51,9 @@ export const defaultAppealDraft: ReviewAppealDraft = {
 
 function normalizeAppealDraft(draft: ReviewAppealDraft): Required<ReviewAppealDraft> {
   return {
-    ratingValue: undefined as never,
     grounds: draft.grounds.trim(),
     evidenceIds: [...new Set(draft.evidenceIds ?? [])].sort(),
-  } as Required<ReviewAppealDraft>;
+  };
 }
 
 export function reviewAppealPayloadFingerprint(reviewId: string, draft: ReviewAppealDraft): string {
