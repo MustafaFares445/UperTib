@@ -20,6 +20,13 @@ const EVIDENCE_ICON: Record<ClaimEvidenceState, IconName> = {
   ACCEPTED: 'check-circle',
 };
 
+const EVIDENCE_REASON_PREFIX: Record<ClaimEvidenceState, string> = {
+  MISSING: 'ما المطلوب: ',
+  REJECTED: 'سبب الرفض: ',
+  EXPIRED: 'سبب انتهاء الصلاحية: ',
+  ACCEPTED: 'سبب الاستيفاء: ',
+};
+
 function EvidenceRequirementRow({ requirement }: { requirement: ClaimEvidenceRequirement }) {
   return (
     <View
@@ -39,7 +46,7 @@ function EvidenceRequirementRow({ requirement }: { requirement: ClaimEvidenceReq
           <Helper>{EVIDENCE_LABEL[requirement.state]}</Helper>
         </View>
       </View>
-      <Body>{requirement.reason}</Body>
+      <Body>{EVIDENCE_REASON_PREFIX[requirement.state]}{requirement.reason}</Body>
     </View>
   );
 }
