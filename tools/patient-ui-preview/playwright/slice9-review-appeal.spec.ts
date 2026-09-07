@@ -44,6 +44,7 @@ const HIGH_RISK = [
   'patient-screens-scr-reviews-004-review-appeal--window-expired',
   'patient-screens-scr-reviews-004-review-appeal--not-authorized',
   'patient-screens-scr-reviews-004-review-appeal--decision-unavailable',
+  'patient-screens-scr-reviews-004-review-appeal--projection-only-submitted',
   'patient-screens-scr-reviews-004-review-appeal--submitted',
   'patient-screens-scr-reviews-004-review-appeal--decided',
 ];
@@ -143,6 +144,16 @@ test('supporting evidence is optional and does not invent a second generic uploa
   await expect(page.getByRole('button', { name: /رفع|إضافة ملف|تحميل ملف/ })).toHaveCount(0);
 });
 
+test('projection-only existing appeal suppresses duplicate authoring instead of failing silently on submit', async ({ page }, testInfo) => {
+  onlyOnPrimaryProject(testInfo);
+  await gotoStory(page, 'patient-screens-scr-reviews-004-review-appeal--projection-only-submitted');
+
+  await expect(page.getByText('يوجد اعتراض مسجّل بالفعل.', { exact: true })).toBeVisible();
+  await expect(page.getByText(/قيد المراجعة/)).toBeVisible();
+  await expect(page.getByRole('textbox', { name: 'اشرح سبب الاعتراض' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /تقديم الاعتراض/ })).toHaveCount(0);
+});
+
 test('submitted and decided appeal states remain separate and outcome meaning lives in the recorded reason', async ({ page }, testInfo) => {
   onlyOnPrimaryProject(testInfo);
 
@@ -197,6 +208,15 @@ test('appeal idempotency reuses identical retry and rejects materially different
   expect(retry.reused).toBe(true);
   expect(retry.appeal?.id).toBe(first.appeal?.id);
 
+  const retryAfterWindowClosed = submitReviewAppeal(retiredPatientReview, defaultAppealDraft, {
+    actorAuthorized: true,
+    idempotencyKey: key,
+    existingAppeal: first.appeal,
+    nowIso: '2026-09-11T08:00:00+03:00',
+  });
+  expect(retryAfterWindowClosed.reused).toBe(true);
+  expect(retryAfterWindowClosed.appeal?.id).toBe(first.appeal?.id);
+
   const conflict = submitReviewAppeal(retiredPatientReview, {
     ...defaultAppealDraft,
     grounds: `${defaultAppealDraft.grounds} سبب مختلف ماديًا.`,
@@ -215,7 +235,7 @@ test('appeal idempotency reuses identical retry and rejects materially different
   expect(secondIntent.blockedBy).toBe('ACTIVE_APPEAL_EXISTS');
 });
 
-test('appeal projection enforces decision visibility, authorization, window and existing-appeal uniqueness', async ({}, testInfo) => {
+test('appeal projection enforces decision visibility, authorization, policy, window and existing-appeal uniqueness', async ({}, testInfo) => {
   onlyOnPrimaryProject(testInfo);
 
   expect(submitReviewAppeal(retiredReviewWithoutReadableDecision, defaultAppealDraft, {
@@ -231,7 +251,7 @@ test('appeal projection enforces decision visibility, authorization, window and 
   expect(submitReviewAppeal(retiredNoAppealReview, defaultAppealDraft, {
     actorAuthorized: true,
     idempotencyKey: 'policy-no-appeal',
-  }).blockedBy).toBe('NOT_AUTHORIZED');
+  }).blockedBy).toBe('POLICY_INELIGIBLE');
 
   expect(submitReviewAppeal(retiredReviewWithExpiredAppealWindow, defaultAppealDraft, {
     actorAuthorized: true,
