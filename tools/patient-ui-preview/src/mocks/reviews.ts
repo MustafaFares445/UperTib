@@ -40,7 +40,8 @@ export interface PatientReviewProjection {
   ratingValue: string;
   content: string;
   submittedAtIso: string;
-  commandFingerprint?: string;
+  /** Prototype idempotency evidence only; never rendered to the Patient. */
+  commandFingerprint: string;
   retirement?: {
     reason: string;
     decidedAtIso: string;
@@ -112,6 +113,21 @@ export const unverifiedReviewExperience: ReviewableExperienceProjection = {
   verifiedCompleted: false,
 };
 
+function normalizedDraft(draft: ReviewSubmissionDraft): ReviewSubmissionDraft {
+  return {
+    ratingValue: draft.ratingValue.trim(),
+    content: draft.content.trim(),
+  };
+}
+
+function commandFingerprint(experienceId: string, draft: ReviewSubmissionDraft) {
+  const normalized = normalizedDraft(draft);
+  // JSON tuple serialization preserves field boundaries, so user-entered separators cannot collide.
+  return encodeURIComponent(JSON.stringify([experienceId, normalized.ratingValue, normalized.content]));
+}
+
+const existingActiveReviewContent = 'كانت التجربة واضحة ومنظمة، وتم شرح خطوات الزيارة بشكل جيد.';
+
 export const existingActiveReview: PatientReviewProjection = {
   id: 'review-exam-003',
   experienceId: approachingReviewExperience.id,
@@ -122,9 +138,15 @@ export const existingActiveReview: PatientReviewProjection = {
   treatingDentist: approachingReviewExperience.treatingDentist,
   state: 'ACTIVE',
   ratingValue: '4',
-  content: 'كانت التجربة واضحة ومنظمة، وتم شرح خطوات الزيارة بشكل جيد.',
+  content: existingActiveReviewContent,
   submittedAtIso: '2026-09-01T14:30:00+03:00',
+  commandFingerprint: commandFingerprint(approachingReviewExperience.id, {
+    ratingValue: '4',
+    content: existingActiveReviewContent,
+  }),
 };
+
+const retiredReviewContent = 'كتبت هذا التقييم بعد الزيارة المسجّلة في الحالة.';
 
 export const retiredPatientReview: PatientReviewProjection = {
   ...existingActiveReview,
@@ -134,8 +156,12 @@ export const retiredPatientReview: PatientReviewProjection = {
   serviceLabel: 'زيارة متابعة',
   state: 'RETIRED',
   ratingValue: '3',
-  content: 'كتبت هذا التقييم بعد الزيارة المسجّلة في الحالة.',
+  content: retiredReviewContent,
   submittedAtIso: '2026-08-22T11:10:00+03:00',
+  commandFingerprint: commandFingerprint('experience-retired-006', {
+    ratingValue: '3',
+    content: retiredReviewContent,
+  }),
   retirement: {
     reason: 'تمت أرشفة التقييم بعد قرار نزاهة مسجّل بسبب عدم توافقه مع سياسة النشر المطبقة على هذه الحالة.',
     decidedAtIso: '2026-08-25T16:40:00+03:00',
@@ -153,18 +179,6 @@ export const retiredNoAppealReview: PatientReviewProjection = {
   id: 'review-retired-no-appeal-007',
   appealPolicy: { allowed: false },
 };
-
-function normalizedDraft(draft: ReviewSubmissionDraft): ReviewSubmissionDraft {
-  return {
-    ratingValue: draft.ratingValue.trim(),
-    content: draft.content.trim(),
-  };
-}
-
-function commandFingerprint(experienceId: string, draft: ReviewSubmissionDraft) {
-  const normalized = normalizedDraft(draft);
-  return encodeURIComponent([experienceId, normalized.ratingValue, normalized.content].join('|'));
-}
 
 /**
  * Prototype-only projection helper for API-REVIEWS-001.
