@@ -7,6 +7,7 @@ import { formatDateTime } from '../foundations/format';
 import { Icon } from '../foundations/Icon';
 import { Screen, ScreenHeader, Stack } from '../foundations/Screen';
 import { Body, BodyStrong, Heading3, Helper } from '../foundations/Text';
+import type { ClaimAppealProjection } from '../mocks/claimAppeals';
 import { CLAIMS_NOW_ISO, type ClaimRequestState, type PatientClaimDetail } from '../mocks/claims';
 import { borderWidth, color, radius, space } from '../theme/tokens';
 import { ClaimEvidenceDeadlinePanel } from '../widgets/ClaimEvidenceDeadlinePanel';
@@ -18,6 +19,12 @@ const CLAIM_LABEL: Record<ClaimRequestState, string> = {
   DECIDED: 'صدر القرار',
   CLOSED: 'مُغلَق',
 };
+
+const APPEAL_LABEL = {
+  SUBMITTED: 'مُقدَّم',
+  UNDER_REVIEW: 'قيد المراجعة',
+  DECIDED: 'صدر القرار',
+} as const;
 
 function DecisionSection({ claim }: { claim: PatientClaimDetail }) {
   if (!claim.decision) return null;
@@ -60,9 +67,43 @@ function DecisionSection({ claim }: { claim: PatientClaimDetail }) {
   );
 }
 
+function AppealSection({ appeal }: { appeal: ClaimAppealProjection }) {
+  return (
+    <View
+      accessibilityLiveRegion="polite"
+      style={{
+        gap: space('stack-sm'),
+        padding: space('inset-md'),
+        borderRadius: radius('surface'),
+        borderWidth: borderWidth('hairline'),
+        borderColor: color('border.subtle'),
+        backgroundColor: color('surface.default'),
+      }}
+    >
+      <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: space('inline-sm') }}>
+        <Heading3>الاعتراض المسجّل</Heading3>
+        <StateChip machine="claim-appeal" status={appeal.state} label={APPEAL_LABEL[appeal.state]} />
+      </View>
+      <Helper>قُدّم في {formatDateTime(appeal.submittedAtIso)}</Helper>
+      <Body>يبقى قرار المطالبة الأصلي ظاهرًا أعلاه؛ الاعتراض سجل مستقل ولا يعيد كتابة القرار.</Body>
+      {appeal.grounds ? <Body>{appeal.grounds}</Body> : null}
+      {appeal.state === 'DECIDED' && appeal.decisionReason ? (
+        <View style={{ gap: space('stack-xs') }}>
+          <BodyStrong>سبب قرار الاعتراض</BodyStrong>
+          <Body>{appeal.decisionReason}</Body>
+          {appeal.decidedAtIso ? (
+            <Helper>{appeal.decidedByLabel ?? 'مراجع اعتراضات مستقل'} · {formatDateTime(appeal.decidedAtIso)}</Helper>
+          ) : null}
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
 /** SCR-CLAIMS-004 — authoritative patient claim detail with decision as a section, not a separate screen. */
 export function ClaimDetailScreen({
   claim,
+  appeal,
   subject = 'تفاصيل الطلب',
   authority,
   onBack,
@@ -71,6 +112,7 @@ export function ClaimDetailScreen({
   onReportRefundExecution,
 }: {
   claim: PatientClaimDetail;
+  appeal?: ClaimAppealProjection;
   subject?: string;
   authority?: string;
   onBack: () => void;
@@ -86,6 +128,7 @@ export function ClaimDetailScreen({
   );
   const appealOpen = Boolean(
     claim.decision
+      && !appeal
       && claim.appealEligible
       && claim.appealWindowEndsAtIso
       && new Date(claim.appealWindowEndsAtIso).getTime() > new Date(CLAIMS_NOW_ISO).getTime(),
@@ -137,7 +180,7 @@ export function ClaimDetailScreen({
         <ScreenHeader
           eyebrow={claim.type === 'REFUND_REQUEST' ? 'طلب استرداد' : 'مطالبة حماية'}
           title="أين وصل هذا الطلب؟"
-          description="نقرأ الحالة، المتطلبات والمهلة من السجل الحاكم نفسه. القرارات والتغييرات تبقى كسجل تاريخي ولا تمسح ما سبقها."
+          description="نقرأ الحالة، المتطلبات والمهلة من السجل الحاكم نفسه. القرارات والاعتراضات والتغييرات تبقى كسجل تاريخي ولا تمسح ما سبقها."
         />
         <SubjectContextHeader subject={subject} authority={authority} />
 
@@ -199,8 +242,9 @@ export function ClaimDetailScreen({
         ) : null}
 
         <DecisionSection claim={claim} />
+        {appeal ? <AppealSection appeal={appeal} /> : null}
 
-        {claim.decision && claim.appealEligible && claim.appealWindowEndsAtIso && !appealOpen ? (
+        {claim.decision && !appeal && claim.appealEligible && claim.appealWindowEndsAtIso && !appealOpen ? (
           <Helper>انتهت مهلة الاعتراض على هذا القرار في {formatDateTime(claim.appealWindowEndsAtIso)}؛ انتهاء المهلة ليس فشلًا قابلًا لإعادة المحاولة.</Helper>
         ) : null}
       </Stack>
