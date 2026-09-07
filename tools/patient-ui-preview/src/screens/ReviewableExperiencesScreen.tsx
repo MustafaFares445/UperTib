@@ -133,6 +133,17 @@ export function ReviewableExperiencesScreen({
   onOpenReview?: (review: PatientReviewProjection) => void;
   onBackToCase?: () => void;
 }) {
+  const now = new Date(REVIEW_NOW_ISO).getTime();
+  const activeExperienceIds = new Set(
+    existingReviews.filter((review) => review.state === 'ACTIVE').map((review) => review.experienceId),
+  );
+  const visibleReviewable = reviewable.filter((experience) =>
+    experience.verifiedCompleted
+      && experience.reviewWindowState !== 'lapsed'
+      && new Date(experience.reviewWindowEndsAtIso).getTime() > now
+      && !activeExperienceIds.has(experience.id),
+  );
+
   return (
     <Screen
       footer={onBackToCase ? (
@@ -155,9 +166,9 @@ export function ReviewableExperiencesScreen({
 
         <View style={{ gap: space('stack-sm') }}>
           <Heading3>متاحة لكتابة تقييم</Heading3>
-          {reviewable.length > 0 ? (
+          {visibleReviewable.length > 0 ? (
             <View accessibilityRole="list" style={{ gap: space('stack-sm') }}>
-              {reviewable.map((experience) => (
+              {visibleReviewable.map((experience) => (
                 <View key={experience.id} role="listitem">
                   <ReviewableCard experience={experience} onWriteReview={() => onWriteReview(experience)} />
                 </View>
