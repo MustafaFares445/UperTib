@@ -155,7 +155,7 @@ test('submitted and decided appeal states remain separate and outcome meaning li
   await expect(page.getByText('صدر القرار', { exact: true })).toBeVisible();
   await expect(page.getByText('سبب القرار', { exact: true })).toBeVisible();
   await expect(page.getByText(/ثبت أن قرار الأرشفة يطابق سياسة النشر/)).toBeVisible();
-  await expect(page.getByText('مراجع نزاهة مستقل', { exact: false })).toBeVisible();
+  await expect(page.getByText(/^مراجع نزاهة مستقل ·/)).toBeVisible();
 });
 
 test('appeal projection is append-only and preserves the original review decision and content', async ({}, testInfo) => {
