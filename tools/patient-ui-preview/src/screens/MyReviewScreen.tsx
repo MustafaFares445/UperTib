@@ -28,12 +28,16 @@ export function MyReviewScreen({
 }) {
   const actions: ActionSpec[] = [];
   const appeal = review.appealPolicy;
-  if (review.state === 'RETIRED' && appeal?.allowed && onAppeal) {
+  const appealExpired = appeal?.windowState === 'lapsed'
+    || Boolean(appeal?.windowEndsAtIso && new Date(appeal.windowEndsAtIso).getTime() <= new Date(REVIEW_NOW_ISO).getTime());
+  const canOfferAppeal = review.state === 'RETIRED' && appeal?.allowed && !review.appeal;
+
+  if (canOfferAppeal && onAppeal) {
     actions.push({
       key: 'appeal',
       label: 'الاعتراض على قرار الأرشفة',
       role: 'primary',
-      availability: appeal.windowState === 'lapsed'
+      availability: appealExpired
         ? { status: 'disabled', reason: 'انتهت مهلة الاعتراض لهذا القرار.' }
         : { status: 'available' },
       onPress: onAppeal,
@@ -115,14 +119,14 @@ export function MyReviewScreen({
           </View>
         ) : null}
 
-        {review.state === 'RETIRED' && appeal?.allowed && appeal.windowEndsAtIso ? (
+        {canOfferAppeal && appeal?.windowEndsAtIso ? (
           <View style={{ gap: space('stack-xs') }}>
             <Heading3>مهلة الاعتراض</Heading3>
             <DeadlineIndicator
               deadlineIso={appeal.windowEndsAtIso}
               obligation="مهلة الاعتراض على قرار الأرشفة"
               nowIso={REVIEW_NOW_ISO}
-              state={appeal.windowState}
+              state={appealExpired ? 'lapsed' : appeal.windowState}
             />
             <Helper>إذا كانت المهلة مفتوحة والسياسة تمنحك هذا الحق، يمكنك الاعتراض على أساس القرار دون تعديل نص تقييمك الأصلي.</Helper>
           </View>
