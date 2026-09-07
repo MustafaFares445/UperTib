@@ -98,7 +98,7 @@ function ExistingReviewCard({
           accessibilityRole="button"
           onPress={onOpen}
           style={({ pressed }) => ({
-            minHeight: size('target-secondary'),
+            minHeight: size('target-primary'),
             alignItems: 'center',
             justifyContent: 'center',
             paddingHorizontal: space('inset-md'),
