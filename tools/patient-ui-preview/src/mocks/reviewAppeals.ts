@@ -107,6 +107,10 @@ export function submitReviewAppeal(
     return { review, appeal: existingAppeal, blockedBy: 'ACTIVE_APPEAL_EXISTS' };
   }
 
+  if (review.appeal) {
+    return { review, blockedBy: 'ACTIVE_APPEAL_EXISTS' };
+  }
+
   const appeal: ReviewAppealRecord = {
     id: `review-appeal:${review.id}`,
     reviewId: review.id,
