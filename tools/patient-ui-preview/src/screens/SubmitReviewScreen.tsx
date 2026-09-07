@@ -76,22 +76,29 @@ export function SubmitReviewScreen({
   const [ratingValue, setRatingValue] = useState(initialRating);
   const [content, setContent] = useState(initialContent);
   const fieldsComplete = ratingValue.trim().length > 0 && content.trim().length > 0;
-  const domainReady = state === 'editing' && experience.verifiedCompleted && experience.reviewWindowState !== 'lapsed';
+  const windowExpired = experience.reviewWindowState === 'lapsed'
+    || new Date(experience.reviewWindowEndsAtIso).getTime() <= new Date(REVIEW_NOW_ISO).getTime();
+  const effectiveState: SubmitReviewState = state === 'editing' && !experience.verifiedCompleted
+    ? 'not-verified'
+    : state === 'editing' && windowExpired
+      ? 'window-expired'
+      : state;
+  const domainReady = effectiveState === 'editing';
 
   const submit: ActionSpec = {
     key: 'submit-review',
     label: 'إرسال التقييم',
     role: 'primary',
-    availability: state === 'submitting'
+    availability: effectiveState === 'submitting'
       ? { status: 'loading' }
       : domainReady && fieldsComplete
         ? { status: 'available' }
-        : { status: 'disabled', reason: state === 'editing' ? 'أكمل التقييم والنص قبل الإرسال.' : 'لا يمكن إرسال تقييم جديد في الحالة الحالية.' },
+        : { status: 'disabled', reason: effectiveState === 'editing' ? 'أكمل التقييم والنص قبل الإرسال.' : 'لا يمكن إرسال تقييم جديد في الحالة الحالية.' },
     onPress: () => onSubmit({ ratingValue: ratingValue.trim(), content: content.trim() }),
   };
 
   const actions: ActionSpec[] = [];
-  if (state === 'active-review-exists' && onOpenExistingReview) {
+  if (effectiveState === 'active-review-exists' && onOpenExistingReview) {
     actions.push({
       key: 'open-existing',
       label: 'عرض تقييمي الموجود',
@@ -99,10 +106,12 @@ export function SubmitReviewScreen({
       availability: { status: 'available' },
       onPress: onOpenExistingReview,
     });
-  } else if (state === 'editing' || state === 'submitting') {
+  } else if (effectiveState === 'editing' || effectiveState === 'submitting') {
     actions.push(submit);
   }
   actions.push({ key: 'cancel', label: 'إلغاء', role: 'secondary', availability: { status: 'available' }, onPress: onCancel });
+
+  const blocked = effectiveState === 'window-expired' || effectiveState === 'active-review-exists' || effectiveState === 'not-verified';
 
   return (
     <Screen footer={<ActionBar actions={actions} />}>
@@ -133,11 +142,11 @@ export function SubmitReviewScreen({
           deadlineIso={experience.reviewWindowEndsAtIso}
           obligation="مهلة إرسال هذا التقييم"
           nowIso={REVIEW_NOW_ISO}
-          state={experience.reviewWindowState}
+          state={windowExpired ? 'lapsed' : experience.reviewWindowState}
         />
 
-        {state === 'window-expired' || state === 'active-review-exists' || state === 'not-verified' ? (
-          <BlockedMessage state={state} />
+        {blocked ? (
+          <BlockedMessage state={effectiveState} />
         ) : (
           <View style={{ gap: space('stack-lg') }}>
             <View style={{ gap: space('stack-sm') }}>
