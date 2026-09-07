@@ -102,7 +102,7 @@ test('expired, unverified and duplicate-review conditions have distinct structur
 
   await gotoStory(page, 'patient-screens-scr-reviews-002-submit-review--not-verified');
   await expect(page.getByText('هذه التجربة ليست متاحة للتقييم الآن.', { exact: true })).toBeVisible();
-  await expect(page.getByText(/مكتملة وموثّقة/)).toBeVisible();
+  await expect(page.getByText('يلزم أن تكون التجربة مكتملة وموثّقة قبل أن يقبل النظام تقييمًا مرتبطًا بها.', { exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: 'إرسال التقييم' })).toHaveCount(0);
 
   await gotoStory(page, 'patient-screens-scr-reviews-002-submit-review--active-review-exists');
