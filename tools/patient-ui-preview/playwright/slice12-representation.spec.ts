@@ -118,9 +118,9 @@ test('grant revocation remains reachable and its consequence never depends on bo
   onlyOnPrimaryProject(testInfo);
   await gotoStory(page, 'patient-screens-scr-identity-007-grant-detail--active');
 
-  await expect(page.getByText(/لا توجد حالة حجز أو حالة أو مطالبة تستطيع تعطيل زر إلغاء التمثيل/)).toBeVisible();
+  await expect(page.getByText(/يبقى إلغاؤها متاحًا مهما كانت حالة الحجز أو الحالة العلاجية أو المطالبة/)).toBeVisible();
   const revoke = page.getByRole('button', { name: 'إلغاء هذه الصلاحية' });
-  await expect(revoke).toBeVisible();
+  await expect(revoke).toBeEnabled();
   await revoke.click();
   await expect(page.getByText('السجل السابق لن يُحذف.', { exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: 'تأكيد إلغاء الصلاحية الآن' })).toBeVisible();
@@ -301,11 +301,14 @@ test('FLOW-IDENTITY-002-004 creates then revokes one grant while retaining it in
   await gotoStory(page, 'patient-flows-flow-identity-002-004-representation-grant--default');
   await page.getByRole('button', { name: 'منح صلاحية لشخص آخر' }).click();
   await page.getByRole('button', { name: 'إنشاء الصلاحية بهذا النطاق' }).click();
-  await expect(page.getByText('ريم فارس', { exact: true }).first()).toBeVisible();
+  const createdCard = page.getByLabel('صلاحية منحتها، ريم فارس، مصطفى فارس');
+  await expect(createdCard).toBeVisible();
   await page.getByRole('button', { name: 'إلغاء هذه الصلاحية' }).click();
   await page.getByRole('button', { name: 'تأكيد إلغاء الصلاحية الآن' }).click();
   await expect(page.getByText('السجل السابق', { exact: true })).toBeVisible();
-  await expect(page.getByText('ريم فارس', { exact: true })).toBeVisible();
+  const revokedCard = page.getByLabel('صلاحية منحتها، ريم فارس، مصطفى فارس');
+  await expect(revokedCard).toBeVisible();
+  await expect(revokedCard.getByText('أُلغيت', { exact: true })).toBeVisible();
 });
 
 test('FLOW-IDENTITY-021 submits a verification request without creating a patient grant', async ({ page }, testInfo) => {
