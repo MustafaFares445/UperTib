@@ -26,6 +26,7 @@ export interface ReviewAppealRecord extends ReviewAppealProjection {
   idempotencyKey: string;
   payloadFingerprint: string;
   windowEndsAtIso: string;
+  decidedByLabel?: string;
 }
 
 export interface ReviewAppealSubmissionResult {
