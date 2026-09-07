@@ -36,6 +36,7 @@ export function CaseSummaryScreen({
   onOpenTimeline,
   onActOutstanding,
   onOpenFinance,
+  onOpenReviews,
 }: {
   item: PatientCase;
   subject?: string;
@@ -44,6 +45,7 @@ export function CaseSummaryScreen({
   onOpenTimeline: () => void;
   onActOutstanding?: () => void;
   onOpenFinance?: () => void;
+  onOpenReviews?: () => void;
 }) {
   return (
     <Screen
@@ -109,6 +111,9 @@ export function CaseSummaryScreen({
           <RouteCard label="سجل الحالة" detail="تابع الأحداث بالترتيب، بما فيها التصحيحات التي تظهر كأحداث لاحقة." onPress={onOpenTimeline} />
           {item.financialSnapshotAvailable && onOpenFinance ? (
             <RouteCard label="الشروط المالية المسجّلة" detail="عرض سجل الشروط المالية الخارجية المقبولة لهذه الحالة." onPress={onOpenFinance} />
+          ) : null}
+          {onOpenReviews ? (
+            <RouteCard label="تقييم التجربة" detail="اكتب تقييمًا فقط إذا كانت التجربة مكتملة وموثّقة وما زالت ضمن المهلة، أو افتح تقييمك الموجود." onPress={onOpenReviews} />
           ) : null}
         </View>
       </Stack>
