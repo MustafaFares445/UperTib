@@ -111,4 +111,6 @@ An unknown effective deadline fails closed for evidence authoring: the UI does n
 
 ## Final verification
 
-Pending the pull-request `Patient UI Preview` workflow on the final Slice 10 head.
+Implementation head `724800b3862cc71bbd73de3568db1799a6f08c36` passed **Patient UI Preview run #59 (`34095984116`)** completely: dependency audit, TypeScript, Storybook production build, all Slice 2–10 readiness/Playwright smoke suites, serious/critical accessibility checks and artifact upload.
+
+CodeRabbit was explicitly requested for the stacked PR, but its included review capacity was rate-limited at this time, so no CodeRabbit findings are claimed for Slice 10.
