@@ -14,6 +14,8 @@ interface ValidationFieldProps {
   keyboardType?: 'default' | 'phone-pad' | 'number-pad';
   maxLength?: number;
   autoFocus?: boolean;
+  multiline?: boolean;
+  numberOfLines?: number;
 }
 
 /**
@@ -32,6 +34,8 @@ export function ValidationField({
   keyboardType = 'default',
   maxLength,
   autoFocus,
+  multiline = false,
+  numberOfLines = 4,
 }: ValidationFieldProps) {
   const ring = useFocusRing();
   const t = typeStyle('body');
@@ -48,13 +52,16 @@ export function ValidationField({
         keyboardType={keyboardType}
         maxLength={maxLength}
         autoFocus={autoFocus}
+        multiline={multiline}
+        numberOfLines={multiline ? numberOfLines : 1}
         onFocus={ring.onFocus}
         onBlur={ring.onBlur}
         accessibilityLabel={label}
         accessibilityHint={[helper, error].filter(Boolean).join(' ') || undefined}
         style={{
-          minHeight: size('control-lg'),
+          minHeight: multiline ? Math.max(size('control-lg'), numberOfLines * 28) : size('control-lg'),
           paddingHorizontal: space('inset-md'),
+          paddingVertical: multiline ? space('inset-sm') : 0,
           borderWidth: 1,
           borderColor,
           borderRadius: radius('control'),
@@ -63,6 +70,7 @@ export function ValidationField({
           fontFamily: t.fontFamily,
           fontSize: t.fontSize,
           textAlign: 'right',
+          textAlignVertical: multiline ? 'top' : 'center',
           writingDirection: 'rtl',
           ...ring.ringStyle,
         }}
