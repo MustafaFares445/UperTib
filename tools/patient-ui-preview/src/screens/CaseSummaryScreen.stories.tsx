@@ -17,3 +17,6 @@ export const UpToDate: Story = { args: { item: patientCases[1], onOpenPlan: () =
 export const FinancialHistoryAvailable: Story = {
   args: { item: patientCases[1], onOpenPlan: () => {}, onOpenTimeline: () => {}, onOpenFinance: () => {} },
 };
+export const ReviewExperienceAvailable: Story = {
+  args: { item: patientCases[1], onOpenPlan: () => {}, onOpenTimeline: () => {}, onOpenReviews: () => {} },
+};
