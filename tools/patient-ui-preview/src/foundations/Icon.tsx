@@ -35,7 +35,11 @@ export type IconName =
   | 'document-check'
   | 'banknotes'
   | 'hand-raised'
-  | 'plus-circle';
+  | 'plus-circle'
+  | 'eye'
+  | 'archive-box'
+  | 'inbox-arrow-down'
+  | 'scale';
 
 const PATHS: Record<IconName, string> = {
   'check-circle': 'M8 12.5l2.5 2.5L16 9M20.5 12a8.5 8.5 0 11-17 0 8.5 8.5 0 0117 0z',
@@ -65,6 +69,10 @@ const PATHS: Record<IconName, string> = {
   banknotes: 'M4 8.5h16v9H4v-9zM7 6.5h10M8 13a4 3 0 118 0 4 3 0 01-8 0zM5.5 11h1M17.5 15h1',
   'hand-raised': 'M6.5 12V8.5a1 1 0 012 0V12m0 0V6.5a1 1 0 012 0V12m0 0V5.5a1 1 0 012 0V12m0 0V7a1 1 0 012 0v6.5l1-1.5a1.6 1.6 0 012.6 1.9l-2.7 4.1A4 4 0 0114 20H10a4 4 0 01-3.5-2.1L5 15.3A2 2 0 016.5 12z',
   'plus-circle': 'M12 8v8M8 12h8M20.5 12a8.5 8.5 0 11-17 0 8.5 8.5 0 0117 0z',
+  eye: 'M3.5 12s3-5.5 8.5-5.5 8.5 5.5 8.5 5.5-3 5.5-8.5 5.5S3.5 12 3.5 12zM12 9a3 3 0 110 6 3 3 0 010-6z',
+  'archive-box': 'M4.5 8h15v11.5h-15V8zM3.5 4.5h17V8h-17V4.5zM9.5 12h5',
+  'inbox-arrow-down': 'M5 4.5h14v15H5v-15zM8 15h2l1 1.5h2L14 15h2M12 7v5m0 0l-2-2m2 2l2-2',
+  scale: 'M12 4v16M7 7h10M6 7l-3 6h6L6 7zm12 0l-3 6h6l-3-6zM8.5 20h7',
 };
 
 export interface IconProps {
