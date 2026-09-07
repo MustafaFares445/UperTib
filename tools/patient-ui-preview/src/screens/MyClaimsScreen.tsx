@@ -96,16 +96,22 @@ export function MyClaimsScreen({
   authority,
   canRequestRefund = true,
   refundUnavailableReason,
+  canRequestProtection = false,
+  protectionUnavailableReason,
   onOpenClaim,
   onRequestRefund,
+  onRequestProtection,
 }: {
   claims: PatientClaimDetail[];
   subject?: string;
   authority?: string;
   canRequestRefund?: boolean;
   refundUnavailableReason?: string;
+  canRequestProtection?: boolean;
+  protectionUnavailableReason?: string;
   onOpenClaim: (claim: PatientClaimDetail) => void;
   onRequestRefund?: () => void;
+  onRequestProtection?: () => void;
 }) {
   const [filter, setFilter] = useState<'ALL' | ClaimRequestState>('ALL');
   const filtered = useMemo(
@@ -123,6 +129,17 @@ export function MyClaimsScreen({
         ? { status: 'available' }
         : { status: 'disabled', reason: refundUnavailableReason ?? 'لا يتوفر طلب استرداد جديد لهذه الحالة الآن.' },
       onPress: onRequestRefund,
+    });
+  }
+  if (onRequestProtection) {
+    actions.push({
+      key: 'protection',
+      label: 'مطالبة حماية جديدة',
+      role: 'secondary',
+      availability: canRequestProtection
+        ? { status: 'available' }
+        : { status: 'absent', reason: protectionUnavailableReason ?? 'لا تظهر مطالبة الحماية إلا عندما تحتوي الشروط المقبولة حماية فعّالة تنطبق على الحالة.' },
+      onPress: onRequestProtection,
     });
   }
 
