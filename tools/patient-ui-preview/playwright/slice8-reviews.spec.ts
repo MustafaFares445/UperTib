@@ -2,7 +2,6 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page, type TestInfo } from '@playwright/test';
 import {
   completedCleaningExperience,
-  existingActiveReview,
   expiredReviewExperience,
   submitVerifiedReview,
   unverifiedReviewExperience,
@@ -68,8 +67,18 @@ test('reviewable experiences show verified completion and the remaining window b
   await expect(write).toBeVisible();
   const [deadlineBox, writeBox] = await Promise.all([deadline.boundingBox(), write.boundingBox()]);
   expect(deadlineBox?.y).toBeLessThan(writeBox?.y ?? Number.POSITIVE_INFINITY);
+  // These invalid candidates are intentionally present in the story input and must be filtered by the screen.
   await expect(page.getByText(expiredReviewExperience.serviceLabel, { exact: true })).toHaveCount(0);
   await expect(page.getByText(unverifiedReviewExperience.serviceLabel, { exact: true })).toHaveCount(0);
+});
+
+test('an existing active review removes the duplicate write opportunity at the screen boundary', async ({ page }, testInfo) => {
+  onlyOnPrimaryProject(testInfo);
+  await gotoStory(page, 'patient-screens-scr-reviews-001-reviewable-experiences--existing-reviews');
+
+  await expect(page.getByRole('button', { name: 'اكتب تقييمًا لتجربة تنظيف الأسنان' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'اكتب تقييمًا لتجربة فحص أسنان دوري' })).toHaveCount(0);
+  await expect(page.getByText('تقييماتي السابقة', { exact: true })).toBeVisible();
 });
 
 test('empty reviewability is a no-data state rather than a failure or disabled fake opportunity', async ({ page }, testInfo) => {
@@ -90,6 +99,7 @@ test('submit review states verified linkage and classification independence with
   await expect(page.getByRole('button', { name: 'إرسال التقييم' })).toBeEnabled();
   await expect(page.getByText(/من 5|5 نجوم|خمس نجوم/)).toHaveCount(0);
   await expect(page.getByText(/\bS\b|\bP\b|\bH\b|\bI\b/)).toHaveCount(0);
+  await expect(page.getByText(/هذه المعاينة|سياسة المنتج/)).toHaveCount(0);
 });
 
 test('expired, unverified and duplicate-review conditions have distinct structural recovery', async ({ page }, testInfo) => {
@@ -155,6 +165,14 @@ test('appeal action is absent when policy grants no patient appeal', async ({ pa
   await gotoStory(page, 'patient-screens-scr-reviews-003-my-review--retired-no-appeal');
   await expect(page.getByText('مؤرشَف', { exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: /اعتراض/ })).toHaveCount(0);
+});
+
+test('an already submitted appeal suppresses a duplicate appeal action', async ({ page }, testInfo) => {
+  onlyOnPrimaryProject(testInfo);
+  await gotoStory(page, 'patient-screens-scr-reviews-003-my-review--appeal-submitted');
+  await expect(page.getByText('مُقدَّم', { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'الاعتراض على قرار الأرشفة' })).toHaveCount(0);
+  await expect(page.getByText('مهلة الاعتراض', { exact: true })).toHaveCount(0);
 });
 
 test('verified review flow creates one active review and removes the second-write opportunity', async ({ page }, testInfo) => {
