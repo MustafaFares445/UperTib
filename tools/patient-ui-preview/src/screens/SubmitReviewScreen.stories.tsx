@@ -41,7 +41,8 @@ export const Submitting: Story = {
 };
 
 export const WindowExpired: Story = {
-  args: { experience: expiredReviewExperience, state: 'window-expired', ...handlers },
+  // The screen derives this from the governed deadline rather than trusting a caller-supplied flag.
+  args: { experience: expiredReviewExperience, ...handlers },
 };
 
 export const ActiveReviewExists: Story = {
@@ -49,5 +50,6 @@ export const ActiveReviewExists: Story = {
 };
 
 export const NotVerified: Story = {
-  args: { experience: unverifiedReviewExperience, state: 'not-verified', ...handlers },
+  // The screen derives this from verified-completion context.
+  args: { experience: unverifiedReviewExperience, ...handlers },
 };
