@@ -94,6 +94,13 @@ export const DecisionUnavailable: Story = {
   },
 };
 
+export const ProjectionOnlySubmitted: Story = {
+  args: {
+    review: retiredReviewWithSubmittedAppeal,
+    ...handlers,
+  },
+};
+
 export const Submitted: Story = {
   args: {
     review: retiredReviewWithSubmittedAppeal,
