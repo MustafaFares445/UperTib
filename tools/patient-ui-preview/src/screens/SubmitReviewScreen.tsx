@@ -146,7 +146,7 @@ export function SubmitReviewScreen({
                 label="التقييم"
                 value={ratingValue}
                 onChangeText={setRatingValue}
-                helper="قيمة التقييم تتبع سياسة المنتج لهذه التجربة؛ هذه المعاينة لا تفترض مقياسًا رقميًا محددًا."
+                helper="أدخل تقييمك لهذه التجربة."
                 placeholder="أدخل تقييمك"
                 maxLength={40}
                 autoFocus
