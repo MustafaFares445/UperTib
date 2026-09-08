@@ -56,5 +56,5 @@ export function formatVerifiedReviewAggregate(aggregate: VerifiedReviewAggregate
 export function verifiedReviewAggregateAccessibilityLabel(aggregate: VerifiedReviewAggregate | undefined): string | null {
   if (!isPublicVerifiedReviewAggregate(aggregate)) return null;
   const average = formatNumber(Number(aggregate.average.toFixed(1)));
-  return `متوسط تقييم التجربة ${average} من 5، بناءً على ${reviewCountLabel(aggregate.count)} موثّقًا`;
+  return `متوسط تقييم التجربة ${average} من 5، بناءً على عدد من التقييمات الموثّقة يبلغ ${formatNumber(aggregate.count)}`;
 }
