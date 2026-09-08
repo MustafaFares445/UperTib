@@ -1,44 +1,19 @@
 import { useMemo, useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 import { ActionBar, type ActionSpec } from '../components/ActionBar';
+import { ContextNote } from '../components/ContextNote';
+import { SelectionChoice } from '../components/SelectionChoice';
 import { ValidationField } from '../components/ValidationField';
 import { formatDateTime } from '../foundations/format';
 import { Screen, ScreenHeader, Stack } from '../foundations/Screen';
 import { Body, BodyStrong, Heading3, Helper, Label } from '../foundations/Text';
-import { useFocusRing } from '../foundations/useFocusRing';
 import {
   representationActionOptions,
   representationDataScopeOptions,
   type ConsentGrantDraft,
   type GrantPeriodMode,
 } from '../mocks/representation';
-import { borderWidth, color, radius, size, space } from '../theme/tokens';
-
-function Choice({ label, selected, onPress }: { label: string; selected: boolean; onPress: () => void }) {
-  const ring = useFocusRing();
-  return (
-    <Pressable
-      accessibilityRole="checkbox"
-      accessibilityState={{ checked: selected }}
-      accessibilityLabel={label}
-      onPress={onPress}
-      onFocus={ring.onFocus}
-      onBlur={ring.onBlur}
-      style={({ pressed }) => ({
-        minHeight: size('target-floor'),
-        justifyContent: 'center',
-        paddingHorizontal: space('inset-sm'),
-        borderRadius: radius('control'),
-        borderWidth: borderWidth('hairline'),
-        borderColor: selected ? color('border.strong') : color('border.subtle'),
-        backgroundColor: selected || pressed ? color('surface.subtle') : color('surface.default'),
-        ...ring.ringStyle,
-      })}
-    >
-      <BodyStrong>{selected ? `✓ ${label}` : label}</BodyStrong>
-    </Pressable>
-  );
-}
+import { borderWidth, color, radius, space } from '../theme/tokens';
 
 /** SCR-IDENTITY-006 — adult-consent grant authoring with the entire scope visible before commit. */
 export function CreateGrantScreen({
@@ -106,44 +81,36 @@ export function CreateGrantScreen({
         : { status: 'disabled', reason: `أكمل أولًا: ${missing.join('، ')}.` },
       onPress: () => onCreate(draft),
     },
-    {
-      key: 'cancel',
-      label: 'إلغاء',
-      role: 'secondary',
-      availability: { status: 'available' },
-      onPress: onCancel,
-    },
+    { key: 'cancel', label: 'إلغاء', role: 'secondary', availability: { status: 'available' }, onPress: onCancel },
   ];
 
   return (
     <Screen footer={<ActionBar actions={actionsBar} />}>
       <Stack gap="stack-lg">
-        <ScreenHeader
-          eyebrow="منح صلاحية"
-          title="حدّد ما تسمح به بالضبط"
-          description="هذا المسار لمريض بالغ يمنح صلاحية لشخص آخر بموافقته. إضافة تابع لا يستطيع منح الموافقة لنفسه تمر بمسار تحقق منفصل ولا تنشئ صلاحية مباشرة."
-        />
+        <ScreenHeader eyebrow="منح صلاحية" title="ابنِ صلاحية واضحة خطوة بخطوة" />
 
-        <View style={{ gap: space('stack-xs') }}>
-          <Label>صاحب السجل</Label>
-          <Heading3>{subjectPatientName}</Heading3>
-          <Helper>أنت تمنح الصلاحية عن نفسك؛ لا يمكن استخدام هذا النموذج ليمنح ولي الأمر نفسه صلاحية على تابع.</Helper>
-        </View>
-
-        <ValidationField
-          label="الشخص الذي ستمنحه الصلاحية"
-          value={granteeName}
-          onChangeText={setGranteeName}
-          helper="يجب أن تكون الهوية قابلة للحل والتحقق قبل إنشاء الصلاحية."
-          placeholder="اسم الشخص"
-          maxLength={120}
+        <ContextNote
+          icon="shield-check"
+          title={`صاحب السجل: ${subjectPatientName}`}
+          body="هذا المسار لمريض بالغ يمنح صلاحية لشخص آخر بموافقته. إضافة تابع لا يستطيع منح الموافقة لنفسه تمر بمسار تحقق منفصل ولا تنشئ صلاحية مباشرة."
         />
 
         <View style={{ gap: space('stack-sm') }}>
-          <Heading3>ما الذي يستطيع فعله؟</Heading3>
-          <Helper>اختر الأفعال صراحةً. عدم الاختيار لا يعني «كل الأفعال».</Helper>
+          <Heading3>1. من سيحصل على الصلاحية؟</Heading3>
+          <ValidationField
+            label="الشخص الذي ستمنحه الصلاحية"
+            value={granteeName}
+            onChangeText={setGranteeName}
+            helper="يجب أن تكون الهوية قابلة للحل والتحقق قبل إنشاء الصلاحية."
+            placeholder="اسم الشخص"
+            maxLength={120}
+          />
+        </View>
+
+        <View style={{ gap: space('stack-sm') }}>
+          <Heading3>2. ما الذي يستطيع فعله؟</Heading3>
           {representationActionOptions.map((option) => (
-            <Choice
+            <SelectionChoice
               key={option.id}
               label={option.label}
               selected={actions.includes(option.label)}
@@ -153,10 +120,9 @@ export function CreateGrantScreen({
         </View>
 
         <View style={{ gap: space('stack-sm') }}>
-          <Heading3>ما البيانات التي يستطيع الوصول إليها؟</Heading3>
-          <Helper>النطاق غير المختار يبقى خارج الصلاحية.</Helper>
+          <Heading3>3. ما المعلومات التي يستطيع الوصول إليها؟</Heading3>
           {representationDataScopeOptions.map((option) => (
-            <Choice
+            <SelectionChoice
               key={option.id}
               label={option.label}
               selected={dataScope.includes(option.label)}
@@ -165,26 +131,27 @@ export function CreateGrantScreen({
           ))}
         </View>
 
-        <ValidationField
-          label="لماذا تمنح هذه الصلاحية؟"
-          value={purpose}
-          onChangeText={setPurpose}
-          helper="الغرض جزء من النطاق الذي سيُراجع عند كل استخدام للصلاحية."
-          placeholder="مثال: المساعدة في متابعة المواعيد أثناء السفر"
-          maxLength={500}
-          multiline
-          numberOfLines={4}
-        />
-
         <View style={{ gap: space('stack-sm') }}>
-          <Heading3>مدة الصلاحية</Heading3>
+          <Heading3>4. لماذا؟ وإلى متى؟</Heading3>
+          <ValidationField
+            label="الغرض"
+            value={purpose}
+            onChangeText={setPurpose}
+            helper="الغرض جزء من النطاق الذي سيُراجع عند كل استخدام للصلاحية."
+            placeholder="مثال: المساعدة في متابعة المواعيد أثناء السفر"
+            maxLength={500}
+            multiline
+            numberOfLines={4}
+          />
           <Body>تبدأ: {formatDateTime(effectiveFromIso)}</Body>
-          <Choice
+          <SelectionChoice
+            role="radio"
             label={`محددة حتى ${formatDateTime(boundedUntilIso)}`}
             selected={periodMode === 'BOUNDED'}
             onPress={() => setPeriodMode('BOUNDED')}
           />
-          <Choice
+          <SelectionChoice
+            role="radio"
             label="بلا تاريخ نهاية محدد"
             selected={periodMode === 'OPEN_ENDED'}
             onPress={() => setPeriodMode('OPEN_ENDED')}
@@ -203,20 +170,19 @@ export function CreateGrantScreen({
             backgroundColor: color('surface.subtle'),
           }}
         >
-          <Heading3>راجع النطاق قبل الإنشاء</Heading3>
-          <BodyStrong>من يتصرف: {granteeName.trim() || 'لم يُحدد بعد'}</BodyStrong>
+          <Heading3>5. راجع الإذن قبل التأكيد</Heading3>
+          <BodyStrong>{granteeName.trim() || 'لم يُحدد الشخص بعد'}</BodyStrong>
           <Body>لصالح: {subjectPatientName}</Body>
           <View style={{ gap: space('stack-xs') }}>
-            <Label>الأفعال</Label>
-            {actions.length ? actions.map((item) => <Body key={item}>• {item}</Body>) : <Helper>لم تُحدد بعد.</Helper>}
+            <Label>يمكنه</Label>
+            {actions.length ? actions.map((item) => <Body key={item}>• {item}</Body>) : <Helper>لم تُحدد الأفعال بعد.</Helper>}
           </View>
           <View style={{ gap: space('stack-xs') }}>
-            <Label>البيانات</Label>
-            {dataScope.length ? dataScope.map((item) => <Body key={item}>• {item}</Body>) : <Helper>لم تُحدد بعد.</Helper>}
+            <Label>يمكنه الوصول إلى</Label>
+            {dataScope.length ? dataScope.map((item) => <Body key={item}>• {item}</Body>) : <Helper>لم يُحدد نطاق البيانات بعد.</Helper>}
           </View>
-          <Body>الغرض: {purpose.trim() || 'لم يُحدد بعد'}</Body>
-          <Body>المدة: {periodMode === 'BOUNDED' ? `حتى ${formatDateTime(boundedUntilIso)}` : periodMode === 'OPEN_ENDED' ? 'بلا تاريخ نهاية محدد' : 'لم تُحدد بعد'}</Body>
-          <Helper>إنشاء الصلاحية يمنح هذا النطاق فقط، ولا يمنح أي دور عام أو وصول خارج ما هو مكتوب هنا.</Helper>
+          <Body>حتى: {periodMode === 'BOUNDED' ? formatDateTime(boundedUntilIso) : periodMode === 'OPEN_ENDED' ? 'بلا تاريخ نهاية محدد' : 'لم تُحدد المدة بعد'}</Body>
+          <Helper>يمنح التأكيد هذا النطاق فقط، ولا ينشئ دورًا عامًا أو وصولًا خارج ما هو ظاهر هنا.</Helper>
         </View>
       </Stack>
     </Screen>
