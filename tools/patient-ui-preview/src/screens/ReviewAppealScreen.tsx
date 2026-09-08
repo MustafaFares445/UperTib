@@ -80,7 +80,7 @@ export function ReviewAppealScreen({
   return (
     <Screen footer={<ActionBar actions={actions} />}>
       <Stack gap="stack-lg">
-        <ScreenHeader eyebrow="اعتراض على قرار مراجعة" title={hasExistingAppeal ? 'حالة اعتراضك' : 'راجع القرار ثم اكتب سبب اعتراضك'} />
+        <ScreenHeader eyebrow="اعتراض على قرار مراجعة" title={hasExistingAppeal ? 'حالة اعتراضك' : 'راجع نطاق الاعتراض قبل أن تكتب'} />
         <SubjectContextHeader subject={subject} authority={authority} />
         <DecisionCard review={review} />
 
