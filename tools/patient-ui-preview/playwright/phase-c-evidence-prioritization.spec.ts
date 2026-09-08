@@ -91,7 +91,7 @@ test('scanning dependent evidence remains current and never moves into completed
   await gotoStory(page, 'patient-screens-scr-identity-037-add-dependent--evidence-scanning');
 
   await expect(page.getByText('جارٍ الفحص', { exact: true })).toBeVisible();
-  await expect(page.getByText(/الملف قيد الفحص ولا يحقق المتطلب قبل أن يصبح مقبولًا/)).toBeVisible();
+  await expect(page.getByText(/قيد الفحص لا يحقق المتطلب قبل أن يصبح مقبولًا/)).toBeVisible();
   await expect(page.getByRole('button', { name: 'إرسال طلب التحقق' })).toBeDisabled();
   await expect(page.getByRole('button', { name: 'عرض الأدلة المقبولة المكتملة' })).toBeVisible();
 });
