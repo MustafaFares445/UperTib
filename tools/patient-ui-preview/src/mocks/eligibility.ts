@@ -4,6 +4,7 @@ import type { ProviderOption } from '../components/ProviderDecisionCard';
  * Deterministic mock projection of API-ELIG-001. Aleppo only, per SCR-ELIG-001. Carries no
  * internal classification value, no service risk level, no comparison value, no sample count, no
  * confidence figure and no market-average label — matching the real contract's own prohibition.
+ * The only review count carried here belongs to the separate Patient-safe verified-review aggregate.
  */
 const NOW = '2026-09-03T09:00:00+03:00';
 
@@ -19,7 +20,7 @@ export const eligibilityResults: Record<string, ProviderOption[]> = {
       price: { mode: 'from', amount_min: 45000, currency: 'SYP' },
       priceIncludes: 'يشمل الفحص والحشوة؛ قد تُضاف تكلفة إضافية حسب حجم التسوس.',
       fundedProtection: false,
-      ratingLabel: 'تقييم موثّق: 4.6 من 5 (312 تقييمًا)',
+      verifiedRating: { average: 4.6, count: 312 },
       nearestAppointmentIso: '2026-09-05T11:00:00+03:00',
       assessedAtIso: NOW,
     },
@@ -32,7 +33,7 @@ export const eligibilityResults: Record<string, ProviderOption[]> = {
       eligibility: 'ELIGIBLE',
       price: { mode: 'fixed', amount: 60000, currency: 'SYP' },
       fundedProtection: false,
-      ratingLabel: 'تقييم موثّق: 4.2 من 5 (98 تقييمًا)',
+      verifiedRating: { average: 4.2, count: 98 },
       nearestAppointmentIso: '2026-09-04T16:30:00+03:00',
       assessedAtIso: NOW,
     },
@@ -46,6 +47,8 @@ export const eligibilityResults: Record<string, ProviderOption[]> = {
       price: { mode: 'range', amount_min: 40000, amount_max: 80000, currency: 'SYP' },
       priceIncludes: 'يعتمد السعر النهائي على عدد الأسطح المتضررة.',
       fundedProtection: false,
+      // Deliberately below the PO-UX-19 public threshold: the UI must withhold this average.
+      verifiedRating: { average: 5, count: 3 },
       assessedAtIso: NOW,
     },
   ],
@@ -59,7 +62,7 @@ export const eligibilityResults: Record<string, ProviderOption[]> = {
       eligibility: 'ELIGIBLE',
       price: { mode: 'fixed', amount: 25000, currency: 'SYP' },
       fundedProtection: false,
-      ratingLabel: 'تقييم موثّق: 4.6 من 5 (312 تقييمًا)',
+      verifiedRating: { average: 4.6, count: 312 },
       nearestAppointmentIso: '2026-09-04T10:00:00+03:00',
       assessedAtIso: NOW,
     },

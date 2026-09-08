@@ -5,6 +5,11 @@ import { Body, BodyStrong, Heading4, Helper } from '../foundations/Text';
 import { Icon } from '../foundations/Icon';
 import { useFocusRing } from '../foundations/useFocusRing';
 import { webSpaceActivationProps } from '../foundations/webKeyboardActivation';
+import {
+  formatVerifiedReviewAggregate,
+  verifiedReviewAggregateAccessibilityLabel,
+  type VerifiedReviewAggregate,
+} from '../reviews/rating';
 import { PriceDisplay, type PriceFact } from './PriceDisplay';
 import { StateChip } from './StateChip';
 import { ProviderIdentity } from './ProviderIdentity';
@@ -35,7 +40,8 @@ export interface ProviderOption {
   price: PriceFact;
   priceIncludes?: string;
   fundedProtection: boolean;
-  ratingLabel?: string;
+  /** PO-UX-19: active verified-review aggregate; public display is withheld under 5 reviews. */
+  verifiedRating?: VerifiedReviewAggregate;
   nearestAppointmentIso?: string;
   assessedAtIso: string;
 }
@@ -77,6 +83,13 @@ function Fact({
       {note ? <Helper>{note}</Helper> : null}
     </View>
   );
+}
+
+function VerifiedRatingFact({ aggregate }: { aggregate?: VerifiedReviewAggregate }) {
+  const display = formatVerifiedReviewAggregate(aggregate);
+  const accessibilityLabel = verifiedReviewAggregateAccessibilityLabel(aggregate);
+  if (!display || !accessibilityLabel) return <BodyStrong>غير متوفر</BodyStrong>;
+  return <BodyStrong accessibilityLabel={accessibilityLabel}>{display}</BodyStrong>;
 }
 
 /**
@@ -142,7 +155,7 @@ export function ProviderDecisionCard({
         {!isChosenEcho ? (
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space('stack-sm') }}>
             <Fact label="السعر" detail={<PriceDisplay price={option.price} compact />} wide={!isCompact} />
-            <Fact label="التقييم الموثّق" detail={option.ratingLabel?.replace('تقييم موثّق: ', '') ?? 'غير متوفر'} />
+            <Fact label="التقييم الموثّق" detail={<VerifiedRatingFact aggregate={option.verifiedRating} />} />
             <Fact
               label="أقرب موعد"
               detail={

@@ -1,12 +1,10 @@
 # UberTib Patient UI Preview — Slice 8 Verified Reviews
 
-Date: 2026-09-07
+Date: 2026-09-08
 
-Branch: `feat/patient-slice8-verified-reviews`
+Current rating-policy implementation branch: `feat/patient-review-five-star-rating`
 
-Base: `feat/patient-slice7-refund-execution`
-
-Writable/product scope: `tools/patient-ui-preview/**` only. This remains a non-production React Native Web / Storybook preview.
+Scope: Patient verified-review UI/projection under `tools/patient-ui-preview/**`, plus the authoritative Product Owner clarification in `.spec/decisions/PO-2026-09-08-review-rating-scale.md`. This remains a non-production React Native Web / Storybook preview.
 
 ## Canonical derivation
 
@@ -16,238 +14,162 @@ This slice implements the Patient authoring/read portion of the verified-review 
 - `SCR-REVIEWS-002` — Submit review
 - `SCR-REVIEWS-003` — My review
 - `FLOW-REVIEWS-001` — Submit a verified review
-- the existing `SCR-CLINICAL-002` case summary receives the canonical entry route
+- the existing `SCR-CLINICAL-002` case summary entry route
 
-`SCR-REVIEWS-004` — the Patient appeal authoring surface — is deliberately deferred. This slice may show whether the policy grants an appeal and its window, but does not invent the appeal form or its evidence contract.
+Primary authority for the rating behavior is now:
 
-Primary authority remains the repository documentation chain, especially:
-
-1. `.spec/decisions/`
+1. `.spec/decisions/PO-2026-09-08-review-rating-scale.md` (`PO-UX-19`)
 2. `.spec/functional-requirements/FR.08.1.1-single-verified-review.md`
-3. `docs/ux/PHASE_05_HANDOFF.md`
-4. `docs/ux/05-build/IMPLEMENTATION_CONTRACTS.md`
-5. `docs/ux/04-specs/SCREEN_SPECS_PATIENT_02.md`
-6. `docs/ux/04-specs/SCREEN_SPECS_PATIENT_03.md`
-7. `docs/ux/01-foundation/USER_FLOWS.md`
-8. `docs/api/API_CONTRACTS.md`
-9. `docs/ux/03-system/CONTENT_GUIDE_STATES.md`
-10. `.claude/skills/patient-ui-preview/SKILL.md`
+3. the existing Patient UX/spec/API contracts
 
 ## Business invariants preserved
 
-The canonical review requirement is not a generic provider-rating feature. A review is anchored to a verified completed experience.
+The review remains anchored to one verified completed Patient experience. The preview enforces:
 
-The preview therefore enforces:
+- verified completion before review authoring;
+- an open review window;
+- at most one active review per eligible experience;
+- structurally removing duplicate review opportunities;
+- idempotent reuse of an identical retry;
+- refusal of a materially different later attempt once an active review exists;
+- immutable historical review projection and retirement reason;
+- review rating `R` remains separate from scientific eligibility/classification and never changes `S`, `P`, `H`, internal `I`, eligibility state, grade, or any scientific decision.
 
-- only a verified completed experience may become reviewable;
-- the applicable review window must still be open;
-- only one active review exists for one eligible experience;
-- a duplicate opportunity is removed structurally rather than rendered as a disabled second-review row;
-- an identical retry may reuse the same locally projected review;
-- a materially different later attempt against an already active review is refused;
-- the review retains its verified-experience linkage;
-- review rating `R` remains separate from scientific eligibility/classification and never changes `S`, `P`, `H`, or internal `I`;
-- retirement does not delete the review; the historical review and governed reason remain readable.
+## Rating scale — resolved by PO-UX-19
 
-## Rating-scale boundary
+The former open rating-scale question is closed.
 
-The canonical `API-REVIEWS-001` contract does **not** define a concrete rating scale. It says the request carries:
+UberTib V1 uses one required **overall Patient-experience rating** with whole-number values:
 
-`Review rating/content fields defined by product policy`
+| Value | Patient label |
+|---:|---|
+| 1 | سيئة جدًا |
+| 2 | سيئة |
+| 3 | مقبولة |
+| 4 | جيدة |
+| 5 | ممتازة |
 
-No approved source inspected by this slice defines a fixed one-to-five-star scale.
+Patient question:
 
-The preview therefore does not silently create one.
+> **كيف كانت تجربتك في هذه الزيارة؟**
 
-`ratingValue` is kept as a product-policy-owned string in the local projection. Fixture value `"4"` is mock content only; it is **not** a declaration that production uses 1–5 stars. Patient copy explicitly says the value follows product policy and the preview does not assume a numeric scale.
+Rules implemented in the preview:
 
-This is intentional source fidelity, not an omitted implementation detail.
+- the rating is required;
+- only integer values `1..5` are valid;
+- no half-stars, decimals, smileys, or multi-dimension score are introduced in V1;
+- written feedback is optional;
+- the rating measures experience of the visit, not medical competence, diagnosis accuracy, treatment outcome, or scientific eligibility;
+- the Patient-facing control is one accessible `radiogroup` with five `radio` choices and explicit checked state;
+- the star shape is a visual rating affordance only and is never the sole carrier of meaning.
 
 ## SCR-REVIEWS-001 — Reviewable experiences
 
-Implemented in:
-
-`src/screens/ReviewableExperiencesScreen.tsx`
-
-The screen lists only currently reviewable verified experiences. Each opportunity shows:
-
-- service;
-- provider and branch;
-- treating dentist;
-- verified completion time;
-- remaining review window before the action;
-- one clear `اكتب تقييمًا` action.
-
-Experiences that are unverified, expired, or already own an active review are not shown as fake disabled opportunities.
-
-Existing reviews appear separately and route to `SCR-REVIEWS-003`.
-
-The empty state reads as ordinary no-data:
-
-`لا توجد تجربة متاحة للتقييم الآن.`
-
-It does not imply a server failure.
+`src/screens/ReviewableExperiencesScreen.tsx` still lists only currently reviewable verified experiences. Unverified, expired, or already-reviewed experiences are not rendered as fake disabled opportunities.
 
 ## SCR-REVIEWS-002 — Submit review
 
-Implemented in:
+Implemented in `src/screens/SubmitReviewScreen.tsx` with `src/components/ExperienceRatingField.tsx`.
 
-`src/screens/SubmitReviewScreen.tsx`
-
-The screen hierarchy is:
+Hierarchy:
 
 1. verified-experience context;
 2. review-window context;
-3. required rating/content fields;
-4. consequence before submit;
+3. required five-star experience rating;
+4. optional written feedback;
 5. one dominant submit action.
 
-The consequence copy states before submission that the review is tied to the verified experience and does not alter scientific eligibility.
+The screen now asks `كيف كانت تجربتك في هذه الزيارة؟` and presents five touch/keyboard/assistive-technology selectable radio options. Each option has a complete accessible label such as `4 من 5، جيدة`.
 
-The preview distinguishes the important non-submit conditions:
+The submit action is available once a valid rating exists. Written feedback is explicitly labelled optional and may be omitted.
 
-- review window expired;
-- verified completion missing;
-- an active review already exists.
-
-An expired window is explicitly not described as a retryable transmission failure. A duplicate active review routes back to the existing review instead of offering a second submission.
-
-The shared `ValidationField` gained backwards-compatible multiline support so review text can use the existing governed labelled-field treatment rather than introducing a separate textarea component.
+Expired, unverified, and duplicate-active-review conditions still replace the authoring surface rather than stacking a dead form beneath an error.
 
 ## SCR-REVIEWS-003 — My review
 
-Implemented in:
+`src/screens/MyReviewScreen.tsx` renders the immutable submitted rating using `ExperienceRatingReadout` and keeps written feedback optional.
 
-`src/screens/MyReviewScreen.tsx`
-
-The screen uses canonical state copy:
-
-- `ACTIVE` → `منشور`
-- `RETIRED` → `مؤرشَف`
-
-Review content is read-only. No edit or delete action is introduced.
-
-A retired review remains visible with:
-
-- the original rating value and text;
-- the retirement reason;
-- decision attribution and time where available.
-
-Where policy grants a Patient appeal, the surface can show the appeal window and an appeal action callback. Where policy does not grant it, the action is structurally absent. The actual `SCR-REVIEWS-004` authoring flow remains outside this slice.
-
-Existing appeal read projection uses canonical states:
-
-- `SUBMITTED` → `مُقدَّم`
-- `DECIDED` → `صدر القرار`
+A review without text says that no written notes were added. A retired review preserves the original rating, optional text, retirement reason, attribution, time, and appeal behavior.
 
 ## Local projection integrity
 
-`src/mocks/reviews.ts` adds prototype-only models for reviewable experiences, reviews, review windows and review submission.
+`src/mocks/reviews.ts` now models `ratingValue` as the governed numeric review rating and validates the API-boundary-shaped draft at runtime.
 
-`submitVerifiedReview()` demonstrates the documented `API-REVIEWS-001` invariants without pretending to be the production backend:
+`submitVerifiedReview()` demonstrates:
 
-- empty required content is rejected;
-- unverified completion is rejected;
-- expired review window is rejected;
-- an existing active review blocks a second materially different review;
-- an identical retry reuses the existing locally projected review;
+- rating `1..5` integer accepted;
+- `0`, `6`, decimals, missing/non-valid values rejected as `INVALID_INPUT`;
+- empty written feedback accepted when the rating is valid;
+- unverified completion rejected;
+- expired review window rejected;
+- one active review enforced;
+- identical retry idempotency preserved;
 - a valid submission appends one `ACTIVE` review linked to the exact experience.
 
-The helper intentionally does not decide the rating scale.
+## Public verified-review aggregate
+
+`src/reviews/rating.ts` owns the shared Patient-safe aggregate rules introduced by PO-UX-19.
+
+- fewer than 5 active verified reviews → no public numeric/star aggregate;
+- 5 or more → compact display may be `★ 4.7 · 126 تقييمًا`;
+- average is formatted to one decimal place when needed;
+- a full accessible label states the average is out of 5 and states the verified-review count;
+- retired/non-published reviews are excluded by the upstream aggregate contract defined by PO-UX-19.
+
+Provider decision/comparison mock projections now carry a structured `verifiedRating` aggregate instead of a preformatted arbitrary rating string. A deterministic fixture with only 3 reviews verifies that the UI withholds its average.
 
 ## Flow integration
 
-A dedicated prototype implements:
-
-`FLOW-REVIEWS-001`:
+`FLOW-REVIEWS-001` remains:
 
 `Reviewable experiences → Submit review → My review → Reviewable experiences`
 
-After submission, the reviewed experience disappears from the new-review opportunities and appears under existing reviews.
-
-The broader `CareReadingFlow` also receives the case-scoped route:
+The broader `CareReadingFlow` remains:
 
 `My cases → Case summary → تقييم التجربة → Reviewable experiences → Submit review → My review`
 
-The entry is supplied only for the mock case that owns the verified completed experience.
-
-## State and icon governance
-
-The preview continues to consume canonical state triples through `StateChip`.
-
-The existing governed Heroicons vocabulary subset was extended only with names already required by canonical review state tokens:
-
-- `eye`
-- `archive-box`
-- `inbox-arrow-down`
-- `scale`
-
-No new icon system or ad-hoc lifecycle colour was introduced.
+Both flows now use numeric governed ratings rather than string placeholders.
 
 ## Storybook coverage
 
-Added states for:
+`SCR-REVIEWS-002` covers:
 
-### `SCR-REVIEWS-001`
-- default reviewable experiences;
-- empty no-data;
-- existing active/retired reviews.
-
-### `SCR-REVIEWS-002`
-- ready/default;
-- empty fields;
+- default selected rating;
+- rating-only submission with no written feedback;
+- empty fields/no selected rating;
 - submitting;
 - expired window;
 - active review already exists;
 - not verified.
 
-### `SCR-REVIEWS-003`
-- active;
-- retired with appeal available;
-- retired with no policy-granted appeal;
-- appeal submitted read state;
-- appeal decided read state.
-
-### `FLOW-REVIEWS-001`
-- clickable end-to-end local prototype.
+Existing Reviewable Experiences and My Review states remain covered.
 
 ## Playwright coverage
 
-`playwright/slice8-reviews.spec.ts` verifies:
+`playwright/slice8-reviews.spec.ts` now verifies:
 
-- Arabic RTL rendering and reflow;
-- serious/critical Axe checks on high-risk Slice 8 stories;
-- verified completion and remaining review window appear before review effort;
-- expired/unverified entries are not rendered as review opportunities;
-- empty reviewability is no-data, not failure;
-- verified-experience linkage and scientific-classification independence are stated before submission;
-- no fixed 1–5/star scale is invented;
-- expired, unverified and duplicate-active-review conditions have distinct recovery;
-- local projection enforces verified completion, window, uniqueness and identical-retry idempotency;
-- retirement preserves the review and governed reason;
-- review edit/delete controls do not exist;
-- Patient appeal action is absent where policy grants none;
-- the dedicated verified-review flow creates one active review and removes the second-write opportunity;
-- the case-scoped care-reading flow reaches the verified-review path.
-
-`playwright/capture-slice8.spec.ts` provides opt-in deterministic visual evidence with `CAPTURE=1` and remains outside the ordinary CI gate.
-
-`package.json` promotes Slice 8 into `test:smoke` and `verify` alongside preceding Patient slices.
+- RTL/reflow safety and serious/critical Axe checks;
+- a five-option rating `radiogroup` with explicit checked state;
+- correct 1/4/5 accessible labels;
+- changing the selected rating;
+- rating-only submission with optional text omitted;
+- numeric 1..5 projection validation and rejection of 0/6/decimal values;
+- scientific-eligibility independence;
+- aggregate suppression below five reviews and compact display at the threshold;
+- verified completion, review-window, uniqueness, idempotency, retirement, appeal, and end-to-end flow invariants.
 
 ## Preserved boundaries
 
-This slice does **not**:
+This work does **not**:
 
-- invent a production review rating scale;
-- allow an unverified experience to be reviewed;
-- allow two active reviews for one eligible experience;
-- let `R` affect scientific eligibility or classification;
-- expose raw `S`, `P`, `H`, internal `I`, or formulas;
+- make reviews a scientific/medical-quality score;
+- let `R` affect `S`, `P`, `H`, internal `I`, eligibility, grade, or clinical decisions;
+- introduce half-star or multi-dimension review semantics;
+- allow unverified or duplicate active reviews;
 - allow the clinic to edit Patient review content;
-- silently delete a retired review;
-- invent the Patient appeal authoring form or evidence-transfer behavior;
-- implement production API, authorization, persistence or database uniqueness.
+- delete retired review history;
+- implement production API, authorization, persistence, or database uniqueness.
 
 ## Verification status
 
-Pending the pull-request `Patient UI Preview` CI run. Update this section only from measured GitHub Actions evidence.
+Pending the Patient UI Preview workflow for the final pull-request head. The branch is not considered ready until typecheck, Storybook build, readiness/Axe smoke, full Patient E2E, and 320/390/414 capture are green.

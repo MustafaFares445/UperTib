@@ -2,81 +2,63 @@
 
 Date: 2026-09-08
 
-Implementation branch: `fix/patient-all-slices-ui-ux-remediation`
+Original remediation branch: `fix/patient-all-slices-ui-ux-remediation`  
+Rating-policy follow-up: `feat/patient-review-five-star-rating`
 
 Baseline branch: `main`
 
-Baseline HEAD used to create the remediation branch: `0e3d4e66475ff43848852d3b45c90d0d453e0b6c`
+Authority: `ALL_SLICES_SENIOR_UI_UX_REVIEW.md`, canonical Patient UX/spec contracts, the approved cross-slice remediation plan, and the later Product Owner rating decision `PO-UX-19`.
 
-Authority: `ALL_SLICES_SENIOR_UI_UX_REVIEW.md`, the canonical Patient UX/spec contracts, and the approved cross-slice remediation plan.
-
-Scope: `tools/patient-ui-preview/**` plus the Patient preview GitHub Actions workflow. No production backend, clinical engine, financial engine, ranking, eligibility, or native application behavior is changed here.
+Scope: Patient preview UI/UX plus its verification workflow. No production backend, clinical engine, financial engine, ranking, or eligibility behavior is changed by this remediation/follow-up.
 
 ---
 
-## 1. Baseline
+## 1. Baseline and completed remediation
 
-The independent all-slices review recorded that the product implementation merge passed TypeScript and Storybook build but failed the Patient preview readiness smoke gate on a critical Slice 12 `aria-required-attr` issue: React Native Web checkbox-role controls did not expose checked-state semantics. The review also recorded that the standard CI evidence did not contain a complete current 320/390/414 visual capture set for the later slices because those capture suites were opt-in.
+The independent all-slices review originally found a critical Slice 12 checked-state accessibility issue and incomplete current 320/390/414 evidence. The remediation fixed those problems, recomposed the high-density Patient flows, and strengthened CI.
 
-The remediation branch starts from the documentation-only main HEAD after that review so the review itself remains the comparison authority.
-
-Baseline Patient workflow before this remediation:
-
-- Node 24 / `npm ci` / dependency audit;
-- Chromium install;
-- TypeScript typecheck;
-- Storybook production build;
-- one 390px readiness smoke pass;
-- artifact upload.
+The completed remediation was merged to `main` in commit `643067e7f687c73f5fde5dd04c51a33f23da1436` after Patient UI Preview run #73 passed. Post-merge run #74 also passed typecheck, Storybook, readiness/Axe, full Patient E2E, all-slice 320/390/414 visual capture, and artifact upload.
 
 ---
 
 ## 2. Product boundaries preserved
 
-This remediation deliberately does not change the canonical business model:
+The implementation preserves these canonical boundaries:
 
 - eligibility remains separate from ranking and hidden S/P/H/I mechanics;
-- booking request, alternative proposal, and confirmation remain distinct lifecycle meanings;
+- booking request, alternative proposal, and confirmation retain distinct lifecycle meanings;
 - accepted treatment and financial snapshots remain immutable;
-- `FAILED_RETRYABLE != REJECTED` and `UPLOADED != ACCEPTED` remain preserved by the existing evidence state components and projections;
-- Patient finance continues to record external facts rather than collecting, holding, transferring, settling, or refunding money inside UberTib;
-- reviews remain attached to verified experiences and remain independent from scientific eligibility;
-- claims and appeals keep historical governing snapshots, decisions, and deadlines authoritative;
+- `FAILED_RETRYABLE != REJECTED` and `UPLOADED != ACCEPTED` remain distinct;
+- Patient finance records external facts only and does not execute money movement;
+- reviews remain attached to verified experiences and independent from scientific eligibility;
+- claims and appeals retain historical governing snapshots, decisions, and deadlines;
 - representation consent, dependent legal-basis verification, active context, and revocation remain separate concepts.
-
-The work changes composition, hierarchy, disclosure, copy density, state replacement, responsive verification, and accessibility semantics only.
 
 ---
 
 ## 3. Shared Patient composition foundation
 
-Implemented shared primitives:
+Implemented shared primitives include:
 
 ### `SelectionChoice`
 
-A governed checkbox/radio choice that:
-
-- emits explicit `aria-checked` for React Native Web;
-- keeps `accessibilityState` in sync;
-- exposes disabled state;
-- uses the governed `check-circle` icon rather than a literal check glyph;
-- preserves the minimum target size and focus-ring behavior.
-
-This removes the Slice 12 accessibility blocker without weakening Axe or changing the control role.
+- explicit `aria-checked` and synchronized accessibility state;
+- governed selection icon;
+- disabled semantics;
+- minimum target size and focus-ring behavior.
 
 ### `ContextNote`
 
-A lightweight icon + title/body treatment for one persistent governing fact. It replaces repeated safety/policy cards where the fact must stay visible but should not compete with the Patient's object or action.
+Lightweight persistent context for one governing fact without creating another equal-weight card.
 
 ### `DisclosureSection`
 
-An accessible progressive-disclosure control with exposed expanded state. It is used for secondary/historical policy detail rather than forcing every term into the initial reading column.
+Accessible progressive disclosure for secondary/historical policy detail.
 
-### Shared foundation cleanup
+### Shared cleanup
 
-`SubjectContextHeader` now uses the governed hairline token instead of a literal border width.
-
-`AuthorizationGrantPanel` now supports a compact summary mode for overview/context-selection surfaces while retaining the complete scope, basis, period, attribution, and revocation history in full detail mode.
+- `SubjectContextHeader` uses the governed hairline token;
+- `AuthorizationGrantPanel` supports compact summary composition where full detail is unnecessary.
 
 ---
 
@@ -84,18 +66,18 @@ An accessible progressive-disclosure control with exposed expanded state. It is 
 
 | Slice | Implementation | Status |
 |---|---|---|
-| 1 | Existing baseline `PriceDisplay` already keeps the amount/currency run atomic and allows surrounding qualifiers to wrap; no additional business or composition change was required. | PASS / retain reference composition |
-| 2 | Existing service-first discovery, comparison, active filters, and progressive eligibility explanation remain intact. No ranking or winner behavior was introduced. | PASS / retain reference composition |
-| 3 | Plan Acceptance is now a treatment-plan object plus one permanence consequence. Stale/incomplete/unauthorized states replace the normal acceptance composition while preserving the disabled irreversible action required by the current contract. Amendment delta remains explicit. | IMPLEMENTED |
-| 4 | Existing evidence-state object vocabulary is preserved unchanged so transport failure, scanning, rejection, and acceptance retain distinct meanings. | PASS / preserve state composition |
-| 5 | Accepted Financial Terms is now one accepted snapshot with compact line rows. Payment/cancellation/refund/protection terms use progressive disclosure, and governing references move to advanced detail. Incomplete snapshots still suppress totals. | IMPLEMENTED |
-| 6 | External financial reporting/responding now uses one persistent external-record context and makes the original event the dominant object. Confirmation and dispute remain independent; dispute still requires a reason and appends rather than rewrites history. | IMPLEMENTED |
-| 7 | Existing narrow external-refund record task and exact decision amount/currency behavior remain intact. No wallet/refund execution behavior was introduced. | PASS / retain disciplined task |
-| 8 | Repeated eligibility disclaimer copy was reduced to one clear screen-level statement. The generic rating value field remains intentionally unchanged as a scale because the canonical rating scale is still undefined. | COPY REMEDIATION IMPLEMENTED; RATING CONTROL BLOCKED BY PRODUCT DECISION |
-| 9 | Review Appeal is now original decision → compact contestable scope → independent-review context → deadline → grounds. Submitted/decided/projection-only and blocked states replace authoring instead of stacking beneath it. | IMPLEMENTED |
-| 10 | Refund Request now begins with one entitlement object, uses structural blocked states, compact evidence readiness, and places the external-execution consequence directly before the commit action. | IMPLEMENTED |
-| 11 | Protection Claim is staged as accepted protection → evidence readiness → request → pre-submit consequence. No-entitlement/unavailable/expired conditions withhold dead authoring. Claim Appeal is recomposed around original decision, historical policy/deadline, grounds, and append-only state. | IMPLEMENTED |
-| 12 | Overview grant scope is compact, Create Grant is a progressive permission builder, Add Dependent is explicitly a verification request whose submitted state replaces the form, and Active Patient Context makes the represented Patient the primary object. Full authorization complexity remains in Grant Detail. | IMPLEMENTED |
+| 1 | `PriceDisplay` keeps amount/currency atomic and narrow-width safe. | PASS |
+| 2 | Service-first discovery/comparison retained; no ranking or winner behavior introduced. | PASS |
+| 3 | Plan Acceptance recomposed around the treatment-plan object and structural blocked states. | IMPLEMENTED |
+| 4 | Evidence-state vocabulary preserves transport/scanning/rejection/acceptance distinctions. | PASS |
+| 5 | Accepted Financial Terms is one immutable snapshot with compact rows and progressive policy disclosure. | IMPLEMENTED |
+| 6 | External financial event/reporting surfaces lead with the original external record and preserve append-only confirmation/dispute semantics. | IMPLEMENTED |
+| 7 | External refund record task remains narrow; no wallet/refund execution behavior introduced. | PASS |
+| 8 | Review copy density remediated; `PO-UX-19` now defines one required accessible 1–5 overall Patient-experience rating, optional written feedback, and a five-review public aggregate threshold. | IMPLEMENTED / PRODUCT DECISION RESOLVED |
+| 9 | Review Appeal recomposed as original decision → scope → independent review → deadline → grounds. | IMPLEMENTED |
+| 10 | Refund Request begins with one entitlement object and structural blocked states. | IMPLEMENTED |
+| 11 | Protection Claim/Claim Appeal use staged evidence/request/decision composition and append-only history. | IMPLEMENTED |
+| 12 | Representation overview/grant/dependent/context surfaces use compact scope and explicit verification/context semantics. | IMPLEMENTED |
 
 ---
 
@@ -103,61 +85,74 @@ An accessible progressive-disclosure control with exposed expanded state. It is 
 
 | Finding | Disposition | Implementation evidence |
 |---|---|---|
-| `ALL-B01` checkbox checked-state semantics | FIXED IN CODE | `SelectionChoice.tsx`; Create Grant and Add Dependent no longer use custom literal-glyph checkbox code and expose `aria-checked`. |
-| `ALL-B02` incomplete 320/390/414 evidence | FIXED IN VERIFICATION PIPELINE | `scripts/capture-all.mjs`, package scripts, and Patient UI Preview workflow now run all existing capture suites across `patient-320`, `patient-390`, and `patient-414` and upload the artifacts. |
-| `ALL-M01` missing application-object vocabulary | REMEDIATED | Treatment plan, financial snapshot/event, claim/appeal, and representation compositions now lead with Patient-recognizable records/states. |
-| `ALL-M02` repeated safety/business prose | REMEDIATED | `ContextNote` plus decision-adjacent consequences replace repeated cards while preserving controlling boundaries. |
-| `ALL-M03` reading density on high-effort tasks | REMEDIATED | Protection, representation, claims, and appeal authoring use staged/progressive sections without inventing new canonical routes. |
-| `ALL-M04` blocked states stacked with dead forms | REMEDIATED | Refund, claim appeal, review appeal, dependent verification, protection, and plan acceptance structurally withhold or replace unavailable authoring. |
-| `ALL-M05` bordered surfaces as information architecture | REMEDIATED | Flat rows, typography, compact context, and disclosure replace many equal-weight cards. |
-| `ALL-M06` undefined review rating scale | UPSTREAM BLOCKER REMAINS | No 1–5/star/smiley scale was invented. Product must define values/labels/meaning before a governed accessible rating selector can be implemented. |
-| `ALL-M07` over-expanded representation | REMEDIATED | Summary-mode grant panels and compact patient-context objects; full scope remains in Grant Detail. |
-| `ALL-N01` narrow-width currency run | SATISFIED BY BASELINE | Existing `PriceDisplay.CurrencyRun` is atomic and is included in the 320px capture suite. |
-| `ALL-N02` literal selected check glyph | FIXED | Governed `check-circle` icon in `SelectionChoice`. |
-| `ALL-N03` hardcoded shared border width | FIXED | `SubjectContextHeader` uses `borderWidth('hairline')`. |
+| `ALL-B01` checkbox checked-state semantics | FIXED | `SelectionChoice.tsx`; explicit checked-state semantics. |
+| `ALL-B02` incomplete 320/390/414 evidence | FIXED | `capture-all.mjs` + CI all-slice capture. |
+| `ALL-M01` missing application-object vocabulary | REMEDIATED | Treatment plan, financial event, claim/appeal, and representation surfaces. |
+| `ALL-M02` repeated safety/business prose | REMEDIATED | `ContextNote` and decision-adjacent consequences. |
+| `ALL-M03` reading density on high-effort tasks | REMEDIATED | Staged/progressive protection, representation, claim, and appeal composition. |
+| `ALL-M04` blocked states stacked with dead forms | REMEDIATED | Structural replacement/withholding on affected screens. |
+| `ALL-M05` bordered surfaces as information architecture | REMEDIATED | Flat rows, hierarchy, compact context, disclosure. |
+| `ALL-M06` undefined review rating scale | **RESOLVED BY `PO-UX-19`; IMPLEMENTED** | `ExperienceRatingField.tsx`, `reviews/rating.ts`, numeric local review projection, optional comment, aggregate threshold. |
+| `ALL-M07` over-expanded representation | REMEDIATED | Summary grant panels and compact patient-context objects. |
+| `ALL-N01` narrow-width currency run | SATISFIED | Existing atomic `PriceDisplay.CurrencyRun`. |
+| `ALL-N02` literal selected check glyph | FIXED | Governed `check-circle`. |
+| `ALL-N03` hardcoded shared border width | FIXED | Governed hairline token. |
 
 ---
 
-## 6. Verification contract after remediation
+## 6. Slice 8 rating decision follow-up
 
-The Patient preview workflow now performs, on pull requests touching the preview:
+The former Slice 8 blocker is closed by `.spec/decisions/PO-2026-09-08-review-rating-scale.md` (`PO-UX-19`).
 
-1. `npm ci` and dependency audit;
+Approved behavior:
+
+- question: `كيف كانت تجربتك في هذه الزيارة؟`;
+- one overall Patient-experience rating;
+- required integer values `1..5`;
+- labels: `سيئة جدًا`, `سيئة`, `مقبولة`, `جيدة`, `ممتازة`;
+- no half-stars, decimals, smileys, or multi-dimension rating in V1;
+- written feedback optional;
+- rating does not represent medical competence, diagnosis accuracy, treatment outcome, or scientific eligibility;
+- rating never changes `S`, `P`, `H`, internal `I`, eligibility state, grade, or scientific decisions;
+- input is an accessible five-option radio group with explicit checked state and text labels;
+- public verified-rating aggregate is withheld below five active verified reviews;
+- at five or more, the compact Patient-safe display may be `★ 4.7 · 126 تقييمًا`;
+- retired/non-published reviews do not contribute to the public aggregate.
+
+Implementation evidence:
+
+- `src/components/ExperienceRatingField.tsx`;
+- `src/reviews/rating.ts`;
+- `src/screens/SubmitReviewScreen.tsx`;
+- `src/screens/MyReviewScreen.tsx`;
+- `src/mocks/reviews.ts`;
+- structured provider `verifiedRating` aggregate in discovery/comparison mocks and components;
+- Slice 8 Playwright coverage for radio semantics, optional comment, runtime validation, and aggregate threshold.
+
+---
+
+## 7. Verification contract
+
+The Patient preview workflow performs:
+
+1. dependency install and audit;
 2. Chromium installation;
-3. `npm run typecheck`;
-4. `npm run storybook:build`;
-5. the existing 390px readiness/slice smoke gate with serious/critical Axe assertions;
-6. the complete Playwright Patient E2E suite across the configured 320/390/414 projects;
-7. every existing deterministic `capture*.spec.ts` suite across 320/390/414;
-8. upload of Playwright, visual-review, and audit artifacts.
+3. TypeScript typecheck;
+4. Storybook production build;
+5. 390px readiness/slice smoke with serious/critical Axe assertions;
+6. full Patient Playwright suite across configured widths;
+7. deterministic all-slice visual capture at 320/390/414;
+8. artifact upload.
 
-The capture runner is cross-platform and may also be run locally with:
+The workflow does not weaken Axe assertions or hide controls from accessibility APIs.
 
-```bash
-npm run capture:all
-```
-
-The workflow intentionally does not weaken Axe assertions or hide controls from accessibility APIs.
-
----
-
-## 7. Rating-scale product decision still required
-
-The cross-slice remediation can finish every presentation defect without inventing a rating policy, but Slice 8 cannot receive a final consumer-grade rating selector until product authority defines:
-
-- allowed rating values;
-- scale and labels;
-- meaning of each value;
-- whether partial values exist;
-- whether the review has one overall rating or multiple dimensions.
-
-Until that decision exists, the preview keeps the current generic `ratingValue` input and explicitly avoids implying a 5-star or other scale.
+The original all-slices remediation is verified green by PR run #73 and post-merge run #74. The five-star rating follow-up requires its own green pull-request workflow before it is ready for merge.
 
 ---
 
 ## 8. Native proof boundary
 
-This React Native Web preview and browser CI still do not prove native-only behavior. The following remain explicit real-device verification items:
+The React Native Web preview/browser CI does not by itself prove native-only behavior. Real-device verification remains required for:
 
 - VoiceOver;
 - TalkBack;
@@ -166,9 +161,3 @@ This React Native Web preview and browser CI still do not prove native-only beha
 - safe-area behavior;
 - real-device gestures;
 - production performance.
-
----
-
-## 9. Final verification evidence
-
-Pending the pull-request workflow for the final implementation head. The PR run must be green before this branch is treated as ready for merge. The uploaded CI artifact is the required source for the final 320/390/414 visual review.

@@ -1,6 +1,7 @@
 import { View } from 'react-native';
 import { ActionBar, type ActionSpec } from '../components/ActionBar';
 import { DeadlineIndicator } from '../components/DeadlineIndicator';
+import { ExperienceRatingReadout } from '../components/ExperienceRatingField';
 import { StateChip } from '../components/StateChip';
 import { SubjectContextHeader } from '../components/SubjectContextHeader';
 import { formatDateTime } from '../foundations/format';
@@ -57,7 +58,7 @@ export function MyReviewScreen({
         <ScreenHeader
           eyebrow="تقييمي"
           title={review.serviceLabel}
-          description="هنا ترى التقييم كما أرسلته وحالته الحالية. لا يمكن تعديل نص التقييم أو قيمته من هذه الصفحة."
+          description="هنا ترى التقييم كما أرسلته وحالته الحالية. لا يمكن تعديل التقييم أو ملاحظاته من هذه الصفحة."
         />
         <SubjectContextHeader subject={subject} authority={authority} />
 
@@ -80,10 +81,10 @@ export function MyReviewScreen({
             backgroundColor: color('surface.default'),
           }}
         >
-          <Helper>التقييم كما أرسلته</Helper>
-          <BodyStrong>{review.ratingValue}</BodyStrong>
-          <Body>{review.content}</Body>
-          <Helper>هذا تقييم تجربة موثّقة، وهو مستقل عن الأهلية العلمية للطبيب ولا يدخل في حسابها.</Helper>
+          <Helper>تقييم تجربتك كما أرسلته</Helper>
+          <ExperienceRatingReadout value={review.ratingValue} />
+          {review.content ? <Body>{review.content}</Body> : <Helper>لم تضف ملاحظات مكتوبة.</Helper>}
+          <Helper>هذا تقييم لتجربة موثّقة، وليس تقييمًا للكفاءة الطبية أو دقة التشخيص، ولا يدخل في حساب أهلية الطبيب العلمية.</Helper>
         </View>
 
         {review.state === 'RETIRED' ? (
@@ -128,7 +129,7 @@ export function MyReviewScreen({
               nowIso={REVIEW_NOW_ISO}
               state={appealExpired ? 'lapsed' : appeal.windowState}
             />
-            <Helper>إذا كانت المهلة مفتوحة والسياسة تمنحك هذا الحق، يمكنك الاعتراض على أساس القرار دون تعديل نص تقييمك الأصلي.</Helper>
+            <Helper>إذا كانت المهلة مفتوحة والسياسة تمنحك هذا الحق، يمكنك الاعتراض على أساس القرار دون تعديل تقييمك الأصلي.</Helper>
           </View>
         ) : null}
       </Stack>

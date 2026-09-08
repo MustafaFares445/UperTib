@@ -154,7 +154,7 @@ export function CareReadingFlow() {
     return (
       <SubmitReviewScreen
         experience={selectedReviewExperience}
-        initialRating="4"
+        initialRating={4}
         initialContent="كانت التجربة واضحة، وتم شرح خطوات الزيارة بشكل جيد."
         onSubmit={(draft) => {
           const result = submitVerifiedReview(selectedReviewExperience, reviews, draft);
