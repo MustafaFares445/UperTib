@@ -166,6 +166,7 @@ export function MyClaimsScreen({
                   accessibilityLabel={`تصفية المطالبات: ${item.label}`}
                   onPress={() => setFilter(item.key)}
                   style={{
+                    minWidth: size('target-primary'),
                     minHeight: size('target-primary'),
                     justifyContent: 'center',
                     paddingHorizontal: space('inset-sm'),
