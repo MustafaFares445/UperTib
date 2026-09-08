@@ -14,6 +14,16 @@ async function gotoStory(page: Page, id: string) {
   });
 }
 
+async function analyzeAxe(page: Page) {
+  return new AxeBuilder({ page })
+    .analyze()
+    .catch(async (error) => {
+      if (!String(error).includes('Axe is already running')) throw error;
+      await page.waitForTimeout(1000);
+      return new AxeBuilder({ page }).analyze();
+    });
+}
+
 async function describedFieldState(page: Page, label: string) {
   return page.getByLabel(label).evaluate((element) => {
     const describedBy = (element.getAttribute('aria-describedby') ?? '').trim().split(/\s+/).filter(Boolean);
@@ -54,7 +64,7 @@ test('shared Patient Screen emits one main landmark and clears structural axe fi
   for (const id of representativeStories) {
     await gotoStory(page, id);
     await expect(page.getByRole('main')).toHaveCount(1);
-    const results = await new AxeBuilder({ page }).analyze();
+    const results = await analyzeAxe(page);
     const structural = results.violations.filter((violation) => violation.id === 'landmark-one-main' || violation.id === 'region');
     expect(structural, `${id}: ${JSON.stringify(structural, null, 2)}`).toEqual([]);
   }
