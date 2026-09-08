@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { ScrollView, View } from 'react-native';
+import { Platform, ScrollView, View } from 'react-native';
 import { Heading2, Helper } from './Text';
 import { borderWidth, color, resolve, space } from '../theme/tokens';
 
@@ -19,6 +19,13 @@ interface ScreenProps {
 const readingColumnMax = `${resolve('profile-c.reading-column-max')}ch` as unknown as number;
 
 /**
+ * React Native has no cross-platform `main` accessibilityRole. The isolated RNW preview does need
+ * one HTML main landmark, while the integrated native application shell owns native landmark/
+ * navigation semantics. Keep this web-only instead of projecting an invalid native role.
+ */
+const webMainLandmarkProps = Platform.OS === 'web' ? ({ role: 'main' } as any) : {};
+
+/**
  * The Patient screen shell: one primary reading column, capped at the Profile C reading-column
  * measure ceiling (docs/ux/03-system/design_tokens/breakpoints.json profile-c.reading-column-max),
  * centred so a wider device produces whitespace rather than a second pane. See
@@ -26,7 +33,10 @@ const readingColumnMax = `${resolve('profile-c.reading-column-max')}ch` as unkno
  */
 export function Screen({ children, footer, centerContent = false }: ScreenProps) {
   return (
-    <View style={{ minHeight: '100%', backgroundColor: color('surface.canvas') }}>
+    <View
+      {...webMainLandmarkProps}
+      style={{ minHeight: '100%', backgroundColor: color('surface.canvas') }}
+    >
       <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={{

@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import { TextInput, View } from 'react-native';
 import { Helper, Label } from '../foundations/Text';
 import { useFocusRing } from '../foundations/useFocusRing';
@@ -39,6 +40,10 @@ export function ValidationField({
 }: ValidationFieldProps) {
   const ring = useFocusRing();
   const t = typeStyle('body');
+  const fieldId = useId();
+  const helperId = helper ? `${fieldId}-helper` : undefined;
+  const errorId = error ? `${fieldId}-error` : undefined;
+  const describedBy = [helperId, errorId].filter(Boolean).join(' ') || undefined;
   const borderColor = error ? color('tone.danger.border') : color('border.strong');
 
   return (
@@ -58,6 +63,8 @@ export function ValidationField({
         onBlur={ring.onBlur}
         accessibilityLabel={label}
         accessibilityHint={[helper, error].filter(Boolean).join(' ') || undefined}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={describedBy}
         style={{
           minHeight: multiline ? Math.max(size('control-lg'), numberOfLines * 28) : size('control-lg'),
           paddingHorizontal: space('inset-md'),
@@ -75,9 +82,14 @@ export function ValidationField({
           ...ring.ringStyle,
         }}
       />
-      {helper ? <Helper>{helper}</Helper> : null}
+      {helper ? <Helper nativeID={helperId}>{helper}</Helper> : null}
       {error ? (
-        <Helper accessibilityRole="alert" tone="secondary" style={{ color: color('tone.danger.text') }}>
+        <Helper
+          nativeID={errorId}
+          accessibilityRole="alert"
+          tone="secondary"
+          style={{ color: color('tone.danger.text') }}
+        >
           {error}
         </Helper>
       ) : null}

@@ -64,16 +64,9 @@ export function ReportRefundExecutionScreen({
     ? { status: 'absent', reason: 'لا يوجد قرار استرداد معتمد يمكن ربط واقعة التنفيذ به.' }
     : submitting
       ? { status: 'loading' }
-      : canRecord
-        ? { status: 'available' }
-        : {
-            status: 'disabled',
-            reason: state === 'mismatch'
-              ? 'لا يمكن تسجيل الواقعة حتى تتطابق مع القرار والسجل الحاليين.'
-              : !exactDecisionMatch
-                ? 'يجب أن يطابق المبلغ والعملة قرار الاسترداد المعتمد بالكامل.'
-                : 'أدخل وقت تنفيذ الاسترداد خارج المنصة.',
-          };
+      : state === 'mismatch'
+        ? { status: 'disabled', reason: 'لا يمكن تسجيل الواقعة حتى تتطابق مع القرار والسجل الحاليين.' }
+        : { status: 'available' };
 
   const submit = () => {
     setAttempted(true);

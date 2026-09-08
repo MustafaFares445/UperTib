@@ -33,11 +33,18 @@ export function ReportExternalPaymentScreen({ snapshot, state = 'editing', initi
   const complete = fieldsComplete && domainReady;
   const submitting = state === 'submitting';
   const submitted = state === 'submitted';
-  const disabledReason = !snapshot.complete ? 'لا يمكن المتابعة لأن لقطة الشروط المقبولة غير مكتملة.' : state === 'mismatch' ? 'تحتاج تفاصيل الواقعة إلى المراجعة وفق الشروط والسجل الحاليين قبل التسجيل.' : 'أكمل المبلغ والعملة وطريقة السداد ووقت حدوث الواقعة أولًا.';
+  const domainBlockedReason = !snapshot.complete
+    ? 'لا يمكن المتابعة لأن لقطة الشروط المقبولة غير مكتملة.'
+    : 'تحتاج تفاصيل الواقعة إلى المراجعة وفق الشروط والسجل الحاليين قبل التسجيل.';
+  const recordAvailability = submitting
+    ? { status: 'loading' as const }
+    : !domainReady
+      ? { status: 'disabled' as const, reason: domainBlockedReason }
+      : { status: 'available' as const };
   const submit = () => { setAttempted(true); if (!complete) return; onSubmit({ amount: parsedAmount, currency: currency.trim(), externalMethodCategory: method.trim(), occurredAtIso: occurredAt.trim() }); };
 
   return (
-    <Screen footer={submitted ? <ActionBar actions={[{ key: 'timeline', label: 'عرض السجل المالي', role: 'primary', availability: { status: 'available' }, onPress: onOpenTimeline ?? onCancel }]} /> : <ActionBar actions={[{ key: 'record', label: 'تسجيل هذه الواقعة', role: 'primary', availability: submitting ? { status: 'loading' } : complete ? { status: 'available' } : { status: 'disabled', reason: disabledReason }, onPress: submit }, ...(!submitting ? [{ key: 'cancel', label: 'إلغاء', role: 'secondary' as const, availability: { status: 'available' as const }, onPress: onCancel }] : [])]} />}>
+    <Screen footer={submitted ? <ActionBar actions={[{ key: 'timeline', label: 'عرض السجل المالي', role: 'primary', availability: { status: 'available' }, onPress: onOpenTimeline ?? onCancel }]} /> : <ActionBar actions={[{ key: 'record', label: 'تسجيل هذه الواقعة', role: 'primary', availability: recordAvailability, onPress: submit }, ...(!submitting ? [{ key: 'cancel', label: 'إلغاء', role: 'secondary' as const, availability: { status: 'available' as const }, onPress: onCancel }] : [])]} />}>
       <Stack gap="stack-lg">
         <ScreenHeader eyebrow="تسجيل واقعة مالية" title={submitted ? 'تم تسجيل الواقعة' : 'سجّل ما دفعته خارج UberTib'} description={submitted ? 'أضيفت الواقعة إلى السجل بانتظار رد العيادة عليها.' : 'هذه الخطوة لا تدفع أي مبلغ. أنت تسجّل واقعة حدثت بينك وبين العيادة خارج المنصة.'} />
         <ContextNote icon="banknotes" title="سجل مالي خارجي" body="UberTib يسجّل الواقعة فقط؛ السداد نفسه حدث خارج المنصة." />

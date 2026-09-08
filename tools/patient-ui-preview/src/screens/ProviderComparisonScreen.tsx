@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react';
-import { Pressable, View } from 'react-native';
+import { Pressable, useWindowDimensions, View } from 'react-native';
 import { ActionBar } from '../components/ActionBar';
 import { PriceDisplay } from '../components/PriceDisplay';
 import type { ProviderOption } from '../components/ProviderDecisionCard';
@@ -14,7 +14,7 @@ import {
   formatVerifiedReviewAggregate,
   verifiedReviewAggregateAccessibilityLabel,
 } from '../reviews/rating';
-import { borderWidth, color, radius, size, space } from '../theme/tokens';
+import { borderWidth, color, radius, resolve, size, space } from '../theme/tokens';
 
 export interface ProviderComparisonScreenProps {
   options: ProviderOption[];
@@ -30,18 +30,48 @@ const ELIGIBILITY_LABEL: Record<ProviderOption['eligibility'], string> = {
   NOT_ELIGIBLE: 'غير مؤهَّل حاليًا',
 };
 
-function OptionValue({ option, children }: { option: ProviderOption; children: ReactNode }) {
+const profileCMediumMin = Number.parseFloat(String(resolve('profile-c.size-class.medium')));
+
+function OptionValue({
+  option,
+  children,
+  stacked,
+  testID,
+}: {
+  option: ProviderOption;
+  children: ReactNode;
+  stacked: boolean;
+  testID?: string;
+}) {
   return (
-    <View style={{ flex: 1, minWidth: 0, gap: space('stack-xs') }}>
+    <View
+      testID={testID}
+      style={stacked
+        ? { width: '100%', minWidth: 0, gap: space('stack-xs') }
+        : { flex: 1, minWidth: 0, gap: space('stack-xs') }}
+    >
       <Helper>{option.providerName}</Helper>
       {typeof children === 'string' || typeof children === 'number' ? <BodyStrong>{children}</BodyStrong> : children}
     </View>
   );
 }
 
-function AttributeGroup({ label, options, renderValue }: { label: string; options: ProviderOption[]; renderValue: (option: ProviderOption) => ReactNode }) {
+function AttributeGroup({
+  label,
+  options,
+  renderValue,
+  stacked,
+  testID,
+}: {
+  label: string;
+  options: ProviderOption[];
+  renderValue: (option: ProviderOption) => ReactNode;
+  stacked: boolean;
+  testID?: string;
+}) {
   return (
     <View
+      testID={testID}
       style={{
         gap: space('stack-sm'),
         padding: space('inset-md'),
@@ -52,8 +82,23 @@ function AttributeGroup({ label, options, renderValue }: { label: string; option
       }}
     >
       <Heading4 aria-level={3}>{label}</Heading4>
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space('stack-md') }}>
-        {options.map((option) => <OptionValue key={option.id} option={option}>{renderValue(option)}</OptionValue>)}
+      <View
+        style={{
+          flexDirection: stacked ? 'column' : 'row',
+          flexWrap: 'nowrap',
+          gap: space('stack-md'),
+        }}
+      >
+        {options.map((option) => (
+          <OptionValue
+            key={option.id}
+            option={option}
+            stacked={stacked}
+            testID={testID ? `${testID}-${option.id}` : undefined}
+          >
+            {renderValue(option)}
+          </OptionValue>
+        ))}
       </View>
     </View>
   );
@@ -124,6 +169,8 @@ function VerifiedRatingValue({ option }: { option: ProviderOption }) {
 export function ProviderComparisonScreen({ options, onBook, onOpen, onBack }: ProviderComparisonScreenProps) {
   const [visibleOptions, setVisibleOptions] = useState(options);
   const [chosenId, setChosenId] = useState<string | null>(null);
+  const { width, fontScale } = useWindowDimensions();
+  const stackedComparisonValues = width < profileCMediumMin || fontScale > 1;
   const chosen = visibleOptions.find((option) => option.id === chosenId);
   const oneService = new Set(visibleOptions.map((option) => option.serviceLabel)).size === 1;
 
@@ -173,14 +220,14 @@ export function ProviderComparisonScreen({ options, onBook, onOpen, onBack }: Pr
 
         <View style={{ gap: space('stack-sm') }}>
           <Heading4>تفاصيل المقارنة</Heading4>
-          <AttributeGroup label="السعر" options={visibleOptions} renderValue={(option) => <PriceDisplay price={option.price} compact />} />
-          <AttributeGroup label="ما يشمله السعر" options={visibleOptions} renderValue={(option) => option.priceIncludes ?? 'لم تُذكر تفاصيل إضافية'} />
-          <AttributeGroup label="التقييم الموثّق" options={visibleOptions} renderValue={(option) => <VerifiedRatingValue option={option} />} />
-          <AttributeGroup label="أقرب موعد" options={visibleOptions} renderValue={(option) => option.nearestAppointmentIso ? <BodyStrong>{formatDateTime(option.nearestAppointmentIso)}</BodyStrong> : 'غير متوفر حاليًا'} />
-          <AttributeGroup label="الفرع والمنطقة" options={visibleOptions} renderValue={(option) => `${option.branchName} · ${option.areaLabel}`} />
-          <AttributeGroup label="حالة الأهلية" options={visibleOptions} renderValue={(option) => ELIGIBILITY_LABEL[option.eligibility]} />
-          <AttributeGroup label="الحماية الممولة" options={visibleOptions} renderValue={(option) => option.fundedProtection ? 'متوفرة عند الحاجة' : 'غير مشمولة'} />
-          <AttributeGroup label="آخر تقييم للتوفر" options={visibleOptions} renderValue={(option) => <BodyStrong>{formatDateTime(option.assessedAtIso)}</BodyStrong>} />
+          <AttributeGroup testID="comparison-price" label="السعر" options={visibleOptions} stacked={stackedComparisonValues} renderValue={(option) => <PriceDisplay price={option.price} compact />} />
+          <AttributeGroup testID="comparison-price-includes" label="ما يشمله السعر" options={visibleOptions} stacked={stackedComparisonValues} renderValue={(option) => option.priceIncludes ?? 'لم تُذكر تفاصيل إضافية'} />
+          <AttributeGroup testID="comparison-rating" label="التقييم الموثّق" options={visibleOptions} stacked={stackedComparisonValues} renderValue={(option) => <VerifiedRatingValue option={option} />} />
+          <AttributeGroup testID="comparison-appointment" label="أقرب موعد" options={visibleOptions} stacked={stackedComparisonValues} renderValue={(option) => option.nearestAppointmentIso ? <BodyStrong>{formatDateTime(option.nearestAppointmentIso)}</BodyStrong> : 'غير متوفر حاليًا'} />
+          <AttributeGroup testID="comparison-branch" label="الفرع والمنطقة" options={visibleOptions} stacked={stackedComparisonValues} renderValue={(option) => `${option.branchName} · ${option.areaLabel}`} />
+          <AttributeGroup testID="comparison-eligibility" label="حالة الأهلية" options={visibleOptions} stacked={stackedComparisonValues} renderValue={(option) => ELIGIBILITY_LABEL[option.eligibility]} />
+          <AttributeGroup testID="comparison-protection" label="الحماية الممولة" options={visibleOptions} stacked={stackedComparisonValues} renderValue={(option) => option.fundedProtection ? 'متوفرة عند الحاجة' : 'غير مشمولة'} />
+          <AttributeGroup testID="comparison-assessed-at" label="آخر تقييم للتوفر" options={visibleOptions} stacked={stackedComparisonValues} renderValue={(option) => <BodyStrong>{formatDateTime(option.assessedAtIso)}</BodyStrong>} />
         </View>
       </Stack>
     </Screen>

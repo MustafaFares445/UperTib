@@ -20,6 +20,9 @@ const REASON_COPY: Record<'invalid' | 'expired' | 'exhausted', string> = {
   exhausted: 'تم استنفاد عدد المحاولات المسموح بها. يرجى طلب رمز جديد.',
 };
 
+const CODE_PATTERN = /^\d{6}$/;
+const CODE_FORMAT_ERROR = 'أدخل الرمز المكوّن من 6 أرقام.';
+
 /**
  * SCR-IDENTITY-003 — Code verification. Verifies the challenge code and activates or resumes the
  * patient identity (WGT-IDENTITY-001, API-IDENTITY-002). Invalid, expired and attempts-exhausted
@@ -30,11 +33,18 @@ export function CodeVerificationScreen({ phone, challenge, onVerified, onChangeN
   const [current, setCurrent] = useState(challenge);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string>();
+  const [formatAttempted, setFormatAttempted] = useState(false);
   const [resending, setResending] = useState(false);
 
   const attemptsExhausted = current.attemptsRemaining <= 0;
+  const codeWellFormed = CODE_PATTERN.test(code);
+  const fieldError = formatAttempted && !codeWellFormed ? CODE_FORMAT_ERROR : error;
 
   function handleVerify() {
+    setFormatAttempted(true);
+    if (!codeWellFormed) return;
+
+    setFormatAttempted(false);
     setSubmitting(true);
     window.setTimeout(() => {
       setSubmitting(false);
@@ -51,6 +61,12 @@ export function CodeVerificationScreen({ phone, challenge, onVerified, onChangeN
     }, 400);
   }
 
+  function handleCodeChange(nextCode: string) {
+    setCode(nextCode);
+    if (formatAttempted && CODE_PATTERN.test(nextCode)) setFormatAttempted(false);
+    if (error === REASON_COPY.invalid) setError(undefined);
+  }
+
   function handleResend() {
     setResending(true);
     window.setTimeout(() => {
@@ -60,6 +76,7 @@ export function CodeVerificationScreen({ phone, challenge, onVerified, onChangeN
       const refreshed = requestChallenge(phone);
       setCurrent((c) => ({ ...refreshed, attemptsRemaining: c.attemptsRemaining }));
       setCode('');
+      setFormatAttempted(false);
       setError(undefined);
     }, 400);
   }
@@ -79,8 +96,8 @@ export function CodeVerificationScreen({ phone, challenge, onVerified, onChangeN
                 availability:
                   attemptsExhausted
                     ? { status: 'absent', reason: 'انتهت المحاولات المتاحة. اطلب رمزًا جديدًا للمتابعة.' }
-                    : submitting || code.length !== 6
-                      ? { status: 'disabled', reason: 'أدخل الرمز المكوّن من 6 أرقام.' }
+                    : submitting
+                      ? { status: 'disabled', reason: 'جارٍ التحقق…' }
                       : { status: 'available' },
                 onPress: handleVerify,
               },
@@ -109,11 +126,11 @@ export function CodeVerificationScreen({ phone, challenge, onVerified, onChangeN
         <ValidationField
           label="رمز التحقق"
           value={code}
-          onChangeText={setCode}
+          onChangeText={handleCodeChange}
           placeholder="000000"
           keyboardType="number-pad"
           maxLength={6}
-          error={error}
+          error={fieldError}
           helper={!attemptsExhausted ? `المحاولات المتبقية: ${current.attemptsRemaining}` : undefined}
           autoFocus
         />
