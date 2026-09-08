@@ -1,3 +1,5 @@
+import { isReviewRatingValue, type ReviewRatingValue } from '../reviews/rating';
+
 export type ReviewState = 'ACTIVE' | 'RETIRED';
 export type ReviewAppealState = 'SUBMITTED' | 'DECIDED';
 export type ReviewWindowState = 'running' | 'approaching' | 'lapsed';
@@ -36,9 +38,10 @@ export interface PatientReviewProjection {
   branchName: string;
   treatingDentist: string;
   state: ReviewState;
-  /** Product-policy-owned rating value. The preview intentionally does not assume a numeric scale. */
-  ratingValue: string;
-  content: string;
+  /** PO-UX-19: required whole-number Patient-experience rating, 1..5. */
+  ratingValue: ReviewRatingValue;
+  /** PO-UX-19: optional written feedback. */
+  content?: string;
   submittedAtIso: string;
   /** Prototype idempotency evidence only; never rendered to the Patient. */
   commandFingerprint: string;
@@ -55,9 +58,10 @@ export interface PatientReviewProjection {
   };
 }
 
+/** API-boundary-shaped draft: runtime validation still rejects non-integer/out-of-range values. */
 export interface ReviewSubmissionDraft {
-  ratingValue: string;
-  content: string;
+  ratingValue: number;
+  content?: string;
 }
 
 export interface ReviewSubmissionResult {
@@ -114,16 +118,17 @@ export const unverifiedReviewExperience: ReviewableExperienceProjection = {
 };
 
 function normalizedDraft(draft: ReviewSubmissionDraft): ReviewSubmissionDraft {
+  const content = draft.content?.trim();
   return {
-    ratingValue: draft.ratingValue.trim(),
-    content: draft.content.trim(),
+    ratingValue: draft.ratingValue,
+    ...(content ? { content } : {}),
   };
 }
 
 function commandFingerprint(experienceId: string, draft: ReviewSubmissionDraft) {
   const normalized = normalizedDraft(draft);
   // JSON tuple serialization preserves field boundaries, so user-entered separators cannot collide.
-  return encodeURIComponent(JSON.stringify([experienceId, normalized.ratingValue, normalized.content]));
+  return encodeURIComponent(JSON.stringify([experienceId, normalized.ratingValue, normalized.content ?? '']));
 }
 
 const existingActiveReviewContent = 'كانت التجربة واضحة ومنظمة، وتم شرح خطوات الزيارة بشكل جيد.';
@@ -137,11 +142,11 @@ export const existingActiveReview: PatientReviewProjection = {
   branchName: approachingReviewExperience.branchName,
   treatingDentist: approachingReviewExperience.treatingDentist,
   state: 'ACTIVE',
-  ratingValue: '4',
+  ratingValue: 4,
   content: existingActiveReviewContent,
   submittedAtIso: '2026-09-01T14:30:00+03:00',
   commandFingerprint: commandFingerprint(approachingReviewExperience.id, {
-    ratingValue: '4',
+    ratingValue: 4,
     content: existingActiveReviewContent,
   }),
 };
@@ -155,11 +160,11 @@ export const retiredPatientReview: PatientReviewProjection = {
   caseId: 'case-retired-006',
   serviceLabel: 'زيارة متابعة',
   state: 'RETIRED',
-  ratingValue: '3',
+  ratingValue: 3,
   content: retiredReviewContent,
   submittedAtIso: '2026-08-22T11:10:00+03:00',
   commandFingerprint: commandFingerprint('experience-retired-006', {
-    ratingValue: '3',
+    ratingValue: 3,
     content: retiredReviewContent,
   }),
   retirement: {
@@ -183,9 +188,9 @@ export const retiredNoAppealReview: PatientReviewProjection = {
 /**
  * Prototype-only projection helper for API-REVIEWS-001.
  *
- * It demonstrates the documented invariants without choosing a production rating scale:
- * verified completion, an open review window, one active review per experience, and an idempotent
- * identical retry. A materially different second submission is refused by the active-review rule.
+ * It demonstrates the documented invariants plus PO-UX-19:
+ * verified completion, an open review window, one active review per experience, an idempotent
+ * identical retry, a required whole-number 1..5 rating, and optional written feedback.
  */
 export function submitVerifiedReview(
   experience: ReviewableExperienceProjection,
@@ -194,7 +199,7 @@ export function submitVerifiedReview(
   nowIso = REVIEW_NOW_ISO,
 ): ReviewSubmissionResult {
   const normalized = normalizedDraft(draft);
-  if (!normalized.ratingValue || !normalized.content) {
+  if (!isReviewRatingValue(normalized.ratingValue)) {
     return { reviews, blockedBy: 'INVALID_INPUT' };
   }
 
@@ -225,7 +230,7 @@ export function submitVerifiedReview(
     treatingDentist: experience.treatingDentist,
     state: 'ACTIVE',
     ratingValue: normalized.ratingValue,
-    content: normalized.content,
+    ...(normalized.content ? { content: normalized.content } : {}),
     submittedAtIso: nowIso,
     commandFingerprint: fingerprint,
   };
