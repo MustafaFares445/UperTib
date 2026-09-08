@@ -37,17 +37,22 @@ function InlineAction({ label, onPress }: { label: string; onPress: () => void }
   );
 }
 
-/** WGT-IDENTITY-002 — exact, patient-readable representation scope and retained history. */
+/** WGT-IDENTITY-002 — patient-readable representation scope and retained history. */
 export function AuthorizationGrantPanel({
   grant,
   onOpen,
+  mode = 'full',
 }: {
   grant: RepresentationGrantProjection;
   onOpen?: () => void;
+  mode?: 'summary' | 'full';
 }) {
   const period = grant.effectiveUntilIso
     ? `من ${formatDateTime(grant.effectiveFromIso)} حتى ${formatDateTime(grant.effectiveUntilIso)}`
     : `من ${formatDateTime(grant.effectiveFromIso)} دون تاريخ نهاية محدد`;
+  const scopeSummary = grant.actions.length <= 2
+    ? grant.actions.join(' + ')
+    : `${grant.actions.slice(0, 2).join(' + ')} + ${grant.actions.length - 2} إضافية`;
 
   return (
     <View
@@ -71,29 +76,21 @@ export function AuthorizationGrantPanel({
       </View>
 
       {!grant.scopeResolved ? (
-        <View
-          accessibilityRole="alert"
-          style={{
-            gap: space('stack-xs'),
-            padding: space('inset-sm'),
-            borderRadius: radius('surface'),
-            backgroundColor: color('surface.subtle'),
-          }}
-        >
+        <View accessibilityRole="alert" style={{ gap: space('stack-xs'), padding: space('inset-sm'), borderRadius: radius('surface'), backgroundColor: color('surface.subtle') }}>
           <BodyStrong>تعذّر قراءة نطاق هذه الصلاحية.</BodyStrong>
           <Body>لن نعامل النطاق المجهول كأنه كامل، لذلك لا يتوفر فتحه أو استخدامه حتى تُقرأ تفاصيله بأمان.</Body>
         </View>
+      ) : mode === 'summary' ? (
+        <>
+          <BodyStrong>{scopeSummary}</BodyStrong>
+          <Helper>{period}</Helper>
+          {onOpen ? <InlineAction label="فتح تفاصيل الصلاحية" onPress={onOpen} /> : null}
+        </>
       ) : (
         <>
           <View style={{ gap: space('stack-sm') }}>
-            <View style={{ gap: space('stack-xs') }}>
-              <Label>من يتصرف؟</Label>
-              <Body>{grant.granteeName}</Body>
-            </View>
-            <View style={{ gap: space('stack-xs') }}>
-              <Label>لصالح من؟</Label>
-              <Body>{grant.subjectPatientName}</Body>
-            </View>
+            <View style={{ gap: space('stack-xs') }}><Label>من يتصرف؟</Label><Body>{grant.granteeName}</Body></View>
+            <View style={{ gap: space('stack-xs') }}><Label>لصالح من؟</Label><Body>{grant.subjectPatientName}</Body></View>
             <View style={{ gap: space('stack-xs') }}>
               <Label>ما الذي تسمح به؟</Label>
               {grant.actions.map((action) => <Body key={action}>• {action}</Body>)}
@@ -103,28 +100,15 @@ export function AuthorizationGrantPanel({
               {grant.dataScope.map((scope) => <Body key={scope}>• {scope}</Body>)}
             </View>
           </View>
-
-          <View style={{ gap: space('stack-xs') }}>
-            <Label>الغرض</Label>
-            <Body>{grant.purpose}</Body>
-          </View>
-          <View style={{ gap: space('stack-xs') }}>
-            <Label>الفترة الفعّالة</Label>
-            <Body>{period}</Body>
-          </View>
-          <View style={{ gap: space('stack-xs') }}>
-            <Label>الأساس</Label>
-            <Body>{grant.basisLabel}</Body>
-          </View>
-
+          <View style={{ gap: space('stack-xs') }}><Label>الغرض</Label><Body>{grant.purpose}</Body></View>
+          <View style={{ gap: space('stack-xs') }}><Label>الفترة الفعّالة</Label><Body>{period}</Body></View>
+          <View style={{ gap: space('stack-xs') }}><Label>الأساس</Label><Body>{grant.basisLabel}</Body></View>
           {grant.status === 'REVOKED' && grant.revokedAtIso ? (
             <View style={{ gap: space('stack-xs') }}>
-              <Label>سجل الإلغاء</Label>
-              <Body>{formatDateTime(grant.revokedAtIso)}</Body>
+              <Label>سجل الإلغاء</Label><Body>{formatDateTime(grant.revokedAtIso)}</Body>
               {grant.revocationReason ? <Helper>{grant.revocationReason}</Helper> : null}
             </View>
           ) : null}
-
           <Helper>{grant.historicalAttribution}</Helper>
           {onOpen ? <InlineAction label="فتح تفاصيل الصلاحية" onPress={onOpen} /> : null}
         </>

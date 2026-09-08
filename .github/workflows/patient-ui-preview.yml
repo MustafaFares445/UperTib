@@ -22,7 +22,7 @@ jobs:
   verify:
     name: Verify Storybook preview
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     defaults:
       run:
         working-directory: tools/patient-ui-preview
@@ -60,7 +60,13 @@ jobs:
       - name: Run readiness smoke test
         run: npm run test:smoke
 
-      - name: Upload Playwright and audit artifacts
+      - name: Run full Patient E2E suite
+        run: npx playwright test
+
+      - name: Capture all-slices visual evidence at 320 / 390 / 414
+        run: npm run capture:all:ci
+
+      - name: Upload Playwright, visual-review, and audit artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
