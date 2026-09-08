@@ -75,7 +75,7 @@ export function ClaimAppealScreen({
   return (
     <Screen footer={<ActionBar actions={actions} />}>
       <Stack gap="stack-lg">
-        <ScreenHeader eyebrow="اعتراض على قرار مطالبة" title={appeal ? 'حالة اعتراضك' : 'راجع القرار ثم اكتب سبب اعتراضك'} />
+        <ScreenHeader eyebrow="اعتراض على قرار مطالبة" title={appeal ? 'حالة اعتراضك' : 'اعترض على القرار نفسه دون محو تاريخه'} />
         <SubjectContextHeader subject={subject} authority={authority} />
         <OriginalDecision claim={claim} />
         <ContextNote icon="document-check" title="لقطة السياسة الحاكمة للاعتراض" body={`${claim.governingSnapshotLabel} — النافذة والشروط تأتي من النسخة التاريخية التي حكمت القرار.`} />
