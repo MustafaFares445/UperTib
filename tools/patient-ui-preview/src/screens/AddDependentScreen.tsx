@@ -108,11 +108,14 @@ export function AddDependentScreen({
         {request && !editable ? <RequestProjection request={request} /> : (
           <>
             {request?.state === 'CHANGES_REQUESTED' ? <RequestProjection request={request} /> : null}
-            <ContextNote
-              icon="shield-exclamation"
-              title="هذه ليست شاشة إنشاء صلاحية."
-              body="المراجع البشري هو من يقرر إن كانت العلاقة والأساس والمستندات تبرر التمثيل. لن ينشئ زر الإرسال صلاحية الآن."
-            />
+            <View style={{ gap: space('stack-xs') }}>
+              <ContextNote
+                icon="shield-exclamation"
+                title="هذه ليست شاشة إنشاء صلاحية."
+                body="المراجع البشري هو من يقرر إن كانت العلاقة والأساس والمستندات تبرر التمثيل."
+              />
+              <BodyStrong>لن ينشئ زر الإرسال صلاحية الآن.</BodyStrong>
+            </View>
 
             <View style={{ gap: space('stack-sm') }}>
               <Heading3>1. من هو التابع وما علاقتك به؟</Heading3>
