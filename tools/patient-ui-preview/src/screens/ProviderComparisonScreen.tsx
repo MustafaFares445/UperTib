@@ -4,14 +4,17 @@ import { ActionBar } from '../components/ActionBar';
 import { PriceDisplay } from '../components/PriceDisplay';
 import type { ProviderOption } from '../components/ProviderDecisionCard';
 import { ProviderIdentity } from '../components/ProviderIdentity';
-import { formatDateTime } from '../foundations/format';
+import { formatArabicCount, formatDateTime } from '../foundations/format';
 import { Icon } from '../foundations/Icon';
 import { Screen, ScreenHeader, Stack } from '../foundations/Screen';
 import { Body, BodyStrong, Heading4, Helper } from '../foundations/Text';
 import { useFocusRing } from '../foundations/useFocusRing';
 import { webRadioKeyboardProps } from '../foundations/webKeyboardActivation';
+import {
+  formatVerifiedReviewAggregate,
+  verifiedReviewAggregateAccessibilityLabel,
+} from '../reviews/rating';
 import { borderWidth, color, radius, size, space } from '../theme/tokens';
-import { formatArabicCount } from '../foundations/format';
 
 export interface ProviderComparisonScreenProps {
   options: ProviderOption[];
@@ -110,6 +113,13 @@ function InlineTextAction({ label, accessibilityLabel, tone = 'link', onPress }:
   );
 }
 
+function VerifiedRatingValue({ option }: { option: ProviderOption }) {
+  const display = formatVerifiedReviewAggregate(option.verifiedRating);
+  const accessibilityLabel = verifiedReviewAggregateAccessibilityLabel(option.verifiedRating);
+  if (!display || !accessibilityLabel) return <BodyStrong>غير متوفر</BodyStrong>;
+  return <BodyStrong accessibilityLabel={accessibilityLabel}>{display}</BodyStrong>;
+}
+
 /** SCR-ELIG-005 — transient, same-service, attribute-first comparison with no ranking. */
 export function ProviderComparisonScreen({ options, onBook, onOpen, onBack }: ProviderComparisonScreenProps) {
   const [visibleOptions, setVisibleOptions] = useState(options);
@@ -165,7 +175,7 @@ export function ProviderComparisonScreen({ options, onBook, onOpen, onBack }: Pr
           <Heading4>تفاصيل المقارنة</Heading4>
           <AttributeGroup label="السعر" options={visibleOptions} renderValue={(option) => <PriceDisplay price={option.price} compact />} />
           <AttributeGroup label="ما يشمله السعر" options={visibleOptions} renderValue={(option) => option.priceIncludes ?? 'لم تُذكر تفاصيل إضافية'} />
-          <AttributeGroup label="التقييم الموثّق" options={visibleOptions} renderValue={(option) => option.ratingLabel?.replace('تقييم موثّق: ', '') ?? 'غير متوفر'} />
+          <AttributeGroup label="التقييم الموثّق" options={visibleOptions} renderValue={(option) => <VerifiedRatingValue option={option} />} />
           <AttributeGroup label="أقرب موعد" options={visibleOptions} renderValue={(option) => option.nearestAppointmentIso ? <BodyStrong>{formatDateTime(option.nearestAppointmentIso)}</BodyStrong> : 'غير متوفر حاليًا'} />
           <AttributeGroup label="الفرع والمنطقة" options={visibleOptions} renderValue={(option) => `${option.branchName} · ${option.areaLabel}`} />
           <AttributeGroup label="حالة الأهلية" options={visibleOptions} renderValue={(option) => ELIGIBILITY_LABEL[option.eligibility]} />
