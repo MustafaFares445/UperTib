@@ -81,7 +81,15 @@ export function AddDependentScreen({
   const [requestedDataScope, setRequestedDataScope] = useState<string[]>(initial?.requestedDataScope ?? initialDataScope);
 
   const acceptedEvidenceIds = useMemo(() => acceptedDependentEvidenceIds(evidenceRequirements), [evidenceRequirements]);
-  const everyRequirementAccepted = evidenceRequirements.length > 0 && evidenceRequirements.every((requirement) => requirement.items.some((item) => item.state === 'ACCEPTED'));
+  const acceptedRequirementCount = useMemo(
+    () => evidenceRequirements.filter((requirement) => requirement.items.some((item) => item.state === 'ACCEPTED')).length,
+    [evidenceRequirements],
+  );
+  const firstOutstandingRequirement = useMemo(
+    () => evidenceRequirements.find((requirement) => !requirement.items.some((item) => item.state === 'ACCEPTED')),
+    [evidenceRequirements],
+  );
+  const everyRequirementAccepted = evidenceRequirements.length > 0 && acceptedRequirementCount === evidenceRequirements.length;
   const editable = !request || request.state === 'DRAFT' || request.state === 'CHANGES_REQUESTED';
   const missing = useMemo(() => {
     const items: string[] = [];
@@ -135,8 +143,20 @@ export function AddDependentScreen({
 
             <View style={{ gap: space('stack-sm') }}>
               <Heading3>3. مستندات التحقق</Heading3>
-              <EvidenceTransferPanel requirements={evidenceRequirements} onAddItem={onAddEvidence} onResume={onResumeEvidence} onRetry={onRetryEvidence} onReplace={onReplaceEvidence} />
-              {!everyRequirementAccepted ? <Helper>الملف المحدد أو المرفوع أو قيد الفحص لا يحقق المتطلب قبل أن يصبح مقبولًا.</Helper> : <BodyStrong>كل المتطلبات الظاهرة مقبولة وجاهزة للإرسال إلى التحقق البشري.</BodyStrong>}
+              <BodyStrong>{acceptedRequirementCount} من {evidenceRequirements.length} متطلبات مكتملة</BodyStrong>
+              {firstOutstandingRequirement ? (
+                <Helper>المطلوب الآن: {firstOutstandingRequirement.title}. الملف المحدد أو المرفوع أو قيد الفحص لا يحقق المتطلب قبل أن يصبح مقبولًا.</Helper>
+              ) : (
+                <BodyStrong>كل المتطلبات الظاهرة مقبولة وجاهزة للإرسال إلى التحقق البشري.</BodyStrong>
+              )}
+              <EvidenceTransferPanel
+                requirements={evidenceRequirements}
+                onAddItem={onAddEvidence}
+                onResume={onResumeEvidence}
+                onRetry={onRetryEvidence}
+                onReplace={onReplaceEvidence}
+                collapseCompleted
+              />
             </View>
           </>
         )}
