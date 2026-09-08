@@ -5,7 +5,6 @@ import { ContextNote } from '../components/ContextNote';
 import { DeadlineIndicator } from '../components/DeadlineIndicator';
 import { SubjectContextHeader } from '../components/SubjectContextHeader';
 import { ValidationField } from '../components/ValidationField';
-import { Icon } from '../foundations/Icon';
 import { Screen, ScreenHeader, Stack } from '../foundations/Screen';
 import { Body, BodyStrong, Heading3, Helper } from '../foundations/Text';
 import { CLAIMS_NOW_ISO } from '../mocks/claims';
@@ -142,20 +141,25 @@ export function ProtectionClaimScreen({
             <View style={{ gap: space('stack-sm') }}>
               <Heading3>2. جاهزية الأدلة</Heading3>
               <BodyStrong>{requirements.length - outstanding.length} من {requirements.length} متطلبات مكتملة</BodyStrong>
-              {requirements.map((item) => (
-                <View key={item.id} style={{ flexDirection: 'row', alignItems: 'flex-start', gap: space('inline-sm') }}>
-                  <Icon name={item.state === 'ACCEPTED' ? 'check-circle' : 'exclamation-triangle'} color={color('text.secondary')} />
-                  <View style={{ flex: 1, gap: space('stack-xs') }}><BodyStrong>{item.label}</BodyStrong><Helper>{item.state === 'ACCEPTED' ? 'مقبول' : 'ما زال مطلوبًا'}</Helper></View>
-                </View>
-              ))}
-              <EvidenceTransferPanel requirements={entitlement.evidenceRequirements} onAddItem={onAddEvidence} onResume={onResumeEvidence} onRetry={onRetryEvidence} onReplace={onReplaceEvidence} />
+
               {outstanding.length > 0 ? (
                 <ContextNote
                   icon={evidencePendingValidation && !actionableEvidenceRequirement ? 'clock' : 'document-check'}
-                  title={evidencePendingValidation && !actionableEvidenceRequirement ? 'المستند قيد النقل أو الفحص.' : `يلزم استكمال: ${outstanding[0].label}`}
+                  title={evidencePendingValidation && !actionableEvidenceRequirement ? 'المستند قيد النقل أو الفحص.' : `المطلوب الآن: ${outstanding[0].label}`}
                   body={evidencePendingValidation && !actionableEvidenceRequirement ? 'الملف قيد الفحص ولم يُقبل بعد. ننتظر اكتمال النقل أو الفحص؛ لا يصبح المتطلب مستوفيًا إلا بعد القبول.' : 'أكمل المتطلب الحالي أولًا. فشل النقل القابل لإعادة المحاولة يختلف عن رفض المستند.'}
                 />
-              ) : null}
+              ) : (
+                <Helper>كل متطلبات الأدلة مكتملة. التفاصيل المقبولة محفوظة ويمكن عرضها عند الحاجة، ولا يلزم إجراء عليها الآن.</Helper>
+              )}
+
+              <EvidenceTransferPanel
+                requirements={entitlement.evidenceRequirements}
+                onAddItem={onAddEvidence}
+                onResume={onResumeEvidence}
+                onRetry={onRetryEvidence}
+                onReplace={onReplaceEvidence}
+                collapseCompleted
+              />
             </View>
 
             {outstanding.length === 0 ? (
