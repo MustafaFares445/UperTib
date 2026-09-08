@@ -28,7 +28,7 @@ async function describedFieldState(page: Page, label: string) {
 test('SCR-ELIG-005 stacks provider values at Patient phone widths without internal collision', async ({ page }) => {
   await gotoStory(page, 'patient-screens-scr-elig-005-provider-comparison--three-options');
 
-  const boxes = await page.locator('[data-testid^="comparison-price-"]').evaluateAll((elements) =>
+  const boxes = await page.getByTestId('comparison-price').locator('[data-testid^="comparison-price-"]').evaluateAll((elements) =>
     elements.map((element) => {
       const rect = element.getBoundingClientRect();
       return { top: rect.top, bottom: rect.bottom, left: rect.left, right: rect.right };
