@@ -18,6 +18,8 @@
     "test:e2e:headed": "npm run storybook:build && playwright test --headed",
     "test:e2e:ui": "npm run storybook:build && playwright test --ui",
     "test:e2e:update": "npm run storybook:build && playwright test --update-snapshots",
+    "capture:all": "npm run storybook:build && node scripts/capture-all.mjs",
+    "capture:all:ci": "node scripts/capture-all.mjs",
     "verify": "npm run typecheck && npm run storybook:build && playwright test playwright/smoke.spec.ts playwright/slice2-discovery.spec.ts playwright/slice3-care.spec.ts playwright/slice4-evidence.spec.ts playwright/slice5-finance.spec.ts playwright/slice6-finance-actions.spec.ts playwright/slice7-refund-execution.spec.ts playwright/slice8-reviews.spec.ts playwright/slice9-review-appeal.spec.ts playwright/slice10-claims-core.spec.ts playwright/slice11-protection-appeal.spec.ts playwright/slice12-representation.spec.ts --project=patient-390"
   },
   "dependencies": {
