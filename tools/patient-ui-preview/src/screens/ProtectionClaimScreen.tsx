@@ -121,7 +121,7 @@ export function ProtectionClaimScreen({
   return (
     <Screen footer={<ActionBar actions={actions} />}>
       <Stack gap="stack-lg">
-        <ScreenHeader eyebrow="مطالبة حماية" title="ما الذي تحتاجه مطالبتك الآن؟" />
+        <ScreenHeader eyebrow="مطالبة حماية" title="ابدأ من الحماية المسجّلة، لا من وعد عام" />
         <SubjectContextHeader subject={subject} authority={authority} />
 
         <View style={{ gap: space('stack-sm'), padding: space('inset-md'), borderRadius: radius('surface'), borderWidth: borderWidth('hairline'), borderColor: color('border.subtle'), backgroundColor: color('surface.default') }}>
@@ -153,7 +153,7 @@ export function ProtectionClaimScreen({
                 <ContextNote
                   icon={evidencePendingValidation && !actionableEvidenceRequirement ? 'clock' : 'document-check'}
                   title={evidencePendingValidation && !actionableEvidenceRequirement ? 'المستند قيد النقل أو الفحص.' : `يلزم استكمال: ${outstanding[0].label}`}
-                  body={evidencePendingValidation && !actionableEvidenceRequirement ? 'ننتظر اكتمال النقل أو الفحص؛ لا يصبح المتطلب مستوفيًا إلا بعد القبول.' : 'أكمل المتطلب الحالي أولًا. فشل النقل القابل لإعادة المحاولة يختلف عن رفض المستند.'}
+                  body={evidencePendingValidation && !actionableEvidenceRequirement ? 'الملف قيد الفحص ولم يُقبل بعد. ننتظر اكتمال النقل أو الفحص؛ لا يصبح المتطلب مستوفيًا إلا بعد القبول.' : 'أكمل المتطلب الحالي أولًا. فشل النقل القابل لإعادة المحاولة يختلف عن رفض المستند.'}
                 />
               ) : null}
             </View>
