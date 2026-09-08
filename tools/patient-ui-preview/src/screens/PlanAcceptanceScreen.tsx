@@ -17,13 +17,14 @@ export function PlanAcceptanceScreen({ plan, state = 'ready', canAccept = true, 
   const blocked = state === 'stale' || !plan.complete || !canAccept;
   const accepted = state === 'accepted';
   const blockedReason = state === 'stale' ? 'تحتاج الخطة إلى تحديث من العيادة.' : !plan.complete ? 'الخطة غير مكتملة، ولا يمكن الموافقة عليها.' : 'لا تملك صلاحية الموافقة على هذه الخطة.';
+  const disabledActionReason = state === 'stale' ? 'لا يمكن الموافقة قبل تحديث الخطة.' : !plan.complete ? 'أكمل الخطة قبل الموافقة.' : 'هذا الحساب غير مخوّل بالموافقة.';
 
   return (
     <Screen footer={accepted ? (
       <ActionBar actions={[{ key: 'review', label: 'فتح الخطة المقبولة', role: 'primary', availability: { status: 'available' }, onPress: onReviewPlan }]} />
     ) : (
       <ActionBar actions={[
-        { key: 'accept', label: 'أوافق على هذه الخطة', role: 'primary', availability: state === 'submitting' ? { status: 'loading' } : blocked ? { status: 'disabled', reason: blockedReason } : { status: 'available' }, onPress: onAccept },
+        { key: 'accept', label: 'أوافق على هذه الخطة', role: 'primary', availability: state === 'submitting' ? { status: 'loading' } : blocked ? { status: 'disabled', reason: disabledActionReason } : { status: 'available' }, onPress: onAccept },
         { key: 'review', label: 'مراجعة الخطة مرة أخرى', role: 'secondary', availability: { status: 'available' }, onPress: onReviewPlan },
       ]} />
     )}>
