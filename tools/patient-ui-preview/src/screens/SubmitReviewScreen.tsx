@@ -2,12 +2,14 @@ import { useState } from 'react';
 import { View } from 'react-native';
 import { ActionBar, type ActionSpec } from '../components/ActionBar';
 import { DeadlineIndicator } from '../components/DeadlineIndicator';
+import { ExperienceRatingField } from '../components/ExperienceRatingField';
 import { SubjectContextHeader } from '../components/SubjectContextHeader';
 import { ValidationField } from '../components/ValidationField';
 import { formatDateTime } from '../foundations/format';
 import { Screen, ScreenHeader, Stack } from '../foundations/Screen';
-import { Body, BodyStrong, Heading3, Helper } from '../foundations/Text';
+import { Body, BodyStrong, Helper } from '../foundations/Text';
 import { REVIEW_NOW_ISO, type ReviewSubmissionDraft, type ReviewableExperienceProjection } from '../mocks/reviews';
+import type { ReviewRatingValue } from '../reviews/rating';
 import { borderWidth, color, radius, space } from '../theme/tokens';
 
 export type SubmitReviewState = 'editing' | 'submitting' | 'window-expired' | 'active-review-exists' | 'not-verified';
@@ -22,17 +24,31 @@ function BlockedMessage({ state }: { state: Exclude<SubmitReviewState, 'editing'
 }
 
 /** SCR-REVIEWS-002 — submit one review tied to one verified completed experience. */
-export function SubmitReviewScreen({ experience, state = 'editing', subject = 'تقييم تجربتك', authority, initialRating = '', initialContent = '', onSubmit, onCancel, onOpenExistingReview }: {
-  experience: ReviewableExperienceProjection; state?: SubmitReviewState; subject?: string; authority?: string; initialRating?: string; initialContent?: string;
+export function SubmitReviewScreen({ experience, state = 'editing', subject = 'تقييم تجربتك', authority, initialRating, initialContent = '', onSubmit, onCancel, onOpenExistingReview }: {
+  experience: ReviewableExperienceProjection; state?: SubmitReviewState; subject?: string; authority?: string; initialRating?: ReviewRatingValue; initialContent?: string;
   onSubmit: (draft: ReviewSubmissionDraft) => void; onCancel: () => void; onOpenExistingReview?: () => void;
 }) {
-  const [ratingValue, setRatingValue] = useState(initialRating);
+  const [ratingValue, setRatingValue] = useState<ReviewRatingValue | null>(initialRating ?? null);
   const [content, setContent] = useState(initialContent);
-  const fieldsComplete = ratingValue.trim().length > 0 && content.trim().length > 0;
+  const ratingComplete = ratingValue !== null;
   const windowExpired = experience.reviewWindowState === 'lapsed' || new Date(experience.reviewWindowEndsAtIso).getTime() <= new Date(REVIEW_NOW_ISO).getTime();
   const effectiveState: SubmitReviewState = state === 'editing' && !experience.verifiedCompleted ? 'not-verified' : state === 'editing' && windowExpired ? 'window-expired' : state;
   const domainReady = effectiveState === 'editing';
-  const submit: ActionSpec = { key: 'submit-review', label: 'إرسال التقييم', role: 'primary', availability: effectiveState === 'submitting' ? { status: 'loading' } : domainReady && fieldsComplete ? { status: 'available' } : { status: 'disabled', reason: effectiveState === 'editing' ? 'أكمل التقييم والنص قبل الإرسال.' : 'لا يمكن إرسال تقييم جديد في الحالة الحالية.' }, onPress: () => onSubmit({ ratingValue: ratingValue.trim(), content: content.trim() }) };
+  const submit: ActionSpec = {
+    key: 'submit-review',
+    label: 'إرسال التقييم',
+    role: 'primary',
+    availability: effectiveState === 'submitting'
+      ? { status: 'loading' }
+      : domainReady && ratingComplete
+        ? { status: 'available' }
+        : { status: 'disabled', reason: effectiveState === 'editing' ? 'اختر تقييمًا من نجمة إلى خمس نجوم قبل الإرسال.' : 'لا يمكن إرسال تقييم جديد في الحالة الحالية.' },
+    onPress: () => {
+      if (ratingValue === null) return;
+      const trimmedContent = content.trim();
+      onSubmit({ ratingValue, ...(trimmedContent ? { content: trimmedContent } : {}) });
+    },
+  };
   const actions: ActionSpec[] = [];
   if (effectiveState === 'active-review-exists' && onOpenExistingReview) actions.push({ key: 'open-existing', label: 'عرض تقييمي الموجود', role: 'primary', availability: { status: 'available' }, onPress: onOpenExistingReview });
   else if (effectiveState === 'editing' || effectiveState === 'submitting') actions.push(submit);
@@ -42,7 +58,7 @@ export function SubmitReviewScreen({ experience, state = 'editing', subject = '�
   return (
     <Screen footer={<ActionBar actions={actions} />}>
       <Stack gap="stack-lg">
-        <ScreenHeader eyebrow="تقييم موثّق" title="اكتب تقييمك عن هذه التجربة" description="هذا التقييم مرتبط بتجربة علاجية مكتملة وموثّقة، وهو مستقل عن أهلية الطبيب العلمية ولا يغيّرها." />
+        <ScreenHeader eyebrow="تقييم موثّق" title="قيّم تجربتك في الزيارة" description="هذا التقييم مرتبط بتجربة علاجية مكتملة وموثّقة، ويقيس تجربتك في الزيارة فقط. لا يقيّم الكفاءة الطبية ولا يغيّر أهلية الطبيب العلمية." />
         <SubjectContextHeader subject={subject} authority={authority} />
         <View style={{ gap: space('stack-sm'), padding: space('inset-md'), borderRadius: radius('surface'), backgroundColor: color('surface.subtle') }}>
           <Helper>التجربة التي ستقيّمها</Helper><BodyStrong>{experience.serviceLabel}</BodyStrong><Body>{experience.providerName}</Body><Helper>{experience.branchName} · {experience.treatingDentist}</Helper><Helper>اكتملت وجرى توثيقها: {formatDateTime(experience.completedAtIso)}</Helper>
@@ -50,9 +66,17 @@ export function SubmitReviewScreen({ experience, state = 'editing', subject = '�
         <DeadlineIndicator deadlineIso={experience.reviewWindowEndsAtIso} obligation="مهلة إرسال هذا التقييم" nowIso={REVIEW_NOW_ISO} state={windowExpired ? 'lapsed' : experience.reviewWindowState} />
         {blocked ? <BlockedMessage state={effectiveState} /> : (
           <View style={{ gap: space('stack-lg') }}>
-            <Heading3>تقييمك</Heading3>
-            <ValidationField label="التقييم" value={ratingValue} onChangeText={setRatingValue} helper="أدخل تقييمك لهذه التجربة." placeholder="أدخل تقييمك" maxLength={40} autoFocus />
-            <ValidationField label="اكتب تجربتك" value={content} onChangeText={setContent} helper="اكتب ما يفيد الآخرين عن تجربتك الفعلية." placeholder="صف تجربتك" maxLength={1000} multiline numberOfLines={5} />
+            <ExperienceRatingField value={ratingValue} onChange={setRatingValue} disabled={effectiveState === 'submitting'} />
+            <ValidationField
+              label="ملاحظات إضافية (اختياري)"
+              value={content}
+              onChangeText={setContent}
+              helper="اختياري — شارك ما يفيد الآخرين عن تجربتك الفعلية."
+              placeholder="اكتب ملاحظاتك إن رغبت"
+              maxLength={1000}
+              multiline
+              numberOfLines={5}
+            />
           </View>
         )}
       </Stack>
