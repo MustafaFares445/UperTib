@@ -6,6 +6,10 @@ import {
   submitVerifiedReview,
   unverifiedReviewExperience,
 } from '../src/mocks/reviews';
+import {
+  formatVerifiedReviewAggregate,
+  verifiedReviewAggregateAccessibilityLabel,
+} from '../src/reviews/rating';
 
 const PRIMARY_PROJECT = 'patient-390';
 
@@ -39,6 +43,7 @@ const HIGH_RISK = [
   'patient-screens-scr-reviews-001-reviewable-experiences--default',
   'patient-screens-scr-reviews-001-reviewable-experiences--empty',
   'patient-screens-scr-reviews-002-submit-review--default',
+  'patient-screens-scr-reviews-002-submit-review--rating-only',
   'patient-screens-scr-reviews-002-submit-review--window-expired',
   'patient-screens-scr-reviews-003-my-review--retired',
 ];
@@ -90,16 +95,35 @@ test('empty reviewability is a no-data state rather than a failure or disabled f
   await expect(page.getByText(/تعذر تحميل|حدث خطأ/)).toHaveCount(0);
 });
 
-test('submit review states verified linkage and classification independence without inventing a rating scale', async ({ page }, testInfo) => {
+test('submit review uses the PO-UX-19 five-star Patient-experience scale and keeps scientific eligibility separate', async ({ page }, testInfo) => {
   onlyOnPrimaryProject(testInfo);
   await gotoStory(page, 'patient-screens-scr-reviews-002-submit-review--default');
 
   await expect(page.getByText(/مرتبط بتجربة علاجية مكتملة وموثّقة/)).toBeVisible();
-  await expect(page.getByText(/مستقل عن أهلية الطبيب العلمية ولا يغيّرها/)).toBeVisible();
+  await expect(page.getByText(/لا يقيّم الكفاءة الطبية ولا يغيّر أهلية الطبيب العلمية/)).toBeVisible();
+
+  const group = page.getByRole('radiogroup', { name: 'كيف كانت تجربتك في هذه الزيارة؟' });
+  await expect(group).toBeVisible();
+  const radios = group.getByRole('radio');
+  await expect(radios).toHaveCount(5);
+  await expect(group.getByRole('radio', { name: '1 من 5، سيئة جدًا' })).toBeVisible();
+  await expect(group.getByRole('radio', { name: '4 من 5، جيدة' })).toHaveAttribute('aria-checked', 'true');
+  await expect(group.getByRole('radio', { name: '5 من 5، ممتازة' })).toBeVisible();
+
+  await group.getByRole('radio', { name: '5 من 5، ممتازة' }).click();
+  await expect(group.getByRole('radio', { name: '5 من 5، ممتازة' })).toHaveAttribute('aria-checked', 'true');
+  await expect(page.getByText('5 من 5 · ممتازة', { exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: 'إرسال التقييم' })).toBeEnabled();
-  await expect(page.getByText(/من 5|5 نجوم|خمس نجوم/)).toHaveCount(0);
   await expect(page.getByText(/\bS\b|\bP\b|\bH\b|\bI\b/)).toHaveCount(0);
-  await expect(page.getByText(/هذه المعاينة|سياسة المنتج/)).toHaveCount(0);
+});
+
+test('written feedback is optional once a valid rating is selected', async ({ page }, testInfo) => {
+  onlyOnPrimaryProject(testInfo);
+  await gotoStory(page, 'patient-screens-scr-reviews-002-submit-review--rating-only');
+
+  await expect(page.getByText('ملاحظات إضافية (اختياري)', { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'إرسال التقييم' })).toBeEnabled();
+  await expect(page.getByText('5 من 5 · ممتازة', { exact: true })).toBeVisible();
 });
 
 test('expired, unverified and duplicate-review conditions have distinct structural recovery', async ({ page }, testInfo) => {
@@ -121,13 +145,14 @@ test('expired, unverified and duplicate-review conditions have distinct structur
   await expect(page.getByRole('button', { name: 'إرسال التقييم' })).toHaveCount(0);
 });
 
-test('review projection enforces verified completion, window, uniqueness and identical-retry idempotency', async ({}, testInfo) => {
+test('review projection enforces five-star validation, optional text, verified completion, window, uniqueness and idempotency', async ({}, testInfo) => {
   onlyOnPrimaryProject(testInfo);
-  const draft = { ratingValue: '4', content: 'كانت التجربة واضحة ومنظمة.' };
+  const draft = { ratingValue: 4, content: 'كانت التجربة واضحة ومنظمة.' };
 
   const first = submitVerifiedReview(completedCleaningExperience, [], draft);
   expect(first.blockedBy).toBeUndefined();
   expect(first.review?.state).toBe('ACTIVE');
+  expect(first.review?.ratingValue).toBe(4);
   expect(first.review?.experienceId).toBe(completedCleaningExperience.id);
   expect(first.reviews).toHaveLength(1);
 
@@ -142,6 +167,16 @@ test('review projection enforces verified completion, window, uniqueness and ide
   expect(changedSecond.blockedBy).toBe('ACTIVE_REVIEW_EXISTS');
   expect(changedSecond.reviews).toHaveLength(1);
 
+  const ratingOnly = submitVerifiedReview(completedCleaningExperience, [], { ratingValue: 5 });
+  expect(ratingOnly.blockedBy).toBeUndefined();
+  expect(ratingOnly.review?.ratingValue).toBe(5);
+  expect(ratingOnly.review?.content).toBeUndefined();
+
+  for (const invalidRating of [0, 6, 4.5]) {
+    const invalid = submitVerifiedReview(completedCleaningExperience, [], { ratingValue: invalidRating });
+    expect(invalid.blockedBy).toBe('INVALID_INPUT');
+  }
+
   const expired = submitVerifiedReview(expiredReviewExperience, [], draft);
   expect(expired.blockedBy).toBe('WINDOW_EXPIRED');
 
@@ -149,11 +184,20 @@ test('review projection enforces verified completion, window, uniqueness and ide
   expect(unverified.blockedBy).toBe('NOT_VERIFIED_COMPLETE');
 });
 
+test('public verified-rating aggregates are hidden below five active reviews and compact above the threshold', async ({}, testInfo) => {
+  onlyOnPrimaryProject(testInfo);
+  expect(formatVerifiedReviewAggregate({ average: 5, count: 4 })).toBeNull();
+  expect(verifiedReviewAggregateAccessibilityLabel({ average: 5, count: 4 })).toBeNull();
+  expect(formatVerifiedReviewAggregate({ average: 4.7, count: 5 })).toBe('★ 4.7 · 5 تقييمات');
+  expect(verifiedReviewAggregateAccessibilityLabel({ average: 4.7, count: 5 })).toContain('4.7 من 5');
+});
+
 test('retired review remains readable with its governed reason and cannot be edited or deleted', async ({ page }, testInfo) => {
   onlyOnPrimaryProject(testInfo);
   await gotoStory(page, 'patient-screens-scr-reviews-003-my-review--retired');
 
   await expect(page.getByText('مؤرشَف', { exact: true })).toBeVisible();
+  await expect(page.getByText('3 من 5 · مقبولة', { exact: true })).toBeVisible();
   await expect(page.getByText(/تمت أرشفة التقييم بعد قرار نزاهة مسجّل/)).toBeVisible();
   await expect(page.getByText('مراجع نزاهة مخوّل', { exact: false })).toBeVisible();
   await expect(page.getByRole('button', { name: /تعديل|حذف/ })).toHaveCount(0);
@@ -181,7 +225,7 @@ test('verified review flow creates one active review and removes the second-writ
   await gotoStory(page, 'patient-flows-flow-reviews-001-verified-review--default');
 
   await page.getByRole('button', { name: 'اكتب تقييمًا لتجربة تنظيف الأسنان' }).click();
-  await expect(page.getByText('اكتب تقييمك عن هذه التجربة', { exact: true })).toBeVisible();
+  await expect(page.getByRole('radiogroup', { name: 'كيف كانت تجربتك في هذه الزيارة؟' })).toBeVisible();
   await page.getByRole('button', { name: 'إرسال التقييم' }).click();
   await expect(page.getByText('منشور', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'العودة إلى تجاربي' }).click();
@@ -198,6 +242,7 @@ test('care-reading flow reaches verified review submission from the eligible cas
   await expect(page.getByRole('button', { name: 'تقييم التجربة' })).toBeVisible();
   await page.getByRole('button', { name: 'تقييم التجربة' }).click();
   await page.getByRole('button', { name: 'اكتب تقييمًا لتجربة تنظيف الأسنان' }).click();
+  await expect(page.getByRole('radiogroup', { name: 'كيف كانت تجربتك في هذه الزيارة؟' })).toBeVisible();
   await page.getByRole('button', { name: 'إرسال التقييم' }).click();
   await expect(page.getByText('منشور', { exact: true })).toBeVisible();
   await expect(page.getByText('كانت التجربة واضحة، وتم شرح خطوات الزيارة بشكل جيد.', { exact: true })).toBeVisible();
