@@ -20,8 +20,16 @@ const handlers = { onSubmit: () => {}, onCancel: () => {}, onOpenExistingReview:
 export const Default: Story = {
   args: {
     experience: completedCleaningExperience,
-    initialRating: '4',
+    initialRating: 4,
     initialContent: 'كانت التجربة واضحة، وتم شرح خطوات الزيارة بشكل جيد.',
+    ...handlers,
+  },
+};
+
+export const RatingOnly: Story = {
+  args: {
+    experience: completedCleaningExperience,
+    initialRating: 5,
     ...handlers,
   },
 };
@@ -34,7 +42,7 @@ export const Submitting: Story = {
   args: {
     experience: completedCleaningExperience,
     state: 'submitting',
-    initialRating: '4',
+    initialRating: 4,
     initialContent: 'كانت التجربة واضحة، وتم شرح خطوات الزيارة بشكل جيد.',
     ...handlers,
   },
