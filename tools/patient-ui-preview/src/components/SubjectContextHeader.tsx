@@ -1,6 +1,6 @@
 import { View } from 'react-native';
 import { Body, Heading3 } from '../foundations/Text';
-import { color, space } from '../theme/tokens';
+import { borderWidth, color, space } from '../theme/tokens';
 
 interface SubjectContextHeaderProps {
   /** Whose case this is, e.g. "لحسابك" (self) or the represented patient's name under a grant. */
@@ -19,7 +19,7 @@ export function SubjectContextHeader({ subject, authority }: SubjectContextHeade
     <View
       style={{
         paddingBottom: space('inset-sm'),
-        borderBottomWidth: 1,
+        borderBottomWidth: borderWidth('hairline'),
         borderBottomColor: color('border.subtle'),
         gap: space('stack-xs'),
       }}
