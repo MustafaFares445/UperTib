@@ -21,7 +21,7 @@ function InlineAction({ label, onPress }: { label: string; onPress: () => void }
       onFocus={ring.onFocus}
       onBlur={ring.onBlur}
       style={({ pressed }) => ({
-        minHeight: size('target-floor'),
+        minHeight: size('target-primary'),
         justifyContent: 'center',
         alignItems: 'center',
         paddingHorizontal: space('inset-md'),

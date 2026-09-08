@@ -63,8 +63,8 @@ function RatingOption({
       onBlur={ring.onBlur}
       onPress={() => onChange(option)}
       style={({ pressed }) => ({
-        minWidth: size('target-floor'),
-        minHeight: size('target-floor'),
+        minWidth: size('target-primary'),
+        minHeight: size('target-primary'),
         alignItems: 'center',
         justifyContent: 'center',
         borderRadius: radius('control'),

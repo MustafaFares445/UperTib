@@ -28,7 +28,7 @@ export function DisclosureSection({
         onFocus={ring.onFocus}
         onBlur={ring.onBlur}
         style={({ pressed }) => ({
-          minHeight: size('target-floor'),
+          minHeight: size('target-primary'),
           flexDirection: 'row',
           alignItems: 'center',
           gap: space('inline-sm'),

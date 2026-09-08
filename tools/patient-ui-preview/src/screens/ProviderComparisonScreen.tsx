@@ -146,7 +146,7 @@ function InlineTextAction({ label, accessibilityLabel, tone = 'link', onPress }:
       onBlur={ring.onBlur}
       onPress={onPress}
       style={({ pressed }) => ({
-        minHeight: size('target-floor'),
+        minHeight: size('target-primary'),
         alignItems: 'center',
         justifyContent: 'center',
         opacity: pressed ? 0.8 : 1,

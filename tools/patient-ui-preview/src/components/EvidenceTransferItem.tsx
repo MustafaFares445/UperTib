@@ -25,7 +25,7 @@ function TransferAction({ label, onPress }: { label: string; onPress?: () => voi
       onBlur={ring.onBlur}
       onPress={onPress}
       style={({ pressed }) => ({
-        minHeight: size('target-floor'),
+        minHeight: size('target-primary'),
         alignSelf: 'flex-start',
         justifyContent: 'center',
         paddingHorizontal: space('inset-md'),
