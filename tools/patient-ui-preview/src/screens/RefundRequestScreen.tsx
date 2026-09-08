@@ -103,7 +103,7 @@ export function RefundRequestScreen({
   return (
     <Screen footer={<ActionBar actions={actions} />}>
       <Stack gap="stack-lg">
-        <ScreenHeader eyebrow="طلب استرداد" title={blocked ? 'حالة طلب الاسترداد' : 'قدّم طلبًا ضمن الشروط المقبولة'} />
+        <ScreenHeader eyebrow="طلب استرداد" title={blocked ? 'حالة طلب الاسترداد' : 'راجع الشروط أولًا، ثم اكتب طلبك'} />
         <SubjectContextHeader subject={subject} authority={authority} />
 
         <View style={{ gap: space('stack-sm'), padding: space('inset-md'), borderRadius: radius('surface'), borderWidth: borderWidth('hairline'), borderColor: color('border.subtle'), backgroundColor: color('surface.default') }}>
