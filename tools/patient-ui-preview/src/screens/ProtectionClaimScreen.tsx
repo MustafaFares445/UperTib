@@ -125,7 +125,7 @@ export function ProtectionClaimScreen({
         <SubjectContextHeader subject={subject} authority={authority} />
 
         <View style={{ gap: space('stack-sm'), padding: space('inset-md'), borderRadius: radius('surface'), borderWidth: borderWidth('hairline'), borderColor: color('border.subtle'), backgroundColor: color('surface.default') }}>
-          <Helper>1. الحماية الفعّالة في الشروط المقبولة</Helper>
+          <Helper>الحماية الفعّالة في الشروط المقبولة</Helper>
           <Heading3>{entitlement.protectionLabel}</Heading3>
           <Body>{entitlement.protectionSummary}</Body>
           <BodyStrong>{entitlement.serviceLabel}</BodyStrong>
@@ -161,7 +161,8 @@ export function ProtectionClaimScreen({
             {outstanding.length === 0 ? (
               <View style={{ gap: space('stack-md') }}>
                 <Heading3>3. طلبك</Heading3>
-                <ContextNote title={`نوع المطالبة: ${entitlement.claimTypeLabel}`} body="لا تحتاج إلى اختيار تصنيف داخلي أو مستوى حماية تقني." />
+                <BodyStrong>{entitlement.claimTypeLabel}</BodyStrong>
+                <Helper>لا تحتاج إلى اختيار تصنيف داخلي أو مستوى حماية تقني.</Helper>
                 <ValidationField label="المعالجة التي تطلب مراجعتها" value={requestedRemedy} onChangeText={setRequestedRemedy} helper="اكتب ما تريد من فريق المراجعة النظر فيه." placeholder="مثال: مراجعة الحاجة إلى متابعة إضافية ضمن الحماية" maxLength={500} />
                 <ValidationField label="اشرح ما حدث" value={narrative} onChangeText={setNarrative} helper="اذكر الوقائع المرتبطة بالحالة باختصار." placeholder="اكتب وصفًا واضحًا لما حدث" maxLength={1600} multiline numberOfLines={6} />
                 {submitState === 'retryable-failure' ? <BlockedState title="تعذّر تأكيد إرسال المطالبة." body="احتفظنا بما كتبته. إعادة الإرسال تستخدم نية الإرسال نفسها ولا تنشئ مطالبة ثانية." /> : null}
