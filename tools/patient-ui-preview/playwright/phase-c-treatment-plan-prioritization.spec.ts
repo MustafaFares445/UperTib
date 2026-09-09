@@ -19,6 +19,8 @@ test('WP-UX-06 proposed treatment plan keeps changed and controlling facts ahead
   const total = page.getByText('إجمالي الخطة', { exact: true });
   const lines = page.getByText('بنود الخطة', { exact: true });
   const disclosure = page.getByRole('button', { name: 'عرض ما الذي تشمله الخطة؟' });
+  const inclusionRecap = page.getByText(/العناصر المذكورة داخل كل بند فقط/);
+  const exclusionRecap = page.getByText(/أي خدمة أو مادة غير مذكورة صراحة في الخطة/);
 
   await expect(page.getByText(/الخطة المقترحة متاحة للمراجعة حتى/)).toBeVisible();
   await expect(amendment).toBeVisible();
@@ -29,8 +31,8 @@ test('WP-UX-06 proposed treatment plan keeps changed and controlling facts ahead
 
   await expect(disclosure).toBeVisible();
   await expect(disclosure).toHaveAttribute('aria-expanded', 'false');
-  await expect(page.getByText('العناصر المذكورة داخل كل بند فقط', { exact: true })).toHaveCount(0);
-  await expect(page.getByText('أي خدمة أو مادة غير مذكورة صراحة في الخطة', { exact: true })).toHaveCount(0);
+  await expect(inclusionRecap).toHaveCount(0);
+  await expect(exclusionRecap).toHaveCount(0);
 
   const [amendmentBox, totalBox, linesBox] = await Promise.all([
     amendment.boundingBox(),
@@ -42,6 +44,6 @@ test('WP-UX-06 proposed treatment plan keeps changed and controlling facts ahead
 
   await disclosure.click();
   await expect(page.getByRole('button', { name: 'إخفاء ما الذي تشمله الخطة؟' })).toHaveAttribute('aria-expanded', 'true');
-  await expect(page.getByText('العناصر المذكورة داخل كل بند فقط', { exact: true })).toBeVisible();
-  await expect(page.getByText('أي خدمة أو مادة غير مذكورة صراحة في الخطة', { exact: true })).toBeVisible();
+  await expect(inclusionRecap).toBeVisible();
+  await expect(exclusionRecap).toBeVisible();
 });
