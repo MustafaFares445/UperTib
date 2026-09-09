@@ -48,6 +48,18 @@ function ExistingAppeal({ appeal }: { appeal: ReviewAppealRecord }) {
   );
 }
 
+function ReviewAppealScope() {
+  return (
+    <View style={{ gap: space('stack-sm') }}>
+      <Heading3>ما الذي يمكن لهذا الاعتراض مراجعته؟</Heading3>
+      {['الأهلية', 'التحقق', 'الالتزام بالسياسة'].map((label) => (
+        <View key={label} style={{ flexDirection: 'row', alignItems: 'center', gap: space('inline-sm') }}><Icon name="check-circle" color={color('text.secondary')} /><BodyStrong>{label}</BodyStrong></View>
+      ))}
+      <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: space('inline-sm') }}><Icon name="no-symbol" color={color('text.secondary')} /><View style={{ flex: 1 }}><BodyStrong>لا يغيّر قيمة التقييم أو نصه</BodyStrong><Helper>هذا المسار يراجع القرار ولا يعيد كتابة تقييمك.</Helper></View></View>
+    </View>
+  );
+}
+
 /** SCR-REVIEWS-004 — patient-safe appeal of a governed decision about the patient's own review. */
 export function ReviewAppealScreen({
   review, appealRecord, actorAuthorized = true, submitState = 'editing', subject = 'الاعتراض على قرار التقييم', authority,
@@ -83,16 +95,6 @@ export function ReviewAppealScreen({
         <ScreenHeader eyebrow="اعتراض على قرار مراجعة" title={hasExistingAppeal ? 'حالة اعتراضك' : 'راجع نطاق الاعتراض قبل أن تكتب'} />
         <SubjectContextHeader subject={subject} authority={authority} />
         <DecisionCard review={review} />
-
-        <View style={{ gap: space('stack-sm') }}>
-          <Heading3>ما الذي يمكن لهذا الاعتراض مراجعته؟</Heading3>
-          {['الأهلية', 'التحقق', 'الالتزام بالسياسة'].map((label) => (
-            <View key={label} style={{ flexDirection: 'row', alignItems: 'center', gap: space('inline-sm') }}><Icon name="check-circle" color={color('text.secondary')} /><BodyStrong>{label}</BodyStrong></View>
-          ))}
-          <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: space('inline-sm') }}><Icon name="no-symbol" color={color('text.secondary')} /><View style={{ flex: 1 }}><BodyStrong>لا يغيّر قيمة التقييم أو نصه</BodyStrong><Helper>هذا المسار يراجع القرار ولا يعيد كتابة تقييمك.</Helper></View></View>
-        </View>
-
-        <ContextNote icon="scale" title="مراجعة مستقلة" body="يصدر القرار من مراجع نزاهة مستقل لم يتخذ القرار الأصلي." />
         {deadlineIso ? <DeadlineIndicator deadlineIso={deadlineIso} obligation="مهلة تقديم الاعتراض" nowIso={REVIEW_NOW_ISO} state={deadlineExpired ? 'lapsed' : review.appealPolicy?.windowState} /> : null}
 
         {existingAppeal ? <ExistingAppeal appeal={existingAppeal} /> : projectionAppeal ? (
@@ -106,9 +108,11 @@ export function ReviewAppealScreen({
         ) : (
           <View style={{ gap: space('stack-lg') }}>
             {submitState === 'retryable-failure' ? <BlockedState title="تعذّر تأكيد إرسال الاعتراض." body="احتفظنا بما كتبته. أعد الإرسال من هنا؛ إعادة المحاولة تستخدم محاولة الإرسال نفسها بدل إنشاء اعتراض جديد." /> : null}
+            <ReviewAppealScope />
             <Heading3>أساس اعتراضك</Heading3>
             <ValidationField label="اشرح سبب الاعتراض" value={grounds} onChangeText={setGrounds} helper="اشرح ما يحتاج مراجعة في الأهلية أو التحقق أو تطبيق السياسة." placeholder="اكتب أساس الاعتراض" maxLength={1200} multiline numberOfLines={6} autoFocus />
             <View style={{ gap: space('stack-sm') }}><BodyStrong>مستندات داعمة</BodyStrong>{supportingEvidence.length ? supportingEvidence.map((item) => <View key={item.id} style={{ flexDirection: 'row', alignItems: 'center', gap: space('inline-sm') }}><Icon name="document-check" color={color('text.secondary')} /><Body>{item.label}</Body></View>) : <Helper>لا توجد مستندات مرفقة. المستندات اختيارية في هذا الاعتراض.</Helper>}</View>
+            <ContextNote icon="scale" title="مراجعة مستقلة" body="يصدر القرار من مراجع نزاهة مستقل لم يتخذ القرار الأصلي." />
           </View>
         )}
       </Stack>
