@@ -23,6 +23,7 @@ export function DisclosureSection({
       <Pressable
         accessibilityRole="button"
         accessibilityState={{ expanded }}
+        aria-expanded={expanded}
         accessibilityLabel={`${expanded ? 'إخفاء' : 'عرض'} ${label}`}
         onPress={() => setExpanded((value) => !value)}
         onFocus={ring.onFocus}
