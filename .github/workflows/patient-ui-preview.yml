@@ -6,11 +6,13 @@ on:
       - main
     paths:
       - 'tools/patient-ui-preview/**'
+      - 'docs/ux/02-wireframes/wireframe-manifest.json'
       - '.claude/skills/patient-ui-preview/SKILL.md'
       - '.github/workflows/patient-ui-preview.yml'
   pull_request:
     paths:
       - 'tools/patient-ui-preview/**'
+      - 'docs/ux/02-wireframes/wireframe-manifest.json'
       - '.claude/skills/patient-ui-preview/SKILL.md'
       - '.github/workflows/patient-ui-preview.yml'
   workflow_dispatch:
