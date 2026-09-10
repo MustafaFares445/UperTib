@@ -8,7 +8,7 @@ import { StateChip } from '../components/StateChip';
 import { StateSummary } from '../components/StateSummary';
 import { SubjectContextHeader } from '../components/SubjectContextHeader';
 import { Screen, ScreenHeader, Stack } from '../foundations/Screen';
-import { Body, BodyStrong, Heading3, Helper } from '../foundations/Text';
+import { Body, Heading3, Helper } from '../foundations/Text';
 import type { RescheduleProjection } from '../mocks/bookingRemaining';
 import { space } from '../theme/tokens';
 
@@ -35,7 +35,7 @@ const PROPOSAL_LABEL: Record<NonNullable<RescheduleProjection['proposalState']>,
   WITHDRAWN: 'تم سحبه',
 };
 
-function ProposalMeaning({ projection }: { projection: RescheduleProjection }) {
+function proposalMeaning(projection: RescheduleProjection): string {
   switch (projection.proposalState) {
     case 'PENDING':
       return projection.proposalActor === 'clinic'
@@ -115,7 +115,7 @@ export function RescheduleRequestScreen({
         <ScreenHeader
           eyebrow={`الحجز ${projection.bookingId}`}
           title="طلب تغيير الموعد"
-          description="تغيير الموعد يتم باقتراح مستقل. الموعد المؤكد لا يُستبدل وهو الاقتراح ما زال بانتظار القرار."
+          description="تغيير الموعد يتم باقتراح مستقل. الموعد المؤكد لا يُستبدل ما دام الاقتراح بانتظار القرار."
         />
         <SubjectContextHeader subject={subject} authority={authority} />
 
@@ -188,7 +188,7 @@ export function RescheduleRequestScreen({
                     label={PROPOSAL_LABEL[projection.proposalState]}
                   />
                 ) : null}
-                <Body>{<ProposalMeaning projection={projection} />}</Body>
+                <Body>{proposalMeaning(projection)}</Body>
                 {pending && projection.responseDeadlineIso ? (
                   <DeadlineIndicator deadlineIso={projection.responseDeadlineIso} obligation="مهلة الرد على اقتراح تغيير الموعد" />
                 ) : null}
