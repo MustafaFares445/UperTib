@@ -196,7 +196,7 @@ test.describe('WP-UX-07 authoritative Patient approval audit', () => {
           const axe = await analyzeAxe(page);
           record.axeViolations = axe.violations.map((violation) => ({
             id: violation.id,
-            impact: violation.impact,
+            impact: violation.impact ?? null,
             help: violation.help,
             nodes: violation.nodes.length,
           }));
