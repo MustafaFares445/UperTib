@@ -30,6 +30,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Node
         uses: actions/setup-node@v4
@@ -47,6 +49,24 @@ jobs:
           mkdir -p artifacts
           npm audit --json > artifacts/npm-audit.json || true
           npm audit --omit=dev --audit-level=high
+
+      - name: Validate documentation integrity
+        working-directory: .
+        run: python3 docs/scripts/validate_docs.py
+
+      - name: Check changed lines for whitespace errors
+        working-directory: .
+        shell: bash
+        run: |
+          if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
+            git diff --check "${{ github.event.pull_request.base.sha }}...HEAD"
+          elif [[ -n "${{ github.event.before }}" && "${{ github.event.before }}" != "0000000000000000000000000000000000000000" ]]; then
+            git diff --check "${{ github.event.before }}...HEAD"
+          elif git rev-parse HEAD^ >/dev/null 2>&1; then
+            git diff --check HEAD^..HEAD
+          else
+            git diff --check
+          fi
 
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
