@@ -68,8 +68,6 @@ function SubmissionRow({
 
   return (
     <View
-      accessible
-      accessibilityLabel={`${entry.intentLabel}. أُرسل في ${formatDateTime(entry.createdAtIso)}.`}
       style={{
         gap: space('stack-sm'),
         padding: space('inset-md'),
@@ -79,7 +77,12 @@ function SubmissionRow({
         backgroundColor: color('surface.default'),
       }}
     >
-      <View style={{ gap: space('stack-xs') }}>
+      <View
+        accessible
+        accessibilityRole="text"
+        accessibilityLabel={`${entry.intentLabel}. أُرسل في ${formatDateTime(entry.createdAtIso)}. آخر تحقق ${formatDateTime(entry.asOfIso)}.`}
+        style={{ gap: space('stack-xs') }}
+      >
         <BodyStrong>{entry.intentLabel}</BodyStrong>
         <Helper>بدأ الطلب: {formatDateTime(entry.createdAtIso)}</Helper>
         <Helper>آخر تحقق موثوق: {formatDateTime(entry.asOfIso)}</Helper>
