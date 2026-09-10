@@ -130,7 +130,7 @@ export function ProviderResultsScreen({
                 onBlur={clearRing.onBlur}
                 onPress={onClearFilter}
                 style={({ pressed }) => ({
-                  minHeight: size('target-floor'),
+                  minHeight: size('target-primary'),
                   justifyContent: 'center',
                   paddingHorizontal: space('inset-sm'),
                   opacity: pressed ? 0.8 : 1,

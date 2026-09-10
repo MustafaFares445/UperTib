@@ -197,7 +197,7 @@ export function ProviderDecisionCard({
           onBlur={compareRing.onBlur}
           onPress={onCompareToggle}
           style={({ pressed }) => ({
-            minHeight: size('target-floor'),
+            minHeight: size('target-primary'),
             alignSelf: 'flex-start',
             flexDirection: 'row',
             alignItems: 'center',

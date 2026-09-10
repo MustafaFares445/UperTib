@@ -3,6 +3,38 @@
   document.documentElement.dir = 'rtl';
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
+<!--
+  The canonical Patient type family is IBM Plex Sans Arabic / IBM Plex Sans. The preview pins the
+  exact open-licensed Fontsource package version instead of relying on a host-installed font or an
+  unversioned Google Fonts response. Only the four weights referenced by the canonical type tokens
+  are loaded. Native application bundling remains owned by the integrated application build.
+-->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-sans-arabic@5.3.0/400.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-sans-arabic@5.3.0/500.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-sans-arabic@5.3.0/600.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-sans-arabic@5.3.0/700.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-sans@5.3.0/400.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-sans@5.3.0/500.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-sans@5.3.0/600.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-sans@5.3.0/700.css" />
+<script>
+  window.__ubertibFontsReady = Promise.all([
+    document.fonts.load('400 16px "IBM Plex Sans Arabic"', 'العربية'),
+    document.fonts.load('500 16px "IBM Plex Sans Arabic"', 'العربية'),
+    document.fonts.load('600 16px "IBM Plex Sans Arabic"', 'العربية'),
+    document.fonts.load('700 16px "IBM Plex Sans Arabic"', 'العربية'),
+    document.fonts.load('400 16px "IBM Plex Sans"', 'UberTib 123'),
+    document.fonts.load('500 16px "IBM Plex Sans"', 'UberTib 123'),
+    document.fonts.load('600 16px "IBM Plex Sans"', 'UberTib 123'),
+    document.fonts.load('700 16px "IBM Plex Sans"', 'UberTib 123'),
+  ]).then((faces) => {
+    document.documentElement.dataset.ubertibFontsReady = 'true';
+    return faces;
+  }).catch((error) => {
+    document.documentElement.dataset.ubertibFontsReady = 'error';
+    throw error;
+  });
+</script>
 <style>
   /*
     height (not min-height) so the percentage-height chain RN Web's `minHeight: '100%'` relies on

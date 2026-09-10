@@ -3,10 +3,12 @@ import { View } from 'react-native';
 import { ActionBar, type ActionSpec } from '../components/ActionBar';
 import { ContextNote } from '../components/ContextNote';
 import { DeadlineIndicator } from '../components/DeadlineIndicator';
+import { DisclosureSection } from '../components/DisclosureSection';
 import { StateChip } from '../components/StateChip';
 import { SubjectContextHeader } from '../components/SubjectContextHeader';
 import { ValidationField } from '../components/ValidationField';
 import { formatDateTime } from '../foundations/format';
+import { Icon } from '../foundations/Icon';
 import { Screen, ScreenHeader, Stack } from '../foundations/Screen';
 import { Body, BodyStrong, Heading3, Helper } from '../foundations/Text';
 import { type ClaimAppealDraft, type ClaimAppealProjection } from '../mocks/claimAppeals';
@@ -48,6 +50,22 @@ function ExistingAppeal({ appeal }: { appeal: ClaimAppealProjection }) {
   );
 }
 
+function ClaimAppealScope() {
+  return (
+    <View style={{ gap: space('stack-sm') }}>
+      <Heading3>نطاق هذا الاعتراض</Heading3>
+      <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: space('inline-sm') }}>
+        <Icon name="check-circle" color={color('text.secondary')} />
+        <View style={{ flex: 1 }}><BodyStrong>مراجعة تطبيق الوقائع والسياسة التي حكمت القرار</BodyStrong></View>
+      </View>
+      <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: space('inline-sm') }}>
+        <Icon name="no-symbol" color={color('text.secondary')} />
+        <View style={{ flex: 1 }}><BodyStrong>لا يمحو القرار الأصلي</BodyStrong><Helper>يبقى القرار وسببه محفوظين أثناء المراجعة.</Helper></View>
+      </View>
+    </View>
+  );
+}
+
 /** SCR-CLAIMS-005 — appeal a claim decision under the historical policy snapshot that governed it. */
 export function ClaimAppealScreen({
   claim, appeal, actorAuthorized = true, submitState = 'editing', subject = 'الاعتراض على قرار المطالبة', authority,
@@ -78,7 +96,11 @@ export function ClaimAppealScreen({
         <ScreenHeader eyebrow="اعتراض على قرار مطالبة" title={appeal ? 'حالة اعتراضك' : 'اعترض على القرار نفسه دون محو تاريخه'} />
         <SubjectContextHeader subject={subject} authority={authority} />
         <OriginalDecision claim={claim} />
-        <ContextNote icon="document-check" title="لقطة السياسة الحاكمة للاعتراض" body={`${claim.governingSnapshotLabel} — النافذة والشروط تأتي من النسخة التاريخية التي حكمت القرار.`} />
+        {/* The collapsed content only repeats explanatory policy detail. The governing snapshot label remains visible in the disclosure summary, and the historical deadline remains visible below it. */}
+        <DisclosureSection label="لقطة السياسة الحاكمة للاعتراض" summary={claim.governingSnapshotLabel}>
+          <Body>{claim.governingSnapshotLabel}</Body>
+          <Helper>النافذة والشروط تأتي من النسخة التاريخية التي حكمت القرار.</Helper>
+        </DisclosureSection>
         {deadlineIso ? <DeadlineIndicator deadlineIso={deadlineIso} obligation="مهلة الاعتراض على هذا القرار" nowIso={CLAIMS_NOW_ISO} state={deadlineExpired ? 'lapsed' : 'running'} /> : null}
 
         {appeal ? <ExistingAppeal appeal={appeal} /> : !policyAllows ? (
@@ -90,6 +112,7 @@ export function ClaimAppealScreen({
         ) : (
           <View style={{ gap: space('stack-lg') }}>
             {submitState === 'retryable-failure' ? <BlockedState title="تعذّر تأكيد إرسال الاعتراض." body="احتفظنا بما كتبته. إعادة الإرسال تستخدم محاولة الإرسال نفسها بدل إنشاء اعتراض ثانٍ." /> : null}
+            <ClaimAppealScope />
             <Heading3>أساس الاعتراض</Heading3>
             <ValidationField label="أساس الاعتراض" value={grounds} onChangeText={setGrounds} helper="اشرح لماذا يحتاج القرار إلى مراجعة وفق الوقائع والسياسة التي حكمته." placeholder="اكتب أساس الاعتراض" maxLength={1600} multiline numberOfLines={6} autoFocus />
             <View style={{ gap: space('stack-xs') }}>

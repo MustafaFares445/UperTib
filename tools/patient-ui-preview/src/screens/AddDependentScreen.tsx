@@ -2,12 +2,13 @@ import { useMemo, useState } from 'react';
 import { View } from 'react-native';
 import { ActionBar, type ActionSpec } from '../components/ActionBar';
 import { ContextNote } from '../components/ContextNote';
+import { EditableStepSection } from '../components/EditableStepSection';
 import { SelectionChoice } from '../components/SelectionChoice';
 import { StateChip } from '../components/StateChip';
 import { ValidationField } from '../components/ValidationField';
 import { formatDateTime } from '../foundations/format';
 import { Screen, ScreenHeader, Stack } from '../foundations/Screen';
-import { Body, BodyStrong, Heading3, Helper } from '../foundations/Text';
+import { Body, BodyStrong, Heading3, Helper, Label } from '../foundations/Text';
 import type { EvidenceRequirementProjection } from '../mocks/evidence';
 import {
   acceptedDependentEvidenceIds,
@@ -17,7 +18,7 @@ import {
   type DependentRepresentationRequest,
   type DependentRepresentationRequestState,
 } from '../mocks/representation';
-import { color, radius, space } from '../theme/tokens';
+import { borderWidth, color, radius, space } from '../theme/tokens';
 import { EvidenceTransferPanel } from '../widgets/EvidenceTransferPanel';
 
 const REQUEST_LABEL: Record<DependentRepresentationRequestState, string> = {
@@ -81,8 +82,18 @@ export function AddDependentScreen({
   const [requestedDataScope, setRequestedDataScope] = useState<string[]>(initial?.requestedDataScope ?? initialDataScope);
 
   const acceptedEvidenceIds = useMemo(() => acceptedDependentEvidenceIds(evidenceRequirements), [evidenceRequirements]);
-  const everyRequirementAccepted = evidenceRequirements.length > 0 && evidenceRequirements.every((requirement) => requirement.items.some((item) => item.state === 'ACCEPTED'));
+  const acceptedRequirementCount = useMemo(
+    () => evidenceRequirements.filter((requirement) => requirement.items.some((item) => item.state === 'ACCEPTED')).length,
+    [evidenceRequirements],
+  );
+  const firstOutstandingRequirement = useMemo(
+    () => evidenceRequirements.find((requirement) => !requirement.items.some((item) => item.state === 'ACCEPTED')),
+    [evidenceRequirements],
+  );
+  const everyRequirementAccepted = evidenceRequirements.length > 0 && acceptedRequirementCount === evidenceRequirements.length;
   const editable = !request || request.state === 'DRAFT' || request.state === 'CHANGES_REQUESTED';
+  const identityStepComplete = Boolean(subjectIdentification.trim() && relationship.trim() && legalBasis.trim());
+  const scopeStepComplete = Boolean(requestedActions.length && requestedDataScope.length && purpose.trim());
   const missing = useMemo(() => {
     const items: string[] = [];
     if (!subjectIdentification.trim()) items.push('بيانات تعريف التابع');
@@ -117,26 +128,82 @@ export function AddDependentScreen({
               <BodyStrong>لن ينشئ زر الإرسال صلاحية الآن.</BodyStrong>
             </View>
 
-            <View style={{ gap: space('stack-sm') }}>
-              <Heading3>1. من هو التابع وما علاقتك به؟</Heading3>
+            <EditableStepSection
+              title="1. من هو التابع وما علاقتك به؟"
+              summary={identityStepComplete ? `${subjectIdentification.trim()} · ${relationship.trim()} · الأساس موضّح` : 'أكمل تعريف التابع والعلاقة والأساس'}
+              complete={identityStepComplete}
+              testID="dependent-step-identity"
+            >
               <ValidationField label="بيانات تعريف التابع" value={subjectIdentification} onChangeText={setSubjectIdentification} helper="اكتب ما يكفي لتمييز الشخص المطلوب التحقق منه." placeholder="الاسم وبيانات التعريف المناسبة" maxLength={300} />
               <ValidationField label="العلاقة بالتابع" value={relationship} onChangeText={setRelationship} helper="هذه المعلومة تخضع للتحقق ولا تكفي وحدها للمنح." placeholder="العلاقة" maxLength={160} />
               <ValidationField label="الأساس القانوني أو سبب طلب التمثيل" value={legalBasis} onChangeText={setLegalBasis} helper="سيُراجع مع المستندات قبل إنشاء أي صلاحية." placeholder="اشرح الأساس الذي تعتمد عليه" maxLength={600} multiline numberOfLines={4} />
-            </View>
+            </EditableStepSection>
 
-            <View style={{ gap: space('stack-sm') }}>
-              <Heading3>2. ما النطاق الذي تطلبه؟</Heading3>
+            <EditableStepSection
+              title="2. ما النطاق الذي تطلبه؟"
+              summary={scopeStepComplete ? `${requestedActions.length} أفعال · ${requestedDataScope.length} نطاقات بيانات · الغرض محدد` : 'أكمل الأفعال والبيانات والغرض'}
+              complete={scopeStepComplete}
+              testID="dependent-step-scope"
+            >
               <Helper>الأفعال</Helper>
               {representationActionOptions.map((option) => <SelectionChoice key={option.id} label={option.label} selected={requestedActions.includes(option.label)} onPress={() => toggle(option.label, requestedActions, setRequestedActions)} />)}
               <Helper>البيانات</Helper>
               {representationDataScopeOptions.map((option) => <SelectionChoice key={option.id} label={option.label} selected={requestedDataScope.includes(option.label)} onPress={() => toggle(option.label, requestedDataScope, setRequestedDataScope)} />)}
               <ValidationField label="الغرض من التمثيل" value={purpose} onChangeText={setPurpose} helper="يُراجع الغرض مع النطاق ولا يتحول إلى صلاحية عامة." placeholder="لماذا تحتاج إلى التمثيل؟" maxLength={500} multiline numberOfLines={4} />
-            </View>
+            </EditableStepSection>
 
+            {/* Evidence remains expanded here because the earlier evidence-prioritization theme owns its current/outstanding state. Only accepted items collapse inside EvidenceTransferPanel. */}
             <View style={{ gap: space('stack-sm') }}>
               <Heading3>3. مستندات التحقق</Heading3>
-              <EvidenceTransferPanel requirements={evidenceRequirements} onAddItem={onAddEvidence} onResume={onResumeEvidence} onRetry={onRetryEvidence} onReplace={onReplaceEvidence} />
-              {!everyRequirementAccepted ? <Helper>الملف المحدد أو المرفوع أو قيد الفحص لا يحقق المتطلب قبل أن يصبح مقبولًا.</Helper> : <BodyStrong>كل المتطلبات الظاهرة مقبولة وجاهزة للإرسال إلى التحقق البشري.</BodyStrong>}
+              <BodyStrong>{acceptedRequirementCount} من {evidenceRequirements.length} متطلبات مكتملة</BodyStrong>
+              {firstOutstandingRequirement ? (
+                <Helper>المطلوب الآن: {firstOutstandingRequirement.title}. الملف المحدد أو المرفوع أو قيد الفحص لا يحقق المتطلب قبل أن يصبح مقبولًا.</Helper>
+              ) : (
+                <BodyStrong>كل المتطلبات الظاهرة مقبولة وجاهزة للإرسال إلى التحقق البشري.</BodyStrong>
+              )}
+              <EvidenceTransferPanel
+                requirements={evidenceRequirements}
+                onAddItem={onAddEvidence}
+                onResume={onResumeEvidence}
+                onRetry={onRetryEvidence}
+                onReplace={onReplaceEvidence}
+                collapseCompleted
+              />
+            </View>
+
+            {/* Identity/scope steps may collapse only because every controlling request fact is repeated in this explicit review before commit. */}
+            <View
+              accessibilityLabel="مراجعة نطاق طلب تمثيل التابع قبل الإرسال"
+              style={{
+                gap: space('stack-sm'),
+                padding: space('inset-md'),
+                borderRadius: radius('surface'),
+                borderWidth: borderWidth('hairline'),
+                borderColor: color('border.strong'),
+                backgroundColor: color('surface.subtle'),
+              }}
+            >
+              <Heading3>4. راجع طلب التحقق قبل الإرسال</Heading3>
+              <BodyStrong>{subjectIdentification.trim() || 'لم تُحدد هوية التابع بعد'}</BodyStrong>
+              <Body>العلاقة: {relationship.trim() || 'لم تُحدد بعد'}</Body>
+              <View style={{ gap: space('stack-xs') }}>
+                <Label>الأساس القانوني أو سبب التمثيل</Label>
+                {legalBasis.trim() ? <Body>{legalBasis.trim()}</Body> : <Helper>لم يُحدد بعد.</Helper>}
+              </View>
+              <View style={{ gap: space('stack-xs') }}>
+                <Label>الأفعال المطلوبة</Label>
+                {requestedActions.length ? requestedActions.map((item) => <Body key={item}>• {item}</Body>) : <Helper>لم تُحدد الأفعال بعد.</Helper>}
+              </View>
+              <View style={{ gap: space('stack-xs') }}>
+                <Label>نطاق البيانات المطلوب</Label>
+                {requestedDataScope.length ? requestedDataScope.map((item) => <Body key={item}>• {item}</Body>) : <Helper>لم يُحدد نطاق البيانات بعد.</Helper>}
+              </View>
+              <View style={{ gap: space('stack-xs') }}>
+                <Label>الغرض</Label>
+                {purpose.trim() ? <Body>{purpose.trim()}</Body> : <Helper>لم يُحدد الغرض بعد.</Helper>}
+              </View>
+              <Body>الأدلة المقبولة: {acceptedRequirementCount} من {evidenceRequirements.length} متطلبات.</Body>
+              <Helper>الإرسال ينشئ طلب تحقق فقط. لا تصبح أي صلاحية فعّالة قبل قرار الاعتماد البشري وبالنطاق الذي يعتمد عليه المراجع.</Helper>
             </View>
           </>
         )}

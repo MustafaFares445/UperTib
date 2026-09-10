@@ -65,7 +65,7 @@ export function ProviderSearchScreen({ family, onSearch, onChangeService }: Prov
               onBlur={changeRing.onBlur}
               onPress={onChangeService}
               style={({ pressed }) => ({
-                minHeight: size('target-floor'),
+                minHeight: size('target-primary'),
                 justifyContent: 'center',
                 paddingHorizontal: space('inset-sm'),
                 opacity: pressed ? 0.8 : 1,

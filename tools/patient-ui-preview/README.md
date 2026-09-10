@@ -107,7 +107,43 @@ Use three Patient browser-review widths:
 
 These are review viewports, not a replacement for the canonical Profile C size classes in `breakpoints.json`.
 
-Every Patient screen gets a canonical/default smoke render. Add visual-regression baselines for high-risk states, unusual responsive behavior, and safety-critical errors rather than producing a Cartesian screenshot explosion.
+Normal development E2E remains focused: every Patient screen gets a canonical/default smoke render, and high-risk states get direct behavioral coverage. The **final approval audit is intentionally exhaustive** and is separate from that fast feedback loop.
+
+Run the authoritative gate with:
+
+```bash
+npm run approval:audit
+```
+
+That command typechecks, builds Storybook, then reads the generated Storybook index at runtime and audits every current `Patient/Screens/*` story state at 320 / 390 / 414. The audit does not rely on a hard-coded screen/state list.
+
+For every indexed state it requires:
+
+- a rendered Storybook root;
+- canonical font readiness before measurement or screenshot;
+- no page error or console error;
+- no horizontal overflow;
+- no visible Patient control below the 44 × 44 comfortable target;
+- no compact provider-comparison internal collision when that screen is under review;
+- a full-page screenshot at each review width.
+
+At the primary 390px width it additionally runs **unfiltered Axe** and fails on any remaining accessibility violation rather than filtering by severity.
+
+Machine-readable evidence is written under:
+
+```text
+artifacts/final-approval/
+  audit-patient-320.json
+  audit-patient-390.json
+  audit-patient-414.json
+  320/*.png
+  390/*.png
+  414/*.png
+```
+
+The JSON records both the Storybook-indexed screen/state counts and the successfully captured counts. The two counts must match. CI runs the same Node-based launcher directly, avoiding the old Windows `npx.cmd` spawn path that could fail with `EINVAL` / `UV_HANDLE_CLOSING`.
+
+This browser gate is final **web-preview evidence only**. It does not replace the native VoiceOver/TalkBack, Dynamic Type, safe-area, keyboard, reduced-motion, weak-network, and physical-touch checks required by WP-UX-08.
 
 ## RTL and content rules
 
@@ -146,4 +182,4 @@ If you install it for Claude Code, use its current official CLI/plugin instructi
 
 ## Next step
 
-Run the setup commands above, confirm the readiness story passes, then give Claude the Slice 1 implementation command using the `patient-ui-preview` skill.
+Run the setup commands above, confirm the readiness story passes, then use `npm run approval:audit` before final web-preview approval. Native approval still requires the WP-UX-08 device matrix.

@@ -30,6 +30,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Node
         uses: actions/setup-node@v4
@@ -48,6 +50,24 @@ jobs:
           npm audit --json > artifacts/npm-audit.json || true
           npm audit --omit=dev --audit-level=high
 
+      - name: Validate documentation integrity
+        working-directory: .
+        run: python3 docs/scripts/validate_docs.py
+
+      - name: Check changed lines for whitespace errors
+        working-directory: .
+        shell: bash
+        run: |
+          if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
+            git diff --check "${{ github.event.pull_request.base.sha }}...HEAD"
+          elif [[ -n "${{ github.event.before }}" && "${{ github.event.before }}" != "0000000000000000000000000000000000000000" ]]; then
+            git diff --check "${{ github.event.before }}...HEAD"
+          elif git rev-parse HEAD^ >/dev/null 2>&1; then
+            git diff --check HEAD^..HEAD
+          else
+            git diff --check
+          fi
+
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
 
@@ -65,6 +85,15 @@ jobs:
 
       - name: Capture all-slices visual evidence at 320 / 390 / 414
         run: npm run capture:all:ci
+
+      - name: Upload authoritative audit JSON separately
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: patient-ui-preview-authoritative-audit-json
+          path: tools/patient-ui-preview/artifacts/final-approval/audit-*.json
+          if-no-files-found: ignore
+          retention-days: 7
 
       - name: Upload Playwright, visual-review, and audit artifacts
         if: always()

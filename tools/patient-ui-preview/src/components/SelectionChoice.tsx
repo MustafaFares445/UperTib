@@ -36,7 +36,7 @@ export function SelectionChoice({
       onFocus={ring.onFocus}
       onBlur={ring.onBlur}
       style={({ pressed }) => ({
-        minHeight: size('target-floor'),
+        minHeight: size('target-primary'),
         justifyContent: 'center',
         paddingHorizontal: space('inset-sm'),
         paddingVertical: space('stack-xs'),

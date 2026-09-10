@@ -23,12 +23,13 @@ export function DisclosureSection({
       <Pressable
         accessibilityRole="button"
         accessibilityState={{ expanded }}
+        aria-expanded={expanded}
         accessibilityLabel={`${expanded ? 'إخفاء' : 'عرض'} ${label}`}
         onPress={() => setExpanded((value) => !value)}
         onFocus={ring.onFocus}
         onBlur={ring.onBlur}
         style={({ pressed }) => ({
-          minHeight: size('target-floor'),
+          minHeight: size('target-primary'),
           flexDirection: 'row',
           alignItems: 'center',
           gap: space('inline-sm'),

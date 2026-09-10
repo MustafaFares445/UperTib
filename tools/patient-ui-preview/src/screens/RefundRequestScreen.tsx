@@ -52,6 +52,7 @@ export function RefundRequestScreen({
   const [requestedAmount, setRequestedAmount] = useState(initialRequestedAmount);
   const [reason, setReason] = useState(initialReason);
   const [occurrenceContext, setOccurrenceContext] = useState(initialOccurrenceContext);
+  const [attempted, setAttempted] = useState(false);
   useEffect(() => setRequestedAmount(initialRequestedAmount), [initialRequestedAmount]);
   useEffect(() => setReason(initialReason), [initialReason]);
   useEffect(() => setOccurrenceContext(initialOccurrenceContext), [initialOccurrenceContext]);
@@ -60,11 +61,14 @@ export function RefundRequestScreen({
     || new Date(entitlement.requestWindowEndsAtIso).getTime() <= new Date(CLAIMS_NOW_ISO).getTime();
   const missingEvidence = entitlement.requiredEvidence.filter((item) => !item.satisfied);
   const amountNumber = Number(requestedAmount.replace(/,/g, '').trim());
-  const amountError = requestedAmount.trim() && (!Number.isFinite(amountNumber) || amountNumber <= 0)
-    ? 'أدخل مبلغًا صالحًا أكبر من صفر.'
-    : amountNumber > entitlement.maxRequestedAmount
-      ? 'المبلغ يتجاوز الحد المتاح وفق الشروط المقبولة لهذا الطلب.'
-      : undefined;
+  const amountError = requestedAmount.trim().length === 0
+    ? attempted ? 'أدخل المبلغ المطلوب.' : undefined
+    : !Number.isFinite(amountNumber) || amountNumber <= 0
+      ? 'أدخل مبلغًا صالحًا أكبر من صفر.'
+      : amountNumber > entitlement.maxRequestedAmount
+        ? 'المبلغ يتجاوز الحد المتاح وفق الشروط المقبولة لهذا الطلب.'
+        : undefined;
+  const reasonError = attempted && reason.trim().length === 0 ? 'اكتب سبب طلب الاسترداد قبل الإرسال.' : undefined;
   const canAuthor = entitlement.snapshotAvailable && entitlement.eligible && !expired;
   const fieldsComplete = requestedAmount.trim().length > 0 && reason.trim().length > 0 && !amountError;
   const canSubmit = canAuthor && fieldsComplete && missingEvidence.length === 0;
@@ -77,15 +81,19 @@ export function RefundRequestScreen({
       role: 'primary',
       availability: submitState === 'submitting'
         ? { status: 'loading' }
-        : canSubmit
-          ? { status: 'available' }
-          : { status: 'disabled', reason: missingEvidence.length > 0 ? `أكمل المتطلب: ${missingEvidence[0].label}` : 'أكمل المبلغ والسبب قبل الإرسال.' },
-      onPress: () => onSubmit({
-        requestedAmount: requestedAmount.trim(),
-        reason: reason.trim(),
-        occurrenceContext: occurrenceContext.trim(),
-        evidenceIds: entitlement.requiredEvidence.filter((item) => item.satisfied).map((item) => item.id),
-      }),
+        : missingEvidence.length > 0
+          ? { status: 'disabled', reason: `أكمل المتطلب: ${missingEvidence[0].label}` }
+          : { status: 'available' },
+      onPress: () => {
+        setAttempted(true);
+        if (!canSubmit) return;
+        onSubmit({
+          requestedAmount: requestedAmount.trim(),
+          reason: reason.trim(),
+          occurrenceContext: occurrenceContext.trim(),
+          evidenceIds: entitlement.requiredEvidence.filter((item) => item.satisfied).map((item) => item.id),
+        });
+      },
     });
   }
   if (canAuthor && missingEvidence.length > 0 && onSupplyEvidence) {
@@ -129,7 +137,7 @@ export function RefundRequestScreen({
               <Heading3>طلبك</Heading3>
               <ValidationField label="المبلغ المطلوب" value={requestedAmount} onChangeText={setRequestedAmount} error={amountError} keyboardType="number-pad" placeholder="مثال: 50000" />
               <Helper>استخدم العملة نفسها للشروط المقبولة: <Bdi>{entitlement.currency}</Bdi></Helper>
-              <ValidationField label="سبب الطلب" value={reason} onChangeText={setReason} helper="اشرح الواقعة التي تريد مراجعتها باختصار ووضوح." placeholder="اكتب سبب طلب الاسترداد" multiline numberOfLines={5} maxLength={1200} />
+              <ValidationField label="سبب الطلب" value={reason} onChangeText={setReason} error={reasonError} helper="اشرح الواقعة التي تريد مراجعتها باختصار ووضوح." placeholder="اكتب سبب طلب الاسترداد" multiline numberOfLines={5} maxLength={1200} />
               <ValidationField label="سياق إضافي — اختياري" value={occurrenceContext} onChangeText={setOccurrenceContext} helper="أضف وقتًا أو ظرفًا متعلقًا بالواقعة إن كان مفيدًا للمراجعة." placeholder="تفصيل إضافي اختياري" multiline numberOfLines={3} maxLength={600} />
             </View>
 

@@ -1,5 +1,6 @@
 import { View } from 'react-native';
 import { AmendmentDelta } from '../components/AmendmentDelta';
+import { DisclosureSection } from '../components/DisclosureSection';
 import { PriceDisplay } from '../components/PriceDisplay';
 import { StateChip } from '../components/StateChip';
 import { TreatmentLine } from '../components/TreatmentLine';
@@ -30,13 +31,6 @@ export function TreatmentPlanReader({ plan }: { plan: TreatmentPlanProjection })
 
       {plan.amendment ? <AmendmentDelta amendment={plan.amendment} currency={plan.currency} /> : null}
 
-      <View style={{ gap: space('stack-sm') }}>
-        <Heading3>بنود الخطة</Heading3>
-        {plan.lines.map((line) => (
-          <TreatmentLine key={line.id} line={line} currency={plan.currency} />
-        ))}
-      </View>
-
       {plan.complete ? (
         <View
           accessible
@@ -52,7 +46,7 @@ export function TreatmentPlanReader({ plan }: { plan: TreatmentPlanProjection })
         >
           <BodyStrong>إجمالي الخطة</BodyStrong>
           <PriceDisplay price={{ mode: 'fixed', amount: plan.total, currency: plan.currency }} compact />
-          <Helper>الإجمالي ناتج عن البنود الظاهرة أعلاه، وليس مبلغ دفع داخل UberTib.</Helper>
+          <Helper>الإجمالي ناتج عن البنود الظاهرة أدناه، وليس مبلغ دفع داخل UberTib.</Helper>
         </View>
       ) : (
         <View
@@ -72,19 +66,31 @@ export function TreatmentPlanReader({ plan }: { plan: TreatmentPlanProjection })
       )}
 
       <View style={{ gap: space('stack-sm') }}>
-        <Heading3>ما الذي تشمله الخطة؟</Heading3>
-        {plan.inclusions.map((item) => (
-          <Body key={item}>• {item}</Body>
+        <Heading3>بنود الخطة</Heading3>
+        {plan.lines.map((line) => (
+          <TreatmentLine key={line.id} line={line} currency={plan.currency} />
         ))}
-        {plan.exclusions.length ? (
-          <View style={{ gap: space('stack-xs') }}>
-            <Helper>لا تشمل</Helper>
-            {plan.exclusions.map((item) => (
-              <Body key={item} tone="secondary">• {item}</Body>
-            ))}
-          </View>
-        ) : null}
       </View>
+
+      {/*
+       * This is a non-controlling recap: amendment delta, every treatment line and amount,
+       * the plan total, terms, protection boundary, state and deadline remain visible.
+       */}
+      <DisclosureSection label="ما الذي تشمله الخطة؟">
+        <View style={{ gap: space('stack-sm') }}>
+          {plan.inclusions.map((item) => (
+            <Body key={item}>• {item}</Body>
+          ))}
+          {plan.exclusions.length ? (
+            <View style={{ gap: space('stack-xs') }}>
+              <Helper>لا تشمل</Helper>
+              {plan.exclusions.map((item) => (
+                <Body key={item} tone="secondary">• {item}</Body>
+              ))}
+            </View>
+          ) : null}
+        </View>
+      </DisclosureSection>
 
       <View style={{ gap: space('stack-xs') }}>
         <Heading3>الشروط والمعنى</Heading3>

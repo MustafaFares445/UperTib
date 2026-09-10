@@ -38,6 +38,11 @@ export function PhoneEntryScreen({ onCodeRequested, onBack }: PhoneEntryScreenPr
     }, 400);
   }
 
+  function handlePhoneChange(nextPhone: string) {
+    setPhone(nextPhone);
+    if (error) setError(undefined);
+  }
+
   return (
     <Screen
       centerContent
@@ -50,10 +55,9 @@ export function PhoneEntryScreen({ onCodeRequested, onBack }: PhoneEntryScreenPr
                 key: 'request',
                 label: 'طلب رمز التحقق',
                 role: 'primary',
-                availability:
-                  submitting || !wellFormed
-                    ? { status: 'disabled', reason: !wellFormed ? 'أدخل رقم هاتف صالح لتفعيل الإرسال.' : 'جارٍ الإرسال…' }
-                    : { status: 'available' },
+                availability: submitting
+                  ? { status: 'disabled', reason: 'جارٍ الإرسال…' }
+                  : { status: 'available' },
                 onPress: handleRequest,
               },
               { key: 'back', label: 'رجوع', role: 'secondary', availability: { status: 'available' }, onPress: onBack },
@@ -71,7 +75,7 @@ export function PhoneEntryScreen({ onCodeRequested, onBack }: PhoneEntryScreenPr
         <ValidationField
           label="رقم الهاتف"
           value={phone}
-          onChangeText={setPhone}
+          onChangeText={handlePhoneChange}
           placeholder="09XXXXXXXX"
           keyboardType="phone-pad"
           maxLength={10}

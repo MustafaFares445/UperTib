@@ -1,11 +1,12 @@
 import { View } from 'react-native';
+import { DisclosureSection } from '../components/DisclosureSection';
+import { StateChip } from '../components/StateChip';
 import { Bdi } from '../foundations/Bdi';
 import { formatCurrency, formatDateTime } from '../foundations/format';
 import { Icon, type IconName } from '../foundations/Icon';
 import { Body, BodyStrong, Heading3, Helper, Label, NumericStrong } from '../foundations/Text';
 import type { FinancialEventProjection, FinancialEventState, FinancialLedgerProjection } from '../mocks/finance';
 import { borderWidth, color, radius, space, toneColors, type Tone } from '../theme/tokens';
-import { StateChip } from '../components/StateChip';
 
 const EVENT_LABEL: Record<FinancialEventState, string> = {
   REPORTED_UNCONFIRMED: 'مُبلَّغ عنه — غير مؤكَّد',
@@ -73,6 +74,18 @@ function EventCard({ event }: { event: FinancialEventProjection }) {
   );
 }
 
+function EventList({ events }: { events: FinancialEventProjection[] }) {
+  return (
+    <View accessibilityRole="list" style={{ gap: space('stack-sm') }}>
+      {events.map((event) => (
+        <View key={event.id} role="listitem">
+          <EventCard event={event} />
+        </View>
+      ))}
+    </View>
+  );
+}
+
 interface PositionFactProps {
   label: string;
   amount: number;
@@ -110,15 +123,60 @@ function PositionFact({ label, amount, currency, tone, icon, meaning }: Position
   );
 }
 
+function CurrentPosition({ ledger }: { ledger: FinancialLedgerProjection }) {
+  const { position } = ledger;
+
+  if (!ledger.completeHistory) {
+    return (
+      <View
+        accessibilityLiveRegion="polite"
+        style={{
+          gap: space('stack-xs'),
+          padding: space('inset-md'),
+          borderRadius: radius('surface'),
+          borderWidth: borderWidth('hairline'),
+          borderColor: color('tone.warning.border'),
+          backgroundColor: color('tone.warning.fill'),
+        }}
+      >
+        <BodyStrong>السجل غير مكتمل.</BodyStrong>
+        <Body>{ledger.gapLabel ?? 'تعذّر تحميل جزء من السجل؛ لن نعرض وضعًا مشتقًا قد يكون ناقصًا.'}</Body>
+      </View>
+    );
+  }
+
+  return (
+    <View style={{ gap: space('stack-sm') }}>
+      <View style={{ gap: space('stack-xs') }}>
+        <Heading3>الوضع الحالي المشتق</Heading3>
+        <Helper>مشتق من الشروط المقبولة والسجل الكامل حتى {formatDateTime(position.asOfIso)}. هذه القيم ليست رصيد محفظة.</Helper>
+      </View>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space('stack-sm') }}>
+        <PositionFact label="المتفق عليه" amount={position.agreed} currency={position.currency} tone="neutral" icon="document-check" meaning="القيمة المحفوظة في اللقطة المقبولة." />
+        <PositionFact label="مُبلَّغ عنه خارجيًا" amount={position.reported} currency={position.currency} tone="warning" icon="banknotes" meaning="وقائع أبلغ عنها أحد الأطراف، مهما كانت نتيجة التحقق." />
+        <PositionFact label="مؤكَّد كسجل" amount={position.confirmed} currency={position.currency} tone="success" icon="check-circle" meaning="وقائع تأكدت دقة تسجيلها." />
+        <PositionFact label="محل اعتراض" amount={position.disputed} currency={position.currency} tone="danger" icon="hand-raised" meaning="وقائع لا تُعامل كمؤكدة ما دام الاعتراض قائمًا." />
+        <PositionFact label="استرداد خارجي مسجَّل" amount={position.refunded} currency={position.currency} tone="info" icon="arrow-path" meaning="قيمة استرداد جرى أو أُبلغ عن تنفيذه خارج المنصة." />
+        <PositionFact label="بانتظار تنفيذ خارجي" amount={position.pendingExternalExecution} currency={position.currency} tone="warning" icon="clock" meaning="التزام مسجَّل للأطراف لتنفيذه خارج UberTib." />
+      </View>
+    </View>
+  );
+}
+
 /**
  * WGT-FINANCE-001 — Patient external financial event ledger.
  *
  * This is deliberately a record-reading surface, not a wallet or payment surface. The immutable
- * agreed amount is shown first, assertions remain append-only, and the derived position disappears
- * completely when the event set is partial so a truncated history can never manufacture a balance.
+ * agreed amount stays first. The current derived position follows before chronology so the Patient
+ * sees today's governed state before completed history. Only CONFIRMED events are collapsed because
+ * they are completed record history; unconfirmed/disputed facts remain visible and append-only.
+ * The derived position disappears completely when the event set is partial so a truncated history
+ * can never manufacture a balance.
  */
 export function ExternalFinancialLedger({ ledger }: { ledger: FinancialLedgerProjection }) {
-  const { snapshot, events, position } = ledger;
+  const { snapshot, events } = ledger;
+  const currentEvents = events.filter((event) => event.status !== 'CONFIRMED');
+  const confirmedHistory = events.filter((event) => event.status === 'CONFIRMED');
 
   return (
     <View style={{ gap: space('stack-lg') }}>
@@ -137,58 +195,42 @@ export function ExternalFinancialLedger({ ledger }: { ledger: FinancialLedgerPro
         <Helper>{snapshot.versionLabel} · قُبلت {formatDateTime(snapshot.acceptedAtIso)}</Helper>
       </View>
 
+      <CurrentPosition ledger={ledger} />
+
       <View style={{ gap: space('stack-sm') }}>
         <View style={{ gap: space('stack-xs') }}>
           <Heading3>الوقائع المسجَّلة</Heading3>
-          <Helper>كل عنصر أدناه واقعة حدثت خارج UberTib. التأكيد أو الاعتراض يخص دقة السجل فقط.</Helper>
+          <Helper>الوقائع غير المؤكدة أو محل الاعتراض تبقى ظاهرة. السجل المؤكد المكتمل محفوظ أدناه ويمكن فتحه عند الحاجة.</Helper>
         </View>
-        {events.length > 0 ? (
-          <View accessibilityRole="list" style={{ gap: space('stack-sm') }}>
-            {events.map((event) => (
-              <View key={event.id} role="listitem">
-                <EventCard event={event} />
-              </View>
-            ))}
-          </View>
-        ) : (
+
+        {events.length === 0 ? (
           <View style={{ gap: space('stack-xs'), padding: space('inset-md'), borderRadius: radius('surface'), backgroundColor: color('surface.subtle') }}>
             <BodyStrong>لا توجد وقائع مالية مسجَّلة بعد.</BodyStrong>
             <Helper>تبقى الشروط المقبولة أعلاه هي المرجع حتى يظهر حدث خارجي مسجَّل.</Helper>
           </View>
+        ) : (
+          <>
+            {currentEvents.length > 0 ? (
+              <View style={{ gap: space('stack-sm') }}>
+                <View style={{ gap: space('stack-xs') }}>
+                  <BodyStrong>وقائع ما زالت تحتاج الانتباه</BodyStrong>
+                  <Helper>هذه الوقائع لم تصبح سجلًا مؤكدًا مكتملًا بعد، لذلك لا نخفيها داخل التاريخ.</Helper>
+                </View>
+                <EventList events={currentEvents} />
+              </View>
+            ) : null}
+
+            {confirmedHistory.length > 0 ? (
+              <DisclosureSection
+                label="السجل المؤكَّد السابق"
+                summary={`${confirmedHistory.length} ${confirmedHistory.length === 1 ? 'واقعة مؤكدة مكتملة' : 'وقائع مؤكدة مكتملة'}؛ افتحه لقراءة التفاصيل والتوثيق.`}
+              >
+                <EventList events={confirmedHistory} />
+              </DisclosureSection>
+            ) : null}
+          </>
         )}
       </View>
-
-      {ledger.completeHistory ? (
-        <View style={{ gap: space('stack-sm') }}>
-          <View style={{ gap: space('stack-xs') }}>
-            <Heading3>الوضع الحالي المشتق</Heading3>
-            <Helper>مشتق من الشروط المقبولة والسجل الكامل حتى {formatDateTime(position.asOfIso)}. هذه القيم ليست رصيد محفظة.</Helper>
-          </View>
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space('stack-sm') }}>
-            <PositionFact label="المتفق عليه" amount={position.agreed} currency={position.currency} tone="neutral" icon="document-check" meaning="القيمة المحفوظة في اللقطة المقبولة." />
-            <PositionFact label="مُبلَّغ عنه خارجيًا" amount={position.reported} currency={position.currency} tone="warning" icon="banknotes" meaning="وقائع أبلغ عنها أحد الأطراف، مهما كانت نتيجة التحقق." />
-            <PositionFact label="مؤكَّد كسجل" amount={position.confirmed} currency={position.currency} tone="success" icon="check-circle" meaning="وقائع تأكدت دقة تسجيلها." />
-            <PositionFact label="محل اعتراض" amount={position.disputed} currency={position.currency} tone="danger" icon="hand-raised" meaning="وقائع لا تُعامل كمؤكدة ما دام الاعتراض قائمًا." />
-            <PositionFact label="استرداد خارجي مسجَّل" amount={position.refunded} currency={position.currency} tone="info" icon="arrow-path" meaning="قيمة استرداد جرى أو أُبلغ عن تنفيذه خارج المنصة." />
-            <PositionFact label="بانتظار تنفيذ خارجي" amount={position.pendingExternalExecution} currency={position.currency} tone="warning" icon="clock" meaning="التزام مسجَّل للأطراف لتنفيذه خارج UberTib." />
-          </View>
-        </View>
-      ) : (
-        <View
-          accessibilityLiveRegion="polite"
-          style={{
-            gap: space('stack-xs'),
-            padding: space('inset-md'),
-            borderRadius: radius('surface'),
-            borderWidth: borderWidth('hairline'),
-            borderColor: color('tone.warning.border'),
-            backgroundColor: color('tone.warning.fill'),
-          }}
-        >
-          <BodyStrong>السجل غير مكتمل.</BodyStrong>
-          <Body>{ledger.gapLabel ?? 'تعذّر تحميل جزء من السجل؛ لن نعرض وضعًا مشتقًا قد يكون ناقصًا.'}</Body>
-        </View>
-      )}
     </View>
   );
 }

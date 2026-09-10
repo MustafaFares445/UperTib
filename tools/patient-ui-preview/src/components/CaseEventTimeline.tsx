@@ -37,7 +37,7 @@ function TimelineRow({ event, onOpenRecord }: { event: PatientTimelineEvent; onO
           accessibilityState={{ expanded }}
           onPress={() => setExpanded((value) => !value)}
           style={({ pressed }) => ({
-            minHeight: size('target-floor'),
+            minHeight: size('target-primary'),
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'space-between',
@@ -62,7 +62,7 @@ function TimelineRow({ event, onOpenRecord }: { event: PatientTimelineEvent; onO
         <Pressable
           accessibilityRole="button"
           onPress={() => onOpenRecord(event)}
-          style={({ pressed }) => ({ minHeight: size('target-floor'), justifyContent: 'center', opacity: pressed ? 0.75 : 1 })}
+          style={({ pressed }) => ({ minHeight: size('target-primary'), justifyContent: 'center', opacity: pressed ? 0.75 : 1 })}
         >
           <BodyStrong tone="link">{event.owningRecordLabel}</BodyStrong>
         </Pressable>

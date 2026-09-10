@@ -132,10 +132,11 @@ test('financial timeline keeps payment as the dominant action and refund executi
   onlyOnPrimaryProject(testInfo);
   await gotoStory(page, 'patient-screens-scr-finance-002-financial-timeline--refund-execution-available');
 
-  const buttons = page.getByRole('button');
+  const actionButtons = page.getByRole('button', { name: /تسجيل دفعة تمت خارج المنصة|تسجيل تنفيذ استرداد خارجي/ });
   await expect(page.getByRole('button', { name: 'تسجيل دفعة تمت خارج المنصة' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'تسجيل تنفيذ استرداد خارجي' })).toBeVisible();
-  await expect(buttons.first()).toHaveText('تسجيل دفعة تمت خارج المنصة');
+  await expect(actionButtons).toHaveCount(2);
+  await expect(actionButtons.first()).toHaveText('تسجيل دفعة تمت خارج المنصة');
 });
 
 test('care-reading flow records refund execution outside UberTib and returns to the ledger', async ({ page }, testInfo) => {

@@ -49,4 +49,28 @@ export const RejectedNeedsReplacement: Story = {
   },
 };
 
+export const OutstandingFirstWithCompletedHistory: Story = {
+  args: {
+    requirements: [
+      {
+        ...patientEvidenceRequirement,
+        id: 'requirement-completed-reference',
+        title: 'مرجع مكتمل سابقًا',
+        items: [evidenceStateExamples.find((item) => item.state === 'ACCEPTED')!],
+      },
+      {
+        ...patientEvidenceRequirement,
+        id: 'requirement-current-action',
+        title: 'المستند المطلوب الآن',
+        items: [evidenceStateExamples.find((item) => item.state === 'FAILED_RETRYABLE')!],
+      },
+    ],
+    collapseCompleted: true,
+    onAddItem: noop,
+    onResume: noop,
+    onRetry: noop,
+    onReplace: noop,
+  },
+};
+
 export const NoRequirement: Story = { args: { requirements: [] } };

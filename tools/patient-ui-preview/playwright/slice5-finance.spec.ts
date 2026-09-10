@@ -86,8 +86,16 @@ test('financial timeline distinguishes all six required financial meanings witho
   }
 
   await expect(page.getByText('مُبلَّغ عنه — غير مؤكَّد', { exact: true })).toBeVisible();
-  await expect(page.getByText('مؤكَّد', { exact: true })).toBeVisible();
   await expect(page.getByText('محل اعتراض', { exact: true }).first()).toBeVisible();
+
+  // Completed confirmed chronology is intentionally progressive-disclosure history. Its governed
+  // meaning must stay recoverable without competing with unresolved facts in the first viewport.
+  const confirmedHistory = page.getByRole('button', { name: 'عرض السجل المؤكَّد السابق' });
+  await expect(confirmedHistory).toBeVisible();
+  await expect(page.getByText('مؤكَّد', { exact: true })).toHaveCount(0);
+  await confirmedHistory.click();
+  await expect(page.getByText('مؤكَّد', { exact: true })).toBeVisible();
+
   await expect(page.getByText(/ليس محفظة، ولا ينفّذ دفعًا أو استردادًا/)).toBeVisible();
   await expect(page.getByRole('button', { name: /ادفع|سداد الآن|محفظة|تحويل|استرداد الآن/ })).toHaveCount(0);
 });

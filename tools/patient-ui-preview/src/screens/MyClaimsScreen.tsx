@@ -8,7 +8,7 @@ import { Icon } from '../foundations/Icon';
 import { Screen, ScreenHeader, Stack } from '../foundations/Screen';
 import { Body, BodyStrong, Heading3, Helper, Label } from '../foundations/Text';
 import { CLAIMS_NOW_ISO, type ClaimRequestState, type PatientClaimDetail } from '../mocks/claims';
-import { borderWidth, color, radius, space } from '../theme/tokens';
+import { borderWidth, color, radius, size, space } from '../theme/tokens';
 
 const CLAIM_LABEL: Record<ClaimRequestState, string> = {
   SUBMITTED: 'مُقدَّم',
@@ -73,7 +73,7 @@ function ClaimRow({ claim, onOpen }: { claim: PatientClaimDetail; onOpen: () => 
         accessibilityLabel={`فتح ${claim.type === 'REFUND_REQUEST' ? 'طلب الاسترداد' : 'مطالبة الحماية'} — ${claim.serviceLabel}`}
         onPress={onOpen}
         style={{
-          minHeight: 44,
+          minHeight: size('target-primary'),
           alignItems: 'center',
           justifyContent: 'center',
           paddingHorizontal: space('inset-md'),
@@ -166,7 +166,8 @@ export function MyClaimsScreen({
                   accessibilityLabel={`تصفية المطالبات: ${item.label}`}
                   onPress={() => setFilter(item.key)}
                   style={{
-                    minHeight: 40,
+                    minWidth: size('target-primary'),
+                    minHeight: size('target-primary'),
                     justifyContent: 'center',
                     paddingHorizontal: space('inset-sm'),
                     borderRadius: radius('chip'),
