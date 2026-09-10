@@ -68,6 +68,9 @@ jobs:
             git diff --check
           fi
 
+      - name: Test native evidence validator
+        run: npm run test:native-evidence-validator
+
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
 
