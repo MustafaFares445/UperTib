@@ -145,6 +145,32 @@ The JSON records both the Storybook-indexed screen/state counts and the successf
 
 This browser gate is final **web-preview evidence only**. It does not replace the native VoiceOver/TalkBack, Dynamic Type, safe-area, keyboard, reduced-motion, weak-network, and physical-touch checks required by WP-UX-08.
 
+## Native approval handoff
+
+The repository does not currently contain an integrated Patient React Native iOS/Android application, so WP-UX-08 cannot be truthfully completed from this preview alone.
+
+The repository-side handoff for that final approval gate is documented in:
+
+```text
+WP_UX_08_NATIVE_VALIDATION_HANDOFF.md
+```
+
+When an identified native build is available, copy:
+
+```text
+native-validation/evidence.template.json
+```
+
+to a working evidence file, execute the required VoiceOver/TalkBack physical-device matrix, and validate the completed record with:
+
+```bash
+npm run approval:native-evidence -- native-validation/evidence.json
+```
+
+The validator rejects simulator/browser-only evidence, placeholder metadata, missing iOS/Android assistive-technology coverage, unexecuted device checks, missing scenarios, missing acceptance criteria, non-passing scenario results, and unsigned final approval.
+
+CI runs `npm run test:native-evidence-validator` to verify the validator itself. A green CI run **does not** claim that native-device evidence has been executed; only a filled real-device evidence file that passes `approval:native-evidence` can close WP-UX-08.
+
 ## RTL and content rules
 
 - Arabic-first and RTL-first.
@@ -182,4 +208,4 @@ If you install it for Claude Code, use its current official CLI/plugin instructi
 
 ## Next step
 
-Run the setup commands above, confirm the readiness story passes, then use `npm run approval:audit` before final web-preview approval. Native approval still requires the WP-UX-08 device matrix.
+The web-preview approval gate is repository-verifiable through `npm run approval:audit`. Full native approval must wait for the real Patient React Native build, then execute the WP-UX-08 device matrix and pass `npm run approval:native-evidence` with real physical-device evidence.
