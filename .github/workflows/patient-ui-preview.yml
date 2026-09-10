@@ -68,6 +68,12 @@ jobs:
             git diff --check
           fi
 
+      - name: Test canonical Patient screen coverage validator
+        run: npm run test:screen-coverage-validator
+
+      - name: Audit canonical Patient screen coverage
+        run: npm run screen-coverage
+
       - name: Test native evidence validator
         run: npm run test:native-evidence-validator
 
