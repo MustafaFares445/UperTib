@@ -25,6 +25,25 @@ export interface PatientAttentionEntry {
   subjectLabel?: string;
 }
 
+export type PendingSubmissionReconciliationState = 'unknown' | 'not-committed' | 'retrying' | 'committed';
+
+export interface PendingSubmissionProjection {
+  id: string;
+  intentLabel: string;
+  createdAtIso: string;
+  asOfIso: string;
+  /** Stored locally and reused for an idempotent retry. It is never rendered as Patient content. */
+  idempotencyKey: string;
+  reconciliationState: PendingSubmissionReconciliationState;
+  resolvedRecord?: {
+    resource: AttentionResourceReference;
+    label: string;
+    statusLabel: string;
+  };
+  retryConflict?: boolean;
+  subjectLabel?: string;
+}
+
 export const PLATFORM_NOW_ISO = '2026-09-10T19:00:00+03:00';
 export const PLATFORM_AS_OF_ISO = '2026-09-10T18:56:00+03:00';
 
@@ -78,3 +97,59 @@ export const representedPatientAttentionEntries: PatientAttentionEntry[] = patie
   id: `represented-${entry.id}`,
   subjectLabel: 'لين',
 }));
+
+export const pendingSubmissionUnknown: PendingSubmissionProjection = {
+  id: 'submission-booking-unknown',
+  intentLabel: 'طلب حجز لزراعة سن',
+  createdAtIso: '2026-09-10T18:42:00+03:00',
+  asOfIso: '2026-09-10T18:56:00+03:00',
+  idempotencyKey: 'preview-booking-intent-01',
+  reconciliationState: 'unknown',
+};
+
+export const pendingSubmissionStillUnknown: PendingSubmissionProjection = {
+  ...pendingSubmissionUnknown,
+  id: 'submission-booking-still-unknown',
+  asOfIso: '2026-09-10T18:59:00+03:00',
+};
+
+export const pendingSubmissionNotCommitted: PendingSubmissionProjection = {
+  id: 'submission-finance-not-committed',
+  intentLabel: 'الإبلاغ عن واقعة مالية خارج المنصة',
+  createdAtIso: '2026-09-10T18:10:00+03:00',
+  asOfIso: '2026-09-10T18:58:00+03:00',
+  idempotencyKey: 'preview-finance-intent-02',
+  reconciliationState: 'not-committed',
+};
+
+export const pendingSubmissionRetrying: PendingSubmissionProjection = {
+  ...pendingSubmissionNotCommitted,
+  id: 'submission-finance-retrying',
+  reconciliationState: 'retrying',
+};
+
+export const pendingSubmissionCommitted: PendingSubmissionProjection = {
+  id: 'submission-claim-committed',
+  intentLabel: 'إرسال مطالبة حماية',
+  createdAtIso: '2026-09-10T17:35:00+03:00',
+  asOfIso: '2026-09-10T18:57:00+03:00',
+  idempotencyKey: 'preview-claim-intent-03',
+  reconciliationState: 'committed',
+  resolvedRecord: {
+    resource: { kind: 'claim', id: 'CLM-129' },
+    label: 'المطالبة CLM-129',
+    statusLabel: 'تم العثور على السجل الملتزم',
+  },
+};
+
+export const pendingSubmissionRetryConflict: PendingSubmissionProjection = {
+  ...pendingSubmissionNotCommitted,
+  id: 'submission-retry-conflict',
+  retryConflict: true,
+};
+
+export const pendingSubmissionExamples: PendingSubmissionProjection[] = [
+  pendingSubmissionUnknown,
+  pendingSubmissionNotCommitted,
+  pendingSubmissionCommitted,
+];
