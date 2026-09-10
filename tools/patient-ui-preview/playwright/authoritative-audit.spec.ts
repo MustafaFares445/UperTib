@@ -104,12 +104,15 @@ async function collectUndersizedTargets(page: Page): Promise<TargetFinding[]> {
 
 async function collectComparisonCollisions(page: Page): Promise<string[]> {
   return page.evaluate(() => {
-    const groups = Array.from(document.querySelectorAll<HTMLElement>('[data-testid^="comparison-"]'));
+    const groups = Array.from(document.querySelectorAll<HTMLElement>('[data-testid^="comparison-"]'))
+      .filter((group) => !group.parentElement?.closest('[data-testid^="comparison-"]'));
     const failures: string[] = [];
 
     for (const group of groups) {
-      const values = Array.from(group.querySelectorAll<HTMLElement>('[data-testid]'))
-        .filter((element) => element !== group)
+      const groupTestId = group.dataset.testid;
+      if (!groupTestId) continue;
+
+      const values = Array.from(group.querySelectorAll<HTMLElement>(`[data-testid^="${groupTestId}-"]`))
         .map((element) => ({ id: element.dataset.testid ?? 'comparison-value', rect: element.getBoundingClientRect() }))
         .filter(({ rect }) => rect.width > 0 && rect.height > 0)
         .sort((left, right) => left.rect.top - right.rect.top);
