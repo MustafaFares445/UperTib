@@ -63,8 +63,8 @@ jobs:
       - name: Run full Patient E2E suite
         run: npx playwright test
 
-      - name: Run authoritative all-screen approval audit at 320 / 390 / 414
-        run: npm run approval:audit:ci
+      - name: Capture all-slices visual evidence at 320 / 390 / 414
+        run: npm run capture:all:ci
 
       - name: Upload Playwright, visual-review, and audit artifacts
         if: always()
