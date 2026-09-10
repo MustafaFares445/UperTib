@@ -73,8 +73,8 @@ jobs:
       - name: Test canonical Patient screen coverage validator
         run: npm run test:screen-coverage-validator
 
-      - name: Audit canonical Patient screen coverage
-        run: npm run screen-coverage
+      - name: Enforce canonical Patient screen coverage
+        run: npm run screen-coverage:enforce
 
       - name: Test native evidence validator
         run: npm run test:native-evidence-validator
