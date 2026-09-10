@@ -142,7 +142,7 @@ export function PatientProfileScreen({
               <Heading3>العائلة والتمثيل</Heading3>
               <Body tone="secondary">إدارة الأشخاص الذين تمثلهم أو منحتهم صلاحية موجودة في شاشة التمثيل المخصصة، حتى يبقى النطاق واضحًا ولا يتكرر هنا.</Body>
               <UtilityDestination
-                icon="users"
+                icon="eye"
                 label="العائلة والتمثيل"
                 description="راجع الصلاحيات والمرضى الذين يمكنك تمثيلهم ضمن النطاق المسموح."
                 onPress={onOpenRepresentation}
@@ -158,7 +158,7 @@ export function PatientProfileScreen({
                 onPress={onOpenPendingSubmissions}
               />
               <UtilityDestination
-                icon="bell"
+                icon="inbox-arrow-down"
                 label="مركز الإشعارات"
                 description="السجل الزمني الدائم للتغييرات. هذه وجهة مساعدة وليست تبويبًا رئيسيًا خامسًا."
                 onPress={onOpenNotifications}
