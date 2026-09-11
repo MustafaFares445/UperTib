@@ -51,8 +51,8 @@ test('attention correctness does not depend on external notification transport',
   onlyOnPrimaryProject(testInfo);
   await gotoStory(page, 'patient-screens-scr-platform-001-needs-attention--multiple-attention-items');
 
-  await expect(page.getByText('اختر ما إذا كان الموعد البديل يناسبك', { exact: true })).toBeVisible();
-  await expect(page.getByText('أكمل الأدلة المطلوبة للمطالبة', { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: /^اختر ما إذا كان الموعد البديل يناسبك/ }).first()).toBeVisible();
+  await expect(page.getByRole('button', { name: /^أكمل الأدلة المطلوبة للمطالبة/ }).first()).toBeVisible();
   await expect(page.getByText(/فتح أي عنصر يقرأ سجله الحالي من جديد/)).toBeVisible();
 });
 
@@ -88,16 +88,18 @@ test('notification centre remains a durable utility record and re-read entry poi
 
   await expect(page.getByText(/الرسائل النصية والتنبيهات الخارجية وسائل مساعدة فقط/)).toBeVisible();
   await expect(page.getByText(/فتح أي إشعار يقرأ السجل المرتبط من جديد/)).toBeVisible();
-  await expect(page.getByText('اختر ما إذا كان الموعد البديل يناسبك', { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: /^اختر ما إذا كان الموعد البديل يناسبك/ }).first()).toBeVisible();
 });
 
 test('booking list exposes action-required state and deadline before opening detail', async ({ page }, testInfo) => {
   onlyOnPrimaryProject(testInfo);
   await gotoStory(page, 'patient-screens-scr-booking-003-my-bookings--action-required-first');
 
-  await expect(page.getByText('اتخذ قرارًا بشأن الموعد البديل', { exact: true })).toBeVisible();
-  await expect(page.getByText('عُرض موعد بديل', { exact: true })).toBeVisible();
-  await expect(page.getByText(/مهلة/).first()).toBeVisible();
+  const requiredBooking = page.getByRole('button', { name: /حشوات الأسنان.*عُرض موعد بديل.*المهلة/ }).first();
+  await expect(requiredBooking).toBeVisible();
+  await expect(requiredBooking).toContainText('اتخذ قرارًا بشأن الموعد البديل');
+  await expect(requiredBooking).toContainText('عُرض موعد بديل');
+  await expect(requiredBooking).toContainText(/مهلة/);
 });
 
 test('alternative decision keeps original request before proposal and decline is one step', async ({ page }, testInfo) => {
