@@ -19,7 +19,11 @@ export interface BookingDetailScreenProps {
   onCancelled: () => void;
   onDone: () => void;
   onAcceptAlternative?: () => void;
+  /** Canonical SCR-BOOKING-004 → SCR-BOOKING-005 route when the dedicated decision surface is wired. */
+  onRespondAlternative?: () => void;
   onReschedule?: () => void;
+  /** Canonical SCR-BOOKING-004 → SCR-BOOKING-006 route for confirmed-booking cancellation. */
+  onCancelBooking?: () => void;
   onFindAlternative?: () => void;
 }
 
@@ -97,7 +101,9 @@ export function BookingDetailScreen({
   onCancelled,
   onDone,
   onAcceptAlternative,
+  onRespondAlternative,
   onReschedule,
+  onCancelBooking,
   onFindAlternative,
 }: BookingDetailScreenProps) {
   const [cancelled, setCancelled] = useState(false);
@@ -126,6 +132,18 @@ export function BookingDetailScreen({
   }
 
   function alternativeActions(): ActionSpec[] {
+    if (onRespondAlternative) {
+      return [{
+        key: 'review-alternative',
+        label: 'مراجعة الموعد البديل',
+        role: 'primary',
+        availability: booking.alternativeResponseDeadlineIso
+          ? { status: 'available' }
+          : { status: 'absent', reason: 'تعذر تحديد مهلة الرد، لذلك لا يمكن اتخاذ قرار من هذه الحالة.' },
+        onPress: onRespondAlternative,
+      }];
+    }
+
     const acceptAvailability: ActionSpec['availability'] = !booking.alternativeResponseDeadlineIso
       ? { status: 'absent', reason: 'تعذر تحديد مهلة الرد، لذلك لا يمكن قبول الموعد من هذه الحالة.' }
       : onAcceptAlternative
@@ -198,7 +216,7 @@ export function BookingDetailScreen({
             <Body tone="secondary">استخدم الإلغاء فقط إذا لم تعد تريد متابعة هذا الحجز.</Body>
             <QuietDestructiveAction
               label={state === 'CONFIRMED' ? 'إلغاء الحجز' : 'إلغاء الطلب'}
-              onPress={() => setConfirmCancellation(true)}
+              onPress={onCancelBooking ?? (() => setConfirmCancellation(true))}
             />
           </View>
         ) : null}
