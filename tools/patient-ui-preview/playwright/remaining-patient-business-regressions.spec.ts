@@ -99,7 +99,7 @@ test('booking list exposes action-required state and deadline before opening det
   await expect(requiredBooking).toBeVisible();
   await expect(requiredBooking).toContainText('اتخذ قرارًا بشأن الموعد البديل');
   await expect(requiredBooking).toContainText('عُرض موعد بديل');
-  await expect(requiredBooking).toContainText(/مهلة/);
+  await expect(requiredBooking).toContainText(/متبقٍ.*حتى/);
 });
 
 test('alternative decision keeps original request before proposal and decline is one step', async ({ page }, testInfo) => {
