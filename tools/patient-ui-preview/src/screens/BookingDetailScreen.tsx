@@ -27,32 +27,57 @@ export interface BookingDetailScreenProps {
   onFindAlternative?: () => void;
 }
 
-const BOOKING_LABEL: Record<BookingRecord['state'], string> = {
+const BOOKING_LABEL: Record<Exclude<BookingRecord['state'], 'CANCELLED'>, string> = {
   REQUESTED: 'بانتظار تأكيد العيادة',
   ALTERNATIVE_PROPOSED: 'عرضت العيادة موعدًا بديلًا',
   CONFIRMED: 'الموعد مؤكَّد',
   ELIGIBILITY_REVIEW: 'الموعد قيد مراجعة الأهلية',
   REJECTED: 'لم توافق العيادة على الطلب',
-  CANCELLED: 'لم يتم تأكيد الحجز',
 };
 
-const BOOKING_MEANING: Record<BookingRecord['state'], string> = {
+const BOOKING_MEANING: Record<Exclude<BookingRecord['state'], 'CANCELLED'>, string> = {
   REQUESTED: 'وصل طلبك إلى العيادة، لكنه ليس موعدًا مؤكَّدًا بعد.',
   ALTERNATIVE_PROPOSED: 'الموعد الأصلي ما زال مرجع الطلب، والعيادة اقترحت وقتًا بديلًا لتراجعه.',
   CONFIRMED: 'وافقت العيادة وأصبح الموعد مثبتًا.',
   ELIGIBILITY_REVIEW: 'تجري مراجعة إضافية قبل إمكان الحضور. هذا ليس اتهامًا ولا إلغاءً تلقائيًا.',
   REJECTED: 'أغلقت العيادة هذا الطلب دون تأكيد الموعد.',
-  CANCELLED: 'أُغلق الطلب دون موعد مؤكَّد، ولا يعني ذلك وجود غرامة أو دفعة مستحقة.',
 };
 
-const NEXT_STEP: Record<BookingRecord['state'], string> = {
+const NEXT_STEP: Record<Exclude<BookingRecord['state'], 'CANCELLED'>, string> = {
   REQUESTED: 'لا يلزمك إجراء الآن. انتظر رد العيادة ضمن المهلة الظاهرة أدناه.',
   ALTERNATIVE_PROPOSED: 'راجع الوقت البديل ثم اقبله أو ارفضه قبل انتهاء المهلة. الرفض ينهي هذا الطلب دون أي عقوبة، ويمكنك طلب موعد جديد.',
   CONFIRMED: 'احتفظ بموعدك، أو اطلب تغييره إذا لم يعد مناسبًا وكانت السياسة تسمح بذلك.',
   ELIGIBILITY_REVIEW: 'انتظر نتيجة المراجعة ولا تتوجه إلى الموعد حتى تعود الحالة إلى مؤكَّد.',
   REJECTED: 'يمكنك العودة إلى النتائج واختيار طبيب أو موعد آخر.',
-  CANCELLED: 'يمكنك العودة إلى النتائج وبدء طلب جديد عندما ترغب.',
 };
+
+function cancellationCopy(reason?: string) {
+  if (reason === 'ALTERNATIVE_DECLINED') {
+    return {
+      label: 'لم يُؤكَّد — تم رفض البديل',
+      meaning: 'تم رفض الموعد البديل المقترح، فلم يُؤكَّد الحجز. لا توجد غرامة على رفض الاقتراح.',
+      nextStep: 'يمكنك تقديم طلب حجز جديد في أي وقت.',
+    };
+  }
+  if (reason === 'ALTERNATIVE_EXPIRED') {
+    return {
+      label: 'لم يُؤكَّد — انتهت مهلة الرد',
+      meaning: 'انتهت مهلة الرد على الموعد البديل المقترح، فلم يُؤكَّد الحجز. لا توجد غرامة على ذلك.',
+      nextStep: 'يمكنك تقديم طلب حجز جديد.',
+    };
+  }
+  return {
+    label: 'تم إلغاء الحجز',
+    meaning: 'تم إلغاء هذا الحجز. لا تضيف هذه الحالة بحد ذاتها أي ادعاء بوجود غرامة أو حركة مالية.',
+    nextStep: 'يمكنك الرجوع إلى حجوزاتك أو بدء طلب جديد عندما ترغب.',
+  };
+}
+
+function patientVisibleReason(reason?: string) {
+  if (!reason) return undefined;
+  if (reason === 'ALTERNATIVE_DECLINED' || reason === 'ALTERNATIVE_EXPIRED' || reason === 'PATIENT_CANCELLED_CONFIRMED') return undefined;
+  return reason;
+}
 
 function AppointmentChange({ booking, option }: { booking: BookingRecord; option: ProviderOption }) {
   if (!booking.alternativeSlotIso) return null;
@@ -107,11 +132,17 @@ export function BookingDetailScreen({
   onFindAlternative,
 }: BookingDetailScreenProps) {
   const [cancelled, setCancelled] = useState(false);
+  const [localCancellationReason, setLocalCancellationReason] = useState<string | undefined>();
   const [confirmCancellation, setConfirmCancellation] = useState(false);
   const state: BookingRecord['state'] = cancelled ? 'CANCELLED' : booking.state;
+  const effectiveReason = cancelled ? localCancellationReason ?? booking.stateReason : booking.stateReason;
   const allowed = cancelled ? [] : booking.allowedActions;
+  const stateCopy = state === 'CANCELLED'
+    ? cancellationCopy(effectiveReason)
+    : { label: BOOKING_LABEL[state], meaning: BOOKING_MEANING[state], nextStep: NEXT_STEP[state] };
 
-  function completeCancellation() {
+  function completeCancellation(reason = 'PATIENT_CANCELLED_CONFIRMED') {
+    setLocalCancellationReason(reason);
     setCancelled(true);
     setConfirmCancellation(false);
     onCancelled();
@@ -120,7 +151,7 @@ export function BookingDetailScreen({
   function cancellationActions(): ActionSpec[] {
     return [
       { key: 'keep', label: 'الاحتفاظ بالطلب', role: 'secondary', availability: { status: 'available' }, onPress: () => setConfirmCancellation(false) },
-      { key: 'confirm-cancel', label: 'تأكيد إلغاء الطلب', role: 'destructive', availability: { status: 'available' }, onPress: completeCancellation },
+      { key: 'confirm-cancel', label: 'تأكيد إلغاء الطلب', role: 'destructive', availability: { status: 'available' }, onPress: () => completeCancellation('PATIENT_CANCELLED_CONFIRMED') },
     ];
   }
 
@@ -154,7 +185,13 @@ export function BookingDetailScreen({
         key: 'accept-alternative', label: 'قبول الموعد البديل', role: 'primary', onPress: onAcceptAlternative,
         availability: acceptAvailability,
       },
-      { key: 'decline-alternative', label: 'رفض الموعد البديل', role: 'secondary', availability: { status: 'available' }, onPress: completeCancellation },
+      {
+        key: 'decline-alternative',
+        label: 'رفض الموعد البديل',
+        role: 'secondary',
+        availability: { status: 'available' },
+        onPress: () => completeCancellation('ALTERNATIVE_DECLINED'),
+      },
     ];
   }
 
@@ -178,6 +215,7 @@ export function BookingDetailScreen({
   const deadline =
     state === 'ALTERNATIVE_PROPOSED' ? booking.alternativeResponseDeadlineIso : state === 'REQUESTED' ? booking.responseDeadlineIso : undefined;
   const cancellable = allowed.includes('cancel') && !confirmCancellation;
+  const visibleReason = patientVisibleReason(effectiveReason);
 
   return (
     <Screen footer={actions.length ? <ActionBar actions={actions} /> : undefined}>
@@ -186,9 +224,9 @@ export function BookingDetailScreen({
         <StateSummary
           machine="booking"
           status={state}
-          label={BOOKING_LABEL[state]}
-          meaning={BOOKING_MEANING[state]}
-          nextStep={NEXT_STEP[state]}
+          label={stateCopy.label}
+          meaning={stateCopy.meaning}
+          nextStep={stateCopy.nextStep}
           variant="hero"
         />
         {state === 'ALTERNATIVE_PROPOSED' ? (
@@ -202,7 +240,7 @@ export function BookingDetailScreen({
             obligation={state === 'ALTERNATIVE_PROPOSED' ? 'مهلة الرد على الموعد البديل' : 'مهلة رد العيادة على الطلب'}
           />
         ) : null}
-        {booking.stateReason ? <Helper>{booking.stateReason}</Helper> : null}
+        {visibleReason ? <Helper>{visibleReason}</Helper> : null}
         {confirmCancellation ? (
           <View style={{ gap: space('stack-xs'), padding: space('inset-sm'), borderRadius: radius('surface'), backgroundColor: color('action.destructive-subtle') }}>
             <BodyStrong>هل تريد إلغاء الطلب؟</BodyStrong>
