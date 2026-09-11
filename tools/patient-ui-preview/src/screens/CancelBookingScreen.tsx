@@ -33,7 +33,8 @@ export function CancelBookingScreen({
   onRefresh,
 }: CancelBookingScreenProps) {
   const permissionDenied = state === 'error-permission';
-  const policyUnavailable = !policy.consequence || state === 'error-fetch';
+  const consequence = policy.consequence;
+  const policyUnavailable = !consequence || state === 'error-fetch';
   const staleOrOffline = state === 'stale' || state === 'offline';
   const committed = state === 'committed';
 
@@ -105,15 +106,15 @@ export function CancelBookingScreen({
                   onPress: onRefresh,
                 } : undefined}
               />
-            ) : (
+            ) : consequence ? (
               <Stack gap="stack-sm">
                 <BodyStrong>ما الذي سيحدث إذا ألغيت الآن؟</BodyStrong>
-                <Body>{policy.consequence}</Body>
+                <Body>{consequence}</Body>
                 <Helper>هذه النتيجة مأخوذة من شروط هذا الحجز، وليست نصًا ثابتًا لكل الحجوزات.</Helper>
 
                 <SensitiveConfirmation
                   actionLabel="إلغاء الحجز"
-                  effect={policy.consequence}
+                  effect={consequence}
                   reversibility="بعد تنفيذ الإلغاء، لا يعود هذا الموعد حجزًا مؤكدًا. يمكنك لاحقًا إنشاء طلب جديد وفق الحالة المتاحة حينها."
                   subject={`${option.serviceLabel} · ${option.providerName} · ${option.branchName}`}
                   reasonRequired={policy.reasonRequired}
@@ -124,7 +125,7 @@ export function CancelBookingScreen({
                   committing={state === 'committing'}
                 />
               </Stack>
-            )}
+            ) : null}
           </Stack>
         )}
       </Stack>
