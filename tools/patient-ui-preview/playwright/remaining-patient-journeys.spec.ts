@@ -15,8 +15,9 @@ test('attention re-entry discards stale entry state in favor of authoritative bo
   onlyOnPrimaryProject(testInfo);
   await gotoStory(page, 'patient-flows-remaining-canonical-patient-journeys--attention-notification-reentry');
 
-  await expect(page.getByText('اختر ما إذا كان الموعد البديل يناسبك', { exact: true })).toBeVisible();
-  await page.getByText('اختر ما إذا كان الموعد البديل يناسبك', { exact: true }).click();
+  const alternativeAttention = page.getByRole('button', { name: /^اختر ما إذا كان الموعد البديل يناسبك/ }).first();
+  await expect(alternativeAttention).toBeVisible();
+  await alternativeAttention.click();
   await expect(page.getByRole('heading', { name: 'تفاصيل الحجز' })).toBeVisible();
   await expect(page.getByText('الموعد مؤكَّد', { exact: true })).toBeVisible();
   await expect(page.getByText('عُرض موعد بديل', { exact: true })).toHaveCount(0);
