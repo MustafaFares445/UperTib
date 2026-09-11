@@ -72,13 +72,27 @@ const authoritativeReentryBooking: BookingRecord = {
   ],
 };
 
+function authoritativeBookingForResource(id: string): BookingRecord | undefined {
+  if (id === authoritativeReentryBooking.id) return authoritativeReentryBooking;
+  const summary = patientBookingSummaries.find((booking) => booking.id === id);
+  return summary ? bookingRecordFromSummary(summary) : undefined;
+}
+
 function AttentionNotificationReentryFlow() {
   const [screen, setScreen] = useState<'attention' | 'notifications' | 'booking'>('attention');
+  const [selectedBooking, setSelectedBooking] = useState<BookingRecord>();
 
-  if (screen === 'booking') {
+  const openBookingResource = (id: string) => {
+    const current = authoritativeBookingForResource(id);
+    if (!current) return;
+    setSelectedBooking(current);
+    setScreen('booking');
+  };
+
+  if (screen === 'booking' && selectedBooking) {
     return (
       <BookingDetailScreen
-        booking={authoritativeReentryBooking}
+        booking={selectedBooking}
         option={option}
         onCancelled={() => {}}
         onDone={() => setScreen('attention')}
@@ -91,7 +105,7 @@ function AttentionNotificationReentryFlow() {
       <NotificationCentreScreen
         entries={patientNotificationEntries}
         onOpenNotification={(entry) => {
-          if (entry.resource.kind === 'booking') setScreen('booking');
+          if (entry.resource.kind === 'booking') openBookingResource(entry.resource.id);
         }}
         onMarkRead={() => {}}
         onRefresh={() => {}}
@@ -103,7 +117,7 @@ function AttentionNotificationReentryFlow() {
     <NeedsAttentionScreen
       entries={patientAttentionEntries}
       onOpenAttention={(entry) => {
-        if (entry.resource.kind === 'booking') setScreen('booking');
+        if (entry.resource.kind === 'booking') openBookingResource(entry.resource.id);
       }}
       onRefresh={() => {}}
       onFindCare={() => {}}
