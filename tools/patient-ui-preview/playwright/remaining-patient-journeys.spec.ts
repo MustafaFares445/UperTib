@@ -90,6 +90,7 @@ test('follow-up journey opens the linked authoritative case rather than mutating
   await gotoStory(page, 'patient-flows-remaining-canonical-patient-journeys--follow-up-to-case');
 
   await page.getByRole('button', { name: /متابعة مستحقة/ }).click();
-  await expect(page.getByRole('heading', { name: /ملخص الحالة|حالتك العلاجية/ })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'حشوات الأسنان' })).toBeVisible();
+  await expect(page.getByText('هذه الصفحة هي نقطة البداية لكل ما يخص هذه الحالة فقط.', { exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: /إكمال المرحلة|إعادة فتح المرحلة/ })).toHaveCount(0);
 });
