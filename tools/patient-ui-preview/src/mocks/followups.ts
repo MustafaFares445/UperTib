@@ -19,7 +19,7 @@ export interface PatientFollowUpProjection {
 export const patientFollowUps: PatientFollowUpProjection[] = [
   {
     id: 'FU-301',
-    caseId: 'CASE-418',
+    caseId: 'case-filling-001',
     stageLabel: 'متابعة بعد المرحلة العلاجية',
     serviceLabel: 'حشوات الأسنان',
     dueState: 'due',
@@ -31,7 +31,7 @@ export const patientFollowUps: PatientFollowUpProjection[] = [
   },
   {
     id: 'FU-302',
-    caseId: 'CASE-421',
+    caseId: 'case-cleaning-002',
     stageLabel: 'متابعة مجدولة',
     serviceLabel: 'تنظيف وتلميع الأسنان',
     dueState: 'upcoming',
@@ -43,7 +43,7 @@ export const patientFollowUps: PatientFollowUpProjection[] = [
   },
   {
     id: 'FU-289',
-    caseId: 'CASE-407',
+    caseId: 'case-filling-001',
     stageLabel: 'متابعة سابقة',
     serviceLabel: 'حشوات الأسنان',
     dueState: 'completed',
