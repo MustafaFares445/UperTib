@@ -28,8 +28,7 @@ import { NotificationCentreScreen } from '../screens/NotificationCentreScreen';
 import { PatientProfileScreen } from '../screens/PatientProfileScreen';
 import { RescheduleRequestScreen } from '../screens/RescheduleRequestScreen';
 
-const option = findOption('opt-1');
-if (!option) throw new Error('Remaining Patient journeys require deterministic option opt-1.');
+const option = findOption('opt-1')!;
 
 function bookingRecordFromSummary(summary: PatientBookingSummary): BookingRecord {
   const base: BookingRecord = {
