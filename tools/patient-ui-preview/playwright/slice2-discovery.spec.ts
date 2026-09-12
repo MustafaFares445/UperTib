@@ -58,13 +58,17 @@ test.describe('eligibility explanation stays patient-safe and responsive', () =>
       await expectNoHorizontalOverflow(page, `eligibility explanation ${story}`);
 
       if (testInfo.project.name === PRIMARY_PROJECT) {
-        await expect(page.getByText('ماذا تعني حالة هذا الخيار؟')).toBeVisible();
+        const expectedTitle = story === 'eligible'
+          ? 'لماذا هذا الطبيب متاح للحجز؟'
+          : 'لماذا لا يمكن حجز هذا الطبيب الآن؟';
+        await expect(page.getByText(expectedTitle)).toBeVisible();
         await expect(page.getByText('حشوات الأسنان', { exact: true })).toBeVisible();
-        await expect(page.getByText(/عيادة الشهباء لطب الأسنان/)).toBeVisible();
-        await expect(page.getByText(/حلب الجديدة/)).toBeVisible();
-        await expect(page.getByText('آخر تقييم لهذه الخدمة في هذا الفرع')).toBeVisible();
-        await expect(page.getByText(/درجات المخاطر الداخلية/)).toBeVisible();
-        await expect(page.getByText(/ترتيبًا عامًا للطبيب/)).toBeVisible();
+        await expect(page.getByText('عيادة الشهباء لطب الأسنان · حلب الجديدة', { exact: true })).toBeVisible();
+        await expect(page.getByText('آخر تحديث لحالة الإتاحة لهذه الخدمة في هذا الفرع')).toBeVisible();
+        await expect(page.getByRole('button', { name: 'العودة إلى تفاصيل الطبيب' })).toBeVisible();
+        await expect(page.getByRole('button', { name: 'العودة إلى نتائج البحث' })).toBeVisible();
+        await expect(page.getByText(/درجات المخاطر الداخلية/)).toHaveCount(0);
+        await expect(page.getByText(/ترتيبًا عامًا للطبيب/)).toHaveCount(0);
         await expectNoSeriousAccessibilityViolations(page, `eligibility explanation ${story}`);
       }
     });
@@ -83,7 +87,8 @@ test('provider decision sends explanation to a separate progressive-disclosure r
   onlyOnPrimaryProject(testInfo);
   await gotoStory(page, 'patient-screens-scr-elig-003-provider-decision-card--default');
 
-  await expect(page.getByText('لماذا هذا الخيار متاح؟')).toBeVisible();
-  await expect(page.getByRole('link', { name: 'لماذا هذا الخيار متاح لهذه الخدمة في هذا الفرع؟' })).toBeVisible();
-  await expect(page.getByText('ما معنى حالة التوفر؟')).toHaveCount(0);
+  await expect(page.getByText('لماذا يمكنني حجز هذا الطبيب؟')).toBeVisible();
+  await expect(page.getByText('عرض تفاصيل الإتاحة')).toBeVisible();
+  await expect(page.getByRole('link', { name: 'فتح تفاصيل سبب إتاحة هذا الطبيب للحجز' })).toBeVisible();
+  await expect(page.getByText(/درجات المخاطر الداخلية/)).toHaveCount(0);
 });

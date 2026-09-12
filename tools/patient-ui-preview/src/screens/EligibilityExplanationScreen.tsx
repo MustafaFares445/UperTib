@@ -29,14 +29,14 @@ export function EligibilityExplanationScreen({
           actions={[
             {
               key: 'back',
-              label: available ? 'العودة إلى هذا الخيار' : 'العودة إلى الخيار',
+              label: 'العودة إلى تفاصيل الطبيب',
               role: 'primary',
               availability: { status: 'available' },
               onPress: onBack,
             },
             {
               key: 'alternatives',
-              label: 'عرض خيارات أخرى',
+              label: 'العودة إلى نتائج البحث',
               role: 'secondary',
               availability: { status: 'available' },
               onPress: onFindAlternatives,
@@ -47,9 +47,9 @@ export function EligibilityExplanationScreen({
     >
       <Stack gap="stack-lg">
         <ScreenHeader
-          eyebrow="سبب إتاحة هذا الخيار"
-          title="ماذا تعني حالة هذا الخيار؟"
-          description="الشرح يخص هذه الخدمة وهذا الفرع فقط، ولا يمثل ترتيبًا عامًا للطبيب."
+          eyebrow="تفاصيل الإتاحة"
+          title={available ? 'لماذا هذا الطبيب متاح للحجز؟' : 'لماذا لا يمكن حجز هذا الطبيب الآن؟'}
+          description={`هذه الحالة تخص ${explanation.serviceLabel} في ${explanation.branchName}. ستجد هنا معنى الحالة لحجزك والخطوة التالية.`}
         />
 
         <ProviderIdentity
