@@ -18,6 +18,23 @@ Do not put Laravel/API implementation, production authentication, real eligibili
 
 The Phase 5 contracts remain authoritative.
 
+## Current measured approval status
+
+The final browser closeout on 2026-09-12 records:
+
+| Measure | Current result |
+|---|---:|
+| Canonical Patient screens | 47 |
+| Implemented Patient screen titles | 47 |
+| Storybook Patient states | 230 |
+| Browser approval | **PASS** |
+| Native approval | **PENDING** |
+| WP-UX-08 | **PENDING** |
+
+The authoritative audit rendered and captured all 230 states at 320, 390, and 414px (690 screenshots) with zero audit failures and zero unfiltered axe violations at 390px. See [`FINAL_PATIENT_UI_BROWSER_APPROVAL.md`](FINAL_PATIENT_UI_BROWSER_APPROVAL.md) for the measured commands, CI run, rendered review, and native boundary.
+
+Historical review documents that report 38 screens / 147 states remain historical evidence; do not reuse those counts as the current inventory.
+
 ## Requirements
 
 Use Node 24 where possible. From this directory:
@@ -208,4 +225,4 @@ If you install it for Claude Code, use its current official CLI/plugin instructi
 
 ## Next step
 
-The web-preview approval gate is repository-verifiable through `npm run approval:audit`. Full native approval must wait for the real Patient React Native build, then execute the WP-UX-08 device matrix and pass `npm run approval:native-evidence` with real physical-device evidence.
+The web-preview approval gate is complete and remains reproducible through `npm run approval:audit`. Full native approval must wait for the real Patient React Native build, then execute the WP-UX-08 device matrix and pass `npm run approval:native-evidence` with real physical-device evidence.
