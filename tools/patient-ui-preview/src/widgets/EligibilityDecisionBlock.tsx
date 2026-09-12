@@ -6,10 +6,10 @@ import type { EligibilityExplanation } from '../mocks/eligibility';
 import { borderWidth, color, radius, space } from '../theme/tokens';
 
 const ELIGIBILITY_LABEL: Record<EligibilityExplanation['eligibility'], string> = {
-  PENDING_EVALUATION: 'قيد التقييم',
-  ELIGIBLE: 'مؤهّل لهذه الخدمة',
-  SUSPENDED: 'معلَّق مؤقتًا',
-  NOT_ELIGIBLE: 'غير مؤهَّل حاليًا',
+  PENDING_EVALUATION: 'جاري التحقق من الإتاحة',
+  ELIGIBLE: 'متاح للحجز لهذه الخدمة',
+  SUSPENDED: 'غير متاح مؤقتًا',
+  NOT_ELIGIBLE: 'غير متاح للحجز حاليًا',
 };
 
 /**
@@ -39,12 +39,12 @@ export function EligibilityDecisionBlock({ explanation }: { explanation: Eligibi
           backgroundColor: color('surface.subtle'),
         }}
       >
-        <Heading4>المعنى الآن</Heading4>
+        <Heading4>ماذا تعني هذه الحالة لحجزك؟</Heading4>
         <Body>{explanation.reasonSummary}</Body>
       </View>
 
       <View style={{ gap: space('stack-xs') }}>
-        <Heading4>ماذا يمكنك أن تفعل؟</Heading4>
+        <Heading4>ما الخطوة التالية؟</Heading4>
         <Body tone="secondary">{explanation.nextStep}</Body>
       </View>
 
@@ -56,9 +56,9 @@ export function EligibilityDecisionBlock({ explanation }: { explanation: Eligibi
           borderTopColor: color('border.subtle'),
         }}
       >
-        <Helper>آخر تقييم لهذه الخدمة في هذا الفرع</Helper>
+        <Helper>آخر تحديث لحالة الإتاحة لهذه الخدمة في هذا الفرع</Helper>
         <BodyStrong>{formatDateTime(explanation.assessedAtIso)}</BodyStrong>
-        <Helper>لا يعرض UberTib هنا درجات المخاطر الداخلية أو تفاصيل المراجعة غير المخصصة للمريض.</Helper>
+        <Helper>قد تتغير الإتاحة لاحقًا بحسب توفر الخدمة وحالة الفرع، وسيظهر لك التحديث عند المتابعة.</Helper>
       </View>
     </View>
   );

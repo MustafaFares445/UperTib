@@ -65,7 +65,8 @@ export function ProviderDecisionScreen({
         >
           <Pressable
             accessibilityRole="link"
-            accessibilityLabel="لماذا هذا الخيار متاح لهذه الخدمة في هذا الفرع؟"
+            accessibilityLabel="فتح تفاصيل سبب إتاحة هذا الطبيب للحجز"
+            accessibilityHint="يفتح صفحة توضح حالة الإتاحة الحالية لهذه الخدمة في هذا الفرع وما يمكنك فعله بعدها."
             onFocus={explanationRing.onFocus}
             onBlur={explanationRing.onBlur}
             onPress={onExplainEligibility}
@@ -80,12 +81,12 @@ export function ProviderDecisionScreen({
             })}
           >
             <View style={{ flex: 1, gap: space('stack-xs') }}>
-              <BodyStrong>لماذا هذا الخيار متاح؟</BodyStrong>
-              <Helper>شرح مختصر لحالة الأهلية الحالية، من دون درجات أو تفاصيل داخلية.</Helper>
+              <BodyStrong>لماذا يمكنني حجز هذا الطبيب؟</BodyStrong>
+              <Helper>افتح تفاصيل الإتاحة لمعرفة سبب توفر هذا الطبيب لهذه الخدمة في هذا الفرع، وما الخطوة التالية قبل الحجز.</Helper>
             </View>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: space('inline-xs') }}>
-              <Icon name="magnifying-glass" color={color('action.primary')} scale="sm" />
-              <Body tone="link">عرض الشرح</Body>
+              <Icon name="eye" color={color('action.primary')} scale="sm" />
+              <Body tone="link">عرض تفاصيل الإتاحة</Body>
             </View>
           </Pressable>
         </View>
