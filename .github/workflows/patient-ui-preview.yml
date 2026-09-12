@@ -6,11 +6,13 @@ on:
       - main
     paths:
       - 'tools/patient-ui-preview/**'
+      - 'docs/ux/02-wireframes/wireframe-manifest.json'
       - '.claude/skills/patient-ui-preview/SKILL.md'
       - '.github/workflows/patient-ui-preview.yml'
   pull_request:
     paths:
       - 'tools/patient-ui-preview/**'
+      - 'docs/ux/02-wireframes/wireframe-manifest.json'
       - '.claude/skills/patient-ui-preview/SKILL.md'
       - '.github/workflows/patient-ui-preview.yml'
   workflow_dispatch:
@@ -67,6 +69,12 @@ jobs:
           else
             git diff --check
           fi
+
+      - name: Test canonical Patient screen coverage validator
+        run: npm run test:screen-coverage-validator
+
+      - name: Enforce canonical Patient screen coverage
+        run: npm run screen-coverage:enforce
 
       - name: Test native evidence validator
         run: npm run test:native-evidence-validator

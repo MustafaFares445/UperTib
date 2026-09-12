@@ -8,7 +8,7 @@ export type SubmissionStatus = 'pending' | 'failed' | 'retrying' | 'completed';
 const COPY: Record<SubmissionStatus, string> = {
   pending: 'جارٍ الإرسال…',
   retrying: 'جارٍ إعادة المحاولة…',
-  failed: 'تعذر الإرسال. لم يُعرف ما إذا وصل الطلب أم لا.',
+  failed: 'لم يلتزم الطلب. بياناتك محفوظة ويمكن إعادة المحاولة بأمان.',
   completed: 'تم الإرسال بنجاح.',
 };
 
@@ -21,15 +21,17 @@ const ICON: Record<SubmissionStatus, IconName> = {
 
 /**
  * CMP-PLATFORM-011 — Submission state indicator. The visible face of the idempotency contract:
- * pending, failed, retrying, completed — never an optimistic guess at the outcome.
+ * pending, failed, retrying, completed — never an optimistic guess at the outcome. Unknown commit
+ * outcomes are deliberately rendered by CMP-PLATFORM-010 `unknown-outcome`, not by `failed`.
  */
 export function SubmissionStateIndicator({ status }: { status: SubmissionStatus }) {
-  const tone = status === 'completed' ? 'success' : status === 'failed' ? 'warning' : 'info';
+  const tone = status === 'completed' ? 'success' : status === 'failed' ? 'danger' : 'info';
   const visual = chipVisual(tone, 'subtle');
   return (
     <View
       accessible
       accessibilityLiveRegion="polite"
+      accessibilityState={{ busy: status === 'pending' || status === 'retrying' }}
       style={{
         flexDirection: 'row',
         alignItems: 'center',

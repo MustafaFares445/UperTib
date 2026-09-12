@@ -13,7 +13,11 @@
     "storybook:build": "storybook build",
     "typecheck": "tsc --noEmit",
     "playwright:install": "playwright install chromium",
-    "test:smoke": "npm run storybook:build && playwright test playwright/smoke.spec.ts playwright/slice2-discovery.spec.ts playwright/slice3-care.spec.ts playwright/slice4-evidence.spec.ts playwright/slice5-finance.spec.ts playwright/slice6-finance-actions.spec.ts playwright/slice7-refund-execution.spec.ts playwright/slice8-reviews.spec.ts playwright/slice9-review-appeal.spec.ts playwright/slice10-claims-core.spec.ts playwright/slice11-protection-appeal.spec.ts playwright/slice12-representation.spec.ts --project=patient-390",
+    "screen-coverage": "node scripts/validate-screen-coverage.mjs",
+    "screen-coverage:json": "node scripts/validate-screen-coverage.mjs --json",
+    "screen-coverage:enforce": "node scripts/validate-screen-coverage.mjs --enforce",
+    "test:screen-coverage-validator": "node --test scripts/validate-screen-coverage.test.mjs",
+    "test:smoke": "npm run storybook:build && playwright test playwright/smoke.spec.ts playwright/slice2-discovery.spec.ts playwright/slice3-care.spec.ts playwright/slice4-evidence.spec.ts playwright/slice5-finance.spec.ts playwright/slice6-finance-actions.spec.ts playwright/slice7-refund-execution.spec.ts playwright/slice8-reviews.spec.ts playwright/slice9-review-appeal.spec.ts playwright/slice10-claims-core.spec.ts playwright/slice11-protection-appeal.spec.ts playwright/slice12-representation.spec.ts playwright/remaining-patient-business-regressions.spec.ts playwright/remaining-patient-journeys.spec.ts --project=patient-390",
     "test:e2e": "npm run storybook:build && playwright test",
     "test:e2e:headed": "npm run storybook:build && playwright test --headed",
     "test:e2e:ui": "npm run storybook:build && playwright test --ui",
@@ -24,7 +28,7 @@
     "approval:audit": "npm run typecheck && npm run storybook:build && node scripts/capture-all.mjs",
     "approval:audit:ci": "node scripts/capture-all.mjs",
     "approval:native-evidence": "node scripts/validate-native-evidence.mjs",
-    "verify": "npm run typecheck && npm run storybook:build && playwright test playwright/smoke.spec.ts playwright/slice2-discovery.spec.ts playwright/slice3-care.spec.ts playwright/slice4-evidence.spec.ts playwright/slice5-finance.spec.ts playwright/slice6-finance-actions.spec.ts playwright/slice7-refund-execution.spec.ts playwright/slice8-reviews.spec.ts playwright/slice9-review-appeal.spec.ts playwright/slice10-claims-core.spec.ts playwright/slice11-protection-appeal.spec.ts playwright/slice12-representation.spec.ts --project=patient-390"
+    "verify": "npm run test:screen-coverage-validator && npm run screen-coverage:enforce && npm run typecheck && npm run storybook:build && playwright test playwright/smoke.spec.ts playwright/slice2-discovery.spec.ts playwright/slice3-care.spec.ts playwright/slice4-evidence.spec.ts playwright/slice5-finance.spec.ts playwright/slice6-finance-actions.spec.ts playwright/slice7-refund-execution.spec.ts playwright/slice8-reviews.spec.ts playwright/slice9-review-appeal.spec.ts playwright/slice10-claims-core.spec.ts playwright/slice11-protection-appeal.spec.ts playwright/slice12-representation.spec.ts playwright/remaining-patient-business-regressions.spec.ts playwright/remaining-patient-journeys.spec.ts --project=patient-390"
   },
   "dependencies": {
     "react": "19.2.8",

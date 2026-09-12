@@ -1,10 +1,12 @@
 # WP-UX-08 — Native Validation Handoff
 
-Date: 2026-09-10
+Date: 2026-09-12
 
-Status: **repository-side preparation complete; physical native validation not yet executed**
+Status: **PENDING — repository-side preparation complete; physical native validation not yet executed**
 
 Scope: Patient application native approval only. This document does not claim that React Native Web, Storybook, browser Axe, or the Patient preview can substitute for an installed iOS/Android application.
+
+Current split approval status: browser approval is **PASS** for 47 screens / 230 Storybook states / 690 responsive captures; native approval and WP-UX-08 remain **PENDING**. The current browser evidence is recorded in [`FINAL_PATIENT_UI_BROWSER_APPROVAL.md`](FINAL_PATIENT_UI_BROWSER_APPROVAL.md).
 
 ## Why this remains separate
 
