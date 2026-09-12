@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { TextInput, View } from 'react-native';
 import { ActionBar, type ActionSpec } from './ActionBar';
 import { Body, BodyStrong, Helper, Label } from '../foundations/Text';
@@ -33,6 +33,7 @@ export function SensitiveConfirmation({
   onConfirm,
   committing = false,
 }: SensitiveConfirmationProps) {
+  const effectDescriptionId = useId();
   const [reason, setReason] = useState('');
   const trimmedReason = reason.trim();
   const confirmAvailability: ActionSpec['availability'] = committing
@@ -62,6 +63,9 @@ export function SensitiveConfirmation({
   return (
     <View
       accessibilityRole="summary"
+      accessibilityLabel={actionLabel}
+      accessibilityHint={`${effect} ${reversibility}`}
+      aria-describedby={effectDescriptionId}
       style={{
         gap: space('stack-md'),
         padding: space('inset-lg'),
@@ -73,7 +77,7 @@ export function SensitiveConfirmation({
     >
       <View style={{ gap: space('stack-xs') }}>
         <BodyStrong>{actionLabel}</BodyStrong>
-        <Body>{effect}</Body>
+        <Body nativeID={effectDescriptionId}>{effect}</Body>
         <Helper>{reversibility}</Helper>
         <Helper>يشمل: {subject}</Helper>
       </View>

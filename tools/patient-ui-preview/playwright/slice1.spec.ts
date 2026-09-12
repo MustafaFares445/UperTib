@@ -319,7 +319,7 @@ const BOOKING_STATE_STORIES = [
   ['confirmed', 'الموعد مؤكَّد', 'طلب تغيير الموعد'],
   ['eligibility-review', 'الموعد قيد مراجعة الأهلية', 'العودة إلى الخدمات'],
   ['rejected', 'لم توافق العيادة على الطلب', 'البحث عن خيار آخر'],
-  ['cancelled', 'لم يتم تأكيد الحجز', 'البحث عن خيار آخر'],
+  ['cancelled', 'تم إلغاء الحجز', 'البحث عن خيار آخر'],
 ] as const;
 
 test.describe('Booking Detail projects the meaning, next step, and allowed action for every Slice 1 state', () => {
